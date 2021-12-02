@@ -1,0 +1,25 @@
+Package: rino
+Type: Package
+Title: RNA editing tools in R
+Version: 0.0.0.9000
+Authors@R: person("Kent", "Riemondy", email = "kent.riemondy@gmail.com",
+  role = c("aut", "cre"))
+Description: Tools for identifying rna editing sites
+License: MIT + file LICENSE
+Depends: R (>= 3.1.2)
+Imports: 
+    Rcpp,
+    data.table,
+    R.utils,
+    Rhtslib
+SystemRequirements: C++11 
+LinkingTo:
+    Rcpp (>= 0.12.8),
+    Rhtslib,
+    zlibbioc
+Encoding: UTF-8
+LazyData: true
+Suggests: testthat
+RoxygenNote: 7.1.1
+URL: http://github.com/kriemo/rino, http://kriemo.github.io/rino
+BugReports: https://github.com/kriemo/rino/issues
