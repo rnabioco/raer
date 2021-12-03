@@ -14,37 +14,31 @@
 #' @importFrom IRanges IRanges
 #' @importFrom data.table fread
 #' @export
-get_pileup <- function(bamfile = NULL,
-                   fafile = NULL,
-                   bedfile = NULL,
+get_pileup <- function(bamfile =  system.file("extdata",
+                                              "SRR1258218_chr21.bam",
+                                              package = "rino"),
+                   fafile = system.file("extdata",
+                                        "chr21.fa",
+                                        package = "rino"),
+                   bedfile = system.file("extdata",
+                                         "chr21_regions.bed",
+                                         package = "rino"),
                    region = NULL,
                    chrom = NULL,
                    start = NULL,
                    end = NULL,
                    outfile = "tmp.txt",
                    return_data = TRUE){
-  if(is.null(bamfile)) {
-    bamfile <- system.file("extdata",
-                           "SRR1258218_chr21.bam",
-                           package = "rino")
-  }
-
-  if(is.null(fafile)) {
-    fafile <- system.file("extdata",
-                          "chr21.fa",
-                          package = "rino")
-  }
-
-  if(is.null(bedfile)) {
-    bedfile <- system.file("extdata",
-                          "chr21_regions.bed",
-                          package = "rino")
-  }
 
   bamfile <- path.expand(bamfile)
   fafile <- path.expand(fafile)
   outfile <- path.expand(outfile)
-  bedfile <- path.expand(bedfile)
+
+  if(!is.null(bedfile)){
+    bedfile <- path.expand(bedfile)
+  } else {
+    bedfile = "."
+  }
 
   if(is.null(region)) {
     if(any(!c(is.null(chrom), is.null(start), is.null(end)))){
@@ -58,8 +52,8 @@ get_pileup <- function(bamfile = NULL,
   res <- run_pileup(bamfile, fafile, region, outfile, bedfile)
 
   tbxfile <- Rsamtools::bgzip(outfile, overwrite = TRUE)
-  Rsamtools::indexTabix(tbxfile, seq = 1, start = 2, end = 2, zeroBased = FALSE)
-  tbx <- Rsamtools::TabixFile(tbxfile)
+  idx <- Rsamtools::indexTabix(tbxfile, seq = 1, start = 2, end = 2, zeroBased = FALSE)
+  tbx <- Rsamtools::TabixFile(tbxfile, idx)
 
   if(region != "."){
     ivl_vals <- get_region(region)
