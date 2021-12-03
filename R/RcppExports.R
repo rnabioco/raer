@@ -9,7 +9,11 @@ read_bam <- function(bampath, region, tag_ids, tag_types) {
     .Call(`_rino_read_bam`, bampath, region, tag_ids, tag_types)
 }
 
-run_pileup <- function(bampath, fapath, region = ".") {
-    .Call(`_rino_run_pileup`, bampath, fapath, region)
+run_pileup <- function(bampath, fapath, region, outfn, bedfn) {
+    .Call(`_rino_run_pileup`, bampath, fapath, region, outfn, bedfn)
+}
+
+get_region <- function(region) {
+    .Call(`_rino_get_region`, region)
 }
 

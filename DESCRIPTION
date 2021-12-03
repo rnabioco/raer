@@ -11,7 +11,9 @@ Imports:
     Rcpp,
     data.table,
     R.utils,
-    Rhtslib
+    Rhtslib,
+    GenomicRanges,
+    Rsamtools
 SystemRequirements: C++11 
 LinkingTo:
     Rcpp (>= 0.12.8),

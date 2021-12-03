@@ -1,4 +1,4 @@
-#include "kentr.h"
+#include "rino.h"
 
 //if you forget to close the Bamfile you get a memory leak
 BamReader::BamReader(const std::string& bampath,

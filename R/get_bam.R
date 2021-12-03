@@ -42,30 +42,3 @@ bam_to_df <- function(filename = NULL,
 
   res
 }
-
-#' Generate pileup
-#' @param filename path to bam file
-#' @param region samtools region query string (i.e. chr1:100-1000)
-
-#' @export
-pileup <- function(bamfile = NULL,
-                   fafile = NULL,
-                   region = "."){
-  if(is.null(bamfile)) {
-    bamfile <- system.file("extdata",
-                           "SRR1258218_chr21.bam",
-                           package = "rino")
-  }
-
-  if(is.null(fafile)) {
-    fafile <- system.file("extdata",
-                           "chr21.fa",
-                           package = "rino")
-  }
-
-  bamfile <- path.expand(bamfile)
-  fafile <- path.expand(fafile)
-  res <- run_pileup(bamfile, fafile, region)
-
-  res
-}
