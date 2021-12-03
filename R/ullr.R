@@ -2,5 +2,5 @@
 #' @importFrom utils download.file
 #' @importFrom R.utils gzip
 #' @import data.table
-#' @useDynLib rino, .registration = TRUE
+#' @useDynLib ullr, .registration = TRUE
 NULL

@@ -2,18 +2,18 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 read_bam_tags <- function(bampath, tag_ids, tag_types, region = ".") {
-    .Call(`_rino_read_bam_tags`, bampath, tag_ids, tag_types, region)
+    .Call(`_ullr_read_bam_tags`, bampath, tag_ids, tag_types, region)
 }
 
 read_bam <- function(bampath, region, tag_ids, tag_types) {
-    .Call(`_rino_read_bam`, bampath, region, tag_ids, tag_types)
+    .Call(`_ullr_read_bam`, bampath, region, tag_ids, tag_types)
 }
 
 run_pileup <- function(bampath, fapath, region, outfn, bedfn) {
-    .Call(`_rino_run_pileup`, bampath, fapath, region, outfn, bedfn)
+    .Call(`_ullr_run_pileup`, bampath, fapath, region, outfn, bedfn)
 }
 
 get_region <- function(region) {
-    .Call(`_rino_get_region`, region)
+    .Call(`_ullr_get_region`, region)
 }
 

@@ -1,4 +1,4 @@
-Package: rino
+Package: ullr 
 Type: Package
 Title: RNA editing tools in R
 Version: 0.0.0.9000
@@ -23,5 +23,5 @@ Encoding: UTF-8
 LazyData: true
 Suggests: testthat
 RoxygenNote: 7.1.1
-URL: http://github.com/kriemo/rino, http://kriemo.github.io/rino
-BugReports: https://github.com/kriemo/rino/issues
+URL: http://github.com/rnabioco/ullr
+BugReports: https://github.com/rnabioco/ullr/issues
