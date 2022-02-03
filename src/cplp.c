@@ -142,14 +142,19 @@ static int readaln(void *data, bam1_t *b) {
     // check for mapping status
     uint8_t* aux_info = bam_aux_get(b, "NH") ;
     int n_errors = 0 ;
-    if(!aux_info && n_errors < 5) {
-      REprintf("Warning: missing tag info in reads, e.g: %s", bam_get_qname(b)) ;
-      n_errors += 1 ;
+    if(!aux_info) {
+      if(n_errors < 5){
+        REprintf("Warning: missing tag info in reads, e.g: %s", bam_get_qname(b)) ;
+        n_errors += 1 ;
+      }
       continue ;
     }
+
     int64_t mmap_tag = bam_aux2i(aux_info);
     if(mmap_tag > 1) continue ;
 
+    // check for proper pair, if paired end, todo: make an optional argument
+    if((b->core.flag&BAM_FPAIRED) && !(b->core.flag&BAM_FPROPER_PAIR)) continue ;
     break;
   }
 
@@ -161,16 +166,24 @@ int run_cpileup(char* cbampath,
                 char* cfapath,
                 char* cregion,
                 char* coutfn,
-                char* cbedfn) {
+                char* cbedfn,
+                int min_reads,
+                int max_depth,
+                int min_baseQ,
+                int libtype) {
 
   int n = 1;
   mplp_aux_t **data;
-  int i, tid, *n_plp, tid0 = 0, max_depth;
+  int tid, *n_plp, tid0 = 0;
   int pos, beg0 = 0, end0 = INT32_MAX, ref_len;
+
+  if(!min_baseQ) min_baseQ = 20;
+  if(!max_depth) max_depth = 10000;
+
   const bam_pileup1_t **plp;
   mplp_ref_t mp_ref = MPLP_REF_INIT;
   bam_mplp_t iter;
-  bam_hdr_t *h = NULL; /* header of first file in input list */
+ // bam_hdr_t *h = NULL; /* header of first file in input list */
   char *ref;
   FILE *pileup_fp = NULL;
 
@@ -186,7 +199,7 @@ int run_cpileup(char* cbampath,
   plp = calloc(n, sizeof(bam_pileup1_t*));
   n_plp = calloc(n, sizeof(int));
 
-  // set this up in a loop
+  // should set this up in a loop, if want to use multiple files
   data[0] = calloc(1, sizeof(mplp_aux_t));
   data[0]->fp = sam_open(cbampath, "rb");
   data[0]->h = sam_hdr_read(data[0]->fp);
@@ -235,10 +248,6 @@ int run_cpileup(char* cbampath,
   data[0]->conf = conf;
   data[0]->ref = &mp_ref;
 
-  int status ;
-
-  // init int array, if multiple files, set to n files
-  int max_count = 10000;
   iter = bam_mplp_init(1, readaln, (void**)data);
 
   // return type void in rhtslib (htslib v 1.7), current v1.14 htslib returns int
@@ -246,21 +255,20 @@ int run_cpileup(char* cbampath,
   bam_mplp_init_overlaps(iter) ;
 
   // set max depth
-  bam_mplp_set_maxcnt(iter, max_count);
+  bam_mplp_set_maxcnt(iter, max_depth);
 
   if (!iter) {
     REprintf("issue with iterator");
     return 1;
   }
-  int min_baseQ = 20;
-  int n_records = 0;
-  int min_depth = 20;
 
+  int n_records = 0;
   pileup_fp = conf->output_fname? fopen(conf->output_fname, "w") : stdout;
   if (pileup_fp == NULL) {
     REprintf("Failed to write to %s: %s\n", conf->output_fname, strerror(errno));
     return 1;
   }
+
   while ((n = bam_mplp_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
       if (cregion && (pos < beg0 || pos >= end0)) continue; // out of the region requested
       mplp_get_ref(data[0], tid, &ref, &ref_len);
@@ -289,14 +297,44 @@ int run_cpileup(char* cbampath,
           // skip indel and ref skip ;
           if(p->is_del || p->is_refskip) continue ;
 
-          //
+          // get read base
           int c = p->qpos < p->b->core.l_qseq
             ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
           : 'N';
+          // get reference base
           ref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
 
-          // todo: adjust based on library type and r1/r2 status
-          if(bam_is_rev(p->b)){
+          int is_neg = 0;
+          is_neg = bam_is_rev(p->b) ;
+
+          //adjust based on library type and r1/r2 status
+          int invert = 0;
+          if(libtype == 1){
+            if (p->b->core.flag & (BAM_FREAD1)) {
+              if(!(is_neg)){
+                invert = 1;
+              }
+            } else if (p->b->core.flag & (BAM_FPAIRED) & (BAM_FREAD2)) {
+                if(is_neg){
+                  invert = 1;
+                }
+            }
+          } else if (libtype == 2){
+            if (p->b->core.flag & (BAM_FREAD1)) {
+                if(is_neg){
+                  invert = 1;
+                }
+            } else if (p->b->core.flag & (BAM_FPAIRED) & (BAM_FREAD2)) {
+              if(!(is_neg)){
+                invert = 1;
+              }
+            }
+          } else {
+            if(is_neg) {
+              invert = 1;
+            }
+          }
+          if(invert){
             c = comp_base[(unsigned char)c];
             ref_b = comp_base[(unsigned char)ref_b];
             strand = '-';
@@ -333,7 +371,7 @@ int run_cpileup(char* cbampath,
         //  Rprintf("bq: %i\n", bq);
           n_records += 1 ;
         }
-        if(total > min_depth){
+        if(total >= min_reads){
           fprintf(pileup_fp,
                   "%s\t%i\t%c\t%c\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n",
                   data[0]->h->target_name[tid],
@@ -350,8 +388,9 @@ int run_cpileup(char* cbampath,
         }
       }
   }
-  bam_mplp_destroy(iter);
 
+  // todo: probably need to clean up more here
+  bam_mplp_destroy(iter);
   bam_hdr_destroy(data[0]->h);
   sam_close(data[0]->fp);
   if (pileup_fp && conf->output_fname) fclose(pileup_fp);

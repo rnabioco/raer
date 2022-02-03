@@ -9,11 +9,19 @@ read_bam <- function(bampath, region, tag_ids, tag_types) {
     .Call(`_ullr_read_bam`, bampath, region, tag_ids, tag_types)
 }
 
-run_pileup <- function(bampath, fapath, region, outfn, bedfn) {
-    .Call(`_ullr_run_pileup`, bampath, fapath, region, outfn, bedfn)
+run_pileup <- function(bampath, fapath, region, outfn, bedfn, min_reads = 20L, max_depth = 10000L, min_baseQ = 20L, libtype = "fr-first-strand") {
+    .Call(`_ullr_run_pileup`, bampath, fapath, region, outfn, bedfn, min_reads, max_depth, min_baseQ, libtype)
 }
 
 get_region <- function(region) {
     .Call(`_ullr_get_region`, region)
+}
+
+build_index <- function(bampath, idxpath) {
+    .Call(`_ullr_build_index`, bampath, idxpath)
+}
+
+fetch_cb_reads <- function(bampath, outpath, vals) {
+    .Call(`_ullr_fetch_cb_reads`, bampath, outpath, vals)
 }
 

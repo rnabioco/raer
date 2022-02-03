@@ -38,8 +38,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // run_pileup
-int run_pileup(std::string bampath, std::string fapath, std::string region, std::string outfn, std::string bedfn);
-RcppExport SEXP _ullr_run_pileup(SEXP bampathSEXP, SEXP fapathSEXP, SEXP regionSEXP, SEXP outfnSEXP, SEXP bedfnSEXP) {
+int run_pileup(std::string bampath, std::string fapath, std::string region, std::string outfn, std::string bedfn, int min_reads, int max_depth, int min_baseQ, std::string libtype);
+RcppExport SEXP _ullr_run_pileup(SEXP bampathSEXP, SEXP fapathSEXP, SEXP regionSEXP, SEXP outfnSEXP, SEXP bedfnSEXP, SEXP min_readsSEXP, SEXP max_depthSEXP, SEXP min_baseQSEXP, SEXP libtypeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< std::string >::type bampath(bampathSEXP);
@@ -47,7 +47,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::string >::type region(regionSEXP);
     Rcpp::traits::input_parameter< std::string >::type outfn(outfnSEXP);
     Rcpp::traits::input_parameter< std::string >::type bedfn(bedfnSEXP);
-    rcpp_result_gen = Rcpp::wrap(run_pileup(bampath, fapath, region, outfn, bedfn));
+    Rcpp::traits::input_parameter< int >::type min_reads(min_readsSEXP);
+    Rcpp::traits::input_parameter< int >::type max_depth(max_depthSEXP);
+    Rcpp::traits::input_parameter< int >::type min_baseQ(min_baseQSEXP);
+    Rcpp::traits::input_parameter< std::string >::type libtype(libtypeSEXP);
+    rcpp_result_gen = Rcpp::wrap(run_pileup(bampath, fapath, region, outfn, bedfn, min_reads, max_depth, min_baseQ, libtype));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -61,12 +65,37 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// build_index
+int build_index(std::string bampath, std::string idxpath);
+RcppExport SEXP _ullr_build_index(SEXP bampathSEXP, SEXP idxpathSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< std::string >::type bampath(bampathSEXP);
+    Rcpp::traits::input_parameter< std::string >::type idxpath(idxpathSEXP);
+    rcpp_result_gen = Rcpp::wrap(build_index(bampath, idxpath));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fetch_cb_reads
+int fetch_cb_reads(std::string bampath, std::string outpath, std::vector<std::string> vals);
+RcppExport SEXP _ullr_fetch_cb_reads(SEXP bampathSEXP, SEXP outpathSEXP, SEXP valsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< std::string >::type bampath(bampathSEXP);
+    Rcpp::traits::input_parameter< std::string >::type outpath(outpathSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type vals(valsSEXP);
+    rcpp_result_gen = Rcpp::wrap(fetch_cb_reads(bampath, outpath, vals));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_ullr_read_bam_tags", (DL_FUNC) &_ullr_read_bam_tags, 4},
     {"_ullr_read_bam", (DL_FUNC) &_ullr_read_bam, 4},
-    {"_ullr_run_pileup", (DL_FUNC) &_ullr_run_pileup, 5},
+    {"_ullr_run_pileup", (DL_FUNC) &_ullr_run_pileup, 9},
     {"_ullr_get_region", (DL_FUNC) &_ullr_get_region, 1},
+    {"_ullr_build_index", (DL_FUNC) &_ullr_build_index, 2},
+    {"_ullr_fetch_cb_reads", (DL_FUNC) &_ullr_fetch_cb_reads, 3},
     {NULL, NULL, 0}
 };
 

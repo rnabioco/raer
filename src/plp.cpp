@@ -15,7 +15,12 @@ int run_pileup(std::string bampath,
                std::string fapath,
                std::string region,
                std::string outfn,
-               std::string bedfn) {
+               std::string bedfn,
+               int min_reads = 20,
+               int max_depth = 10000,
+               int min_baseQ = 20,
+               std::string libtype = "fr-first-strand") {
+
   const char* cbampath = bampath.c_str();
   const char* cfapath = fapath.c_str();
   const char* coutfn = outfn.c_str();
@@ -33,8 +38,21 @@ int run_pileup(std::string bampath,
     cbedfn = bedfn.c_str();
   }
 
+  // encode libtype as 0 = unstranded, 1 = fr-first-strand, 2 = fr-second-strand
+  int lib_spec = 0;
+  if(libtype == "fr-first-strand"){
+    lib_spec = 1;
+  } else if (libtype == "fr-second-strand") {
+    lib_spec = 2;
+  } else if (libtype == "unstranded") {
+    lib_spec = 0;
+  } else {
+    stop("unrecognized library type: fr-first-strand, fr-second-strand, or unstranded supported");
+  }
+
   int out;
-  out = run_cpileup(cbampath, cfapath, cregion, coutfn, cbedfn);
+  out = run_cpileup(cbampath, cfapath, cregion, coutfn, cbedfn,
+                    min_reads, max_depth, min_baseQ, lib_spec);
   return out;
 }
 

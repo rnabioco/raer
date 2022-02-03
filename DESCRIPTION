@@ -22,6 +22,6 @@ LinkingTo:
 Encoding: UTF-8
 LazyData: true
 Suggests: testthat
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 URL: http://github.com/rnabioco/ullr
 BugReports: https://github.com/rnabioco/ullr/issues
