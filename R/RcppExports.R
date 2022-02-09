@@ -2,26 +2,26 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 read_bam_tags <- function(bampath, tag_ids, tag_types, region = ".") {
-    .Call(`_ullr_read_bam_tags`, bampath, tag_ids, tag_types, region)
+    .Call(`_raer_read_bam_tags`, bampath, tag_ids, tag_types, region)
 }
 
-read_bam <- function(bampath, region, tag_ids, tag_types) {
-    .Call(`_ullr_read_bam`, bampath, region, tag_ids, tag_types)
+read_bam <- function(bampath, tag_ids, tag_types, region = ".") {
+    .Call(`_raer_read_bam`, bampath, tag_ids, tag_types, region)
 }
 
 run_pileup <- function(bampath, fapath, region, outfn, bedfn, min_reads = 20L, max_depth = 10000L, min_baseQ = 20L, libtype = "fr-first-strand") {
-    .Call(`_ullr_run_pileup`, bampath, fapath, region, outfn, bedfn, min_reads, max_depth, min_baseQ, libtype)
+    .Call(`_raer_run_pileup`, bampath, fapath, region, outfn, bedfn, min_reads, max_depth, min_baseQ, libtype)
 }
 
 get_region <- function(region) {
-    .Call(`_ullr_get_region`, region)
+    .Call(`_raer_get_region`, region)
 }
 
 build_index <- function(bampath, idxpath) {
-    .Call(`_ullr_build_index`, bampath, idxpath)
+    .Call(`_raer_build_index`, bampath, idxpath)
 }
 
 fetch_cb_reads <- function(bampath, outpath, vals) {
-    .Call(`_ullr_fetch_cb_reads`, bampath, outpath, vals)
+    .Call(`_raer_fetch_cb_reads`, bampath, outpath, vals)
 }
 

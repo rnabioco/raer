@@ -5,7 +5,7 @@
 #' @param region samtools region query string (i.e. chr1:100-1000)
 #' @param chrom chrom to process, not to be used with region
 #' @param start start position, not to be used with region
-#' @param end end position , not to be used with region
+#' @param end end position, not to be used with region
 #' @param library_type read orientation, one of fr-first-strand,
 #' fr-second-strand, or unstranded.
 #' @param outfile output tabix index file
@@ -16,15 +16,9 @@
 #' @importFrom IRanges IRanges
 #' @importFrom data.table fread
 #' @export
-get_pileup <- function(bamfile =  system.file("extdata",
-                                              "SRR1258218_chr21.bam",
-                                              package = "ullr"),
-                   fafile = system.file("extdata",
-                                        "chr21.fa",
-                                        package = "ullr"),
-                   bedfile = system.file("extdata",
-                                         "chr21_regions.bed",
-                                         package = "ullr"),
+get_pileup <- function(bamfile,
+                   fafile,
+                   bedfile = NULL,
                    region = NULL,
                    chrom = NULL,
                    start = NULL,
@@ -38,7 +32,6 @@ get_pileup <- function(bamfile =  system.file("extdata",
 
   bamfile <- path.expand(bamfile)
   fafile <- path.expand(fafile)
-
 
   if(!is.null(bedfile)){
     bedfile <- path.expand(bedfile)

@@ -1,5 +1,5 @@
-#ifndef ullr_piileup_H
-#define ullr_piileup_H
+#ifndef raer_pileup_H
+#define raer_pileup_H
 
 int run_cpileup(const char* cbampath,
                 const char* fapath,

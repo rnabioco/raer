@@ -13,6 +13,5 @@ RHTSLIB_HTSINCLUDE=$(shell echo 'cat(system.file("include", package = "Rhtslib",
 PKG_LIBS=$(RHTSLIB_LIBS)
 PKG_CPPFLAGS=$(RHTSLIB_CPPFLAGS)  -I../inst/include
 
-CXX = ccache clang++
 CXX_STD = CXX11
 

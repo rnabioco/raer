@@ -1,14 +1,5 @@
-// ullr.h
-//
-// Copyright (C) 2021 Kent Riemondy
-//
-// This file is part of ullr.
-//
-// This software may be modified and distributed under the terms
-// of the MIT license. See the LICENSE file for details.
-
-#ifndef ullr__ullr_H
-#define ullr__ullr_H
+#ifndef raer__raer_H
+#define raer__raer_H
 
 #include <algorithm>
 

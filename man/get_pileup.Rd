@@ -5,14 +5,18 @@
 \title{Generate pileup}
 \usage{
 get_pileup(
-  bamfile = NULL,
-  fafile = NULL,
-  bedfile = NULL,
+  bamfile = system.file("extdata", "SRR1258218_chr21.bam", package = "raer"),
+  fafile = system.file("extdata", "chr21.fa", package = "raer"),
+  bedfile = system.file("extdata", "chr21_regions.bed", package = "raer"),
   region = NULL,
   chrom = NULL,
   start = NULL,
   end = NULL,
-  outfile = "tmp.txt",
+  min_reads = 1L,
+  min_base_qual = 20L,
+  max_depth = 10000,
+  library_type = "fr-first-strand",
+  outfile = NULL,
   return_data = TRUE
 )
 }
@@ -21,7 +25,7 @@ get_pileup(
 
 \item{fafile}{path to fasta file}
 
-\item{bedfile}{path to bed file with sites to query}
+\item{bedfile}{path to bed file with sitesu or regions to query}
 
 \item{region}{samtools region query string (i.e. chr1:100-1000)}
 
@@ -30,6 +34,9 @@ get_pileup(
 \item{start}{start position, not to be used with region}
 
 \item{end}{end position , not to be used with region}
+
+\item{library_type}{read orientation, one of fr-first-strand,
+fr-second-strand, or unstranded.}
 
 \item{outfile}{output tabix index file}
 

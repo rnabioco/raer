@@ -1,4 +1,4 @@
-#include "ullr.h"
+#include "raer.h"
 
 //if you forget to close the Bamfile you get a memory leak
 BamReader::BamReader(const std::string& bampath,
@@ -27,13 +27,25 @@ std::string getTags(bam1_t* &aln,
 
   if (aux_info) {
     if(tag_type == "Z"){
-      tag = std::string(bam_aux2Z(aux_info))  ;
+      char* char_tag = bam_aux2Z(aux_info) ;
+      if (!char_tag){
+        tag = "";
+      }
     } else if (tag_type == "i" ){
       auto int_tag = bam_aux2i(aux_info) ;
-      tag = std::to_string(int_tag) ;
+      if (!int_tag){
+        tag = errno == EINVAL ? "" : "0";
+      } else {
+        tag = std::to_string(int_tag) ;
+      }
+
     } else if (tag_type == "A" ){
       char char_tag = bam_aux2A(aux_info) ;
-      tag = std::to_string(char_tag) ;
+      if (!char_tag){
+        tag = "";
+      } else {
+        tag = std::to_string(char_tag) ;
+      }
     }
   } else {
     tag = "" ;
@@ -75,6 +87,11 @@ DataFrame read_bam_tags(std::string bampath,
 
   // iterate through bam, error code is -1
   while(sam_itr_next(bfile.in, iter, read) >= 0) {
+    // ignore unmapped reads
+    if(read->core.flag & (BAM_FUNMAP)){
+      continue;
+    }
+
     // extract out chrom, start, end, and strand
     std::string chrom = bfile.header->target_name[(read->core).tid] ;
     std::size_t start = (read->core).pos ;
@@ -125,7 +142,7 @@ DataFrame read_bam_tags(std::string bampath,
 
 
 DataFrame read_bam_default(std::string bampath,
-                          std::string region = ".") {
+                           std::string region = ".") {
   // open bam
   BamReader bfile(bampath, true) ;
 
@@ -147,6 +164,11 @@ DataFrame read_bam_default(std::string bampath,
 
   // iterate through bam, error code is -1
   while(sam_itr_next(bfile.in, iter, read) >= 0) {
+    // ignore unmapped reads
+    if(read->core.flag & (BAM_FUNMAP)){
+      continue;
+    }
+
     // extract out chrom, start, end, and strand
     std::string chrom = bfile.header->target_name[(read->core).tid] ;
     std::size_t start = (read->core).pos ;
@@ -177,9 +199,9 @@ DataFrame read_bam_default(std::string bampath,
 
 // [[Rcpp::export(rng = false)]]
 DataFrame read_bam(std::string bampath,
-                   std::string region,
                    std::vector<std::string> tag_ids,
-                   std::vector<std::string> tag_types){
+                   std::vector<std::string> tag_types,
+                   std::string region = "."){
   DataFrame res ;
 
   if (tag_ids[0] != "" && tag_types[0] != "") {

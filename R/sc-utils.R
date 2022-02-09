@@ -18,7 +18,7 @@ get_cell_bam <- function(inbam,
   }
   message(tmp_bam)
   message(outbam)
-  ullr:::fetch_cb_reads(inbam,  tmp_bam,   barcodes);
+  raer:::fetch_cb_reads(inbam,  tmp_bam,   barcodes);
   Rsamtools::sortBam(tmp_bam, outbam)
   Rsamtools::indexBam(outbam)
   unlink(tmp_bam)

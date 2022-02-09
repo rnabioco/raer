@@ -1,3 +1,3 @@
 .onUnload <- function (libpath) {
-  library.dynam.unload("ullr", libpath)
+  library.dynam.unload("raer", libpath)
 }
