@@ -14,7 +14,8 @@ Imports:
     Rhtslib,
     GenomicRanges,
     IRanges,
-    Rsamtools
+    Rsamtools,
+    RCurl
 SystemRequirements: C++11 
 LinkingTo:
     Rcpp (>= 0.12.8),

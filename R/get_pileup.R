@@ -8,13 +8,14 @@
 #' @param end end position, not to be used with region
 #' @param library_type read orientation, one of fr-first-strand,
 #' fr-second-strand, or unstranded.
-#' @param outfile output tabix index file
+#' @param outfile output tabix indexed file?
 #' @param return_data return data as a Granges table?
 #'
 #' @importFrom Rsamtools bgzip indexTabix TabixFile scanTabix
 #' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges
 #' @importFrom data.table fread
+#' @importFrom RCurl url.exists
 #' @export
 get_pileup <- function(bamfile,
                    fafile,
@@ -43,11 +44,17 @@ get_pileup <- function(bamfile,
   }
 
   if(!file.exists(bamfile)){
-    stop("bamfile not found: ", bamfile, call. = FALSE)
+    # note that htslib can handle URLs as input for bamfiles
+    if(!RCurl::url.exists(bamfile)){
+      stop("bamfile not found: ", bamfile, call. = FALSE)
+    }
   }
 
   if(!file.exists(fafile)){
-    stop("fasta file not found: ", fafile, call. = FALSE)
+    # note that htslib can handle URLs as input for fasta references
+    if(!RCurl::url.exists(fafile)){
+      stop("fasta file not found: ", fafile, call. = FALSE)
+    }
   }
 
   if(is.null(outfile)){
@@ -87,10 +94,15 @@ get_pileup <- function(bamfile,
     return()
   }
 
+  # run_pileup writes to a (temp)file, next the file will be tabix indexed
   tbxfile <- Rsamtools::bgzip(outfile, overwrite = TRUE)
   idx <- Rsamtools::indexTabix(tbxfile, seq = 1, start = 2, end = 2, zeroBased = FALSE)
   tbx <- Rsamtools::TabixFile(tbxfile, idx)
 
+  # using Rsamtools read in tabix file
+  # note that file is read in as a character vector
+  # consider using our own read_tabix function if this is bottleneck
+  # (https://github.com/kriemo/kentr/blob/master/src/tabix_reader.cpp)
   if(region != "."){
     ivl_vals <- get_region(region)
     params = GenomicRanges::GRanges(ivl_vals$chrom,
@@ -100,6 +112,8 @@ get_pileup <- function(bamfile,
   } else {
     tbx_vals <- Rsamtools::scanTabix(tbx)[[1]]
   }
+
+  # quick method to convert vector of character strings into data.frame
   from <- data.table::fread(paste0(paste(tbx_vals,collapse="\n"),"\n" ),
                 stringsAsFactors = FALSE,
                 data.table = FALSE,

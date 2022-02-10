@@ -5,9 +5,9 @@
 \title{Generate pileup}
 \usage{
 get_pileup(
-  bamfile = system.file("extdata", "SRR1258218_chr21.bam", package = "raer"),
-  fafile = system.file("extdata", "chr21.fa", package = "raer"),
-  bedfile = system.file("extdata", "chr21_regions.bed", package = "raer"),
+  bamfile,
+  fafile,
+  bedfile = NULL,
   region = NULL,
   chrom = NULL,
   start = NULL,
@@ -33,7 +33,7 @@ get_pileup(
 
 \item{start}{start position, not to be used with region}
 
-\item{end}{end position , not to be used with region}
+\item{end}{end position, not to be used with region}
 
 \item{library_type}{read orientation, one of fr-first-strand,
 fr-second-strand, or unstranded.}
