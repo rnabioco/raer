@@ -12,7 +12,7 @@
 #'
 #' res <- bam_to_df(bam_file,
 #'                  region = "DHFR:88-100",
-#'                  tags = c("NH:A", "AS:i"))
+#'                  tags = c("NH:i", "AS:i"))
 #' res
 #' @export
 bam_to_df <- function(filename,

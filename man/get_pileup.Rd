@@ -38,7 +38,7 @@ get_pileup(
 \item{library_type}{read orientation, one of fr-first-strand,
 fr-second-strand, or unstranded.}
 
-\item{outfile}{output tabix index file}
+\item{outfile}{output tabix indexed file?}
 
 \item{return_data}{return data as a Granges table?}
 }

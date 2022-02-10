@@ -4,7 +4,7 @@
 \alias{bam_to_df}
 \title{Read in bam file as a data.frame}
 \usage{
-bam_to_df(filename = NULL, region = ".", tags = NULL)
+bam_to_df(filename, region = NULL, tags = NULL)
 }
 \arguments{
 \item{filename}{path to bam file}
@@ -19,12 +19,12 @@ strings.}
 Read in bam file as a data.frame
 }
 \examples{
-bam_file <- system.file("extdata", "small_sorted.bam", package = "kentr")
+bam_file <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.bam", package = "raer")
 res <- bam_to_df(bam_file)
 head(res)
 
 res <- bam_to_df(bam_file,
-                 region = "chr1:3e6-3.1e6",
-                 tags = c("XS:A", "AS:i", "CB:Z"))
+                 region = "DHFR:88-100",
+                 tags = c("NH:i", "AS:i"))
 res
 }
