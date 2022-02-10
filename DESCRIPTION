@@ -16,7 +16,9 @@ Imports:
     IRanges,
     Rsamtools,
     RCurl
-SystemRequirements: C++11 
+SystemRequirements: 
+    C++11, 
+    GNU make 
 LinkingTo:
     Rcpp (>= 0.12.8),
     Rhtslib,
@@ -25,6 +27,5 @@ Encoding: UTF-8
 LazyData: true
 Suggests: testthat
 RoxygenNote: 7.1.2
-SystemRequirements: GNU make
 URL: http://github.com/rnabioco/raer
 BugReports: https://github.com/rnabioco/raer/issues
