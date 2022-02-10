@@ -41,5 +41,5 @@ test_that("malformed type string throws error", {
 })
 
 test_that("incorrect types are filled with empty strings", {
-  expect_error(all(bam_to_df(bam_file, tags = "NH:Z")$NH == ""))
+  expect_true(all(bam_to_df(bam_file, tags = "NH:Z")$NH == ""))
 })

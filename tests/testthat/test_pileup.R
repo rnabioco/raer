@@ -21,7 +21,7 @@ test_that("pileup regional query works", {
   expect_error(get_pileup(bamfn, fafn, region = "chr1"))
 
   res <- get_pileup(bamfn, fafn, bedfile = NULL, chrom = "SSR3")
-  expect_true(length(res$Ref), 529)
+  expect_equal(length(res$Ref), 529)
 })
 
 test_that("incorrect regional query is caught", {
