@@ -1,4 +1,4 @@
 library(testthat)
-library(kentr)
+library(raer)
 
-test_check("kentr")
+test_check("raer")

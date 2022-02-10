@@ -28,7 +28,7 @@ test_that("region and tag extraction work", {
             tags = c("AS:i"))
   cnames <- colnames(res)
   expect_equal(nrow(res), 19)
-  expect_true("AS" %in% cnames))
+  expect_true("AS" %in% cnames)
 })
 
 test_that("missing tags are filled with empty strings", {

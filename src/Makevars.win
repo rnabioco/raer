@@ -6,6 +6,5 @@ RHTSLIB_CPPFLAGS=$(shell echo 'Rhtslib::pkgconfig("PKG_CPPFLAGS")'|\
 PKG_LIBS=$(RHTSLIB_LIBS)
 PKG_CPPFLAGS=$(RHTSLIB_CPPFLAGS)  -I../inst/include
 
-CXX = clang++
 CXX_STD = CXX11
 CXX11FLAGS += -std=c++11
