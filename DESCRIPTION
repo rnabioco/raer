@@ -20,7 +20,8 @@ Imports:
     Rsamtools,
     RCurl
 Suggests: 
-    testthat
+    testthat,
+    knitr
 SystemRequirements: 
     C++11, 
     GNU make 
