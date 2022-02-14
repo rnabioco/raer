@@ -53,20 +53,20 @@ test_that("pileup chrom start end args", {
   expect_identical(levels(res@seqnames), "DHFR")
 })
 
-check_nRef_calc <- function(input) {
+check_nRef_calc <- function(input, nts_in = nts) {
   res <- as.data.frame(input)
 
-  for (nt in nts) {
+  for (nt in nts_in) {
     clmn <- paste0("n", nt)
     dat  <- res[res$Ref == nt, ]
 
-    expect_true(all(dat[, clmn] == dat$nRef))
+    expect_identical(dat[, clmn], dat$nRef)
 
-    other_clmns <- nts[nts != nt]
+    other_clmns <- nts_in[nts_in != nt]
     other_clmns <- paste0("n", other_clmns)
     var_sums    <- rowSums(dat[, other_clmns])
 
-    expect_true(all(var_sums == dat$nVar))
+    expect_identical(as.integer(var_sums), as.integer(dat$nVar))
   }
 }
 
@@ -82,13 +82,22 @@ test_that("pileup check nRef and nVar", {
 })
 
 test_that("pileup depth lims", {
+
+  unflt <- get_pileup(bamfn, fafn)
+  unflt <- as.data.frame(unflt)
+  unflt$seqnames <- as.character(unflt$seqnames)
+
+  rsums <- unflt[nt_clmns]
+  rsums <- rowSums(rsums) >= 30
+
+  expected_df <- unflt[rsums, ]
+  rownames(expected_df) <- NULL
+
   res <- get_pileup(bamfn, fafn, min_reads = 30)
-  res <- as.data.frame(res)
+  res <- as.data.frame(res, row.names = NULL)
+  res$seqnames <- as.character(res$seqnames)
 
-  rsums <- res[nt_clmns]
-  rsums <- rowSums(rsums)
-
-  expect_true(all(rsums >= 30))
+  expect_identical(expected_df, res)
 
   # How does max_depth filter?
   # res <- get_pileup(bamfn, fafn, max_depth = 10)
