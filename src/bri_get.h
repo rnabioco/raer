@@ -19,11 +19,11 @@
 
 // retrieve pointers to the range of records for readname
 // start and end will be NULL if readname is not in the index
-// otherwise start will point at the first record with readname 
+// otherwise start will point at the first record with readname
 // and end will point to one-past the last record with readname
-void bam_read_idx_get_range(const bam_read_idx* bri, 
-                            const char* readname, 
-                            bam_read_idx_record** start, 
+void bam_read_idx_get_range(const bam_read_idx* bri,
+                            const char* readname,
+                            bam_read_idx_record** start,
                             bam_read_idx_record** end);
 
 // fill in the bam record (b) by seeking to the right offset in fp using the information stored in bri_record
@@ -31,5 +31,11 @@ void bam_read_idx_get_by_record(htsFile* fp, bam_hdr_t* hdr, bam1_t* b, bam_read
 
 // main of the "get" subprogram
 int bam_read_idx_get_main(int argc, char** argv);
+
+// call get by argument
+int bam_read_idx_get(const char* input_bam,
+                     const char* output_bam,
+                     const char** bcs,
+                     int nbcs) ;
 
 #endif

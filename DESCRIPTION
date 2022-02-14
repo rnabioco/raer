@@ -7,7 +7,8 @@ Authors@R: c(
            comment = c(ORCID = "0000-0003-0750-1273")),
     person("RNA Bioscience Initiative", role = "fnd")
     )
-Description: Tools for identifying rna editing sites
+Description: Toolkit for identification, visualization, and statistical testing 
+    of RNA editing signals from within R.
 License: MIT + file LICENSE
 Depends: R (>= 3.1.2)
 Imports: 

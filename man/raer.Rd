@@ -6,7 +6,7 @@
 \alias{raer-package}
 \title{raer: RNA editing tools in R}
 \description{
-Tools for identifying rna editing sites
+Toolkit for identification, visualization, and statistical testing of RNA editing signals from within R.
 }
 \seealso{
 Useful links:
@@ -17,6 +17,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Kent Riemondy \email{kent.riemondy@gmail.com}
+\strong{Maintainer}: Kent Riemondy \email{kent.riemondy@cuanschutz.edu} (\href{https://orcid.org/0000-0003-0750-1273}{ORCID})
+
+Other contributors:
+\itemize{
+  \item RNA Bioscience Initiative [funder]
+}
 
 }
