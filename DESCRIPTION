@@ -19,7 +19,8 @@ Imports:
     GenomicRanges,
     IRanges,
     Rsamtools,
-    RCurl
+    RCurl,
+    SummarizedExperiment
 Suggests: 
     testthat,
     knitr
