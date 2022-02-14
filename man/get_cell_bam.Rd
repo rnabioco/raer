@@ -4,7 +4,17 @@
 \alias{get_cell_bam}
 \title{Subset a bam file to contain only certain cell barcodes}
 \usage{
-get_cell_bam(inbam, barcodes = c("AAACCTGGTGACAAAT-1"), outbam = NULL)
+get_cell_bam(inbam, barcodes, outbam = NULL)
+}
+\arguments{
+\item{inbam}{input tag indexed bam file}
+
+\item{barcodes}{character vector of tag values to extract}
+
+\item{outbame}{optional output bam file name}
+}
+\value{
+Returns name of output bam file
 }
 \description{
 Subset a bam file to contain only certain cell barcodes
