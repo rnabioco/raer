@@ -1,0 +1,113 @@
+#' Create RangedSummarizedExperiment
+#' 
+#' This function will take either a single result from running pileup_res or a list of
+#' results (ie for different samples) from running pileup_res and will return a summarized
+#' experiment object that contains assays for each column in the pileup_res output.
+#' Currently this doesn't add any sample info and can only take a list of results.
+#' Potential added functionality would be to allow the user to give an existing
+#' SE object as input or to give sample meta data.
+#' 
+#' @param pileup_res results from running get_pileup.R, can be one result, a list
+#' of results, or a named list of results. If a named list is give, the colData
+#' will be named using the names in the list.
+#' @param sample_names OPTIONAL A list of names to be added to the SE object.
+#' If no sample names are given and pileup_res is not a named list, then 
+#' default names (ie sample_1, sample_2, ..., sample_n) will be given and
+#' a warning will be printed.
+#'
+#' @import GenomicRanges
+#' @import SummarlizedExperiment
+#' @export
+
+create_se <- function(pileup_res, sample_names = NULL){
+  if(!is.list(pileup_res)){
+    pileup_res <- list(pileup_res)
+  }
+  # Checks for sample names
+  if(is.null(sample_names)){
+    if(is.null(names(pileup_res))){
+      sample_names <- paste0("sample_", 1:length(pileup_res))
+      print(paste0("Sample names not provided, using ",
+                   paste(sample_names, collapse = ", "), "!!!"))
+      
+    } else {
+      sample_names <- names(pileup_res)
+    }
+    
+  
+  # Check that sample names match list
+  } else {
+    if(length(pileup_res) != length(sample_names)){
+        stop(paste0("You must provide the same number of sample names as pileup results!!!
+                    You supplied ",
+                    length(pileup_res), " pileup results but supplied ",
+                    length(sample_names), " sample names!!!"))
+
+    }
+  }
+  
+  # Find all ranges in the list of results
+  all_ranges <- lapply(pileup_res, function(x){
+    row_range <- x
+    elementMetadata(row_range) <- NULL
+    return(row_range)
+  })
+  
+  all_ranges <- GRangesList(all_ranges)
+  all_ranges <- unique(unlist(all_ranges))
+
+  # Loop through all samples
+  names(pileup_res) <- sample_names
+  se_list <- lapply(sample_names, function(sample_name){
+    pileup_sample <- pileup_res[[sample_name]]
+    
+    # Add NA where there is no data
+    ranges_sample <- pileup_sample
+    elementMetadata(ranges_sample) <- NULL
+    
+    # Make a granges object of only the ranges that aren't in the current
+    # sample
+    hits <- findOverlaps(all_ranges, ranges_sample, type = "equal")
+    grl <- extractList(ranges_sample, as(hits, "List"))
+    unique_hits <- unlist(psetdiff(all_ranges, grl))
+    
+    # Add an empty metadata df to the newly made granges object
+    meta_data <- data.frame(matrix( NA,
+                                    nrow = NROW(unique_hits),
+                                    ncol = ncol(ranges_sample@elementMetadata)))
+    
+    
+    
+    colnames(meta_data) <- colnames(ranges_sample@elementMetadata)
+    elementMetadata(unique_hits) <- meta_data
+    
+    # Add the "empty" object to the 
+    pileup_sample <- c(pileup_sample, unique_hits)
+    
+    pileup_sample <- pileup_sample[order(match(pileup_sample, all_ranges))]
+    
+    assay_names <- colnames(pileup_sample@elementMetadata)
+    
+    # Pull out data frame for each column in the results, these will become
+    # the assays
+    assay_list <- lapply(assay_names, function(x){
+      return_df <- data.frame(pileup_sample@elementMetadata[[x]])
+      colnames(return_df) <- sample_name
+      return(return_df)
+    })
+    
+    names(assay_list) <- assay_names
+    
+    rowRanges <- pileup_sample
+    elementMetadata(rowRanges) <- NULL
+    colData <- data.frame(sample = sample_name)
+    
+    
+    se <- SummarizedExperiment(assays = assay_list,
+                               rowRanges = rowRanges, colData = colData)
+    
+    return(se)
+  })
+  combined_se <- do.call(cbind, se_list)
+  return(combined_se)
+}
