@@ -2,10 +2,10 @@
 % Please edit documentation in R/sc-utils.R
 \name{get_cell_bam}
 \alias{get_cell_bam}
-\title{Subset a bam file to contains only certain cell barcodes}
+\title{Subset a bam file to contain only certain cell barcodes}
 \usage{
 get_cell_bam(inbam, barcodes = c("AAACCTGGTGACAAAT-1"), outbam = NULL)
 }
 \description{
-Subset a bam file to contains only certain cell barcodes
+Subset a bam file to contain only certain cell barcodes
 }

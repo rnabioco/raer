@@ -1,5 +1,5 @@
 
-#' Subset a bam file to contains only certain cell barcodes
+#' Subset a bam file to contain only certain cell barcodes
 #' @export
 get_cell_bam <- function(inbam,
                          barcodes = c("AAACCTGGTGACAAAT-1"),
