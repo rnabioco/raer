@@ -6,6 +6,9 @@ fafn <- system.file("extdata", "human.fasta", package = "raer")
 bedfn <- system.file("extdata", "regions.bed", package = "raer")
 res <- get_pileup(bamfn, fafn, bedfn)
 
+nts <- c("A", "T", "G", "C")
+nt_clmns <- paste0("n", nts)
+
 test_that("pileup works", {
   expect_equal(length(res$Ref), 182)
 })
@@ -41,3 +44,56 @@ test_that("library types are respected", {
   # ... add tests for strands here.
   expect_error(get_pileup(bamfn, fafn, bedfn, library_type = "unknown-string"))
 })
+
+test_that("pileup chrom start end args", {
+  res <- get_pileup(
+    bamfn, fafn, chrom = "DHFR"
+  )
+
+  expect_identical(levels(res@seqnames), "DHFR")
+})
+
+check_nRef_calc <- function(input) {
+  res <- as.data.frame(input)
+
+  for (nt in nts) {
+    clmn <- paste0("n", nt)
+    dat  <- res[res$Ref == nt, ]
+
+    expect_true(all(dat[, clmn] == dat$nRef))
+
+    other_clmns <- nts[nts != nt]
+    other_clmns <- paste0("n", other_clmns)
+    var_sums    <- rowSums(dat[, other_clmns])
+
+    expect_true(all(var_sums == dat$nVar))
+  }
+}
+
+test_that("pileup check nRef and nVar", {
+
+  strds <- c("unstranded", "fr-first-strand", "fr-second-strand")
+
+  for (strd in strds) {
+    res <- get_pileup(bamfn, fafn, library_type = strd)
+
+    check_nRef_calc(res)
+  }
+})
+
+test_that("pileup depth lims", {
+  res <- get_pileup(bamfn, fafn, min_reads = 30)
+  res <- as.data.frame(res)
+
+  rsums <- res[nt_clmns]
+  rsums <- rowSums(rsums)
+
+  expect_true(all(rsums >= 30))
+
+  # How does max_depth filter?
+  # res <- get_pileup(bamfn, fafn, max_depth = 10)
+  # res <- as.data.frame(res)
+  # rsums <- res[nt_clmns]
+  # rsums <- rowSums(rsums)
+})
+
