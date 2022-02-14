@@ -1,3 +1,5 @@
+context("create_se")
+
 library(GenomicRanges)
 library(SummarizedExperiment)
 
