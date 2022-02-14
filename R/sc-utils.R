@@ -5,6 +5,7 @@
 #' @export
 build_tag_index <- function(bamfn){
   stopifnot(file.exists(bamfn))
+  bamfn <- path.expand(bamfn)
   outfn <- paste0(bamfn, ".bri")
   c_build_index(bamfn, outfn)
   return(outfn)
@@ -22,6 +23,7 @@ get_cell_bam <- function(inbam,
                          barcodes,
                          outbam = NULL){
   stopifnot(file.exists(inbam))
+  inbam <- path.expand(inbam)
   idx_file <- paste0(inbam, ".bri")
   if(!file.exists(idx_file)){
     stop("bam file must be sorted by CB tag, and indexed with build_index")
