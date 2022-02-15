@@ -1,13 +1,17 @@
 context("get_pileup")
 library(GenomicRanges)
 
-bamfn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.bam", package = "raer")
+bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.bam", package = "raer")
+# bamfn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.bam", package = "raer")
+
+
 fafn <- system.file("extdata", "human.fasta", package = "raer")
 bedfn <- system.file("extdata", "regions.bed", package = "raer")
-res <- get_pileup(bamfn, fafn, bedfn)
 
 nts <- c("A", "T", "G", "C")
 nt_clmns <- paste0("n", nts)
+
+res <- get_pileup(bamfn, fafn, bedfn)
 
 test_that("pileup works", {
   expect_equal(length(res$Ref), 182)
@@ -53,6 +57,34 @@ test_that("pileup chrom start end args", {
   expect_identical(levels(res@seqnames), "DHFR")
 })
 
+test_that("pileup depth lims", {
+  unflt <- get_pileup(bamfn, fafn)
+  unflt <- as.data.frame(unflt)
+  unflt$seqnames <- as.character(unflt$seqnames)
+
+  rsums <- unflt[nt_clmns]
+  rsums <- rowSums(rsums) >= 30
+
+  expected_df <- unflt[rsums, ]
+  rownames(expected_df) <- NULL
+
+  res <- get_pileup(bamfn, fafn, min_reads = 30)
+  res <- as.data.frame(res, row.names = NULL)
+  res$seqnames <- as.character(res$seqnames)
+
+  expect_equal(expected_df, res)
+
+  # How does max_depth filter?
+  # res <- get_pileup(bamfn, fafn, max_depth = 10)
+  # res <- as.data.frame(res)
+  # rsums <- res[nt_clmns]
+  # rsums <- rowSums(rsums)
+})
+
+
+
+
+
 check_nRef_calc <- function(input, nts_in = nts) {
   res <- as.data.frame(input)
 
@@ -72,7 +104,8 @@ check_nRef_calc <- function(input, nts_in = nts) {
 
 test_that("pileup check nRef and nVar", {
 
-  strds <- c("unstranded", "fr-first-strand", "fr-second-strand")
+  # strds <- c("unstranded", "fr-first-strand", "fr-second-strand")
+  strds <- c("fr-first-strand", "fr-second-strand")
 
   for (strd in strds) {
     res <- get_pileup(bamfn, fafn, library_type = strd)
@@ -81,28 +114,40 @@ test_that("pileup check nRef and nVar", {
   }
 })
 
-test_that("pileup depth lims", {
 
-  unflt <- get_pileup(bamfn, fafn)
-  unflt <- as.data.frame(unflt)
-  unflt$seqnames <- as.character(unflt$seqnames)
 
-  rsums <- unflt[nt_clmns]
-  rsums <- rowSums(rsums) >= 30
 
-  expected_df <- unflt[rsums, ]
-  rownames(expected_df) <- NULL
 
-  res <- get_pileup(bamfn, fafn, min_reads = 30)
-  res <- as.data.frame(res, row.names = NULL)
-  res$seqnames <- as.character(res$seqnames)
+# TEST CALCULATIONS
+res1 <- get_pileup(
+  bamfn, fafn, min_reads = 0,
+  min_base_qual = 0,
+  library_type = "fr-first-strand"
+) %>%
+  as.data.frame()
 
-  expect_identical(expected_df, res)
+res2 <- get_pileup(
+  bamfn, fafn, min_reads = 0,
+  min_base_qual = 0,
+  library_type = "fr-second-strand"
+) %>%
+  as.data.frame()
 
-  # How does max_depth filter?
-  # res <- get_pileup(bamfn, fafn, max_depth = 10)
-  # res <- as.data.frame(res)
-  # rsums <- res[nt_clmns]
-  # rsums <- rowSums(rsums)
-})
+# nt <- c("A", "T")
+#
+# clmn  <- paste0("n", nt)
+# dat   <- res[res$Ref %in% nt, ]
+# rsums <- rowSums(dat[, clmn])
+#
+# expect_equal(unname(rsums), dat$nRef)
+#
+# other_clmns <- nts_in[nts_in != nt]
+# other_clmns <- paste0("n", other_clmns)
+# var_sums    <- rowSums(dat[, other_clmns])
+#
+# expect_identical(as.integer(var_sums), as.integer(dat$nVar))
+
+
+
+
 
