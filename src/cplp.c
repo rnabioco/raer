@@ -177,9 +177,7 @@ int run_cpileup(char* cbampath,
   int tid, *n_plp, tid0 = 0;
   int pos, beg0 = 0, end0 = INT32_MAX, ref_len;
 
-  // !!! SET THESE FOR TESTING !!!
-  //if(!min_baseQ) min_baseQ = 20;
-  min_baseQ = 0;
+  if(!min_baseQ) min_baseQ = 20;
   if(!max_depth) max_depth = 10000;
 
   const bam_pileup1_t **plp;
@@ -314,12 +312,13 @@ int run_cpileup(char* cbampath,
             ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
           : 'N';
 
-          // get reference base CAN'T WE DO THIS IN OUTER WHILE LOOP?
+          // get reference base MAYBE DO THIS IN OUTER WHILE LOOP?
           // ref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
 
           int is_neg = 0;
           is_neg = bam_is_rev(p->b) ;
 
+	  // BAM_FPAIRED IS ALWAYS EVALUATING FALSE SO READ2 STRAND IS NEVER FLIPPED
           // adjust based on library type and r1/r2 status
           int invert = 0;
 
@@ -330,7 +329,7 @@ int run_cpileup(char* cbampath,
                 invert = 1;
               }
 
-            } else if (p->b->core.flag & (BAM_FPAIRED) & (BAM_FREAD2)) {
+            } else if (p->b->core.flag & (BAM_FREAD2)) {
 
               if(is_neg){
                 invert = 1;
@@ -343,8 +342,7 @@ int run_cpileup(char* cbampath,
               if(is_neg){
                 invert = 1;
               }
-
-            } else if (p->b->core.flag & (BAM_FPAIRED) & (BAM_FREAD2)) {
+            } else if (p->b->core.flag & (BAM_FREAD2)) {
 
               if(!(is_neg)) {
                 invert = 1;
@@ -359,6 +357,7 @@ int run_cpileup(char* cbampath,
           //   }
           // }
 
+	  // THIS COULD BE CLEANED UP SO LESS REPETITIVE
 	  // count reads that align to minus strand
           if(invert){
             c = comp_base[(unsigned char)c];

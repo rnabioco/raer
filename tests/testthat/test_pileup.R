@@ -73,17 +73,7 @@ test_that("pileup depth lims", {
   res$seqnames <- as.character(res$seqnames)
 
   expect_equal(expected_df, res)
-
-  # How does max_depth filter?
-  # res <- get_pileup(bamfn, fafn, max_depth = 10)
-  # res <- as.data.frame(res)
-  # rsums <- res[nt_clmns]
-  # rsums <- rowSums(rsums)
 })
-
-
-
-
 
 check_nRef_calc <- function(input, nts_in = nts) {
   res <- as.data.frame(input)
@@ -119,35 +109,16 @@ test_that("pileup check nRef and nVar", {
 
 
 # TEST CALCULATIONS
-res1 <- get_pileup(
-  bamfn, fafn, min_reads = 0,
-  min_base_qual = 0,
-  library_type = "fr-first-strand"
-) %>%
-  as.data.frame()
-
-res2 <- get_pileup(
-  bamfn, fafn, min_reads = 0,
-  min_base_qual = 0,
-  library_type = "fr-second-strand"
-) %>%
-  as.data.frame()
-
-# nt <- c("A", "T")
+# res1 <- get_pileup(
+#   bamfn, fafn, min_reads = 0,
+#   min_base_qual = 1,
+#   library_type = "fr-first-strand"
+# ) %>%
+#   as.data.frame()
 #
-# clmn  <- paste0("n", nt)
-# dat   <- res[res$Ref %in% nt, ]
-# rsums <- rowSums(dat[, clmn])
-#
-# expect_equal(unname(rsums), dat$nRef)
-#
-# other_clmns <- nts_in[nts_in != nt]
-# other_clmns <- paste0("n", other_clmns)
-# var_sums    <- rowSums(dat[, other_clmns])
-#
-# expect_identical(as.integer(var_sums), as.integer(dat$nVar))
-
-
-
-
-
+# res2 <- get_pileup(
+#   bamfn, fafn, min_reads = 0,
+#   min_base_qual = 1,
+#   library_type = "fr-second-strand"
+# ) %>%
+#   as.data.frame()
