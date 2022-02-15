@@ -2,9 +2,11 @@
 
 export(bam_to_df)
 export(build_tag_index)
+export(create_se)
 export(get_cell_bam)
 export(get_pileup)
-import(data.table)
+import(GenomicRanges)
+import(SummarizedExperiment)
 importFrom(GenomicRanges,GRanges)
 importFrom(IRanges,IRanges)
 importFrom(R.utils,gzip)
