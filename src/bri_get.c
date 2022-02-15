@@ -117,7 +117,7 @@ int bam_read_idx_get(const char* input_bam,
   bam_read_idx_record* end;
 
   for(int i = 0; i < nbcs; i++) {
-    char* bc = bcs[i];
+    const char* bc = bcs[i];
     bam_read_idx_get_range(bri, bc, &start, &end);
 
     bam1_t *b = bam_init1();
