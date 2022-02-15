@@ -177,7 +177,9 @@ int run_cpileup(char* cbampath,
   int tid, *n_plp, tid0 = 0;
   int pos, beg0 = 0, end0 = INT32_MAX, ref_len;
 
-  if(!min_baseQ) min_baseQ = 20;
+  // !!! SET THESE FOR TESTING !!!
+  //if(!min_baseQ) min_baseQ = 20;
+  min_baseQ = 0;
   if(!max_depth) max_depth = 10000;
 
   const bam_pileup1_t **plp;
@@ -273,22 +275,32 @@ int run_cpileup(char* cbampath,
       if (cregion && (pos < beg0 || pos >= end0)) continue; // out of the region requested
       mplp_get_ref(data[0], tid, &ref, &ref_len);
       if (tid < 0) break;
-    //  if (n_records > 10) break ;
-    //  Rprintf("n_reads_per_col: %i\n", n_plp[0]);
+      // if (n_records > 10) break ;
+      // Rprintf("n_reads_per_col: %i\n", n_plp[0]);
 
       if (conf->bed && tid >= 0 && !bed_overlap(conf->bed, data[0]->h->target_name[tid], pos, pos+1)) continue;
       if (n_plp[0] > 1){
 
         int j;
-        int ref_b;
-        int total, nr, nv, na, nt, ng, nc, nn;
-        total = nr = nv = na = nt = ng = nc = nn = 0;
-        char strand = '+';
+        int pref_b;
+        int mref_b;
 
+        // get reference base and rev comp
+	// want to count plus and minus reads separately
+        pref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
+	mref_b = comp_base[(unsigned char)pref_b];
+
+        int ptotal, pnr, pnv, pna, pnt, png, pnc, pnn;
+        int mtotal, mnr, mnv, mna, mnt, mng, mnc, mnn;
+
+        ptotal = pnr = pnv = pna = pnt = png = pnc = pnn = 0;
+        mtotal = mnr = mnv = mna = mnt = mng = mnc = mnn = 0;
+
+	// iterate through reads that overlap position
         for (j = 0; j < n_plp[0]; ++j) {
           const bam_pileup1_t *p = plp[0] + j;
 
-          // check base quality
+          // check read base quality
           int bq = p->qpos < p->b->core.l_qseq
             ? bam_get_qual(p->b)[p->qpos]
           : 0;
@@ -301,91 +313,152 @@ int run_cpileup(char* cbampath,
           int c = p->qpos < p->b->core.l_qseq
             ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
           : 'N';
-          // get reference base
-          ref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
+
+          // get reference base CAN'T WE DO THIS IN OUTER WHILE LOOP?
+          // ref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
 
           int is_neg = 0;
           is_neg = bam_is_rev(p->b) ;
 
-          //adjust based on library type and r1/r2 status
+          // adjust based on library type and r1/r2 status
           int invert = 0;
+
           if(libtype == 1){
             if (p->b->core.flag & (BAM_FREAD1)) {
-              if(!(is_neg)){
+
+              if(!(is_neg)) {
                 invert = 1;
               }
+
             } else if (p->b->core.flag & (BAM_FPAIRED) & (BAM_FREAD2)) {
-                if(is_neg){
-                  invert = 1;
-                }
+
+              if(is_neg){
+                invert = 1;
+              } 
             }
+
           } else if (libtype == 2){
             if (p->b->core.flag & (BAM_FREAD1)) {
-                if(is_neg){
-                  invert = 1;
-                }
+
+              if(is_neg){
+                invert = 1;
+              }
+
             } else if (p->b->core.flag & (BAM_FPAIRED) & (BAM_FREAD2)) {
-              if(!(is_neg)){
+
+              if(!(is_neg)) {
                 invert = 1;
               }
             }
-          } else {
-            if(is_neg) {
-              invert = 1;
-            }
-          }
+	  }
+          
+	  // NEED TO DEAL WITH UNSTRANDED
+          // } else {
+          //   if(is_neg) {
+	  //     invert = 1;
+          //   }
+          // }
+
+	  // count reads that align to minus strand
           if(invert){
             c = comp_base[(unsigned char)c];
-            ref_b = comp_base[(unsigned char)ref_b];
-            strand = '-';
-          }
 
-          total += 1;
-          if(ref_b == c){
-            nr += 1;
+            mtotal += 1;
+  
+            if(mref_b == c){
+              mnr += 1;
+            } else {
+              mnv += 1;
+            }
+  
+            switch(c) {
+              case 'A':
+                mna += 1;
+                break;
+              case 'C':
+                mnc += 1;
+                break;
+              case 'G':
+                mng += 1;
+                break;
+              case 'T':
+                mnt += 1;
+                break;
+              default:
+                mnn += 1;
+                break;
+            }
+
+          // count reads that align to plus strand
           } else {
-            nv += 1;
+
+            ptotal += 1;
+  
+            if(pref_b == c){
+              pnr += 1;
+            } else {
+              pnv += 1;
+            }
+  
+            switch(c) {
+              case 'A':
+                pna += 1;
+                break;
+              case 'C':
+                pnc += 1;
+                break;
+              case 'G':
+                png += 1;
+                break;
+              case 'T':
+                pnt += 1;
+                break;
+              default:
+                pnn += 1;
+                break;
+            }
           }
 
-          switch(c) {
-            case 'A':
-              na += 1;
-              break;
-            case 'C':
-              nc += 1;
-              break;
-            case 'G':
-              ng += 1;
-              break;
-            case 'T':
-              nt += 1;
-              break;
-            default:
-              nn += 1;
-              break;
-          }
-
-        //  Rprintf("ref_nt: %c\n", ref_b);
-        //  Rprintf("qname: %s\n", bam_get_qname(p->b));
-        //  Rprintf("query_nt: %c\n", seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]);
-        //  Rprintf("bq: %i\n", bq);
+          // Rprintf("ref_nt: %c\n", ref_b);
+          // Rprintf("qname: %s\n", bam_get_qname(p->b));
+          // Rprintf("query_nt: %c\n", seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]);
+          // Rprintf("bq: %i\n", bq);
           n_records += 1 ;
         }
-        if(total >= min_reads){
+
+        // print plus strand totals for position
+        if(ptotal >= min_reads){
           fprintf(pileup_fp,
                   "%s\t%i\t%c\t%c\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n",
                   data[0]->h->target_name[tid],
                   pos + 1,
-                  strand,
-                  ref_b,
-                  nr,
-                  nv,
-                  na,
-                  nt,
-                  nc,
-                  ng,
-                  nn);
+                  '+',
+                  pref_b,
+                  pnr,
+                  pnv,
+                  pna,
+                  pnt,
+                  pnc,
+                  png,
+                  pnn);
         }
+
+        // print minus strand totals for position
+        if(mtotal >= min_reads){
+          fprintf(pileup_fp,
+                  "%s\t%i\t%c\t%c\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n",
+                  data[0]->h->target_name[tid],
+                  pos + 1,
+                  '-',
+                  mref_b,
+                  mnr,
+                  mnv,
+                  mna,
+                  mnt,
+                  mnc,
+                  mng,
+                  mnn);
+	}
       }
   }
 
