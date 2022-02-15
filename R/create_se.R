@@ -26,7 +26,7 @@ create_se <- function(pileup_res, sample_names = NULL){
   if(is.null(sample_names)){
     if(is.null(names(pileup_res))){
       sample_names <- paste0("sample_", 1:length(pileup_res))
-      print(paste0("Sample names not provided, using ",
+      message(paste0("Sample names not provided, using ",
                    paste(sample_names, collapse = ", "), "!!!"))
 
     } else {
@@ -48,7 +48,7 @@ create_se <- function(pileup_res, sample_names = NULL){
   # Find all ranges in the list of results
   all_ranges <- lapply(pileup_res, function(x){
     row_range <- x
-    elementMetadata(row_range) <- NULL
+    mcols(row_range) <- NULL
     return(row_range)
   })
 
@@ -62,7 +62,7 @@ create_se <- function(pileup_res, sample_names = NULL){
 
     # Add NA where there is no data
     ranges_sample <- pileup_sample
-    elementMetadata(ranges_sample) <- NULL
+    mcols(ranges_sample) <- NULL
 
     # Make a granges object of only the ranges that aren't in the current
     # sample
@@ -73,24 +73,24 @@ create_se <- function(pileup_res, sample_names = NULL){
     # Add an empty metadata df to the newly made granges object
     meta_data <- data.frame(matrix( NA,
                                     nrow = NROW(unique_hits),
-                                    ncol = ncol(ranges_sample@elementMetadata)))
+                                    ncol = ncol(mcols(ranges_sample))))
 
 
 
-    colnames(meta_data) <- colnames(ranges_sample@elementMetadata)
-    elementMetadata(unique_hits) <- meta_data
+    colnames(meta_data) <- colnames(mcols(ranges_sample))
+    mcols(unique_hits) <- meta_data
 
     # Add the "empty" object to the
     pileup_sample <- c(pileup_sample, unique_hits)
 
     pileup_sample <- pileup_sample[order(match(pileup_sample, all_ranges))]
 
-    assay_names <- colnames(pileup_sample@elementMetadata)
+    assay_names <- colnames(mcols(pileup_sample))
 
     # Pull out data frame for each column in the results, these will become
     # the assays
     assay_list <- lapply(assay_names, function(x){
-      return_df <- data.frame(pileup_sample@elementMetadata[[x]])
+      return_df <- data.frame(mcols(pileup_sample)[[x]])
       colnames(return_df) <- sample_name
       return(return_df)
     })
@@ -98,7 +98,7 @@ create_se <- function(pileup_res, sample_names = NULL){
     names(assay_list) <- assay_names
 
     rowRanges <- pileup_sample
-    elementMetadata(rowRanges) <- NULL
+    mcols(rowRanges) <- NULL
     colData <- data.frame(sample = sample_name)
 
 
