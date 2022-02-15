@@ -1,6 +1,7 @@
 library(raer)
 
 # ~8 Gb bam file
+remote_bam <- "http://amc-sandbox.ucdenver.edu/User33/raer/SRR5564277_dedup_sorted.bam"
 remote_bam <- "http://amc-sandbox.ucdenver.edu/User33/raer/SRR5564269_dedup_sorted.bam"
 remote_fa <- "http://amc-sandbox.ucdenver.edu/User33/raer/Homo_sapiens.GRCh38.dna.primary_assembly.UCSC.fa"
 

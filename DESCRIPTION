@@ -1,4 +1,4 @@
-Package: raer 
+Package: raer
 Type: Package
 Title: RNA editing tools in R
 Version: 0.0.0.9000
@@ -10,7 +10,6 @@ Authors@R: c(
 Description: Toolkit for identification, visualization, and statistical testing 
     of RNA editing signals from within R.
 License: MIT + file LICENSE
-Depends: R (>= 3.1.2)
 Imports: 
     Rcpp,
     data.table,
@@ -19,21 +18,20 @@ Imports:
     GenomicRanges,
     IRanges,
     Rsamtools,
-    RCurl,
     SummarizedExperiment
-Suggests: 
+Suggests:
     testthat,
     knitr
+LinkingTo: 
+    Rcpp,
+    Rhtslib,
+    zlibbioc
 SystemRequirements: 
     C++11, 
     GNU make 
-LinkingTo:
-    Rcpp (>= 0.12.8),
-    Rhtslib,
-    zlibbioc
 VignetteBuilder: knitr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2.9000
+RoxygenNote: 7.1.2
 URL: http://github.com/rnabioco/raer
 BugReports: https://github.com/rnabioco/raer/issues

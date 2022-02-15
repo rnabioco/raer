@@ -15,7 +15,6 @@
 #' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges
 #' @importFrom data.table fread
-#' @importFrom RCurl url.exists
 #' @export
 get_pileup <- function(bamfile,
                    fafile,
@@ -44,17 +43,11 @@ get_pileup <- function(bamfile,
   }
 
   if(!file.exists(bamfile)){
-    # note that htslib can handle URLs as input for bamfiles
-    if(!RCurl::url.exists(bamfile)){
-      stop("bamfile not found: ", bamfile, call. = FALSE)
-    }
+    stop("bamfile not found: ", bamfile, call. = FALSE)
   }
 
   if(!file.exists(fafile)){
-    # note that htslib can handle URLs as input for fasta references
-    if(!RCurl::url.exists(fafile)){
-      stop("fasta file not found: ", fafile, call. = FALSE)
-    }
+    stop("fasta file not found: ", fafile, call. = FALSE)
   }
 
   if(is.null(outfile)){
