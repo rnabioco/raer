@@ -9,7 +9,7 @@ extern "C" {
 }
 
 // [[Rcpp::export(rng = false)]]
-int build_index(std::string bampath,
+int c_build_index(std::string bampath,
                 std::string idxpath) {
   const char* cbampath = bampath.c_str();
   const char* cidxpath = idxpath.c_str();
@@ -20,24 +20,16 @@ int build_index(std::string bampath,
 // [[Rcpp::export(rng = false)]]
 int fetch_cb_reads(std::string bampath,
                    std::string outpath,
-                   std::vector<std::string> vals) {
+                   std::vector<std::string> cbs) {
 
-  // need to refactor input bam_read_idx_get_main
-  // to pass more sensible data structure
-  std::vector<char*> cstrings{};
-  std::string prog("get");
-  cstrings.push_back(&prog.front()) ;
-  cstrings.push_back(&bampath.front()) ;
-  cstrings.push_back(&outpath.front()) ;
-
-  for(auto& string : vals)
-    cstrings.push_back(&string.front());
-
-  for(auto i:cstrings){
-    Rcpp::Rcout << *i << '\n';
-  }
+  std::vector<const char*> cstrings;
+  for (int i = 0; i < cbs.size(); ++i)
+    cstrings.push_back(cbs[i].c_str());
 
   int ret = 0;
-  ret = bam_read_idx_get_main(cstrings.size(), cstrings.data()) ;
+  ret = bam_read_idx_get(bampath.c_str(),
+                         outpath.c_str(),
+                         cstrings.data(),
+                         cstrings.size()) ;
   return ret;
 }

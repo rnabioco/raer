@@ -65,26 +65,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// build_index
-int build_index(std::string bampath, std::string idxpath);
-RcppExport SEXP _raer_build_index(SEXP bampathSEXP, SEXP idxpathSEXP) {
+// c_build_index
+int c_build_index(std::string bampath, std::string idxpath);
+RcppExport SEXP _raer_c_build_index(SEXP bampathSEXP, SEXP idxpathSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< std::string >::type bampath(bampathSEXP);
     Rcpp::traits::input_parameter< std::string >::type idxpath(idxpathSEXP);
-    rcpp_result_gen = Rcpp::wrap(build_index(bampath, idxpath));
+    rcpp_result_gen = Rcpp::wrap(c_build_index(bampath, idxpath));
     return rcpp_result_gen;
 END_RCPP
 }
 // fetch_cb_reads
-int fetch_cb_reads(std::string bampath, std::string outpath, std::vector<std::string> vals);
-RcppExport SEXP _raer_fetch_cb_reads(SEXP bampathSEXP, SEXP outpathSEXP, SEXP valsSEXP) {
+int fetch_cb_reads(std::string bampath, std::string outpath, std::vector<std::string> cbs);
+RcppExport SEXP _raer_fetch_cb_reads(SEXP bampathSEXP, SEXP outpathSEXP, SEXP cbsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< std::string >::type bampath(bampathSEXP);
     Rcpp::traits::input_parameter< std::string >::type outpath(outpathSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type vals(valsSEXP);
-    rcpp_result_gen = Rcpp::wrap(fetch_cb_reads(bampath, outpath, vals));
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type cbs(cbsSEXP);
+    rcpp_result_gen = Rcpp::wrap(fetch_cb_reads(bampath, outpath, cbs));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -94,7 +94,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_raer_read_bam", (DL_FUNC) &_raer_read_bam, 4},
     {"_raer_run_pileup", (DL_FUNC) &_raer_run_pileup, 9},
     {"_raer_get_region", (DL_FUNC) &_raer_get_region, 1},
-    {"_raer_build_index", (DL_FUNC) &_raer_build_index, 2},
+    {"_raer_c_build_index", (DL_FUNC) &_raer_c_build_index, 2},
     {"_raer_fetch_cb_reads", (DL_FUNC) &_raer_fetch_cb_reads, 3},
     {NULL, NULL, 0}
 };

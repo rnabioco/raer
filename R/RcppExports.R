@@ -17,11 +17,11 @@ get_region <- function(region) {
     .Call(`_raer_get_region`, region)
 }
 
-build_index <- function(bampath, idxpath) {
-    .Call(`_raer_build_index`, bampath, idxpath)
+c_build_index <- function(bampath, idxpath) {
+    .Call(`_raer_c_build_index`, bampath, idxpath)
 }
 
-fetch_cb_reads <- function(bampath, outpath, vals) {
-    .Call(`_raer_fetch_cb_reads`, bampath, outpath, vals)
+fetch_cb_reads <- function(bampath, outpath, cbs) {
+    .Call(`_raer_fetch_cb_reads`, bampath, outpath, cbs)
 }
 
