@@ -2,9 +2,6 @@ context("get_pileup")
 library(GenomicRanges)
 
 bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.bam", package = "raer")
-# bamfn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.bam", package = "raer")
-
-
 fafn <- system.file("extdata", "human.fasta", package = "raer")
 bedfn <- system.file("extdata", "regions.bed", package = "raer")
 
@@ -22,7 +19,7 @@ test_that("pileup regional query works", {
   res <- get_pileup(bamfn, fafn, region = "SSR3:203-205")
   expect_equal(length(res$Ref), 3)
   expect_equal(start(res), c(203, 204, 205))
-  expect_equal(end(res), c(204, 205, 206))
+  expect_equal(end(res), c(203, 204, 205))
 
   # chr1 does not exist
   expect_error(get_pileup(bamfn, fafn, region = "chr1"))
@@ -54,7 +51,7 @@ test_that("pileup chrom start end args", {
     bamfn, fafn, chrom = "DHFR"
   )
 
-  expect_identical(levels(res@seqnames), "DHFR")
+  expect_identical(seqlevels(res), "DHFR")
 })
 
 test_that("pileup depth lims", {
@@ -103,7 +100,6 @@ test_that("pileup check nRef and nVar", {
     check_nRef_calc(res)
   }
 })
-
 
 
 

@@ -268,8 +268,11 @@ int run_cpileup(char* cbampath,
     REprintf("Failed to write to %s: %s\n", conf->output_fname, strerror(errno));
     return 1;
   }
-
+  int n_iter = 0;
   while ((n = bam_mplp_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
+      // check user interrupt
+      // using a 2^k value (e.g. 256) can be 2-3x faster than say 1e6
+      if (n_iter % 262144 == 0) R_CheckUserInterrupt();
       if (cregion && (pos < beg0 || pos >= end0)) continue; // out of the region requested
       mplp_get_ref(data[0], tid, &ref, &ref_len);
       if (tid < 0) break;
@@ -284,9 +287,9 @@ int run_cpileup(char* cbampath,
         int mref_b;
 
         // get reference base and rev comp
-	// want to count plus and minus reads separately
+	      // want to count plus and minus reads separately
         pref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
-	mref_b = comp_base[(unsigned char)pref_b];
+      	mref_b = comp_base[(unsigned char)pref_b];
 
         int ptotal, pnr, pnv, pna, pnt, png, pnc, pnn;
         int mtotal, mnr, mnv, mna, mnt, mng, mnc, mnn;
@@ -294,7 +297,7 @@ int run_cpileup(char* cbampath,
         ptotal = pnr = pnv = pna = pnt = png = pnc = pnn = 0;
         mtotal = mnr = mnv = mna = mnt = mng = mnc = mnn = 0;
 
-	// iterate through reads that overlap position
+	      // iterate through reads that overlap position
         for (j = 0; j < n_plp[0]; ++j) {
           const bam_pileup1_t *p = plp[0] + j;
 
@@ -311,9 +314,6 @@ int run_cpileup(char* cbampath,
           int c = p->qpos < p->b->core.l_qseq
             ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
           : 'N';
-
-          // get reference base MAYBE DO THIS IN OUTER WHILE LOOP?
-          // ref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
 
           int is_neg = 0;
           is_neg = bam_is_rev(p->b) ;
@@ -333,7 +333,7 @@ int run_cpileup(char* cbampath,
 
               if(is_neg){
                 invert = 1;
-              } 
+              }
             }
 
           } else if (libtype == 2){
@@ -349,7 +349,7 @@ int run_cpileup(char* cbampath,
               }
             }
 	  }
-          
+
 	  // NEED TO DEAL WITH UNSTRANDED
           // } else {
           //   if(is_neg) {
@@ -363,13 +363,13 @@ int run_cpileup(char* cbampath,
             c = comp_base[(unsigned char)c];
 
             mtotal += 1;
-  
+
             if(mref_b == c){
               mnr += 1;
             } else {
               mnv += 1;
             }
-  
+
             switch(c) {
               case 'A':
                 mna += 1;
@@ -392,13 +392,13 @@ int run_cpileup(char* cbampath,
           } else {
 
             ptotal += 1;
-  
+
             if(pref_b == c){
               pnr += 1;
             } else {
               pnv += 1;
             }
-  
+
             switch(c) {
               case 'A':
                 pna += 1;

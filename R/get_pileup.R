@@ -82,7 +82,9 @@ get_pileup <- function(bamfile,
                     max_depth,
                     min_base_qual,
                     library_type)
-
+  if(res == 1){
+    stop("Error occured during pileup", call. = FALSE)
+  }
   if(file.info(outfile)$size == 0){
     return()
   }
@@ -94,7 +96,7 @@ get_pileup <- function(bamfile,
 
   # using Rsamtools read in tabix file
   # note that file is read in as a character vector
-  # consider using our own read_tabix function if this is bottleneck
+  # consider using our own read_tabix function if this is a bottleneck
   # (https://github.com/kriemo/kentr/blob/master/src/tabix_reader.cpp)
   if(region != "."){
     ivl_vals <- get_region(region)
@@ -118,7 +120,7 @@ get_pileup <- function(bamfile,
   if(return_data){
     GenomicRanges::GRanges(seqnames=from$V1,
                            ranges=IRanges::IRanges(start=from$V2,
-                                          end=from$V2 + 1),
+                                                   end=from$V2),
                            strand=from$V3,
                            from[,4:ncol(from)])
   }
