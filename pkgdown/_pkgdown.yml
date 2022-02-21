@@ -1,0 +1,5 @@
+url: https://rnabioco.github.io/raer
+template:
+  package: rbitemplate
+  bootstrap: 5
+

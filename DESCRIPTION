@@ -35,3 +35,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 URL: http://github.com/rnabioco/raer
 BugReports: https://github.com/rnabioco/raer/issues
+Config/Needs/website:
+    pkgdown,
+    rnabioco/rbitemplate
