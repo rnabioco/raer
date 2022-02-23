@@ -109,10 +109,10 @@ get_pileup <- function(bamfile,
   }
 
   # quick method to convert vector of character strings into data.frame
-  from <- data.table::fread(paste0(paste(tbx_vals,collapse="\n"),"\n" ),
-                stringsAsFactors = FALSE,
-                data.table = FALSE,
-                sep="\t")
+  from <- data.table::fread(text = tbx_vals,
+                            stringsAsFactors = FALSE,
+                            data.table = FALSE,
+                            sep="\t")
 
   colnames(from)[4:ncol(from)] = c("Ref", "nRef", "nVar",
                                    "nA", "nT", "nC",
