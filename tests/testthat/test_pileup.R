@@ -39,10 +39,21 @@ test_that("missing files are caught", {
 })
 
 test_that("library types are respected", {
-  res_first <- get_pileup(bamfn, fafn, library_type = "fr-first-strand")
-  res_second <- get_pileup(bamfn, fafn, library_type = "fr-second-strand")
-  res_un <- get_pileup(bamfn, fafn, library_type = "unstranded")
-  # ... add tests for strands here.
+  res <- get_pileup(bamfn, fafn, library_type = "fr-first-strand")
+  expect_true(table(strand(res))["+"] == 619)
+  expect_true(table(strand(res))["-"] == 1047)
+  expect_true(all(strand(res[seqnames(res) == "DHFR"]) == "-"))
+  expect_true(all(strand(res[seqnames(res) == "SPCS3"]) == "+"))
+
+  res <- get_pileup(bamfn, fafn, library_type = "fr-second-strand")
+  expect_true(table(strand(res))["+"] == 1047)
+  expect_true(table(strand(res))["-"] == 619)
+  expect_true(all(strand(res[seqnames(res) == "DHFR"]) == "+"))
+  expect_true(all(strand(res[seqnames(res) == "SPCS3"]) == "-"))
+
+  res <- get_pileup(bamfn, fafn, library_type = "unstranded")
+  expect_true(all(strand(res) == "+"))
+
   expect_error(get_pileup(bamfn, fafn, bedfn, library_type = "unknown-string"))
 })
 

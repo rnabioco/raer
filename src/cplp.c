@@ -323,7 +323,12 @@ int run_cpileup(char* cbampath,
           int invert = 0;
 
           if(libtype == 1){
-            if (p->b->core.flag & (BAM_FREAD1)) {
+
+            if(!(p->b->core.flag&BAM_FPAIRED)){
+              if(!(is_neg)) {
+                invert = 1;
+              }
+            } else if (p->b->core.flag & (BAM_FREAD1)) {
 
               if(!(is_neg)) {
                 invert = 1;
@@ -337,7 +342,12 @@ int run_cpileup(char* cbampath,
             }
 
           } else if (libtype == 2){
-            if (p->b->core.flag & (BAM_FREAD1)) {
+
+            if(!(p->b->core.flag&BAM_FPAIRED)){
+              if(is_neg) {
+                invert = 1;
+              }
+            } else if (p->b->core.flag & (BAM_FREAD1)) {
 
               if(is_neg){
                 invert = 1;
@@ -348,17 +358,18 @@ int run_cpileup(char* cbampath,
                 invert = 1;
               }
             }
-	  }
+	        }
 
-	  // NEED TO DEAL WITH UNSTRANDED
+	        // NEED TO DEAL WITH UNSTRANDED
+	        // leave as positive strand for now?
           // } else {
           //   if(is_neg) {
-	  //     invert = 1;
+	        //     invert = 1;
           //   }
           // }
 
-	  // THIS COULD BE CLEANED UP SO LESS REPETITIVE
-	  // count reads that align to minus strand
+	        // THIS COULD BE CLEANED UP SO LESS REPETITIVE
+	        // count reads that align to minus strand
           if(invert){
             c = comp_base[(unsigned char)c];
 

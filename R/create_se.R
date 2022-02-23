@@ -71,11 +71,9 @@ create_se <- function(pileup_res, sample_names = NULL){
     unique_hits <- unlist(psetdiff(all_ranges, grl))
 
     # Add an empty metadata df to the newly made granges object
-    meta_data <- data.frame(matrix( NA,
-                                    nrow = NROW(unique_hits),
-                                    ncol = ncol(mcols(ranges_sample))))
-
-
+    meta_data <- matrix( NA,
+                         nrow = NROW(unique_hits),
+                         ncol = ncol(mcols(ranges_sample)))
 
     colnames(meta_data) <- colnames(mcols(ranges_sample))
     mcols(unique_hits) <- meta_data
@@ -90,7 +88,7 @@ create_se <- function(pileup_res, sample_names = NULL){
     # Pull out data frame for each column in the results, these will become
     # the assays
     assay_list <- lapply(assay_names, function(x){
-      return_df <- data.frame(mcols(pileup_sample)[[x]])
+      return_df <- matrix(mcols(pileup_sample)[[x]])
       colnames(return_df) <- sample_name
       return(return_df)
     })
