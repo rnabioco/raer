@@ -472,10 +472,25 @@ int run_cpileup(char* cbampath,
       }
   }
 
-  // todo: probably need to clean up more here
+  // todo:revist and check for unfreed memory
   bam_mplp_destroy(iter);
   bam_hdr_destroy(data[0]->h);
-  sam_close(data[0]->fp);
+  int i = 0;
+  for (i = 0; i < gplp.n; ++i) free(gplp.plp[i]);
+  free(gplp.plp); free(gplp.n_plp); free(gplp.m_plp);
+
+  for (i = 0; i < n; ++i) {
+    sam_close(data[i]->fp);
+    if (data[i]->iter) hts_itr_destroy(data[i]->iter);
+    free(data[i]);
+  }
+  free(data); free(plp); free(n_plp);
+  free(mp_ref.ref[0]);
+  free(mp_ref.ref[1]);
+
+  if (conf->fai) fai_destroy(conf->fai);
+  if (conf->bed) bed_destroy(conf->bed);
+
   if (pileup_fp && conf->output_fname) fclose(pileup_fp);
   return 0;
 }
