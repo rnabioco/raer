@@ -16,10 +16,16 @@
     <loc>https://rnabioco.github.io/raer/index.html</loc>
   </url>
   <url>
+    <loc>https://rnabioco.github.io/raer/reference/BedFile-class.html</loc>
+  </url>
+  <url>
     <loc>https://rnabioco.github.io/raer/reference/bam_to_df.html</loc>
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/build_tag_index.html</loc>
+  </url>
+  <url>
+    <loc>https://rnabioco.github.io/raer/reference/close.BedFile.html</loc>
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/create_se.html</loc>
@@ -32,6 +38,9 @@
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/index.html</loc>
+  </url>
+  <url>
+    <loc>https://rnabioco.github.io/raer/reference/indexBed-character-method.html</loc>
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/raer.html</loc>
