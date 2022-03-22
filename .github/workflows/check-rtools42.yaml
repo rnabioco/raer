@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main, master]
 
-name: R-CMD-check
+name: check-rtools
 
 jobs:
   R-CMD-check:
@@ -18,10 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: macOS-latest,   r: 'release'}
-          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-latest,   r: 'release'}
-          - {os: ubuntu-latest,   r: 'oldrel-1'}
+          - {os: windows-2022,   r: 'devel'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -37,7 +34,6 @@ jobs:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
-          update-rtools: true
           rtools-version: '42'
 
 
