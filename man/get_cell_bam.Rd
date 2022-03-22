@@ -11,7 +11,7 @@ get_cell_bam(inbam, barcodes, outbam = NULL)
 
 \item{barcodes}{character vector of tag values to extract}
 
-\item{outbame}{optional output bam file name}
+\item{outbam}{optional output bam file name}
 }
 \value{
 Returns name of output bam file

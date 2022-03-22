@@ -1,6 +1,7 @@
 #include "htslib/sam.h"
 #include "htslib/faidx.h"
 #include "bedidx.h"
+#include "bedfile.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -161,7 +162,6 @@ static int readaln(void *data, bam1_t *b) {
   return ret;
 }
 
-
 int run_cpileup(char* cbampath,
                 char* cfapath,
                 char* cregion,
@@ -170,7 +170,8 @@ int run_cpileup(char* cbampath,
                 int min_reads,
                 int max_depth,
                 int min_baseQ,
-                int libtype) {
+                int libtype,
+                SEXP ext) {
 
   int n = 1;
   mplp_aux_t **data;
@@ -240,7 +241,13 @@ int run_cpileup(char* cbampath,
   }
 
   if(cbedfn){
-    conf->bed = bed_read(cbedfn) ;
+    conf->bed = bed_read(cbedfn);
+  } else if (!Rf_isNull(ext)){
+    _BED_FILE *ffile = BEDFILE(ext) ;
+    if (ffile->index == NULL){
+      Rf_error("Failed to load bed index");
+    }
+    conf->bed = ffile->index;
   }
 
   conf->output_fname = coutfn;
@@ -489,7 +496,9 @@ int run_cpileup(char* cbampath,
   free(mp_ref.ref[1]);
 
   if (conf->fai) fai_destroy(conf->fai);
-  if (conf->bed) bed_destroy(conf->bed);
+
+  // don't destroy index if passed from R
+  if (conf->bed && Rf_isNull(ext)) bed_destroy(conf->bed);
 
   if (pileup_fp && conf->output_fname) fclose(pileup_fp);
   return 0;

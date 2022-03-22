@@ -19,7 +19,8 @@ int run_pileup(std::string bampath,
                int min_reads = 20,
                int max_depth = 10000,
                int min_baseQ = 20,
-               std::string libtype = "fr-first-strand") {
+               std::string libtype = "fr-first-strand",
+               SEXP ext = R_NilValue) {
 
   const char* cbampath = bampath.c_str();
   const char* cfapath = fapath.c_str();
@@ -52,7 +53,7 @@ int run_pileup(std::string bampath,
 
   int out;
   out = run_cpileup(cbampath, cfapath, cregion, coutfn, cbedfn,
-                    min_reads, max_depth, min_baseQ, lib_spec);
+                    min_reads, max_depth, min_baseQ, lib_spec, ext);
   return out;
 }
 

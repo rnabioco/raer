@@ -38,8 +38,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // run_pileup
-int run_pileup(std::string bampath, std::string fapath, std::string region, std::string outfn, std::string bedfn, int min_reads, int max_depth, int min_baseQ, std::string libtype);
-RcppExport SEXP _raer_run_pileup(SEXP bampathSEXP, SEXP fapathSEXP, SEXP regionSEXP, SEXP outfnSEXP, SEXP bedfnSEXP, SEXP min_readsSEXP, SEXP max_depthSEXP, SEXP min_baseQSEXP, SEXP libtypeSEXP) {
+int run_pileup(std::string bampath, std::string fapath, std::string region, std::string outfn, std::string bedfn, int min_reads, int max_depth, int min_baseQ, std::string libtype, SEXP ext);
+RcppExport SEXP _raer_run_pileup(SEXP bampathSEXP, SEXP fapathSEXP, SEXP regionSEXP, SEXP outfnSEXP, SEXP bedfnSEXP, SEXP min_readsSEXP, SEXP max_depthSEXP, SEXP min_baseQSEXP, SEXP libtypeSEXP, SEXP extSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< std::string >::type bampath(bampathSEXP);
@@ -51,7 +51,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type max_depth(max_depthSEXP);
     Rcpp::traits::input_parameter< int >::type min_baseQ(min_baseQSEXP);
     Rcpp::traits::input_parameter< std::string >::type libtype(libtypeSEXP);
-    rcpp_result_gen = Rcpp::wrap(run_pileup(bampath, fapath, region, outfn, bedfn, min_reads, max_depth, min_baseQ, libtype));
+    Rcpp::traits::input_parameter< SEXP >::type ext(extSEXP);
+    rcpp_result_gen = Rcpp::wrap(run_pileup(bampath, fapath, region, outfn, bedfn, min_reads, max_depth, min_baseQ, libtype, ext));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -87,19 +88,4 @@ BEGIN_RCPP
     rcpp_result_gen = Rcpp::wrap(fetch_cb_reads(bampath, outpath, cbs));
     return rcpp_result_gen;
 END_RCPP
-}
-
-static const R_CallMethodDef CallEntries[] = {
-    {"_raer_read_bam_tags", (DL_FUNC) &_raer_read_bam_tags, 4},
-    {"_raer_read_bam", (DL_FUNC) &_raer_read_bam, 4},
-    {"_raer_run_pileup", (DL_FUNC) &_raer_run_pileup, 9},
-    {"_raer_get_region", (DL_FUNC) &_raer_get_region, 1},
-    {"_raer_c_build_index", (DL_FUNC) &_raer_c_build_index, 2},
-    {"_raer_fetch_cb_reads", (DL_FUNC) &_raer_fetch_cb_reads, 3},
-    {NULL, NULL, 0}
-};
-
-RcppExport void R_init_raer(DllInfo *dll) {
-    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
-    R_useDynamicSymbols(dll, FALSE);
 }

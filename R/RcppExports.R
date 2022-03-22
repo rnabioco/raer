@@ -9,8 +9,8 @@ read_bam <- function(bampath, tag_ids, tag_types, region = ".") {
     .Call(`_raer_read_bam`, bampath, tag_ids, tag_types, region)
 }
 
-run_pileup <- function(bampath, fapath, region, outfn, bedfn, min_reads = 20L, max_depth = 10000L, min_baseQ = 20L, libtype = "fr-first-strand") {
-    .Call(`_raer_run_pileup`, bampath, fapath, region, outfn, bedfn, min_reads, max_depth, min_baseQ, libtype)
+run_pileup <- function(bampath, fapath, region, outfn, bedfn, min_reads = 20L, max_depth = 10000L, min_baseQ = 20L, libtype = "fr-first-strand", ext = NULL) {
+    .Call(`_raer_run_pileup`, bampath, fapath, region, outfn, bedfn, min_reads, max_depth, min_baseQ, libtype, ext)
 }
 
 get_region <- function(region) {

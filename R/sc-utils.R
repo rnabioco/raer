@@ -15,7 +15,7 @@ build_tag_index <- function(bamfn){
 #' Subset a bam file to contain only certain cell barcodes
 #' @param inbam input tag indexed bam file
 #' @param barcodes character vector of tag values to extract
-#' @param outbame optional output bam file name
+#' @param outbam optional output bam file name
 #'
 #' @return  Returns name of output bam file
 #' @export

@@ -9,6 +9,7 @@ int run_cpileup(const char* cbampath,
                 int min_reads,
                 int max_depth,
                 int min_baseQ,
-                int libtype);
+                int libtype,
+                SEXP ext);
 
 #endif

@@ -16,6 +16,7 @@
 #'
 #' @import GenomicRanges
 #' @import SummarizedExperiment
+#' @importFrom IRanges extractList
 #' @export
 
 create_se <- function(pileup_res, sample_names = NULL){

@@ -18,7 +18,8 @@ Imports:
     GenomicRanges,
     IRanges,
     Rsamtools,
-    SummarizedExperiment
+    SummarizedExperiment,
+    methods
 Suggests:
     testthat,
     knitr
