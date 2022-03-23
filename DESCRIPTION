@@ -18,7 +18,10 @@ Imports:
     GenomicRanges,
     IRanges,
     Rsamtools,
+    BSgenome,
     SummarizedExperiment,
+    S4Vectors,
+    GenomeInfoDb,
     methods
 Suggests:
     testthat,
