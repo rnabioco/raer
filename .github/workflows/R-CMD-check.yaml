@@ -12,6 +12,8 @@ jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
 
+    timeout-minutes: ${{ matrix.config.os == 'macOS-latest' && 10 || 60 }}
+
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 
     strategy:
