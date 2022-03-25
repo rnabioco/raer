@@ -29,7 +29,7 @@ get_pileup <- function(bamfile,
                    chrom = NULL,
                    start = NULL,
                    end = NULL,
-                   min_reads = 1L,
+                   min_reads = c(1L),
                    min_base_qual = 20L,
                    max_depth = 1e4,
                    library_type = "fr-first-strand",
@@ -49,8 +49,8 @@ get_pileup <- function(bamfile,
     bedfile = "."
   }
 
-  if(!file.exists(bamfile)){
-    stop("bamfile not found: ", bamfile, call. = FALSE)
+  if(!all(file.exists(bamfile))){
+    stop("bamfile not found: ", bamfile[!file.exists(bamfile)], call. = FALSE)
   }
 
   if(!file.exists(fafile)){
@@ -94,6 +94,7 @@ get_pileup <- function(bamfile,
       idx_ptr <- bedidx$.extptr
     }
 
+    bedfn <- "."
   }
 
   res <- run_pileup(bamfile,
@@ -139,10 +140,11 @@ get_pileup <- function(bamfile,
                             stringsAsFactors = FALSE,
                             data.table = FALSE,
                             sep="\t")
-
-  colnames(from)[4:ncol(from)] = c("Ref", "nRef", "nVar",
-                                   "nA", "nT", "nC",
-                                   "nG", "nN")
+  count_cols <- c("nRef", "nVar", "nA", "nT", "nC", "nG", "nN")
+  if(length(bamfile) == 2){
+    count_cols <- paste0(rep(count_cols, 2), rep(c("_1", "_2"), each = length(count_cols)))
+  }
+  colnames(from)[4:ncol(from)] = c("Ref", count_cols)
   if(return_data){
     GenomicRanges::GRanges(seqnames=from$V1,
                            ranges=IRanges::IRanges(start=from$V2,

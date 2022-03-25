@@ -162,20 +162,106 @@ static int readaln(void *data, bam1_t *b) {
   return ret;
 }
 
-int run_cpileup(char* cbampath,
+// struct for holding counts
+typedef struct  {
+  int pos;
+  int ptotal, pnr, pnv, pna, pnt, png, pnc, pnn;
+  int mtotal, mnr, mnv, mna, mnt, mng, mnc, mnn;
+  int pref_b;
+  int mref_b;
+} pcounts;
+
+
+static void print_plus_counts(FILE *fp, pcounts *pc, int n, char* ctig, int pos, int pref){
+  fprintf(fp,
+          "%s\t%i\t%c\t%c",
+          ctig,
+          pos + 1,
+          '+',
+          pref) ;
+  int i;
+  for(i = 0; i < n; ++i){
+    fprintf(fp,
+            "\t%i\t%i\t%i\t%i\t%i\t%i\t%i",
+            pc[i].pnr,
+            pc[i].pnv,
+            pc[i].pna,
+            pc[i].pnt,
+            pc[i].pnc,
+            pc[i].png,
+            pc[i].pnn);
+  }
+  fprintf(fp,"\n");
+}
+
+static void print_minus_counts(FILE *fp, pcounts *pc, int n, char* ctig, int pos, int mref){
+  fprintf(fp,
+          "%s\t%i\t%c\t%c",
+          ctig,
+          pos + 1,
+          '-',
+          mref) ;
+  int i;
+  for(i = 0; i < n; ++i){
+    fprintf(fp,
+            "\t%i\t%i\t%i\t%i\t%i\t%i\t%i",
+            pc[i].mnr,
+            pc[i].mnv,
+            pc[i].mna,
+            pc[i].mnt,
+            pc[i].mnc,
+            pc[i].mng,
+            pc[i].mnn);
+  }
+  fprintf(fp,"\n");
+}
+
+static void print_counts(FILE *fp, pcounts *pc, int n, int min_1, int min_2,
+                         char* ctig, int pos, int pref, int mref){
+
+  // determine if counts pass thresholds
+  if(n == 1){
+    if(pc[0].ptotal >= min_1){
+      print_plus_counts(fp, pc, n, ctig, pos, pref) ;
+    }
+
+    if(pc[0].mtotal >= min_1){
+      print_minus_counts(fp, pc, n, ctig, pos, mref) ;
+    }
+  } else if (n == 2) {
+
+    if(pc[0].ptotal >= min_1 && pc[1].ptotal >= min_2){
+      print_plus_counts(fp, pc, n, ctig, pos, pref) ;
+    }
+
+    if(pc[0].mtotal >= min_1 && pc[1].mtotal >= min_2){
+      print_minus_counts(fp, pc, n, ctig, pos, mref) ;
+    }
+  }
+}
+
+
+int run_cpileup(const char** cbampaths,
+                int n,
                 char* cfapath,
                 char* cregion,
                 char* coutfn,
                 char* cbedfn,
-                int min_reads,
+                int* min_reads,
                 int max_depth,
                 int min_baseQ,
                 int libtype,
                 SEXP ext) {
 
-  int n = 1;
+  int debug = 1;
+
+  if (n > 2 || n < 1) {
+    REprintf("pileup requires 1 or 2 bam files");
+    return 1;
+  }
+
   mplp_aux_t **data;
-  int tid, *n_plp, tid0 = 0;
+  int i, tid, *n_plp, tid0 = 0;
   int pos, beg0 = 0, end0 = INT32_MAX, ref_len;
 
   if(!min_baseQ) min_baseQ = 20;
@@ -184,7 +270,7 @@ int run_cpileup(char* cbampath,
   const bam_pileup1_t **plp;
   mplp_ref_t mp_ref = MPLP_REF_INIT;
   bam_mplp_t iter;
- // bam_hdr_t *h = NULL; /* header of first file in input list */
+  bam_hdr_t *h = NULL; /* header of first file in input list */
   char *ref;
   FILE *pileup_fp = NULL;
 
@@ -199,41 +285,6 @@ int run_cpileup(char* cbampath,
   data = calloc(n, sizeof(mplp_aux_t*));
   plp = calloc(n, sizeof(bam_pileup1_t*));
   n_plp = calloc(n, sizeof(int));
-
-  // should set this up in a loop, if want to use multiple files
-  data[0] = calloc(1, sizeof(mplp_aux_t));
-  data[0]->fp = sam_open(cbampath, "rb");
-  data[0]->h = sam_hdr_read(data[0]->fp);
-
-  // read the header of each file in the list and initialize data
-  if (cfapath) {
-    if (hts_set_fai_filename(data[0]->fp, cfapath) != 0) {
-      REprintf("failed to process %s: %s\n",
-               cfapath, strerror(errno));
-      exit(EXIT_FAILURE);
-    }
-  }
-  if(cregion){
-    hts_idx_t *idx = NULL;
-    idx = sam_index_load(data[0]->fp, cbampath) ;
-
-    if (idx == NULL) {
-      REprintf("fail to load bamfile index for %s\n", cbampath);
-      return 1;
-    }
-
-    if ( (data[0]->iter=sam_itr_querys(idx, data[0]->h, cregion)) == 0) {
-      REprintf("Fail to parse region '%s' with %s\n", cregion, cbampath);
-      return 1;
-    }
-    beg0 = data[0]->iter->beg;
-    end0 = data[0]->iter->end;
-    tid0 = data[0]->iter->tid;
-    hts_idx_destroy(idx);
-
-  } else {
-    data[0]->iter = NULL;
-  }
 
   if(cfapath){
     conf->fai_fname = cfapath;
@@ -250,12 +301,74 @@ int run_cpileup(char* cbampath,
     conf->bed = ffile->index;
   }
 
+  if(cregion){
+    conf->reg = cregion;
+  }
+
   conf->output_fname = coutfn;
 
-  data[0]->conf = conf;
-  data[0]->ref = &mp_ref;
+  // read the header of each file in the list and initialize data
+  for (i = 0; i < n; ++i) {
+    bam_hdr_t *h_tmp;
+    data[i] = calloc(1, sizeof(mplp_aux_t));
+    data[i]->fp = sam_open(cbampaths[i], "rb");
 
-  iter = bam_mplp_init(1, readaln, (void**)data);
+    if ( !data[i]->fp )
+    {
+      REprintf("failed to open %s: %s\n", cbampaths[i], strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+
+    if (conf->fai_fname) {
+      if (hts_set_fai_filename(data[i]->fp, conf->fai_fname) != 0) {
+        REprintf("failed to process %s: %s\n",
+                 cfapath, strerror(errno));
+        exit(EXIT_FAILURE);
+      }
+    }
+
+    data[i]->conf = conf;
+    data[i]->ref = &mp_ref;
+
+    h_tmp = sam_hdr_read(data[i]->fp);
+    if ( !h_tmp ) {
+      REprintf("fail to read the header of %s\n", cbampaths[i]);
+      exit(EXIT_FAILURE);
+    }
+
+    if(conf->reg){
+      hts_idx_t *idx = NULL;
+      idx = sam_index_load(data[i]->fp, cbampaths[i]) ;
+
+      if (idx == NULL) {
+        REprintf("fail to load bamfile index for %s\n", cbampaths[i]);
+        return 1;
+      }
+
+      if ( (data[i]->iter=sam_itr_querys(idx, h_tmp, conf->reg)) == 0) {
+        REprintf("Fail to parse region '%s' with %s\n", conf->reg, cbampaths[i]);
+        return 1;
+      }
+
+      if(i == 0){
+        beg0 = data[i]->iter->beg;
+        end0 = data[i]->iter->end;
+        tid0 = data[i]->iter->tid;
+      }
+      hts_idx_destroy(idx);
+    } else {
+      data[i]->iter = NULL;
+    }
+
+    if(i == 0){
+      h = data[i]->h = h_tmp;
+    } else {
+      bam_hdr_destroy(h_tmp);
+      data[i]->h = h;
+    }
+  }
+
+  iter = bam_mplp_init(n, readaln, (void**)data);
 
   // return type void in rhtslib (htslib v 1.7), current v1.14 htslib returns int
   // enable overlap detection
@@ -269,49 +382,60 @@ int run_cpileup(char* cbampath,
     return 1;
   }
 
-  int n_records = 0;
   pileup_fp = conf->output_fname? fopen(conf->output_fname, "w") : stdout;
   if (pileup_fp == NULL) {
     REprintf("Failed to write to %s: %s\n", conf->output_fname, strerror(errno));
     return 1;
   }
+
+  pcounts *pc;
+  pc = calloc(n, sizeof(pcounts));
+
+  int min_1, min_2;
+  min_1 = min_2 = 0;
+  if(n == 1){
+    min_1 = min_reads[0];
+    min_2 = min_1;
+  } else if (n == 2){
+    min_1 = min_reads[0];
+    min_2 = min_reads[1];
+  }
+
   int n_iter = 0;
-  while ((n = bam_mplp_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
+  int l;
+  while ((l = bam_mplp_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
       // check user interrupt
       // using a 2^k value (e.g. 256) can be 2-3x faster than say 1e6
       if (n_iter % 262144 == 0) R_CheckUserInterrupt();
       if (cregion && (pos < beg0 || pos >= end0)) continue; // out of the region requested
       mplp_get_ref(data[0], tid, &ref, &ref_len);
+
       if (tid < 0) break;
-      // if (n_records > 10) break ;
-      // Rprintf("n_reads_per_col: %i\n", n_plp[0]);
-
       if (conf->bed && tid >= 0 && !bed_overlap(conf->bed, data[0]->h->target_name[tid], pos, pos+1)) continue;
-      if (n_plp[0] > 1){
 
+      int pref_b, mref_b;
+      pref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
+      mref_b = comp_base[(unsigned char) pref_b];
+
+      for(i = 0; i < n; ++i){
+        memset(&pc[i], 0, sizeof(pcounts));
+      }
+
+      for (i = 0; i < n; ++i) {
         int j;
-        int pref_b;
-        int mref_b;
 
-        // get reference base and rev comp
-	      // want to count plus and minus reads separately
-        pref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
-      	mref_b = comp_base[(unsigned char)pref_b];
+        if (n_plp[i] == 0) continue;
 
-        int ptotal, pnr, pnv, pna, pnt, png, pnc, pnn;
-        int mtotal, mnr, mnv, mna, mnt, mng, mnc, mnn;
+  	      // want to count plus and minus reads separately
+  	      // iterate through reads that overlap position
+        for (j = 0; j < n_plp[i]; ++j) {
 
-        ptotal = pnr = pnv = pna = pnt = png = pnc = pnn = 0;
-        mtotal = mnr = mnv = mna = mnt = mng = mnc = mnn = 0;
-
-	      // iterate through reads that overlap position
-        for (j = 0; j < n_plp[0]; ++j) {
-          const bam_pileup1_t *p = plp[0] + j;
+          const bam_pileup1_t *p = plp[i] + j;
 
           // check read base quality
           int bq = p->qpos < p->b->core.l_qseq
-            ? bam_get_qual(p->b)[p->qpos]
-          : 0;
+                   ? bam_get_qual(p->b)[p->qpos]
+                   : 0;
           if (bq < min_baseQ) continue ;
 
           // skip indel and ref skip ;
@@ -325,8 +449,7 @@ int run_cpileup(char* cbampath,
           int is_neg = 0;
           is_neg = bam_is_rev(p->b) ;
 
-	  // BAM_FPAIRED IS ALWAYS EVALUATING FALSE SO READ2 STRAND IS NEVER FLIPPED
-          // adjust based on library type and r1/r2 status
+            // adjust based on library type and r1/r2 status
           int invert = 0;
 
           if(libtype == 1){
@@ -365,124 +488,86 @@ int run_cpileup(char* cbampath,
                 invert = 1;
               }
             }
-	        }
+          }
 
-	        // NEED TO DEAL WITH UNSTRANDED
-	        // leave as positive strand for now?
+  	      // NEED TO DEAL WITH UNSTRANDED
+  	      // leave as positive strand for now?
           // } else {
           //   if(is_neg) {
-	        //     invert = 1;
+  	      //     invert = 1;
           //   }
           // }
 
-	        // THIS COULD BE CLEANED UP SO LESS REPETITIVE
-	        // count reads that align to minus strand
+  	      // THIS COULD BE CLEANED UP SO LESS REPETITIVE
+  	      // count reads that align to minus strand
           if(invert){
             c = comp_base[(unsigned char)c];
 
-            mtotal += 1;
+            pc[i].mtotal += 1;
 
             if(mref_b == c){
-              mnr += 1;
+              pc[i].mnr += 1;
             } else {
-              mnv += 1;
+              pc[i].mnv += 1;
             }
 
             switch(c) {
               case 'A':
-                mna += 1;
+                pc[i].mna += 1;
                 break;
               case 'C':
-                mnc += 1;
+                pc[i].mnc += 1;
                 break;
               case 'G':
-                mng += 1;
+                pc[i].mng += 1;
                 break;
               case 'T':
-                mnt += 1;
+                pc[i].mnt += 1;
                 break;
               default:
-                mnn += 1;
+                pc[i].mnn += 1;
                 break;
             }
 
           // count reads that align to plus strand
           } else {
 
-            ptotal += 1;
+            pc[i].ptotal += 1;
 
             if(pref_b == c){
-              pnr += 1;
+              pc[i].pnr += 1;
             } else {
-              pnv += 1;
+              pc[i].pnv += 1;
             }
 
             switch(c) {
               case 'A':
-                pna += 1;
+                pc[i].pna += 1;
                 break;
               case 'C':
-                pnc += 1;
+                pc[i].pnc += 1;
                 break;
               case 'G':
-                png += 1;
+                pc[i].png += 1;
                 break;
               case 'T':
-                pnt += 1;
+                pc[i].pnt += 1;
                 break;
               default:
-                pnn += 1;
+                pc[i].pnn += 1;
                 break;
             }
           }
-
-          // Rprintf("ref_nt: %c\n", ref_b);
-          // Rprintf("qname: %s\n", bam_get_qname(p->b));
-          // Rprintf("query_nt: %c\n", seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]);
-          // Rprintf("bq: %i\n", bq);
-          n_records += 1 ;
         }
-
-        // print plus strand totals for position
-        if(ptotal >= min_reads){
-          fprintf(pileup_fp,
-                  "%s\t%i\t%c\t%c\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n",
-                  data[0]->h->target_name[tid],
-                  pos + 1,
-                  '+',
-                  pref_b,
-                  pnr,
-                  pnv,
-                  pna,
-                  pnt,
-                  pnc,
-                  png,
-                  pnn);
-        }
-
-        // print minus strand totals for position
-        if(mtotal >= min_reads){
-          fprintf(pileup_fp,
-                  "%s\t%i\t%c\t%c\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n",
-                  data[0]->h->target_name[tid],
-                  pos + 1,
-                  '-',
-                  mref_b,
-                  mnr,
-                  mnv,
-                  mna,
-                  mnt,
-                  mnc,
-                  mng,
-                  mnn);
-	}
       }
+      // print out lines if pass depth criteria
+      print_counts(pileup_fp, pc, n, min_1, min_2, h->target_name[tid], pos, pref_b, mref_b);
   }
 
-  // todo:revist and check for unfreed memory
+  //clean up memory
   bam_mplp_destroy(iter);
-  bam_hdr_destroy(data[0]->h);
-  int i = 0;
+  bam_hdr_destroy(h);
+
   for (i = 0; i < gplp.n; ++i) free(gplp.plp[i]);
   free(gplp.plp); free(gplp.n_plp); free(gplp.m_plp);
 
@@ -492,6 +577,7 @@ int run_cpileup(char* cbampath,
     free(data[i]);
   }
   free(data); free(plp); free(n_plp);
+  free(pc);
   free(mp_ref.ref[0]);
   free(mp_ref.ref[1]);
 
