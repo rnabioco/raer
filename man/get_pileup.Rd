@@ -12,7 +12,7 @@ get_pileup(
   chrom = NULL,
   start = NULL,
   end = NULL,
-  min_reads = 1L,
+  min_reads = c(1L),
   min_base_qual = 20L,
   max_depth = 10000,
   library_type = "fr-first-strand",

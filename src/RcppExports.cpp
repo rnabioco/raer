@@ -38,21 +38,21 @@ BEGIN_RCPP
 END_RCPP
 }
 // run_pileup
-int run_pileup(std::string bampath, std::string fapath, std::string region, std::string outfn, std::string bedfn, int min_reads, int max_depth, int min_baseQ, std::string libtype, SEXP ext);
-RcppExport SEXP _raer_run_pileup(SEXP bampathSEXP, SEXP fapathSEXP, SEXP regionSEXP, SEXP outfnSEXP, SEXP bedfnSEXP, SEXP min_readsSEXP, SEXP max_depthSEXP, SEXP min_baseQSEXP, SEXP libtypeSEXP, SEXP extSEXP) {
+int run_pileup(std::vector<std::string> bampaths, std::string fapath, std::string region, std::string outfn, std::string bedfn, std::vector<int> min_reads, int max_depth, int min_baseQ, std::string libtype, SEXP ext);
+RcppExport SEXP _raer_run_pileup(SEXP bampathsSEXP, SEXP fapathSEXP, SEXP regionSEXP, SEXP outfnSEXP, SEXP bedfnSEXP, SEXP min_readsSEXP, SEXP max_depthSEXP, SEXP min_baseQSEXP, SEXP libtypeSEXP, SEXP extSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< std::string >::type bampath(bampathSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type bampaths(bampathsSEXP);
     Rcpp::traits::input_parameter< std::string >::type fapath(fapathSEXP);
     Rcpp::traits::input_parameter< std::string >::type region(regionSEXP);
     Rcpp::traits::input_parameter< std::string >::type outfn(outfnSEXP);
     Rcpp::traits::input_parameter< std::string >::type bedfn(bedfnSEXP);
-    Rcpp::traits::input_parameter< int >::type min_reads(min_readsSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type min_reads(min_readsSEXP);
     Rcpp::traits::input_parameter< int >::type max_depth(max_depthSEXP);
     Rcpp::traits::input_parameter< int >::type min_baseQ(min_baseQSEXP);
     Rcpp::traits::input_parameter< std::string >::type libtype(libtypeSEXP);
     Rcpp::traits::input_parameter< SEXP >::type ext(extSEXP);
-    rcpp_result_gen = Rcpp::wrap(run_pileup(bampath, fapath, region, outfn, bedfn, min_reads, max_depth, min_baseQ, libtype, ext));
+    rcpp_result_gen = Rcpp::wrap(run_pileup(bampaths, fapath, region, outfn, bedfn, min_reads, max_depth, min_baseQ, libtype, ext));
     return rcpp_result_gen;
 END_RCPP
 }

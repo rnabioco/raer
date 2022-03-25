@@ -2,6 +2,7 @@ context("get_pileup")
 library(GenomicRanges)
 
 bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.bam", package = "raer")
+bam2fn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.bam", package = "raer")
 fafn <- system.file("extdata", "human.fasta", package = "raer")
 bedfn <- system.file("extdata", "regions.bed", package = "raer")
 
@@ -12,7 +13,27 @@ res <- get_pileup(bamfn, fafn, bedfn)
 
 test_that("pileup works", {
   expect_equal(length(res$Ref), 182)
+  expect_equal(ncol(as.data.frame(res)), 13)
 })
+
+test_that("2-bam pileup works", {
+  count_cols <- c("nRef", "nVar", "nA", "nT", "nC", "nG", "nN")
+  res <- get_pileup(c(bamfn, bamfn), fafn, bedfn)
+
+  expect_equal(length(res$Ref), 182)
+  expect_equal(ncol(as.data.frame(res)), 20)
+  b1_vals <- mcols(res)[paste0(count_cols, "_1")]
+  b2_vals <- mcols(res)[paste0(count_cols, "_2")]
+  colnames(b2_vals) <- colnames(b1_vals)
+  expect_true(identical(b1_vals, b2_vals))
+
+  res <- get_pileup(c(bamfn, bam2fn), fafn, bedfn)
+  b1_vals <- mcols(res)[paste0(count_cols, "_1")]
+  b2_vals <- mcols(res)[paste0(count_cols, "_2")]
+  colnames(b2_vals) <- colnames(b1_vals)
+  expect_false(identical(b1_vals, b2_vals))
+})
+
 
 test_that("pileup regional query works", {
 

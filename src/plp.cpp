@@ -11,18 +11,25 @@ extern "C" {
 }
 
 // [[Rcpp::export(rng = false)]]
-int run_pileup(std::string bampath,
+int run_pileup(std::vector<std::string> bampaths,
                std::string fapath,
                std::string region,
                std::string outfn,
                std::string bedfn,
-               int min_reads = 20,
+               std::vector<int> min_reads,
                int max_depth = 10000,
                int min_baseQ = 20,
                std::string libtype = "fr-first-strand",
                SEXP ext = R_NilValue) {
 
-  const char* cbampath = bampath.c_str();
+  int n_files;
+  n_files = bampaths.size();
+  std::vector<const char *> cbampaths;
+  cbampaths.reserve(bampaths.size());
+  for(int i = 0; i < bampaths.size(); ++i){
+    cbampaths.push_back(bampaths[i].c_str());
+  }
+
   const char* cfapath = fapath.c_str();
   const char* coutfn = outfn.c_str();
   const char* cregion;
@@ -51,9 +58,24 @@ int run_pileup(std::string bampath,
     stop("unrecognized library type: fr-first-strand, fr-second-strand, or unstranded supported");
   }
 
+  if(min_reads.size() == 0){
+    stop("please supply min_reads parameter");
+  }
+
+  int n_params = 0;
+  n_params = n_files - min_reads.size();
+
+  // set min reads to first parameter if not supplied for each file
+  if(n_params != 0){
+    for(int i = 0; i < n_params; i++){
+      min_reads.push_back(min_reads[0]);
+    }
+  }
+
   int out;
-  out = run_cpileup(cbampath, cfapath, cregion, coutfn, cbedfn,
-                    min_reads, max_depth, min_baseQ, lib_spec, ext);
+  out = run_cpileup(&cbampaths[0], cbampaths.size(),
+                    cfapath, cregion, coutfn, cbedfn,
+                    &min_reads[0], max_depth, min_baseQ, lib_spec, ext);
   return out;
 }
 
