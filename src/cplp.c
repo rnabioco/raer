@@ -2,6 +2,8 @@
 #include "htslib/faidx.h"
 #include "bedidx.h"
 #include "bedfile.h"
+#include "utils.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -154,7 +156,7 @@ static int readaln(void *data, bam1_t *b) {
     int64_t mmap_tag = bam_aux2i(aux_info);
     if(mmap_tag > 1) continue ;
 
-    // check for proper pair, if paired end, todo: make an optional argument
+    // check for proper pair, if paired end
     if((b->core.flag&BAM_FPAIRED) && !(b->core.flag&BAM_FPROPER_PAIR)) continue ;
     break;
   }
@@ -252,8 +254,6 @@ int run_cpileup(const char** cbampaths,
                 int min_baseQ,
                 int libtype,
                 SEXP ext) {
-
-  int debug = 1;
 
   if (n > 2 || n < 1) {
     REprintf("pileup requires 1 or 2 bam files");
@@ -432,7 +432,7 @@ int run_cpileup(const char** cbampaths,
 
           const bam_pileup1_t *p = plp[i] + j;
 
-          // check read base quality
+          // check base quality
           int bq = p->qpos < p->b->core.l_qseq
                    ? bam_get_qual(p->b)[p->qpos]
                    : 0;
@@ -440,6 +440,22 @@ int run_cpileup(const char** cbampaths,
 
           // skip indel and ref skip ;
           if(p->is_del || p->is_refskip) continue ;
+
+          // consider adding a counter to track each error
+          // to be used to exclude sites
+          int check_artifacts = 0;
+          if(check_artifacts){
+            // check for splice in alignment nearby
+            if(dist_to_splice(p->b, p->qpos, 4) != 0) continue;
+
+            // check if indel event nearby
+            if(dist_to_indel(p->b, p->qpos, 4) != 0) continue;
+
+            // check if pos is within x dist from 5' end of read
+            // qpos is 0-based
+            if(trim_pos(p->b, p->qpos, 6)) continue;
+
+          }
 
           // get read base
           int c = p->qpos < p->b->core.l_qseq
