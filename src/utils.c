@@ -6,6 +6,35 @@ SEXP isnull(SEXP pointer) {
   return ScalarLogical(!R_ExternalPtrAddr(pointer));
 }
 
+int check_simple_repeat(char** ref, int* ref_len, int pos, int nmer){
+  int start, n_pos;
+  n_pos = (nmer * 2) - 1;
+
+  if(n_pos < 1 || nmer < 1 || *ref_len < nmer || pos < 0){
+    return 0;
+  }
+  start = pos - nmer + 1;
+  if(start < 0){
+    n_pos = n_pos + start;
+    start = 0;
+  }
+  n_pos = ((n_pos + start) > *ref_len) ? (*ref_len - start): n_pos;
+
+  // check for homopolymer using run-length-encoding approach
+  for (int i = 0;i < n_pos; i++) {
+    // Count occurrences of current character
+    int count = 1;
+    while (i < n_pos - 1 && (*ref)[start + i] == (*ref)[start + i + 1]) {
+      count++;
+      i++;
+    }
+    if(count >= nmer){
+      return 1;
+    }
+  }
+  return 0;
+}
+
 // check if query position is within dist from 5' end of read
 int trim_pos(bam1_t* b, int pos, int dist){
   // pos is 0-based

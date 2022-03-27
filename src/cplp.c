@@ -154,7 +154,7 @@ static int readaln(void *data, bam1_t *b) {
     }
 
     int64_t mmap_tag = bam_aux2i(aux_info);
-    if(mmap_tag > 1) continue ;
+    //if(mmap_tag > 1) continue ;
 
     // check for proper pair, if paired end
     if((b->core.flag&BAM_FPAIRED) && !(b->core.flag&BAM_FPROPER_PAIR)) continue ;
@@ -420,6 +420,10 @@ int run_cpileup(const char** cbampaths,
       for(i = 0; i < n; ++i){
         memset(&pc[i], 0, sizeof(pcounts));
       }
+
+      // check if site is in a homopolymer
+      // todo: find a  way to advance iterator past repeat
+      if(check_simple_repeat(&ref, &ref_len, pos, 6) == 1) continue;
 
       for (i = 0; i < n; ++i) {
         int j;
