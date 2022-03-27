@@ -38,8 +38,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // run_pileup
-int run_pileup(std::vector<std::string> bampaths, std::string fapath, std::string region, std::string outfn, std::string bedfn, std::vector<int> min_reads, int max_depth, int min_baseQ, int min_mapQ, std::string libtype, std::string required_flags, std::string filter_flags, int n_align, std::string n_align_tag, int nmer, SEXP ext);
-RcppExport SEXP _raer_run_pileup(SEXP bampathsSEXP, SEXP fapathSEXP, SEXP regionSEXP, SEXP outfnSEXP, SEXP bedfnSEXP, SEXP min_readsSEXP, SEXP max_depthSEXP, SEXP min_baseQSEXP, SEXP min_mapQSEXP, SEXP libtypeSEXP, SEXP required_flagsSEXP, SEXP filter_flagsSEXP, SEXP n_alignSEXP, SEXP n_align_tagSEXP, SEXP nmerSEXP, SEXP extSEXP) {
+int run_pileup(std::vector<std::string> bampaths, std::string fapath, std::string region, std::string outfn, std::string bedfn, std::vector<int> min_reads, std::vector<int> event_filters, int max_depth, int min_baseQ, int min_mapQ, std::string libtype, std::string required_flags, std::string filter_flags, int n_align, std::string n_align_tag, SEXP ext);
+RcppExport SEXP _raer_run_pileup(SEXP bampathsSEXP, SEXP fapathSEXP, SEXP regionSEXP, SEXP outfnSEXP, SEXP bedfnSEXP, SEXP min_readsSEXP, SEXP event_filtersSEXP, SEXP max_depthSEXP, SEXP min_baseQSEXP, SEXP min_mapQSEXP, SEXP libtypeSEXP, SEXP required_flagsSEXP, SEXP filter_flagsSEXP, SEXP n_alignSEXP, SEXP n_align_tagSEXP, SEXP extSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< std::vector<std::string> >::type bampaths(bampathsSEXP);
@@ -48,6 +48,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::string >::type outfn(outfnSEXP);
     Rcpp::traits::input_parameter< std::string >::type bedfn(bedfnSEXP);
     Rcpp::traits::input_parameter< std::vector<int> >::type min_reads(min_readsSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type event_filters(event_filtersSEXP);
     Rcpp::traits::input_parameter< int >::type max_depth(max_depthSEXP);
     Rcpp::traits::input_parameter< int >::type min_baseQ(min_baseQSEXP);
     Rcpp::traits::input_parameter< int >::type min_mapQ(min_mapQSEXP);
@@ -56,9 +57,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::string >::type filter_flags(filter_flagsSEXP);
     Rcpp::traits::input_parameter< int >::type n_align(n_alignSEXP);
     Rcpp::traits::input_parameter< std::string >::type n_align_tag(n_align_tagSEXP);
-    Rcpp::traits::input_parameter< int >::type nmer(nmerSEXP);
     Rcpp::traits::input_parameter< SEXP >::type ext(extSEXP);
-    rcpp_result_gen = Rcpp::wrap(run_pileup(bampaths, fapath, region, outfn, bedfn, min_reads, max_depth, min_baseQ, min_mapQ, libtype, required_flags, filter_flags, n_align, n_align_tag, nmer, ext));
+    rcpp_result_gen = Rcpp::wrap(run_pileup(bampaths, fapath, region, outfn, bedfn, min_reads, event_filters, max_depth, min_baseQ, min_mapQ, libtype, required_flags, filter_flags, n_align, n_align_tag, ext));
     return rcpp_result_gen;
 END_RCPP
 }

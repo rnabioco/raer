@@ -184,6 +184,10 @@ typedef struct  {
   int mref_b;
 } pcounts;
 
+// struct for event filter params
+typedef struct  {
+  int nmer, splice_dist, indel_dist, trim_dist;
+} efilter;
 
 static void print_plus_counts(FILE *fp, pcounts *pc, int n, char* ctig, int pos, int pref){
   fprintf(fp,
@@ -256,10 +260,10 @@ static void print_counts(FILE *fp, pcounts *pc, int n, int min_1, int min_2,
 
 int run_cpileup(const char** cbampaths,
                 int n,
-                const char* cfapath,
-                const char* cregion,
-                const char* coutfn,
-                const char* cbedfn,
+                char* cfapath,
+                char* cregion,
+                char* coutfn,
+                char* cbedfn,
                 int* min_reads,
                 int max_depth,
                 int min_baseQ,
@@ -268,15 +272,14 @@ int run_cpileup(const char** cbampaths,
                 const char* r_flags,
                 const char* f_flags,
                 int n_align,
-                const char* n_align_tag,
-                int nmer,
+                char* n_align_tag,
+                int* event_filters,
                 SEXP ext) {
 
   if (n > 2 || n < 1) {
     REprintf("pileup requires 1 or 2 bam files");
     return 1;
   }
-
   mplp_aux_t **data;
   int i, tid, *n_plp, tid0 = 0;
   int pos, beg0 = 0, end0 = INT32_MAX, ref_len;
@@ -350,6 +353,13 @@ int run_cpileup(const char** cbampaths,
   } else {
     conf->rflag_filter = BAM_FUNMAP | BAM_FSECONDARY | BAM_FQCFAIL | BAM_FDUP;
   }
+
+  efilter *ef;
+  ef = calloc(1, sizeof(efilter));
+  ef->trim_dist = event_filters[0];
+  ef->splice_dist = event_filters[1];
+  ef->indel_dist = event_filters[2];
+  ef->nmer = event_filters[3];
 
   conf->output_fname = coutfn;
 
@@ -469,7 +479,7 @@ int run_cpileup(const char** cbampaths,
 
       // check if site is in a homopolymer
       // todo: find a  way to advance iterator past repeat
-      if(nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, 6) == nmer) continue;
+      if(ef->nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, 6) == ef->nmer) continue;
 
       for (i = 0; i < n; ++i) {
         int j;
@@ -492,20 +502,15 @@ int run_cpileup(const char** cbampaths,
           if(p->is_del || p->is_refskip) continue ;
 
           // consider adding a counter to track each error
-          // to be used to exclude sites
-          int check_artifacts = 0;
-          if(check_artifacts){
-            // check for splice in alignment nearby
-            if(dist_to_splice(p->b, p->qpos, 4) != 0) continue;
+          // check if pos is within x dist from 5' end of read
+          // qpos is 0-based
+          if(ef->trim_dist && trim_pos(p->b, p->qpos, ef->trim_dist)) continue;
 
-            // check if indel event nearby
-            if(dist_to_indel(p->b, p->qpos, 4) != 0) continue;
+          // check for splice in alignment nearby
+          if(ef->splice_dist && dist_to_splice(p->b, p->qpos, ef->splice_dist) != 0) continue;
 
-            // check if pos is within x dist from 5' end of read
-            // qpos is 0-based
-            if(trim_pos(p->b, p->qpos, 6)) continue;
-
-          }
+          // check if indel event nearby
+          if(ef->indel_dist && dist_to_indel(p->b, p->qpos, ef->indel_dist) != 0) continue;
 
           // get read base
           int c = p->qpos < p->b->core.l_qseq
@@ -643,7 +648,7 @@ int run_cpileup(const char** cbampaths,
     free(data[i]);
   }
   free(data); free(plp); free(n_plp);
-  free(pc);
+  free(pc); free(ef);
   free(mp_ref.ref[0]);
   free(mp_ref.ref[1]);
 
