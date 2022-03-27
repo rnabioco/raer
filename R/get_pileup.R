@@ -97,15 +97,21 @@ get_pileup <- function(bamfile,
     bedfn <- "."
   }
 
-  res <- run_pileup(bamfile,
-                    fafile,
-                    region,
-                    outfile,
-                    bedfile,
-                    min_reads,
-                    max_depth,
-                    min_base_qual,
-                    library_type,
+  res <- run_pileup(bampaths = bamfile,
+                    fapath = fafile,
+                    region = region,
+                    outfn = outfile,
+                    bedfn = bedfile,
+                    min_reads = min_reads,
+                    max_depth = max_depth,
+                    min_baseQ = min_base_qual,
+                    min_mapQ = 0,
+                    libtype = library_type,
+                    required_flags = "0",
+                    filter_flags = "0",
+                    n_align = 1,
+                    n_align_tag = "NH",
+                    nmer = 0,
                     idx_ptr)
 
   if(res == 1){

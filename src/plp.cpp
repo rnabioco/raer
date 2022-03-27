@@ -19,7 +19,13 @@ int run_pileup(std::vector<std::string> bampaths,
                std::vector<int> min_reads,
                int max_depth = 10000,
                int min_baseQ = 20,
+               int min_mapQ = 0,
                std::string libtype = "fr-first-strand",
+               std::string required_flags = "0",
+               std::string filter_flags = "0",
+               int n_align = 1,
+               std::string n_align_tag = "NH",
+               int nmer = 6,
                SEXP ext = R_NilValue) {
 
   int n_files;
@@ -73,9 +79,24 @@ int run_pileup(std::vector<std::string> bampaths,
   }
 
   int out;
-  out = run_cpileup(&cbampaths[0], cbampaths.size(),
-                    cfapath, cregion, coutfn, cbedfn,
-                    &min_reads[0], max_depth, min_baseQ, lib_spec, ext);
+  out = run_cpileup(&cbampaths[0],
+                    cbampaths.size(),
+                    cfapath,
+                    cregion,
+                    coutfn,
+                    cbedfn,
+                    &min_reads[0],
+                    max_depth,
+                    min_baseQ,
+                    min_mapQ,
+                    lib_spec,
+                    required_flags.c_str(),
+                    filter_flags.c_str(),
+                    n_align,
+                    n_align_tag.c_str(),
+                    nmer,
+                    ext);
+
   return out;
 }
 

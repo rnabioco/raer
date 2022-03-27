@@ -38,14 +38,14 @@ static unsigned char comp_base[256] = {
 };
 
 typedef struct {
-  int min_mq, flag, min_baseQ, capQ_thres, max_depth, max_indel_depth, all, rev_del;
-  int rflag_require, rflag_filter;
-  char *reg, *pl_list, *fai_fname, *output_fname;
+  int min_mq, flag, min_baseQ, max_depth, all;
+  int rflag_require, rflag_filter, n_align;
+  char *reg, *fai_fname, *output_fname, *n_align_tag;
   faidx_t *fai;
-  void *bed, *rghash, *auxlist;
+  void *bed ;
   int argc;
   char **argv;
-  char sep, empty, no_ins, no_ins_mods, no_del, no_ends;
+  char sep, empty;
 } mplp_conf_t;
 
 typedef struct {
@@ -128,7 +128,7 @@ static int mplp_get_ref(mplp_aux_t *ma, int tid, char **ref, int *ref_len) {
   return 1;
 }
 
-// read level processing for pileup
+// read processing function for pileup
 static int readaln(void *data, bam1_t *b) {
   mplp_aux_t *g = (mplp_aux_t *)data;
   int ret;
@@ -136,25 +136,36 @@ static int readaln(void *data, bam1_t *b) {
   while (1) {
     ret = g->iter? sam_itr_next(g->fp, g->iter, b) : sam_read1(g->fp, g->h, b);
     if (ret < 0) break;
-    if ( b->core.flag & (BAM_FUNMAP | BAM_FSECONDARY | BAM_FQCFAIL | BAM_FDUP) ) continue;
 
-    if (g->conf->bed) { // test overlap
+    // exclude unmapped reads
+    if (b->core.tid < 0 || (b->core.flag&BAM_FUNMAP)) continue;
+
+    // test required and filter flags
+    if (g->conf->rflag_require && !(g->conf->rflag_require&b->core.flag)) continue;
+    if (g->conf->rflag_filter && g->conf->rflag_filter&b->core.flag) continue;
+
+    // test overlap
+    if (g->conf->bed) {
       skip = !bed_overlap(g->conf->bed, g->h->target_name[b->core.tid], b->core.pos, bam_endpos(b));
       if (skip) continue;
     }
-    // check for mapping status
-    uint8_t* aux_info = bam_aux_get(b, "NH") ;
-    int n_errors = 0 ;
-    if(!aux_info) {
-      if(n_errors < 5){
-        REprintf("Warning: missing tag info in reads, e.g: %s", bam_get_qname(b)) ;
-        n_errors += 1 ;
-      }
-      continue ;
-    }
 
-    int64_t mmap_tag = bam_aux2i(aux_info);
-    //if(mmap_tag > 1) continue ;
+    // check # of alignments
+    if(g->conf->n_align && g->conf->n_align_tag){
+      uint8_t* aux_info = bam_aux_get(b, g->conf->n_align_tag) ;
+      int n_errors = 0 ;
+      if(!aux_info) {
+        if(n_errors < 5){
+          REprintf("Warning: missing tag info in reads, e.g: %s", bam_get_qname(b)) ;
+          n_errors += 1 ;
+        }
+        continue ;
+      }
+      int64_t mmap_tag = bam_aux2i(aux_info);
+      if(mmap_tag > g->conf->n_align) continue ;
+    }
+    // check mapping quality
+    if (b->core.qual < g->conf->min_mq) continue;
 
     // check for proper pair, if paired end
     if((b->core.flag&BAM_FPAIRED) && !(b->core.flag&BAM_FPROPER_PAIR)) continue ;
@@ -245,14 +256,20 @@ static void print_counts(FILE *fp, pcounts *pc, int n, int min_1, int min_2,
 
 int run_cpileup(const char** cbampaths,
                 int n,
-                char* cfapath,
-                char* cregion,
-                char* coutfn,
-                char* cbedfn,
+                const char* cfapath,
+                const char* cregion,
+                const char* coutfn,
+                const char* cbedfn,
                 int* min_reads,
                 int max_depth,
                 int min_baseQ,
+                int min_mapQ,
                 int libtype,
+                const char* r_flags,
+                const char* f_flags,
+                int n_align,
+                const char* n_align_tag,
+                int nmer,
                 SEXP ext) {
 
   if (n > 2 || n < 1) {
@@ -303,6 +320,35 @@ int run_cpileup(const char** cbampaths,
 
   if(cregion){
     conf->reg = cregion;
+  }
+
+  if(n_align && n_align_tag){
+    if(n_align < 0){
+      REprintf("n_align must be >= 0, set to 0 to disable exclude multimappers by tag");
+      return 1;
+    }
+    conf->n_align = n_align;
+    conf->n_align_tag = n_align_tag;
+  }
+
+  if(min_mapQ >= 0) conf->min_mq = min_mapQ;
+
+  if(r_flags){
+    conf->rflag_require = bam_str2flag(r_flags);
+    if(conf->rflag_require < 0) {
+      REprintf("Could not parse required_flags %s\n", r_flags);
+      return 1;
+    }
+  }
+
+  if(f_flags){
+    conf->rflag_filter = bam_str2flag(f_flags);
+    if(conf->rflag_filter < 0) {
+      REprintf("Could not parse filter_flags %s\n", f_flags);
+      return 1;
+    }
+  } else {
+    conf->rflag_filter = BAM_FUNMAP | BAM_FSECONDARY | BAM_FQCFAIL | BAM_FDUP;
   }
 
   conf->output_fname = coutfn;
@@ -423,7 +469,7 @@ int run_cpileup(const char** cbampaths,
 
       // check if site is in a homopolymer
       // todo: find a  way to advance iterator past repeat
-      if(check_simple_repeat(&ref, &ref_len, pos, 6) == 1) continue;
+      if(nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, 6) == nmer) continue;
 
       for (i = 0; i < n; ++i) {
         int j;
