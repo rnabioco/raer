@@ -10,16 +10,22 @@ extern "C" {
  #include "cplp.h"
 }
 
-// [[Rcpp::export(rng = false)]]
+//[[Rcpp::export(rng = false)]]
 int run_pileup(std::vector<std::string> bampaths,
                std::string fapath,
                std::string region,
                std::string outfn,
                std::string bedfn,
                std::vector<int> min_reads,
+               std::vector<int> event_filters,
                int max_depth = 10000,
                int min_baseQ = 20,
+               int min_mapQ = 0,
                std::string libtype = "fr-first-strand",
+               std::string required_flags = "0",
+               std::string filter_flags = "0",
+               int n_align = 1,
+               std::string n_align_tag = "NH",
                SEXP ext = R_NilValue) {
 
   int n_files;
@@ -30,20 +36,20 @@ int run_pileup(std::vector<std::string> bampaths,
     cbampaths.push_back(bampaths[i].c_str());
   }
 
-  const char* cfapath = fapath.c_str();
-  const char* coutfn = outfn.c_str();
-  const char* cregion;
+  char* cfapath = &*fapath.begin();
+  char* coutfn = &*outfn.begin();
+  char* cregion;
   if(region == "."){
     cregion = NULL;
   } else {
-    cregion = region.c_str();
+    cregion = &*region.begin();
   }
 
-  const char* cbedfn;
+  char* cbedfn;
   if(bedfn == "."){
     cbedfn = NULL;
   } else {
-    cbedfn = bedfn.c_str();
+    cbedfn = &*bedfn.begin();
   }
 
   // encode libtype as 0 = unstranded, 1 = fr-first-strand, 2 = fr-second-strand
@@ -72,10 +78,29 @@ int run_pileup(std::vector<std::string> bampaths,
     }
   }
 
+  if(event_filters.size() != 4){
+    stop("event filters must be a vector of 4 positive integers ");
+  }
+
   int out;
-  out = run_cpileup(&cbampaths[0], cbampaths.size(),
-                    cfapath, cregion, coutfn, cbedfn,
-                    &min_reads[0], max_depth, min_baseQ, lib_spec, ext);
+  out = run_cpileup(&cbampaths[0],
+                    cbampaths.size(),
+                    cfapath,
+                    cregion,
+                    coutfn,
+                    cbedfn,
+                    &min_reads[0],
+                    max_depth,
+                    min_baseQ,
+                    min_mapQ,
+                    lib_spec,
+                    &*required_flags.begin(),
+                    &*filter_flags.begin(),
+                    n_align,
+                    &*n_align_tag.begin(),
+                    &event_filters[0],
+                    ext);
+
   return out;
 }
 
