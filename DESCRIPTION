@@ -19,6 +19,7 @@ Imports:
     IRanges,
     Rsamtools,
     BSgenome,
+    Biostrings,
     SummarizedExperiment,
     S4Vectors,
     GenomeInfoDb,

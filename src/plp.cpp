@@ -18,13 +18,12 @@ int run_pileup(std::vector<std::string> bampaths,
                std::string bedfn,
                std::vector<int> min_reads,
                std::vector<int> event_filters,
+               std::vector<int> min_mapQ,
+               std::vector<int> bam_flags,
+               std::vector<int> libtype,
                int max_depth = 10000,
                int min_baseQ = 20,
-               int min_mapQ = 0,
-               std::string libtype = "fr-first-strand",
-               std::string required_flags = "0",
-               std::string filter_flags = "0",
-               int n_align = 1,
+               int n_align = 0,
                std::string n_align_tag = "NH",
                SEXP ext = R_NilValue) {
 
@@ -52,18 +51,6 @@ int run_pileup(std::vector<std::string> bampaths,
     cbedfn = &*bedfn.begin();
   }
 
-  // encode libtype as 0 = unstranded, 1 = fr-first-strand, 2 = fr-second-strand
-  int lib_spec = 0;
-  if(libtype == "fr-first-strand"){
-    lib_spec = 1;
-  } else if (libtype == "fr-second-strand") {
-    lib_spec = 2;
-  } else if (libtype == "unstranded") {
-    lib_spec = 0;
-  } else {
-    stop("unrecognized library type: fr-first-strand, fr-second-strand, or unstranded supported");
-  }
-
   if(min_reads.size() == 0){
     stop("please supply min_reads parameter");
   }
@@ -77,6 +64,21 @@ int run_pileup(std::vector<std::string> bampaths,
       min_reads.push_back(min_reads[0]);
     }
   }
+
+  if(min_mapQ.size() == 0){
+    stop("please supply min_mapQ parameter");
+  }
+
+  n_params = 0;
+  n_params = n_files - min_mapQ.size();
+
+  // set min_mapQ to first parameter if not supplied for each file
+  if(n_params != 0){
+    for(int i = 0; i < n_params; i++){
+      min_mapQ.push_back(min_mapQ[0]);
+    }
+  }
+
 
   if(event_filters.size() != 4){
     stop("event filters must be a vector of 4 positive integers ");
@@ -92,10 +94,9 @@ int run_pileup(std::vector<std::string> bampaths,
                     &min_reads[0],
                     max_depth,
                     min_baseQ,
-                    min_mapQ,
-                    lib_spec,
-                    &*required_flags.begin(),
-                    &*filter_flags.begin(),
+                    &min_mapQ[0],
+                    &libtype[0],
+                    &*bam_flags.begin(),
                     n_align,
                     &*n_align_tag.begin(),
                     &event_filters[0],

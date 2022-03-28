@@ -39,7 +39,8 @@ static unsigned char comp_base[256] = {
 
 typedef struct {
   int min_mq, flag, min_baseQ, max_depth, all;
-  int rflag_require, rflag_filter, n_align;
+  int n_align;
+  uint32_t keep_flag[2];
   char *reg, *fai_fname, *output_fname, *n_align_tag;
   faidx_t *fai;
   void *bed ;
@@ -133,6 +134,8 @@ static int readaln(void *data, bam1_t *b) {
   mplp_aux_t *g = (mplp_aux_t *)data;
   int ret;
   int skip = 0;
+  uint32_t test_flag;
+  int n_errors = 0 ;
   while (1) {
     ret = g->iter? sam_itr_next(g->fp, g->iter, b) : sam_read1(g->fp, g->h, b);
     if (ret < 0) break;
@@ -141,8 +144,10 @@ static int readaln(void *data, bam1_t *b) {
     if (b->core.tid < 0 || (b->core.flag&BAM_FUNMAP)) continue;
 
     // test required and filter flags
-    if (g->conf->rflag_require && !(g->conf->rflag_require&b->core.flag)) continue;
-    if (g->conf->rflag_filter && g->conf->rflag_filter&b->core.flag) continue;
+    test_flag = (g->conf->keep_flag[0] & ~b->core.flag) |
+      (g->conf->keep_flag[1] & b->core.flag);
+    if (~test_flag & 2047u)
+      continue;
 
     // test overlap
     if (g->conf->bed) {
@@ -152,11 +157,12 @@ static int readaln(void *data, bam1_t *b) {
 
     // check # of alignments
     if(g->conf->n_align && g->conf->n_align_tag){
+
       uint8_t* aux_info = bam_aux_get(b, g->conf->n_align_tag) ;
-      int n_errors = 0 ;
+
       if(!aux_info) {
         if(n_errors < 5){
-          REprintf("Warning: missing tag info in reads, e.g: %s", bam_get_qname(b)) ;
+          Rf_warning("Warning: missing tag info in reads, e.g: %s\n", bam_get_qname(b)) ;
           n_errors += 1 ;
         }
         continue ;
@@ -246,12 +252,13 @@ static void print_counts(FILE *fp, pcounts *pc, int n, int min_1, int min_2,
       print_minus_counts(fp, pc, n, ctig, pos, mref) ;
     }
   } else if (n == 2) {
-
-    if(pc[0].ptotal >= min_1 && pc[1].ptotal >= min_2){
+    // if rna + dna supplied,
+    // filter using gDNA counts independent of strand
+    if(pc[0].ptotal >= min_1 && (pc[1].ptotal+ pc[1].mtotal) >= min_2){
       print_plus_counts(fp, pc, n, ctig, pos, pref) ;
     }
 
-    if(pc[0].mtotal >= min_1 && pc[1].mtotal >= min_2){
+    if(pc[0].mtotal >= min_1 && (pc[1].ptotal+ pc[1].mtotal) >= min_2){
       print_minus_counts(fp, pc, n, ctig, pos, mref) ;
     }
   }
@@ -267,17 +274,16 @@ int run_cpileup(const char** cbampaths,
                 int* min_reads,
                 int max_depth,
                 int min_baseQ,
-                int min_mapQ,
-                int libtype,
-                const char* r_flags,
-                const char* f_flags,
+                int* min_mapQ,
+                int* libtype,
+                int* b_flags,
                 int n_align,
                 char* n_align_tag,
                 int* event_filters,
                 SEXP ext) {
 
   if (n > 2 || n < 1) {
-    REprintf("pileup requires 1 or 2 bam files");
+    Rf_error("pileup requires 1 or 2 bam files");
     return 1;
   }
   mplp_aux_t **data;
@@ -326,32 +332,28 @@ int run_cpileup(const char** cbampaths,
   }
 
   if(n_align && n_align_tag){
+
     if(n_align < 0){
-      REprintf("n_align must be >= 0, set to 0 to disable exclude multimappers by tag");
+      Rf_error("n_align must be >= 0, set to 0 to disable exclude multimappers by tag");
       return 1;
     }
     conf->n_align = n_align;
     conf->n_align_tag = n_align_tag;
   }
 
-  if(min_mapQ >= 0) conf->min_mq = min_mapQ;
-
-  if(r_flags){
-    conf->rflag_require = bam_str2flag(r_flags);
-    if(conf->rflag_require < 0) {
-      REprintf("Could not parse required_flags %s\n", r_flags);
-      return 1;
+  // if multiple bam files, use minimum mapQ for initial filtering,
+  // then later filter in pileup loop
+  if(min_mapQ[0] >= 0) {
+    if(n == 1){
+      conf->min_mq = min_mapQ[0];
+    } else {
+      conf->min_mq = min_mapQ[0] < min_mapQ[1] ? min_mapQ[0] : min_mapQ[1];
     }
   }
 
-  if(f_flags){
-    conf->rflag_filter = bam_str2flag(f_flags);
-    if(conf->rflag_filter < 0) {
-      REprintf("Could not parse filter_flags %s\n", f_flags);
-      return 1;
-    }
-  } else {
-    conf->rflag_filter = BAM_FUNMAP | BAM_FSECONDARY | BAM_FQCFAIL | BAM_FDUP;
+  if(b_flags){
+    conf->keep_flag[0] = b_flags[0];
+    conf->keep_flag[1] = b_flags[1];
   }
 
   efilter *ef;
@@ -371,13 +373,13 @@ int run_cpileup(const char** cbampaths,
 
     if ( !data[i]->fp )
     {
-      REprintf("failed to open %s: %s\n", cbampaths[i], strerror(errno));
+      Rf_error("failed to open %s: %s\n", cbampaths[i], strerror(errno));
       exit(EXIT_FAILURE);
     }
 
     if (conf->fai_fname) {
       if (hts_set_fai_filename(data[i]->fp, conf->fai_fname) != 0) {
-        REprintf("failed to process %s: %s\n",
+        Rf_error("failed to process %s: %s\n",
                  cfapath, strerror(errno));
         exit(EXIT_FAILURE);
       }
@@ -388,7 +390,7 @@ int run_cpileup(const char** cbampaths,
 
     h_tmp = sam_hdr_read(data[i]->fp);
     if ( !h_tmp ) {
-      REprintf("fail to read the header of %s\n", cbampaths[i]);
+      Rf_error("fail to read the header of %s\n", cbampaths[i]);
       exit(EXIT_FAILURE);
     }
 
@@ -397,12 +399,12 @@ int run_cpileup(const char** cbampaths,
       idx = sam_index_load(data[i]->fp, cbampaths[i]) ;
 
       if (idx == NULL) {
-        REprintf("fail to load bamfile index for %s\n", cbampaths[i]);
+        Rf_error("fail to load bamfile index for %s\n", cbampaths[i]);
         return 1;
       }
 
       if ( (data[i]->iter=sam_itr_querys(idx, h_tmp, conf->reg)) == 0) {
-        REprintf("Fail to parse region '%s' with %s\n", conf->reg, cbampaths[i]);
+        Rf_error("Fail to parse region '%s' with %s\n", conf->reg, cbampaths[i]);
         return 1;
       }
 
@@ -434,13 +436,13 @@ int run_cpileup(const char** cbampaths,
   bam_mplp_set_maxcnt(iter, max_depth);
 
   if (!iter) {
-    REprintf("issue with iterator");
+    Rf_error("issue with iterator");
     return 1;
   }
 
   pileup_fp = conf->output_fname? fopen(conf->output_fname, "w") : stdout;
   if (pileup_fp == NULL) {
-    REprintf("Failed to write to %s: %s\n", conf->output_fname, strerror(errno));
+    Rf_error("Failed to write to %s: %s\n", conf->output_fname, strerror(errno));
     return 1;
   }
 
@@ -479,7 +481,7 @@ int run_cpileup(const char** cbampaths,
 
       // check if site is in a homopolymer
       // todo: find a  way to advance iterator past repeat
-      if(ef->nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, 6) == ef->nmer) continue;
+      if(ef->nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, ef->nmer)) continue;
 
       for (i = 0; i < n; ++i) {
         int j;
@@ -492,10 +494,14 @@ int run_cpileup(const char** cbampaths,
 
           const bam_pileup1_t *p = plp[i] + j;
 
+          // filter based on mapq as not able to filter per file in pileup
+          if (p->b->core.qual < min_mapQ[i]) continue
+            ;
           // check base quality
           int bq = p->qpos < p->b->core.l_qseq
                    ? bam_get_qual(p->b)[p->qpos]
                    : 0;
+
           if (bq < min_baseQ) continue ;
 
           // skip indel and ref skip ;
@@ -523,7 +529,7 @@ int run_cpileup(const char** cbampaths,
             // adjust based on library type and r1/r2 status
           int invert = 0;
 
-          if(libtype == 1){
+          if(libtype[i] == 1){
 
             if(!(p->b->core.flag&BAM_FPAIRED)){
               if(!(is_neg)) {
@@ -542,7 +548,7 @@ int run_cpileup(const char** cbampaths,
               }
             }
 
-          } else if (libtype == 2){
+          } else if (libtype[i] == 2){
 
             if(!(p->b->core.flag&BAM_FPAIRED)){
               if(is_neg) {
@@ -561,13 +567,7 @@ int run_cpileup(const char** cbampaths,
             }
           }
 
-  	      // NEED TO DEAL WITH UNSTRANDED
-  	      // leave as positive strand for now?
-          // } else {
-          //   if(is_neg) {
-  	      //     invert = 1;
-          //   }
-          // }
+  	      // UNSTRANDED leave as positive strand for now?
 
   	      // THIS COULD BE CLEANED UP SO LESS REPETITIVE
   	      // count reads that align to minus strand

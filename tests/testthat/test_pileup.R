@@ -1,5 +1,7 @@
 context("get_pileup")
 library(GenomicRanges)
+library(Biostrings)
+library(Rsamtools)
 
 bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.bam", package = "raer")
 bam2fn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.bam", package = "raer")
@@ -18,7 +20,9 @@ test_that("pileup works", {
 
 test_that("2-bam pileup works", {
   count_cols <- c("nRef", "nVar", "nA", "nT", "nC", "nG", "nN")
-  res <- get_pileup(c(bamfn, bamfn), fafn, bedfn)
+  res <- get_pileup(c(bamfn, bamfn), fafn, bedfn,
+                    library_type = c("fr-first-strand",
+                                     "fr-first-strand"))
 
   expect_equal(length(res$Ref), 182)
   expect_equal(ncol(as.data.frame(res)), 20)
@@ -26,6 +30,16 @@ test_that("2-bam pileup works", {
   b2_vals <- mcols(res)[paste0(count_cols, "_2")]
   colnames(b2_vals) <- colnames(b1_vals)
   expect_true(identical(b1_vals, b2_vals))
+
+  # should default to fr-first-strand and unstranded
+  res <- get_pileup(c(bamfn, bamfn), fafn, bedfn)
+
+  expect_equal(length(res$Ref), 182)
+  expect_equal(ncol(as.data.frame(res)), 20)
+  b1_vals <- mcols(res)[paste0(count_cols, "_1")]
+  b2_vals <- mcols(res)[paste0(count_cols, "_2")]
+  colnames(b2_vals) <- colnames(b1_vals)
+  expect_false(identical(b1_vals, b2_vals))
 
   res <- get_pileup(c(bamfn, bam2fn), fafn, bedfn)
   b1_vals <- mcols(res)[paste0(count_cols, "_1")]
@@ -133,20 +147,67 @@ test_that("pileup check nRef and nVar", {
   }
 })
 
+bout <- tempfile(fileext = ".bam")
+
+test_that("pileup check nh tag filter", {
+  bout <- filterBam(bamfn,
+                    param = ScanBamParam(tagFilter = list("NH"= 1)),
+                    destination = bout,
+                    indexDestination = TRUE)
+  a <- get_pileup(bamfn, fafn, n_align = 1, n_align_tag = "NH")
+  b <- get_pileup(bout, fafn)
+  expect_true(identical(a, b))
+})
+
+test_that("pileup check mapq filter", {
+  bout <- filterBam(bamfn,
+                    param = ScanBamParam(mapqFilter = 255),
+                    destination = bout,
+                    indexDestination = TRUE)
+  a <- get_pileup(bamfn, fafn, min_mapq = 255)
+  b <- get_pileup(bout, fafn)
+  expect_true(identical(a, b))
+})
+
+test_that("pileup check mapq filter", {
+  bout <- filterBam(bamfn,
+                    param = ScanBamParam(mapqFilter = 255),
+                    destination = bout,
+                    indexDestination = TRUE)
+  a <- get_pileup(bamfn, fafn, min_mapq = 255)
+  b <- get_pileup(bout, fafn)
+  expect_true(identical(a, b))
+})
 
 
+test_that("pileup check flag filtering", {
+  bout <- filterBam(bamfn,
+                    param = ScanBamParam(flag = scanBamFlag(isMinusStrand = F)),
+                    destination = bout,
+                    indexDestination = TRUE)
+  a <- get_pileup(bamfn, fafn, bedfn, bam_flags = scanBamFlag(isMinusStrand = F))
+  b <- get_pileup(bout, fafn, bedfn)
+  expect_true(identical(a, b))
 
-# TEST CALCULATIONS
-# res1 <- get_pileup(
-#   bamfn, fafn, min_reads = 0,
-#   min_base_qual = 1,
-#   library_type = "fr-first-strand"
-# ) %>%
-#   as.data.frame()
-#
-# res2 <- get_pileup(
-#   bamfn, fafn, min_reads = 0,
-#   min_base_qual = 1,
-#   library_type = "fr-second-strand"
-# ) %>%
-#   as.data.frame()
+  bout <- filterBam(bamfn,
+                    param = ScanBamParam(flag = scanBamFlag(isMinusStrand = T)),
+                    destination = bout,
+                    indexDestination = TRUE)
+  a <- get_pileup(bamfn, fafn, bedfn, bam_flags = scanBamFlag(isMinusStrand = T))
+  b <- get_pileup(bout, fafn, bedfn)
+  expect_true(identical(a, b))
+})
+
+fa <- scanFa(fafn)
+hp_matches <- vmatchPattern(strrep("A", 6), fa) %>% as(., "GRanges")
+
+test_that("pileup check homopolymer filter", {
+  a <- get_pileup(bamfn, fafn, event_filters = c(0, 0, 0, 6))
+  b <- get_pileup(bamfn, fafn, event_filters = c(0, 0, 0, 0))
+  expect_false(identical(a, b))
+
+  expect_equal(length(queryHits(findOverlaps(hp_matches, a))), 0)
+  expect_equal(length(queryHits(findOverlaps(hp_matches, b))), 120)
+})
+
+unlink(bout)
