@@ -267,7 +267,7 @@ prep_for_de <- function(se,
 
 #' Perform differential editing
 
-#' Uses either EdgeR or DESeq2 to perform differential editing analysis.
+#' Uses either edgeR or DESeq2 to perform differential editing analysis.
 #' This will work for simple designs that have 1 treatment and 1 control.
 #' For more complex designs, we suggest you perform your own.
 #'
@@ -276,7 +276,7 @@ prep_for_de <- function(se,
 #' possible return values.
 #' 
 #' @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
-#' @param type OPTIONAL if EdgeR or DESeq should be run. Default is EdgeR
+#' @param type OPTIONAL if edgeR or DESeq should be run. Default is edgeR
 #' @param sample_column OPTIONAL the name of the column from colData(deobj) that
 #' contains your sample information. Default is sample. If you do not have a 
 #' column named "sample", you must provide the appropriate sample column
@@ -291,7 +291,7 @@ prep_for_de <- function(se,
 #' @import SummarizedExperiment
 #' @export
 
-perform_de <- function(deobj, type = "EdgeR", sample_col = "sample",
+perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
                        condition_col = "condition",
                        condition_control = NULL,
                        condition_treatment = NULL){
@@ -354,12 +354,12 @@ perform_de <- function(deobj, type = "EdgeR", sample_col = "sample",
                 " options from your experiment are: ",
                 str_c(options, collapse = ", ")))
   }
-  if (type == "EdgeR"){
-    results <- run_edgr()
+  if (type == "edgeR"){
+    results <- run_edger(deobj, condition_control, condition_treatment)
   } else if (type == "DESeq2"){
     results <- run_deseq2(deobj, condition_control, condition_treatment)
   } else {
-    stop(paste0("Unrecognized type: '", type, "'. type must be either EdgeR",
+    stop(paste0("Unrecognized type: '", type, "'. type must be either edgeR",
                 " or DESeq2."))
   }
   return(results)
@@ -391,8 +391,10 @@ perform_de <- function(deobj, type = "EdgeR", sample_col = "sample",
 
 run_deseq2 <- function(deobj, condition_control = NULL,
                        condition_treatment = NULL){
-  # Get rid of any existing model matrix
-  mod_mat <- NULL
+  if (!requireNamespace("DESeq2", quietly = TRUE)){
+    stop(paste0("Package \"DESeq2\" needed to run differential analysis. Please install it."),
+      call. = FALSE)
+  }
   
   design <- ~0 + condition:sample + condition:count
   
@@ -433,7 +435,7 @@ run_deseq2 <- function(deobj, condition_control = NULL,
   
   alt_control <- colMeans(mod_mat[dds$condition == condition_control &
                                     dds$count == "alt",])
-  ref_control <- colMeans(mod_mat[dds$condition == condition_treatment &
+  ref_control <- colMeans(mod_mat[dds$condition == condition_control &
                                     dds$count == "ref",])
   
   # TODO add other possible return values and return as a list.
@@ -450,4 +452,82 @@ run_deseq2 <- function(deobj, condition_control = NULL,
   return(list(deseq_obj = dds,
               results_full = treatment_vs_control,
               sig_results = deseq_res))
+}
+
+#' Perform differential editing with edgeR
+
+#' Uses edgeR to perform differential editing analysis.
+#' This will work for simple designs that have 1 treatment and 1 control.
+#' For more complex designs, we suggest you perform your own.
+#' It will test if your sample column makes the model matrix not full
+#' rank. If that happens, the model matrix will be modified to be full rank.
+#' This is not intended to be called directly by the user, instead, this should
+#' be called by `perform_de`
+#'
+#' At the moment, this function will only find editing events specific
+#' to the treatment, but it will be pretty straight forward to add other
+#' possible return values.
+#' 
+#' @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
+#' @param type OPTIONAL if EdgeR or DESeq should be run. Default is EdgeR
+#' @param condition_control The name of the control condition. This must be a variable
+#' in your condition_col of colData(deobj). No default provided.
+#' @param condition_treatment The name of the treatment condition. This must be a variable
+#' in your condition_col of colData(deobj).
+#'
+#' @import SummarizedExperiment
+#' @export
+
+run_edger <- function(deobj, condition_control = NULL,
+                       condition_treatment = NULL){
+  
+  if (!requireNamespace("edgeR", quietly = TRUE)){
+    stop(paste0("Package \"edgeR\" needed to run differential analysis. Please install it."),
+         call. = FALSE)
+  }
+  
+  sample <- deobj$sample
+  condition <- deobj$condition
+  count <- deobj$count
+  
+  design <- model.matrix(~0 + condition:sample + condition:count)
+  
+  # Check if full rank, if not, fix
+  if (!limma::is.fullrank(design)){
+    design <- model.matrix(~0 + sample + condition:count)
+    design <- design[,!grepl("countref", colnames(design))]
+  }
+  
+  dge <- DGEList(assay(deobj, "counts"), lib.size = rep(1, ncol(deobj)))
+  dge <- estimateDisp(dge)
+  fit <- glmFit(dge, design)
+  
+  # Pull out the model matrix for all comparisons of interest
+  alt_treatment <- colMeans(design[deobj$condition == condition_treatment &
+                                     deobj$count == "alt",])
+  ref_treatment <- colMeans(design[deobj$condition == condition_treatment &
+                                     deobj$count == "ref",])
+  
+  alt_control <- colMeans(design[deobj$condition == condition_control &
+                                   deobj$count == "alt",])
+  ref_control <- colMeans(design[deobj$condition == condition_control &
+                                   deobj$count == "ref",])
+  
+  # TODO add other possible return values and return as a list.
+  # This finds editing specific to the condition
+  treatment_vs_control <- glmLRT(fit, contrast = (alt_treatment - ref_treatment) - 
+                      (alt_control - ref_control))
+  
+  treatment_vs_control <- topTags(treatment_vs_control,
+                                  n = nrow(treatment_vs_control))
+  
+  edger_res <- treatment_vs_control %>%
+    data.frame %>%
+    dplyr::filter(FDR < 0.05) %>%
+    dplyr::arrange(PValue)
+  
+  return(list(deseq_obj = fit,
+              results_full = treatment_vs_control,
+              sig_results = edger_res))
+  
 }
