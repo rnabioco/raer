@@ -1,14 +1,14 @@
 #' Adds editing frequencies
 #'
-#' Adds editing frequencies to an existing summarized experiment object (created by
+#' Adds editing frequencies to an existing SummarizedExperimentobject (created by
 #' `create_se`). Currently A to I editing is supported as well as any custom editing
-#' events. The summarized experiment with a new assay for editing requences for each site
+#' events. The SummarizedExperiment with a new assay for editing requences for each site
 #'  (edit_freq) and new colData columns with the number of edited sites (n_sites) and the
 #' fraction of edits (edit_idx) is returned. If make_plots is set to true and no save
-#' directory is specified, a list including the summarized experiment object and plots
+#' directory is specified, a list including the SummarizedExperiment object and plots
 #' of the number of sites editied and the fraction of editing events will be returned. 
 #' 
-#' @param se_object A summarized experiment object created by `create_se`
+#' @param se_object A SummarizedExperiment object created by `create_se`
 #' @param type OPTIONAL the type of editing event to add. Currently, only 
 #' A to I is supported ("AI") which is the default, but your own custom can
 #' be added by setting this to "none".
@@ -27,8 +27,8 @@
 #' the treatment and replicate information should be provided. See `make_editing_plots`
 #' @param save_dir OPTIONAL if the plots created should be saved, include a path to
 #' the directory. The plots will be saved as "number_of_sites.pdf" and "editing_index.pdf".
-#' If no directory is provided, the plots will be returned in a list with the summarized
-#' experiment object.
+#' If no directory is provided, the plots will be returned in a list with the
+#' SummarizedExperiment object.
 #' @param edit_frequency OPTIONAL the edit frequency used to determine the number of sites.
 #' Default is 0.01.
 #' @param min_count OPTIONAL the number of reads used to determine the number of edited sites.
@@ -90,7 +90,7 @@ add_editing_frequencies <- function(se_object, type = "AI",
 #' (n_sites) and the  fraction of edits (edit_idx). This function should be called by
 #' `add_editing_frequencies` and is not meant to be used directly.
 #' 
-#' @param se_filtered A summarized experiment object created by `create_se` and
+#' @param se_filtered A SummarizedExperiment object created by `create_se` and
 #' processed by `add_editing_frequencies`
 #' @param edit_from OPTIONAL if not using a pre-built type, you can specify
 #' your own editing. This should be a nucleotide (A, C, G, or T) and should
@@ -136,7 +136,7 @@ count_edits <- function(se_filtered, edit_frequency = 0.01, min_count = 10,
 #' of editing events per sample. This function is written to be called directly
 #' by `add_editing_frequencies`
 #' 
-#' @param se_object A summarized experiment object created by `create_se`
+#' @param se_object A SummarizedExperiment object created by `create_se`
 #' @param colors OPTIONAL The colors of the replicates. If no colors are 
 #' provided, Set1 from `RColorBrewer will be used
 #' @param meta_col The column in colData to be used to separate out samples
@@ -190,5 +190,75 @@ make_editing_plots <- function(se_object, colors = NULL,
   
   return(list(p1, p2))
 
+}
+
+#' Make summarized experiment object for DE
+
+#' Generates a SummarizedExperiment object for use with edgeR or DESeq2
+#' will generate a counts assay with a matrix formated with 2 columns per sample
+#' 
+#' @param se A SummarizedExperiment object
+#' @param type OPTIONAL the type of editing event to add. Currently, only 
+#' A to I is supported ("AI") which is the default, but your own custom can
+#' be added by setting this to "none".
+#' @param edit_from OPTIONAL if not using a pre-built type, you can specify
+#' your own editing. This should be a nucleotide (A, C, G, or T) and should
+#' correspond to the nucleotide you expect in the reference. Ex. for A to I
+#' editing events, this would be "A". If type is not "AI", both edit from
+#' and edit_to must be set.
+#' @param edit_to OPTIONAL if not using a pre-built type, you can specify
+#' your own editing. This should be a nucleotide (A, C, G, or T) and should
+#' correspond to the nucleotide you expect after the editing event. Ex. for A to I
+#' editing events, this would be "G". If type is not "AI", both edit from
+#' and edit_to must be set.
+#' @param min_prop OPTIONAL the min proporation of reads edited at a site.
+#' At least min_samples need to pass this to keep the site. Default is 0.1.
+#' @param max_prop OPTIONAL the max proporation of reads edited at a site.
+#' At least min_samples need to pass this to keep the site. Default is 0.9.
+#' @param min_samples OPTIONAL the minimum number of samples passing the cutoffs
+#' to keep a site. Default is 3.
+
+prep_for_de <- function(se,
+                        type = "AI",
+                        edit_from = NULL, edit_to = NULL,
+                        min_prop = 0.1,
+                        max_prop = 0.9,
+                        min_samples = 3){
+  
+  # Set edit to and from for pre defined types
+  if(type == "AI"){
+    edit_from <- "A"
+    edit_to <- "G"
+  } else if (is.null(edit_from) | is.null(edit_to)){
+    stop("If not using a pre built type 'AI', `edit_from` and `edit_to` must be set")
+  } else if (!(edit_from %in% c("A", "C", "G", "T")) | !(edit_to %in% c("A", "C", "G", "T"))) {
+    stop("`edit_to` and `edit_from` must be nucleotides!")
+  }
+  
+  # Only keep locations that pass cutoffs in a certain number of samples
+  pass_cutoff <- (assay(se, "edit_freq") >= min_prop) &
+    (assay(se, "edit_freq") <= max_prop)
+  se <- se[rowSums(pass_cutoff) >= min_samples, ]
+  
+  # Set the ref and alternate allele and create a count table with both
+  ref <- assay(se, paste0("n", edit_from))
+  colnames(ref) <- paste0(colnames(ref), "_ref")
+  alt <- assay(se, paste0("n", edit_to))
+  colnames(alt) <- paste0(colnames(alt), "_alt")
+  res <- cbind(ref, alt)
+  mdata <- colData(se)
+  
+  # Join the meta data for all samples
+  ref_mdata <- alt_mdata <- mdata
+  rownames(ref_mdata) <- colnames(ref)
+  ref_mdata$count <- "ref"
+  rownames(alt_mdata) <- colnames(alt)
+  alt_mdata$count <- "alt"
+  mdata <- rbind(ref_mdata, alt_mdata)
+  
+  # create a new SummarizedExperiment
+  res <- SummarizedExperiment(assays = list(counts = res),
+                              colData = mdata)
+  return(res)
 }
 
