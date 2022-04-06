@@ -217,6 +217,9 @@ make_editing_plots <- function(se_object, colors = NULL,
 #' At least min_samples need to pass this to keep the site. Default is 0.9.
 #' @param min_samples OPTIONAL the minimum number of samples passing the cutoffs
 #' to keep a site. Default is 3.
+#'
+#' @import SummarizedExperiment
+#' @export
 
 prep_for_de <- function(se,
                         type = "AI",
@@ -262,3 +265,189 @@ prep_for_de <- function(se,
   return(res)
 }
 
+#' Perform differential editing
+
+#' Uses either EdgeR or DESeq2 to perform differential editing analysis.
+#' This will work for simple designs that have 1 treatment and 1 control.
+#' For more complex designs, we suggest you perform your own.
+#'
+#' At the moment, this function will only find editing events specific
+#' to the treatment, but it will be pretty straight forward to add other
+#' possible return values.
+#' 
+#' @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
+#' @param type OPTIONAL if EdgeR or DESeq should be run. Default is EdgeR
+#' @param sample_column OPTIONAL the name of the column from colData(deobj) that
+#' contains your sample information. Default is sample. If you do not have a 
+#' column named "sample", you must provide the appropriate sample column
+#' @param condition_col OPTIONAL the name of the column from colData(deobj) that
+#' contains your treatment information. Default is condition, If you do not have a 
+#' column named "condition", you must provide the appropriate condition column
+#' @param condition_control The name of the control condition. This must be a variable
+#' in your condition_col of colData(deobj). No default provided.
+#' @param condition_treatment The name of the treatment condition. This must be a variable
+#' in your condition_col of colData(deobj).
+#'
+#' @import SummarizedExperiment
+#' @export
+
+perform_de <- function(deobj, type = "EdgeR", sample_col = "sample",
+                       condition_col = "condition",
+                       condition_control = NULL,
+                       condition_treatment = NULL){
+  
+  # Make sure all variables are present
+  if (!sample_col %in% colnames(colData(deobj))){
+    stop(paste0("somple_col must be a column in the colDat of your deobj. '",
+                sample_col, "' not found in colnames(colData(deobj))!"))
+  }
+  if (!condition_col %in% colnames(colData(deobj))){
+    stop(paste0("condition_col must be a column in the colData of your deobj. '",
+                condition_col, "' not found in colnames(colData(deobj))!"))
+  }
+  
+  # Rename columns based on the input
+  if (sample_col != "sample"){
+    colData(deobj)$sample <- NULL
+  }
+  if (condition_col != "condition"){
+    colData(deobj)$condition <- NULL
+  }
+  new_columns <- colData(deobj) %>%
+    data.frame %>% 
+    dplyr::rename(condition = condition_col) %>%
+    dplyr::rename(sample = sample_col) %>%
+    dplyr::select(c(sample, condition))
+  
+  colData(deobj) <- cbind(colData(deobj), new_columns)
+  
+  # Check that condition_control and condition_treatment are correct
+  if (is.null(condition_control)){
+    options <- unique(colData(deobj)$condition)
+    stop(paste0("condition_control must be set. This should be the level of",
+                " your meta data that corresponds to your control. Possible",
+                " options from your experiment are: ",
+                str_c(options, collapse = ", ")))
+  }
+  if (is.null(condition_treatment)){
+    options <- unique(colData(deobj)$condition)
+    stop(paste0("condition_treatment must be set. This should be the level of",
+                " your meta data that corresponds to your control. Possible",
+                " options from your experiment are: ",
+                str_c(options, collapse = ", ")))
+  }
+  
+  # Check that the treatment and control are in the object
+  if (!condition_control %in% colData(deobj)$condition){
+    options <- unique(colData(deobj)$condition)
+    stop(paste0("condition_control must be a column in your deobj colData. '",
+                condition_control, "' not found in the levels of the condition",
+                " column of colData(deobj)! Possible",
+                " options from your experiment are: ",
+                str_c(options, collapse = ", ")))
+  }
+  if (!condition_treatment %in% colData(deobj)$condition){
+    options <- unique(colData(deobj)$condition)
+    stop(paste0("condition_treatment must be a column in your deobj colData. '",
+                condition_treatment, "' not found in the levels of the condition",
+                " column of colData(deobj)! Possible",
+                " options from your experiment are: ",
+                str_c(options, collapse = ", ")))
+  }
+  if (type == "EdgeR"){
+    results <- run_edgr()
+  } else if (type == "DESeq2"){
+    results <- run_deseq2(deobj, condition_control, condition_treatment)
+  } else {
+    stop(paste0("Unrecognized type: '", type, "'. type must be either EdgeR",
+                " or DESeq2."))
+  }
+  return(results)
+}
+
+#' Perform differential editing with DESeq2
+
+#' Uses DESeq2 to perform differential editing analysis.
+#' This will work for simple designs that have 1 treatment and 1 control.
+#' For more complex designs, we suggest you perform your own.
+#' It will test if your sample column makes the model matrix not full
+#' rank. If that happens, the model matrix will be modified to be full rank.
+#' This is not intended to be called directly by the user, instead, this should
+#' be called by `perform_de`
+#'
+#' At the moment, this function will only find editing events specific
+#' to the treatment, but it will be pretty straight forward to add other
+#' possible return values.
+#' 
+#' @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
+#' @param type OPTIONAL if EdgeR or DESeq should be run. Default is EdgeR
+#' @param condition_control The name of the control condition. This must be a variable
+#' in your condition_col of colData(deobj). No default provided.
+#' @param condition_treatment The name of the treatment condition. This must be a variable
+#' in your condition_col of colData(deobj).
+#'
+#' @import SummarizedExperiment
+#' @export
+
+run_deseq2 <- function(deobj, condition_control = NULL,
+                       condition_treatment = NULL){
+  # Get rid of any existing model matrix
+  mod_mat <- NULL
+  
+  design <- ~0 + condition:sample + condition:count
+  
+  # See if the design is full rank, if not, remove sample info
+  test_mat <- try(DESeqDataSetFromMatrix(countData = assay(deobj, "counts"),
+                                         colData = colData(deobj),
+                                         design = design), silent = TRUE)
+  
+  if (class(test_mat) == "try-error"){
+    sample <- deobj$sample
+    condition <- deobj$condition
+    count <- deobj$count
+    
+    design <- model.matrix(~0 + sample + condition:count)
+    design <- design[,!grepl("countref", colnames(design))]
+    mod_mat <- design
+  }
+  
+  dds <- DESeqDataSetFromMatrix(countData = assay(deobj, "counts"),
+                                colData = colData(deobj),
+                                design = design)
+  
+  # We don't want size factors because we are looking at ratios within a sample
+  sizeFactors(dds) <- rep(1, nrow(colData(deobj)))
+  
+  # TODO - figure out what modeling is best, also try local
+  dds <- DESeq(dds, fitType = "parametric")
+  
+  if (class(test_mat) != "try-error"){
+    mod_mat <- model.matrix(design(dds), colData(dds))
+  }
+  
+  # Pull out the model matrix for all comparisons of interest
+  alt_treatment <- colMeans(mod_mat[dds$condition == condition_treatment &
+                                      dds$count == "alt",])
+  ref_treatment <- colMeans(mod_mat[dds$condition == condition_treatment &
+                                      dds$count == "ref",])
+  
+  alt_control <- colMeans(mod_mat[dds$condition == condition_control &
+                                    dds$count == "alt",])
+  ref_control <- colMeans(mod_mat[dds$condition == condition_treatment &
+                                    dds$count == "ref",])
+  
+  # TODO add other possible return values and return as a list.
+  # This finds editing specific to the condition
+  treatment_vs_control <- results(dds,
+                                  contrast = (alt_treatment - ref_treatment) - 
+                                    (alt_control - ref_control))
+  
+  deseq_res <- treatment_vs_control %>%
+    data.frame %>%
+    dplyr::filter(padj < 0.05) %>%
+    dplyr::arrange(log2FoldChange)
+  
+  return(list(deseq_obj = dds,
+              results_full = treatment_vs_control,
+              sig_results = deseq_res))
+}
