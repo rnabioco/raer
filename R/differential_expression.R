@@ -9,8 +9,9 @@
 #' of the number of sites editied and the fraction of editing events will be returned. 
 #' 
 #' @param se_object A SummarizedExperiment object created by `create_se`
-#' @param type OPTIONAL the type of editing event to add. Currently, only 
-#' A to I is supported ("AI") which is the default, but your own custom can
+#' @param type OPTIONAL the type of editing event to add. Currently, the options 
+#' are A to I ("AI"), U to C ("UC"), C to U ("CU"), and G to A ("GA"). "AI" is the
+#' default. If you want an editing option outside of these, your own custom can
 #' be added by setting this to "none".
 #' @param edit_from OPTIONAL if not using a pre-built type, you can specify
 #' your own editing. This should be a nucleotide (A, C, G, or T) and should
@@ -49,6 +50,15 @@ add_editing_frequencies <- function(se_object, type = "AI",
   if(type == "AI"){
     edit_from <- "A"
     edit_to <- "G"
+  } else if (type == "CU"){
+    edit_from <- "C"
+    edit_to <- "T"
+  } else if (type =="UC"){
+    edit_from <- "T"
+    edit_to <- "U"
+  } else if (type == "GA"){
+    edit_from <- "G"
+    edit_to <- "A"
   } else if (is.null(edit_from) | is.null(edit_to)){
     stop("If not using a pre built type 'AI', `edit_from` and `edit_to` must be set")
   } else if (!(edit_from %in% c("A", "C", "G", "T")) | !(edit_to %in% c("A", "C", "G", "T"))) {
