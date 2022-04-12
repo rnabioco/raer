@@ -77,8 +77,8 @@ add_editing_frequencies <- function(se_object, type = "AI",
       
       return(se_filtered)
     } else {
-      return(c(se_filtered, plot_list))
-    }
+      plot_list$se_filtered <- se_filtered
+      return(plot_list)    }
   } else {
     return(se_filtered)
   }
