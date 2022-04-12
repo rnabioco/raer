@@ -451,7 +451,8 @@ run_deseq2 <- function(deobj, condition_control = NULL,
   
   return(list(deseq_obj = dds,
               results_full = treatment_vs_control,
-              sig_results = deseq_res))
+              sig_results = deseq_res,
+              model_matrix = mod_mat))
 }
 
 #' Perform differential editing with edgeR
@@ -528,6 +529,7 @@ run_edger <- function(deobj, condition_control = NULL,
   
   return(list(deseq_obj = fit,
               results_full = treatment_vs_control,
-              sig_results = edger_res))
+              sig_results = edger_res,
+              model_matrix = design))
   
 }
