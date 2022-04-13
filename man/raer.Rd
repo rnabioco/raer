@@ -19,6 +19,12 @@ Useful links:
 \author{
 \strong{Maintainer}: Kent Riemondy \email{kent.riemondy@cuanschutz.edu} (\href{https://orcid.org/0000-0003-0750-1273}{ORCID})
 
+Authors:
+\itemize{
+  \item Kristen Wells \email{kristen.wells-wrasman@cuanschutz.edu}
+  \item Ryan Sheridan \email{ryan.sheridan@cuanschutz.edu}
+}
+
 Other contributors:
 \itemize{
   \item RNA Bioscience Initiative [funder]
