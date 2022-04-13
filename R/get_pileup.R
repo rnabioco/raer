@@ -203,7 +203,7 @@ get_pileup <- function(bamfile,
   if(length(bamfile) == 2){
     count_cols <- paste0(rep(count_cols, 2), rep(c("_1", "_2"), each = length(count_cols)))
   }
-  colnames(from)[4:ncol(from)] = c("Ref", count_cols)
+  colnames(from)[4:ncol(from)] = c("Ref", "Var", count_cols)
   if(return_data){
     GenomicRanges::GRanges(seqnames=from$V1,
                            ranges=IRanges::IRanges(start=from$V2,
