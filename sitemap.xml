@@ -19,6 +19,9 @@
     <loc>https://rnabioco.github.io/raer/reference/BedFile-class.html</loc>
   </url>
   <url>
+    <loc>https://rnabioco.github.io/raer/reference/add_editing_frequencies.html</loc>
+  </url>
+  <url>
     <loc>https://rnabioco.github.io/raer/reference/annot_from_gr.html</loc>
   </url>
   <url>
@@ -32,6 +35,9 @@
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/close.BedFile.html</loc>
+  </url>
+  <url>
+    <loc>https://rnabioco.github.io/raer/reference/count_edits.html</loc>
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/create_se.html</loc>
@@ -52,6 +58,21 @@
     <loc>https://rnabioco.github.io/raer/reference/indexBed.html</loc>
   </url>
   <url>
+    <loc>https://rnabioco.github.io/raer/reference/make_editing_plots.html</loc>
+  </url>
+  <url>
+    <loc>https://rnabioco.github.io/raer/reference/perform_de.html</loc>
+  </url>
+  <url>
+    <loc>https://rnabioco.github.io/raer/reference/prep_for_de.html</loc>
+  </url>
+  <url>
     <loc>https://rnabioco.github.io/raer/reference/raer.html</loc>
+  </url>
+  <url>
+    <loc>https://rnabioco.github.io/raer/reference/run_deseq2.html</loc>
+  </url>
+  <url>
+    <loc>https://rnabioco.github.io/raer/reference/run_edger.html</loc>
   </url>
 </urlset>
