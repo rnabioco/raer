@@ -1,5 +1,6 @@
 #include "htslib/sam.h"
 #include "htslib/faidx.h"
+#include "htslib/khash.h"
 #include "bedidx.h"
 #include "bedfile.h"
 #include "utils.h"
@@ -17,6 +18,9 @@
 #include <getopt.h>
 #include <inttypes.h>
 #include <Rinternals.h>
+
+KHASH_SET_INIT_STR(varhash);
+typedef khash_t(varhash) *varhash_t;
 
 static unsigned char comp_base[256] = {
   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,
@@ -188,20 +192,57 @@ typedef struct  {
   int mtotal, mnr, mnv, mna, mnt, mng, mnc, mnn;
   int pref_b;
   int mref_b;
+  varhash_t pvar;
+  varhash_t mvar;
 } pcounts;
+
+static void clear_pcounts(pcounts *p){
+  p->mna = p->mnc = p->mng = p->mnn = p->mnr = p->mnt = p->mnv = p->mtotal = 0;
+  p->pna = p->pnc = p->png = p->pnn = p->pnr = p->pnt = p->pnv = p->ptotal = 0;
+  p->mref_b = p->pref_b = p->pos = 0;
+  kh_clear(varhash, p->mvar);
+  kh_clear(varhash, p->pvar);
+}
 
 // struct for event filter params
 typedef struct  {
   int nmer, splice_dist, indel_dist, trim_dist;
 } efilter;
 
+static void get_var_string(varhash_t *vhash, char *out){
+  const char *reg;
+  int z = 1;
+  khint_t k;
+
+  if(kh_size(*vhash) > 0){
+    for (k = kh_begin(*vhash); k < kh_end(*vhash); k++) {
+      if (kh_exist(*vhash,k)) {
+        reg = kh_key(*vhash,k);
+
+        if(z == 1){
+          strcpy(out, reg);
+        } else {
+          strcat(out, ",");
+          strcat(out, reg);
+        }
+        z += 1;
+      }
+    }
+  } else {
+    strcpy(out, "-");
+  }
+}
+
 static void print_plus_counts(FILE *fp, pcounts *pc, int n, char* ctig, int pos, int pref){
+  char pout[12];
+  get_var_string(&pc[0].pvar, pout);
   fprintf(fp,
-          "%s\t%i\t%c\t%c",
+          "%s\t%i\t%c\t%c\t%s",
           ctig,
           pos + 1,
           '+',
-          pref) ;
+          pref,
+          pout) ;
   int i;
   for(i = 0; i < n; ++i){
     fprintf(fp,
@@ -218,12 +259,15 @@ static void print_plus_counts(FILE *fp, pcounts *pc, int n, char* ctig, int pos,
 }
 
 static void print_minus_counts(FILE *fp, pcounts *pc, int n, char* ctig, int pos, int mref){
+  char mout[12];
+  get_var_string(&pc[0].mvar, mout);
   fprintf(fp,
-          "%s\t%i\t%c\t%c",
+          "%s\t%i\t%c\t%c\t%s",
           ctig,
           pos + 1,
           '-',
-          mref) ;
+          mref,
+          mout) ;
   int i;
   for(i = 0; i < n; ++i){
     fprintf(fp,
@@ -448,6 +492,12 @@ int run_cpileup(const char** cbampaths,
 
   pcounts *pc;
   pc = calloc(n, sizeof(pcounts));
+  if (pc[0].mvar == NULL) {
+    pc[0].mvar = kh_init(varhash);
+  }
+  if (pc[0].pvar == NULL) {
+    pc[0].pvar = kh_init(varhash);
+  }
 
   int min_1, min_2;
   min_1 = min_2 = 0;
@@ -458,6 +508,12 @@ int run_cpileup(const char** cbampaths,
     min_1 = min_reads[0];
     min_2 = min_reads[1];
   }
+  char mvar[3];
+  char pvar[3];
+  mvar[2] = '\0';
+  pvar[2] = '\0';
+
+  int hret ;
 
   int n_iter = 0;
   int l;
@@ -476,7 +532,7 @@ int run_cpileup(const char** cbampaths,
       mref_b = comp_base[(unsigned char) pref_b];
 
       for(i = 0; i < n; ++i){
-        memset(&pc[i], 0, sizeof(pcounts));
+        clear_pcounts(&pc[i]);
       }
 
       // check if site is in a homopolymer
@@ -570,15 +626,25 @@ int run_cpileup(const char** cbampaths,
   	      // UNSTRANDED leave as positive strand for now?
 
   	      // THIS COULD BE CLEANED UP SO LESS REPETITIVE
+
+
+
   	      // count reads that align to minus strand
           if(invert){
-            c = comp_base[(unsigned char)c];
-
+            c = (char)comp_base[(unsigned char)c];
+            mvar[0] = mref_b;
             pc[i].mtotal += 1;
 
             if(mref_b == c){
               pc[i].mnr += 1;
             } else {
+              // store variants in khash (for rna-seq only)
+              mvar[1] = c;
+              if(i == 0){
+                char *p = strdup(mvar);
+                kh_put(varhash, pc[i].mvar, p, &hret);
+                if (hret == 0) free(p);
+              }
               pc[i].mnv += 1;
             }
 
@@ -602,12 +668,18 @@ int run_cpileup(const char** cbampaths,
 
           // count reads that align to plus strand
           } else {
-
+            pvar[0] = pref_b;
             pc[i].ptotal += 1;
 
             if(pref_b == c){
               pc[i].pnr += 1;
             } else {
+              pvar[1] = c;
+              if(i == 0){
+                char *p = strdup(pvar);
+                kh_put(varhash, pc[i].pvar, p, &hret);
+                if (hret == 0) free(p);
+              }
               pc[i].pnv += 1;
             }
 
@@ -633,6 +705,7 @@ int run_cpileup(const char** cbampaths,
       }
       // print out lines if pass depth criteria
       print_counts(pileup_fp, pc, n, min_1, min_2, h->target_name[tid], pos, pref_b, mref_b);
+
   }
 
   //clean up memory
@@ -646,6 +719,8 @@ int run_cpileup(const char** cbampaths,
     sam_close(data[i]->fp);
     if (data[i]->iter) hts_itr_destroy(data[i]->iter);
     free(data[i]);
+    kh_destroy(varhash, pc[i].mvar);
+    kh_destroy(varhash, pc[i].pvar);
   }
   free(data); free(plp); free(n_plp);
   free(pc); free(ef);

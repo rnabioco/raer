@@ -5,6 +5,8 @@ Version: 0.0.0.9000
 Authors@R: c(
     person("Kent", "Riemondy", , "kent.riemondy@cuanschutz.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-0750-1273")),
+    person("Kristen", "Wells", , "kristen.wells-wrasman@cuanschutz.edu", role = c("aut")),
+    person("Ryan", "Sheridan", , "ryan.sheridan@cuanschutz.edu", role = c("aut")),
     person("RNA Bioscience Initiative", role = "fnd")
     )
 Description: Toolkit for identification, visualization, and statistical testing 
@@ -23,10 +25,15 @@ Imports:
     SummarizedExperiment,
     S4Vectors,
     GenomeInfoDb,
-    methods
+    methods,
+    ggplot2
 Suggests:
     testthat,
-    knitr
+    knitr,
+    RColorBrewer,
+    DESeq2,
+    edgeR,
+    limma
 LinkingTo: 
     Rcpp,
     Rhtslib,

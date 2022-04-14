@@ -15,7 +15,7 @@ res <- get_pileup(bamfn, fafn, bedfn)
 
 test_that("pileup works", {
   expect_equal(length(res$Ref), 182)
-  expect_equal(ncol(as.data.frame(res)), 13)
+  expect_equal(ncol(as.data.frame(res)), 14)
 })
 
 test_that("2-bam pileup works", {
@@ -25,7 +25,7 @@ test_that("2-bam pileup works", {
                                      "fr-first-strand"))
 
   expect_equal(length(res$Ref), 182)
-  expect_equal(ncol(as.data.frame(res)), 20)
+  expect_equal(ncol(as.data.frame(res)), 21)
   b1_vals <- mcols(res)[paste0(count_cols, "_1")]
   b2_vals <- mcols(res)[paste0(count_cols, "_2")]
   colnames(b2_vals) <- colnames(b1_vals)
@@ -35,7 +35,7 @@ test_that("2-bam pileup works", {
   res <- get_pileup(c(bamfn, bamfn), fafn, bedfn)
 
   expect_equal(length(res$Ref), 182)
-  expect_equal(ncol(as.data.frame(res)), 20)
+  expect_equal(ncol(as.data.frame(res)), 21)
   b1_vals <- mcols(res)[paste0(count_cols, "_1")]
   b2_vals <- mcols(res)[paste0(count_cols, "_2")]
   colnames(b2_vals) <- colnames(b1_vals)
