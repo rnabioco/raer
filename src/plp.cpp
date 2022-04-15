@@ -25,6 +25,8 @@ int run_pileup(std::vector<std::string> bampaths,
                int min_baseQ = 20,
                int n_align = 0,
                std::string n_align_tag = "NH",
+               int only_keep_variants = 0,
+               std::string outbam = ".",
                SEXP ext = R_NilValue) {
 
   int n_files;
@@ -84,6 +86,14 @@ int run_pileup(std::vector<std::string> bampaths,
     stop("event filters must be a vector of 4 positive integers ");
   }
 
+  char* cbamoutfn;
+  if(outbam == "."){
+    cbamoutfn = NULL;
+  } else {
+    cbamoutfn = &*outbam.begin();
+  }
+
+
   int out;
   out = run_cpileup(&cbampaths[0],
                     cbampaths.size(),
@@ -100,6 +110,8 @@ int run_pileup(std::vector<std::string> bampaths,
                     n_align,
                     &*n_align_tag.begin(),
                     &event_filters[0],
+                    only_keep_variants,
+                    cbamoutfn,
                     ext);
 
   return out;

@@ -36,6 +36,10 @@
 #'  5' ends of reads, distance from splicing events, distance from indels, and
 #'  length of homopolymer stretch used to determine if a site is in a homopolymer.
 #'  default is no filters applied (e.g. c(0,0,0,0)).
+#' @param only_keep_variants if TRUE, then only variant sites will be reported
+#' (FALSE by default)
+#' @param outbam if supplied a bam file will be written with reads that pass filters
+#'  and contain variants
 #' @param return_data return data as a Granges table?
 #'
 #' @importFrom Rsamtools bgzip indexTabix TabixFile scanTabix
@@ -61,6 +65,8 @@ get_pileup <- function(bamfile,
                    n_align = 0,
                    n_align_tag = "NH",
                    event_filters = c(0,0,0,0),
+                   only_keep_variants = FALSE,
+                   outbam = NULL,
                    return_data = TRUE){
 
   bamfile <- path.expand(bamfile)
@@ -151,6 +157,20 @@ get_pileup <- function(bamfile,
     lib_code <- c(lib_code, 0)
   }
 
+  if(!is.null(outbam)){
+    if(!is.character(outbam) | length(outbam) != 1){
+      stop("outbam must be a character vector of length 1")
+    }
+  } else {
+    outbam <- "."
+  }
+
+  if(!is.logical(only_keep_variants)){
+    stop("only_keep_variants must be a logical value")
+  } else {
+    only_keep_variants = as.integer(only_keep_variants)
+  }
+
   res <- run_pileup(bampaths = bamfile,
                     fapath = fafile,
                     region = region,
@@ -165,6 +185,8 @@ get_pileup <- function(bamfile,
                     bam_flags = bam_flags,
                     n_align = as.integer(n_align),
                     n_align_tag = n_align_tag,
+                    only_keep_variants,
+                    outbam,
                     idx_ptr)
 
   if(res == 1){
@@ -195,10 +217,18 @@ get_pileup <- function(bamfile,
   }
 
   # quick method to convert vector of character strings into data.frame
-  from <- data.table::fread(text = tbx_vals,
-                            stringsAsFactors = FALSE,
-                            data.table = FALSE,
-                            sep="\t")
+  if(length(tbx_vals) == 1){
+    # handle length 1 character vectors, which will not work with fread
+    from = data.frame(t(strsplit(tbx_vals, "\t")[[1]]))
+    colnames(from) <- paste0("V", 1:ncol(from))
+    from[c(2, 6:12)] <- as.numeric(from[c(2, 6:12)])
+  } else {
+    from <- data.table::fread(text = tbx_vals,
+                              stringsAsFactors = FALSE,
+                              data.table = FALSE,
+                              sep="\t")
+  }
+
   count_cols <- c("nRef", "nVar", "nA", "nT", "nC", "nG", "nN")
   if(length(bamfile) == 2){
     count_cols <- paste0(rep(count_cols, 2), rep(c("_1", "_2"), each = length(count_cols)))

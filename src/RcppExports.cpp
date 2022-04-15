@@ -38,8 +38,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // run_pileup
-int run_pileup(std::vector<std::string> bampaths, std::string fapath, std::string region, std::string outfn, std::string bedfn, std::vector<int> min_reads, std::vector<int> event_filters, std::vector<int> min_mapQ, std::vector<int> bam_flags, std::vector<int> libtype, int max_depth, int min_baseQ, int n_align, std::string n_align_tag, SEXP ext);
-RcppExport SEXP _raer_run_pileup(SEXP bampathsSEXP, SEXP fapathSEXP, SEXP regionSEXP, SEXP outfnSEXP, SEXP bedfnSEXP, SEXP min_readsSEXP, SEXP event_filtersSEXP, SEXP min_mapQSEXP, SEXP bam_flagsSEXP, SEXP libtypeSEXP, SEXP max_depthSEXP, SEXP min_baseQSEXP, SEXP n_alignSEXP, SEXP n_align_tagSEXP, SEXP extSEXP) {
+int run_pileup(std::vector<std::string> bampaths, std::string fapath, std::string region, std::string outfn, std::string bedfn, std::vector<int> min_reads, std::vector<int> event_filters, std::vector<int> min_mapQ, std::vector<int> bam_flags, std::vector<int> libtype, int max_depth, int min_baseQ, int n_align, std::string n_align_tag, int only_keep_variants, std::string outbam, SEXP ext);
+RcppExport SEXP _raer_run_pileup(SEXP bampathsSEXP, SEXP fapathSEXP, SEXP regionSEXP, SEXP outfnSEXP, SEXP bedfnSEXP, SEXP min_readsSEXP, SEXP event_filtersSEXP, SEXP min_mapQSEXP, SEXP bam_flagsSEXP, SEXP libtypeSEXP, SEXP max_depthSEXP, SEXP min_baseQSEXP, SEXP n_alignSEXP, SEXP n_align_tagSEXP, SEXP only_keep_variantsSEXP, SEXP outbamSEXP, SEXP extSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< std::vector<std::string> >::type bampaths(bampathsSEXP);
@@ -56,8 +56,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type min_baseQ(min_baseQSEXP);
     Rcpp::traits::input_parameter< int >::type n_align(n_alignSEXP);
     Rcpp::traits::input_parameter< std::string >::type n_align_tag(n_align_tagSEXP);
+    Rcpp::traits::input_parameter< int >::type only_keep_variants(only_keep_variantsSEXP);
+    Rcpp::traits::input_parameter< std::string >::type outbam(outbamSEXP);
     Rcpp::traits::input_parameter< SEXP >::type ext(extSEXP);
-    rcpp_result_gen = Rcpp::wrap(run_pileup(bampaths, fapath, region, outfn, bedfn, min_reads, event_filters, min_mapQ, bam_flags, libtype, max_depth, min_baseQ, n_align, n_align_tag, ext));
+    rcpp_result_gen = Rcpp::wrap(run_pileup(bampaths, fapath, region, outfn, bedfn, min_reads, event_filters, min_mapQ, bam_flags, libtype, max_depth, min_baseQ, n_align, n_align_tag, only_keep_variants, outbam, ext));
     return rcpp_result_gen;
 END_RCPP
 }
