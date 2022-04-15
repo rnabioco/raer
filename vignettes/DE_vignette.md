@@ -19,14 +19,14 @@ library(ComplexHeatmap)
 Set directories and read in the data (eventually, we should make this downloadable)
 
 ```{r}
-res_dir <- here("results/GSE99249/")
+res_dir <- here("../working_dir/results/GSE99249/")
 
 # Read in data
 se <- readRDS(file.path(res_dir, "merged_se_with_meta.rds"))
 ```
 
 ## Preprocess
-We start by using the `add_editing_frequencies` function to identify the percent of edits for each position and sample. Currently, the only built in editing type is A to I. You can use this type by setting `type = AI`.
+We start by using the `add_editing_frequencies` function to identify the percent of edits for each position and sample. Several pre-built options are available: A to I ("AI"), U to C ("UC"), C to U ("CU"), and G to A ("GA"). You can specify A to I editing by setting `type = AI` (this is also the default).
 
 ```{r}
 se_filtered <- add_editing_frequencies(se, type = "AI",

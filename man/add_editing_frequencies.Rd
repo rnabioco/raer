@@ -19,8 +19,9 @@ add_editing_frequencies(
 \arguments{
 \item{se_object}{A SummarizedExperiment object created by \code{create_se}}
 
-\item{type}{OPTIONAL the type of editing event to add. Currently, only
-A to I is supported ("AI") which is the default, but your own custom can
+\item{type}{OPTIONAL the type of editing event to add. Currently, the options
+are A to I ("AI"), U to C ("UC"), C to U ("CU"), and G to A ("GA"). "AI" is the
+default. If you want an editing option outside of these, your own custom can
 be added by setting this to "none".}
 
 \item{edit_from}{OPTIONAL if not using a pre-built type, you can specify

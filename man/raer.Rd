@@ -21,7 +21,7 @@ Useful links:
 
 Authors:
 \itemize{
-  \item Kristen Wells \email{kristen.wells-wrasman@cuanschutz.edu}
+  \item Kristen Wells \email{kristen.wells-wrasman@cuanschutz.edu} (\href{https://orcid.org/0000-0002-7466-8164}{ORCID})
   \item Ryan Sheridan \email{ryan.sheridan@cuanschutz.edu}
 }
 
