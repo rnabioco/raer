@@ -21,6 +21,10 @@ perform_de(
 
 \item{type}{OPTIONAL if edgeR or DESeq should be run. Default is edgeR}
 
+\item{sample_col}{OPTIONAL the name of the column from colData(deobj) that
+contains your sample information. Default is sample. If you do not have a
+column named "sample", you must provide the appropriate sample column}
+
 \item{condition_col}{OPTIONAL the name of the column from colData(deobj) that
 contains your treatment information. Default is condition, If you do not have a
 column named "condition", you must provide the appropriate condition column}
@@ -30,10 +34,6 @@ in your condition_col of colData(deobj). No default provided.}
 
 \item{condition_treatment}{The name of the treatment condition. This must be a variable
 in your condition_col of colData(deobj).}
-
-\item{sample_column}{OPTIONAL the name of the column from colData(deobj) that
-contains your sample information. Default is sample. If you do not have a
-column named "sample", you must provide the appropriate sample column}
 }
 \description{
 At the moment, this function will only find editing events specific

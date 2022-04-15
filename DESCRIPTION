@@ -5,7 +5,8 @@ Version: 0.0.0.9000
 Authors@R: c(
     person("Kent", "Riemondy", , "kent.riemondy@cuanschutz.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-0750-1273")),
-    person("Kristen", "Wells", , "kristen.wells-wrasman@cuanschutz.edu", role = c("aut")),
+    person("Kristen", "Wells", , "kristen.wells-wrasman@cuanschutz.edu", role = c("aut"),
+           comment = c(ORCID = "0000-0002-7466-8164")),
     person("Ryan", "Sheridan", , "ryan.sheridan@cuanschutz.edu", role = c("aut")),
     person("RNA Bioscience Initiative", role = "fnd")
     )
@@ -26,7 +27,8 @@ Imports:
     S4Vectors,
     GenomeInfoDb,
     methods,
-    ggplot2
+    ggplot2,
+    stringr
 Suggests:
     testthat,
     knitr,

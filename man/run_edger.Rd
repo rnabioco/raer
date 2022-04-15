@@ -21,8 +21,6 @@ in your condition_col of colData(deobj). No default provided.}
 
 \item{condition_treatment}{The name of the treatment condition. This must be a variable
 in your condition_col of colData(deobj).}
-
-\item{type}{OPTIONAL if EdgeR or DESeq should be run. Default is EdgeR}
 }
 \description{
 At the moment, this function will only find editing events specific

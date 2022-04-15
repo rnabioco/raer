@@ -9,7 +9,7 @@
 #' of the number of sites editied and the fraction of editing events will be returned.
 #'
 #' @param se_object A SummarizedExperiment object created by `create_se`
-#' @param type OPTIONAL the type of editing event to add. Currently, the options 
+#' @param type OPTIONAL the type of editing event to add. Currently, the options
 #' are A to I ("AI"), U to C ("UC"), C to U ("CU"), and G to A ("GA"). "AI" is the
 #' default. If you want an editing option outside of these, your own custom can
 #' be added by setting this to "none".
@@ -60,7 +60,7 @@ add_editing_frequencies <- function(se_object, type = "AI",
     edit_from <- "G"
     edit_to <- "A"
   } else if (is.null(edit_from) | is.null(edit_to)){
-    stop("If not using a pre built type 'AI', `edit_from` and `edit_to` must be set")
+    stop("If not using a pre built type 'AI', 'CU', 'UC' or 'GA', `edit_from` and `edit_to` must be set")
   } else if (!(edit_from %in% c("A", "C", "G", "T")) | !(edit_to %in% c("A", "C", "G", "T"))) {
     stop("`edit_to` and `edit_from` must be nucleotides!")
   }
@@ -191,6 +191,7 @@ make_editing_plots <- function(se_object, colors = NULL,
     ggplot2::theme(axis.text.x = element_text(angle = 90, hjust = 1,
                                               vjust = 0.5))
 
+  p2 <- ggplot2::ggplot(plot_dat, ggplot2::aes(sample_info, edit_idx)) +
     ggplot2::geom_col(ggplot2::aes(fill = rep),
                       position = ggplot2::position_dodge()) +
     ggplot2::scale_fill_manual(values = cols) +
@@ -287,7 +288,7 @@ prep_for_de <- function(se,
 #'
 #' @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
 #' @param type OPTIONAL if edgeR or DESeq should be run. Default is edgeR
-#' @param sample_column OPTIONAL the name of the column from colData(deobj) that
+#' @param sample_col OPTIONAL the name of the column from colData(deobj) that
 #' contains your sample information. Default is sample. If you do not have a
 #' column named "sample", you must provide the appropriate sample column
 #' @param condition_col OPTIONAL the name of the column from colData(deobj) that
@@ -298,6 +299,7 @@ prep_for_de <- function(se,
 #' @param condition_treatment The name of the treatment condition. This must be a variable
 #' in your condition_col of colData(deobj).
 #'
+#' @import stringr
 #' @export
 
 perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
@@ -326,7 +328,7 @@ perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
   new_columns  <- as.data.frame(colData(deobj))
   names(new_columns)[names(new_columns) == condition_col] <- "condition"
   names(new_columns)[names(new_columns) == sample_col] <- "sample"
-  new_columns <- new_columns[c(sample, condition)]
+  new_columns <- new_columns[c("sample", "condition")]
 
   colData(deobj) <- cbind(colData(deobj), new_columns)
 
@@ -336,7 +338,7 @@ perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
     stop(paste0("condition_control must be set. This should be the level of",
                 " your meta data that corresponds to your control. Possible",
                 " options from your experiment are: ",
-                str_c(options, collapse = ", ")))
+                stringr::str_c(options, collapse = ", ")))
   }
   if (is.null(condition_treatment)){
     options <- unique(colData(deobj)$condition)
@@ -389,7 +391,6 @@ perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
 #' possible return values.
 #'
 #' @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
-#' @param type OPTIONAL if EdgeR or DESeq should be run. Default is EdgeR
 #' @param condition_control The name of the control condition. This must be a variable
 #' in your condition_col of colData(deobj). No default provided.
 #' @param condition_treatment The name of the treatment condition. This must be a variable
@@ -408,7 +409,8 @@ run_deseq2 <- function(deobj, condition_control = NULL,
   design <- ~0 + condition:sample + condition:count
 
   # See if the design is full rank, if not, remove sample info
-  test_mat <- try(DESeqDataSetFromMatrix(countData = assay(deobj, "counts"),
+  test_mat <- try(DESeq2::DESeqDataSetFromMatrix(countData = assay(deobj,
+                                                                   "counts"),
                                          colData = colData(deobj),
                                          design = design), silent = TRUE)
 
@@ -422,15 +424,15 @@ run_deseq2 <- function(deobj, condition_control = NULL,
     mod_mat <- design
   }
 
-  dds <- DESeqDataSetFromMatrix(countData = assay(deobj, "counts"),
+  dds <- DESeq2::DESeqDataSetFromMatrix(countData = assay(deobj, "counts"),
                                 colData = colData(deobj),
                                 design = design)
 
   # We don't want size factors because we are looking at ratios within a sample
-  sizeFactors(dds) <- rep(1, nrow(colData(deobj)))
+  DESeq2::sizeFactors(dds) <- rep(1, nrow(colData(deobj)))
 
   # TODO - figure out what modeling is best, also try local
-  dds <- DESeq(dds, fitType = "parametric")
+  dds <- DESeq2::DESeq(dds, fitType = "parametric")
 
   if (class(test_mat) != "try-error"){
     mod_mat <- model.matrix(design(dds), colData(dds))
@@ -449,8 +451,9 @@ run_deseq2 <- function(deobj, condition_control = NULL,
 
   # TODO add other possible return values and return as a list.
   # This finds editing specific to the condition
-  treatment_vs_control <- results(dds,
-                                  contrast = (alt_treatment - ref_treatment) -
+  treatment_vs_control <- DESeq2::results(dds,
+                                          contrast = (alt_treatment -
+                                                        ref_treatment) -
                                     (alt_control - ref_control))
 
   deseq_res <- as.data.frame(treatment_vs_control)
@@ -478,7 +481,6 @@ run_deseq2 <- function(deobj, condition_control = NULL,
 #' possible return values.
 #'
 #' @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
-#' @param type OPTIONAL if EdgeR or DESeq should be run. Default is EdgeR
 #' @param condition_control The name of the control condition. This must be a variable
 #' in your condition_col of colData(deobj). No default provided.
 #' @param condition_treatment The name of the treatment condition. This must be a variable
@@ -506,9 +508,9 @@ run_edger <- function(deobj, condition_control = NULL,
     design <- design[,!grepl("countref", colnames(design))]
   }
 
-  dge <- DGEList(assay(deobj, "counts"), lib.size = rep(1, ncol(deobj)))
-  dge <- estimateDisp(dge)
-  fit <- glmFit(dge, design)
+  dge <- edgeR::DGEList(assay(deobj, "counts"), lib.size = rep(1, ncol(deobj)))
+  dge <- edgeR::estimateDisp(dge)
+  fit <- edgeR::glmFit(dge, design)
 
   # Pull out the model matrix for all comparisons of interest
   alt_treatment <- colMeans(design[deobj$condition == condition_treatment &
@@ -523,10 +525,10 @@ run_edger <- function(deobj, condition_control = NULL,
 
   # TODO add other possible return values and return as a list.
   # This finds editing specific to the condition
-  treatment_vs_control <- glmLRT(fit, contrast = (alt_treatment - ref_treatment) -
+  treatment_vs_control <- edgeR::glmLRT(fit, contrast = (alt_treatment - ref_treatment) -
                       (alt_control - ref_control))
 
-  treatment_vs_control <- topTags(treatment_vs_control,
+  treatment_vs_control <- edgeR::topTags(treatment_vs_control,
                                   n = nrow(treatment_vs_control))
 
   edger_res <- as.data.frame(treatment_vs_control)
