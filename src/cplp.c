@@ -21,6 +21,10 @@
 
 KHASH_SET_INIT_STR(varhash);
 typedef khash_t(varhash) *varhash_t;
+KHASH_SET_INIT_STR(rname);
+typedef khash_t(rname) *rnhash_t;
+
+#define BUFFER_SIZE 0x40000
 
 static unsigned char comp_base[256] = {
   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,
@@ -47,7 +51,9 @@ typedef struct {
   uint32_t keep_flag[2];
   char *reg, *fai_fname, *output_fname, *n_align_tag;
   faidx_t *fai;
-  void *bed ;
+  void *bed;
+  rnhash_t rnames;
+  samFile *outbam;
   int argc;
   char **argv;
   char sep, empty;
@@ -196,12 +202,38 @@ typedef struct  {
   varhash_t mvar;
 } pcounts;
 
+static void clear_rname_set(rnhash_t rnames)
+{
+  khint_t k;
+  if(rnames){
+    for (k = kh_begin(rnames); k < kh_end(rnames); ++k){
+      if (kh_exist(rnames, k)){
+        free((char*)kh_key(rnames, k));
+      }
+      kh_clear(rname, rnames);
+    }
+  }
+}
+
+static void clear_varhash_set(varhash_t vhash)
+{
+  khint_t k;
+  if(vhash){
+    for (k = kh_begin(vhash); k < kh_end(vhash); ++k){
+      if (kh_exist(vhash, k)){
+        free((char*)kh_key(vhash, k));
+      }
+      kh_clear(varhash, vhash);
+    }
+  }
+}
+
 static void clear_pcounts(pcounts *p){
   p->mna = p->mnc = p->mng = p->mnn = p->mnr = p->mnt = p->mnv = p->mtotal = 0;
   p->pna = p->pnc = p->png = p->pnn = p->pnr = p->pnt = p->pnv = p->ptotal = 0;
   p->mref_b = p->pref_b = p->pos = 0;
-  kh_clear(varhash, p->mvar);
-  kh_clear(varhash, p->pvar);
+  clear_varhash_set(p->mvar);
+  clear_varhash_set(p->pvar);
 }
 
 // struct for event filter params
@@ -233,7 +265,14 @@ static void get_var_string(varhash_t *vhash, char *out){
   }
 }
 
-static void print_plus_counts(FILE *fp, pcounts *pc, int n, char* ctig, int pos, int pref){
+static void print_plus_counts(FILE *fp, pcounts *pc, int only_variants, int n, char* ctig, int pos, int pref){
+
+  if(only_variants){
+    if(!(kh_size(pc[0].pvar) > 0)){
+      return;
+    }
+  }
+
   char pout[12];
   get_var_string(&pc[0].pvar, pout);
   fprintf(fp,
@@ -258,7 +297,14 @@ static void print_plus_counts(FILE *fp, pcounts *pc, int n, char* ctig, int pos,
   fprintf(fp,"\n");
 }
 
-static void print_minus_counts(FILE *fp, pcounts *pc, int n, char* ctig, int pos, int mref){
+static void print_minus_counts(FILE *fp, pcounts *pc, int only_variants, int n, char* ctig, int pos, int mref){
+
+  if(only_variants){
+    if(!(kh_size(pc[0].mvar) > 0)){
+      return;
+    }
+  }
+
   char mout[12];
   get_var_string(&pc[0].mvar, mout);
   fprintf(fp,
@@ -283,30 +329,80 @@ static void print_minus_counts(FILE *fp, pcounts *pc, int n, char* ctig, int pos
   fprintf(fp,"\n");
 }
 
-static void print_counts(FILE *fp, pcounts *pc, int n, int min_1, int min_2,
+static void print_counts(FILE *fp, pcounts *pc, int only_variants, int n, int min_1, int min_2,
                          char* ctig, int pos, int pref, int mref){
 
   // determine if counts pass thresholds
   if(n == 1){
     if(pc[0].ptotal >= min_1){
-      print_plus_counts(fp, pc, n, ctig, pos, pref) ;
+      print_plus_counts(fp, pc, only_variants, n, ctig, pos, pref) ;
     }
 
     if(pc[0].mtotal >= min_1){
-      print_minus_counts(fp, pc, n, ctig, pos, mref) ;
+      print_minus_counts(fp, pc, only_variants, n, ctig, pos, mref) ;
     }
   } else if (n == 2) {
     // if rna + dna supplied,
     // filter using gDNA counts independent of strand
     if(pc[0].ptotal >= min_1 && (pc[1].ptotal+ pc[1].mtotal) >= min_2){
-      print_plus_counts(fp, pc, n, ctig, pos, pref) ;
+      print_plus_counts(fp, pc, only_variants, n, ctig, pos, pref) ;
     }
 
     if(pc[0].mtotal >= min_1 && (pc[1].ptotal+ pc[1].mtotal) >= min_2){
-      print_minus_counts(fp, pc, n, ctig, pos, mref) ;
+      print_minus_counts(fp, pc, only_variants, n, ctig, pos, mref) ;
     }
   }
 }
+
+// add/check for readname (with 1 or 2 appended if paired) to hash table
+// if unique write to bam file
+int write_reads(bam1_t *b, bam_hdr_t *h, mplp_conf_t *conf){
+  size_t len = strlen(bam_get_qname(b));
+
+  char *key;
+  char c;
+  if(!((b)->core.flag&BAM_FPAIRED)){
+    key = malloc(len + 1);
+    if(!key) {
+      Rf_error( "malloc failed\n");
+      exit(EXIT_FAILURE);
+    }
+    strcpy(key, bam_get_qname(b));
+    key[len] = '\0';
+  } else {
+    key = malloc(len + 2 + 1);
+    if(!key) {
+      Rf_error( "malloc failed\n");
+      exit(EXIT_FAILURE);
+    }
+    if((b)->core.flag&BAM_FREAD1){
+      c = '1' ;
+    } else {
+      c = '2';
+    }
+    strcpy(key, bam_get_qname(b));
+    key[len] = '-';
+    key[len + 1] = c;
+    key[len + 2] = '\0';
+  }
+
+  // try to add read to cache, check if already present
+  // key will be freed upon cleanup of hashtable, i believe
+  int rret;
+  kh_put(rname, conf->rnames, key, &rret);
+  if (rret == 1) {
+    int ret = 0;
+    ret = sam_write1(conf->outbam, h, b);
+    if(ret < 0) {
+      REprintf( "sam_write1 failed\n");
+      exit(EXIT_FAILURE);
+    }
+  } else {
+    free(key);
+  }
+  return 0;
+}
+
 
 
 int run_cpileup(const char** cbampaths,
@@ -324,6 +420,8 @@ int run_cpileup(const char** cbampaths,
                 int n_align,
                 char* n_align_tag,
                 int* event_filters,
+                int only_keep_variants,
+                char* outbam,
                 SEXP ext) {
 
   if (n > 2 || n < 1) {
@@ -334,7 +432,7 @@ int run_cpileup(const char** cbampaths,
   int i, tid, *n_plp, tid0 = 0;
   int pos, beg0 = 0, end0 = INT32_MAX, ref_len;
 
-  if(!min_baseQ) min_baseQ = 20;
+  if(min_baseQ < 0) min_baseQ = 0;
   if(!max_depth) max_depth = 10000;
 
   const bam_pileup1_t **plp;
@@ -470,6 +568,25 @@ int run_cpileup(const char** cbampaths,
     }
   }
 
+  int write_mismatched_reads = 0;
+  if (outbam){
+    write_mismatched_reads = 1;
+    conf->outbam = sam_open(R_ExpandFileName(outbam), "wb");
+    if (!conf->outbam)
+    {
+      Rf_error("failed to open %s: %s\n",R_ExpandFileName(outbam), strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+    int ret = 0;
+    ret = sam_hdr_write(conf->outbam, data[0]->h);
+    if(ret != 0){
+      REprintf("sam_hdr_write failed\n");
+      exit(EXIT_FAILURE);
+    }
+    conf->rnames = kh_init(rname);
+  }
+
+  //Rprintf("confname: %s", data[0]->conf->outbam);
   iter = bam_mplp_init(n, readaln, (void**)data);
 
   // return type void in rhtslib (htslib v 1.7), current v1.14 htslib returns int
@@ -515,6 +632,7 @@ int run_cpileup(const char** cbampaths,
 
   int hret ;
 
+  int last_tid = -1;
   int n_iter = 0;
   int l;
   while ((l = bam_mplp_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
@@ -526,6 +644,14 @@ int run_cpileup(const char** cbampaths,
 
       if (tid < 0) break;
       if (conf->bed && tid >= 0 && !bed_overlap(conf->bed, data[0]->h->target_name[tid], pos, pos+1)) continue;
+
+      // clear out hash table of read names each chromosome
+      if(tid != last_tid && write_mismatched_reads){
+        if (kh_size(conf->rnames)) {
+          clear_rname_set(conf->rnames);
+        }
+        last_tid = tid;
+      }
 
       int pref_b, mref_b;
       pref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
@@ -569,10 +695,10 @@ int run_cpileup(const char** cbampaths,
           if(ef->trim_dist && trim_pos(p->b, p->qpos, ef->trim_dist)) continue;
 
           // check for splice in alignment nearby
-          if(ef->splice_dist && dist_to_splice(p->b, p->qpos, ef->splice_dist) != 0) continue;
+          if(ef->splice_dist && dist_to_splice(p->b, p->qpos, ef->splice_dist) >= 0) continue;
 
           // check if indel event nearby
-          if(ef->indel_dist && dist_to_indel(p->b, p->qpos, ef->indel_dist) != 0) continue;
+          if(ef->indel_dist && dist_to_indel(p->b, p->qpos, ef->indel_dist) >= 0) continue;
 
           // get read base
           int c = p->qpos < p->b->core.l_qseq
@@ -623,12 +749,6 @@ int run_cpileup(const char** cbampaths,
             }
           }
 
-  	      // UNSTRANDED leave as positive strand for now?
-
-  	      // THIS COULD BE CLEANED UP SO LESS REPETITIVE
-
-
-
   	      // count reads that align to minus strand
           if(invert){
             c = (char)comp_base[(unsigned char)c];
@@ -641,10 +761,18 @@ int run_cpileup(const char** cbampaths,
               // store variants in khash (for rna-seq only)
               mvar[1] = c;
               if(i == 0){
-                char *p = strdup(mvar);
-                kh_put(varhash, pc[i].mvar, p, &hret);
-                if (hret == 0) free(p);
+                char *var = strdup(mvar);
+                kh_put(varhash, pc[i].mvar, var, &hret);
+                if (hret == 0) free(var);
+                if(write_mismatched_reads){
+                  int wret = write_reads(p->b, data[0]->h, conf);
+                  if(wret != 0){
+                    Rf_error( "writing mismatched reads failed\n");
+                    exit(EXIT_FAILURE);
+                  }
+                }
               }
+
               pc[i].mnv += 1;
             }
 
@@ -676,10 +804,18 @@ int run_cpileup(const char** cbampaths,
             } else {
               pvar[1] = c;
               if(i == 0){
-                char *p = strdup(pvar);
-                kh_put(varhash, pc[i].pvar, p, &hret);
-                if (hret == 0) free(p);
+                char *var = strdup(pvar);
+                kh_put(varhash, pc[i].pvar, var, &hret);
+                if (hret == 0) free(var);
+                if(write_mismatched_reads){
+                  int wret = write_reads(p->b, data[0]->h, conf);
+                  if(wret != 0){
+                    Rf_error( "writing mismatched reads failed\n");
+                    exit(EXIT_FAILURE);
+                  }
+                }
               }
+
               pc[i].pnv += 1;
             }
 
@@ -704,7 +840,7 @@ int run_cpileup(const char** cbampaths,
         }
       }
       // print out lines if pass depth criteria
-      print_counts(pileup_fp, pc, n, min_1, min_2, h->target_name[tid], pos, pref_b, mref_b);
+      print_counts(pileup_fp, pc, only_keep_variants, n, min_1, min_2, h->target_name[tid], pos, pref_b, mref_b);
 
   }
 
@@ -719,6 +855,7 @@ int run_cpileup(const char** cbampaths,
     sam_close(data[i]->fp);
     if (data[i]->iter) hts_itr_destroy(data[i]->iter);
     free(data[i]);
+    clear_pcounts(&pc[i]);
     kh_destroy(varhash, pc[i].mvar);
     kh_destroy(varhash, pc[i].pvar);
   }
@@ -733,5 +870,10 @@ int run_cpileup(const char** cbampaths,
   if (conf->bed && Rf_isNull(ext)) bed_destroy(conf->bed);
 
   if (pileup_fp && conf->output_fname) fclose(pileup_fp);
+  if (write_mismatched_reads) {
+    clear_rname_set(conf->rnames);
+    kh_destroy(rname, conf->rnames);
+    sam_close(conf->outbam);
+  }
   return 0;
 }

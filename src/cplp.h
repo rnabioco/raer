@@ -16,6 +16,8 @@ int run_cpileup(const char** cbampath,
                 int n_align,
                 char* n_align_tag,
                 int* event_filters,
+                int only_keep_variants,
+                char* outbam,
                 SEXP ext);
 
 #endif

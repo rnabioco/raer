@@ -26,6 +26,8 @@ Imports:
     SummarizedExperiment,
     S4Vectors,
     GenomeInfoDb,
+    GenomicAlignments,
+    rtracklayer,
     methods,
     ggplot2,
     stringr

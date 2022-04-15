@@ -47,19 +47,20 @@ int trim_pos(bam1_t* b, int pos, int dist){
       return 1;
     }
   } else {
-    REprintf("don't believe should happen in trim_pos");
+    Rf_error("don't believe should happen in trim_pos");
   }
   return 0;
 }
 
+// return -1 if no splice found
 int dist_to_splice(bam1_t* b, int pos, int dist){
   int n_cigar = b->core.n_cigar;
   const uint32_t *cigar = bam_get_cigar(b);
 
   int i, c, ip, sp, ep, idist;
   ip = 0;
-  sp = pos + dist;
-  ep = pos - dist;
+  sp = pos - dist;
+  ep = pos + dist;
   for (i = 0; i < n_cigar; i++){
     c = bam_cigar_op(cigar[i]);
     // is a M, I, S, =, or other query consuming operation
@@ -72,22 +73,22 @@ int dist_to_splice(bam1_t* b, int pos, int dist){
       if (ip >= sp && ip <= ep){
         idist = ip - pos;
         idist = (idist < 0) ? -idist : idist;
-        Rprintf("edit_pos = %i; splice at pos: %i in read: %s\n", pos, ip, bam_get_qname(b)) ;
         return idist;
       }
     }
   }
-  return 0;
+  return -1;
 }
 
+// return -1 if no indel found
 int dist_to_indel(bam1_t* b, int pos, int dist){
   int n_cigar = b->core.n_cigar;
   const uint32_t *cigar = bam_get_cigar(b);
 
   int i, c, read_pos, indel_start, indel_end, sp, ep, ldist, rdist, idist;
   read_pos = indel_start = indel_end = 0;
-  sp = pos + dist;
-  ep = pos - dist;
+  sp = pos - dist;
+  ep = pos + dist;
 
   for (i = 0; i < n_cigar; i++){
     c = bam_cigar_op(cigar[i]);
@@ -102,7 +103,6 @@ int dist_to_indel(bam1_t* b, int pos, int dist){
           ldist = pos - indel_end;
           rdist = indel_start - pos;
           idist = (ldist > rdist) ? ldist : rdist;
-          Rprintf("edit_pos = %i; ins at pos: %i in read: %s\n", pos, idist, bam_get_qname(b)) ;
           return idist;
         }
       }
@@ -113,10 +113,9 @@ int dist_to_indel(bam1_t* b, int pos, int dist){
       if (read_pos >= sp && read_pos <= ep){
         idist = read_pos - pos;
         idist = (idist < 0) ? -idist : idist;
-        Rprintf("edit_pos = %i; del at pos: %i in read: %s\n", pos, read_pos, bam_get_qname(b)) ;
         return idist;
       }
     }
   }
-  return 0;
+  return -1;
 }
