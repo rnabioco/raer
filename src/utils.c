@@ -38,11 +38,11 @@ int check_simple_repeat(char** ref, int* ref_len, int pos, int nmer){
 // check if query position is within dist from 5' end of read
 int trim_pos(bam1_t* b, int pos, int dist){
   // pos is 0-based
-  if(!(b->core.flag&BAM_FPAIRED) || b->core.flag&(BAM_FREAD1)){
+  if(!(b->core.flag&BAM_FREVERSE)){
     if(pos < dist){
       return 1;
     }
-  } else if (b->core.flag&(BAM_FREAD2)) {
+  } else if (b->core.flag&(BAM_FREVERSE)) {
     if((b->core.l_qseq - pos) <= dist){
       return 1;
     }

@@ -24,7 +24,7 @@ get_pileup(
   n_align_tag = "NH",
   event_filters = c(0, 0, 0, 0),
   only_keep_variants = FALSE,
-  outbam = NULL,
+  reads = NULL,
   return_data = TRUE
 )
 }
@@ -78,7 +78,7 @@ default is no filters applied (e.g. c(0,0,0,0)).}
 \item{only_keep_variants}{if TRUE, then only variant sites will be reported
 (FALSE by default)}
 
-\item{outbam}{if supplied a bam file will be written with reads that pass filters
+\item{reads}{if supplied a fasta file will be written with reads that pass filters
 and contain variants}
 
 \item{return_data}{return data as a Granges table?}
