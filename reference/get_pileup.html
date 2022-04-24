@@ -67,6 +67,8 @@
   n_align <span class="op">=</span> <span class="fl">0</span>,
   n_align_tag <span class="op">=</span> <span class="st">"NH"</span>,
   event_filters <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,
+  only_keep_variants <span class="op">=</span> <span class="cn">FALSE</span>,
+  reads <span class="op">=</span> <span class="cn">NULL</span>,
   return_data <span class="op">=</span> <span class="cn">TRUE</span>
 <span class="op">)</span></code></pre></div>
     </div>
@@ -118,6 +120,12 @@ distance from pileup position to features to filter. Distance to trim from
 5' ends of reads, distance from splicing events, distance from indels, and
 length of homopolymer stretch used to determine if a site is in a homopolymer.
 default is no filters applied (e.g. c(0,0,0,0)).</p></dd>
+<dt>only_keep_variants</dt>
+<dd><p>if TRUE, then only variant sites will be reported
+(FALSE by default)</p></dd>
+<dt>reads</dt>
+<dd><p>if supplied a fasta file will be written with reads that pass filters
+and contain variants</p></dd>
 <dt>return_data</dt>
 <dd><p>return data as a Granges table?</p></dd>
 </dl></div>

@@ -79,6 +79,10 @@ possible return values.</p>
 <dd><p>A SummarizedExperiment object prepared for de by <code>prep_for_de</code></p></dd>
 <dt>type</dt>
 <dd><p>OPTIONAL if edgeR or DESeq should be run. Default is edgeR</p></dd>
+<dt>sample_col</dt>
+<dd><p>OPTIONAL the name of the column from colData(deobj) that
+contains your sample information. Default is sample. If you do not have a
+column named "sample", you must provide the appropriate sample column</p></dd>
 <dt>condition_col</dt>
 <dd><p>OPTIONAL the name of the column from colData(deobj) that
 contains your treatment information. Default is condition, If you do not have a
@@ -89,10 +93,6 @@ in your condition_col of colData(deobj). No default provided.</p></dd>
 <dt>condition_treatment</dt>
 <dd><p>The name of the treatment condition. This must be a variable
 in your condition_col of colData(deobj).</p></dd>
-<dt>sample_column</dt>
-<dd><p>OPTIONAL the name of the column from colData(deobj) that
-contains your sample information. Default is sample. If you do not have a
-column named "sample", you must provide the appropriate sample column</p></dd>
 </dl></div>
 
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
