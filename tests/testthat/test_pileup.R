@@ -55,6 +55,11 @@ test_that("2-bam pileup works", {
   b2_vals <- mcols(res)[paste0(count_cols, "_2")]
   colnames(b2_vals) <- colnames(b1_vals)
   expect_false(identical(b1_vals, b2_vals))
+
+  res_all_vars <- get_pileup(c(bamfn, bam2fn), fafn, bedfn,
+                             only_keep_variants = TRUE)
+  expect_equal(length(res_all_vars), 2)
+
 })
 
 
@@ -207,6 +212,20 @@ test_that("pileup check flag filtering", {
   expect_true(identical(a, b))
 })
 
+test_that("pileup read trimming filter works", {
+  # reverse aligned reads trimmed
+  a <- get_pileup(bamfn, fafn, event_filters = c(6, 0, 0, 0), region = "SSR3:170-180")
+  b <- get_pileup(bamfn, fafn, event_filters = c(0, 0, 0, 0), region = "SSR3:170-180")
+  ex <- c(1L, 1L, 0L, 0L, 1L, 1L, 1L, 2L, 2L, 2L, 1L)
+  expect_equal(b$nRef - a$nRef, ex)
+
+  # forward aligned reads trimmed
+  a <- get_pileup(bamfn, fafn, event_filters = c(6, 0, 0, 0), region = "SSR3:133-136")
+  b <- get_pileup(bamfn, fafn, event_filters = c(0, 0, 0, 0), region = "SSR3:133-136")
+  ex <- c(2L, 2L, 1L, 1L)
+  expect_equal(b$nRef - a$nRef, ex)
+})
+
 fa <- scanFa(fafn)
 hp_matches <- vmatchPattern(strrep("A", 6), fa) %>% as(., "GRanges")
 
@@ -272,27 +291,13 @@ test_that("filtering for indel events works",{
   expect_equal(sites_near_indels$nVar[2] - bsites$nVar[1], 1)
 })
 
-bout_sorted <- tempfile()
-bed <- tempfile(fileext = ".bed")
+fout <- tempfile(fileext = ".fa")
 test_that("writing reads with mismatches works", {
-  plp <- get_pileup(bamfn, fafn, outbam = bout)
+  plp <- get_pileup(bamfn, fafn, reads = fout)
   plp <- plp[plp$Var != "-"]
-  # note that this removes single end reads, need to consider how to handle these
-  bam <- GenomicAlignments::readGAlignmentPairs(bout, strandMode = 2)
-  # check that all reads overlap sites with variants
-  overlapping_alignments = bam[unique(queryHits(findOverlaps(bam, plp)))]
-  expect_identical(bam, overlapping_alignments)
-
-  # check that rerunning with bam file of variant overlapping reads
-  # reproduces # and type of variants
-  srted_bam_name <- Rsamtools::sortBam(bout, bout_sorted)
-  export.bed(plp, bed)
-  replp <- get_pileup(srted_bam_name, fafn, bedfile = bed)
-
-  expect_equal(ranges(plp), ranges(replp))
-  expect_equal(plp$nVar, replp$nVar)
-  expect_equal(plp$Var, replp$Var)
+  seqs <- Rsamtools::scanFa(fout)
+  expect_false(any(duplicated(names(seqs))))
 })
 
 
-unlink(c(bout, bout_sorted, bed))
+unlink(c(bout, fout))

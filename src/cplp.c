@@ -45,6 +45,47 @@ static unsigned char comp_base[256] = {
   240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
 };
 
+int8_t seq_comp_table[16] = { 0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15 };
+
+/* from samtools bam_fastq.c
+
+* Reverse a string in place.
+* From http://stackoverflow.com/questions/8534274/is-the-strrev-function-not-available-in-linux.
+* Author Sumit-naik: http://stackoverflow.com/users/4590926/sumit-naik
+*/
+  static char *reverse(char *str)
+  {
+    int i = strlen(str)-1,j=0;
+    char ch;
+    while (i>j) {
+      ch = str[i];
+      str[i]= str[j];
+      str[j] = ch;
+      i--;
+      j++;
+    }
+    return str;
+  }
+
+/* from samtools bam_fastq.c */
+/* return the read, reverse complemented if necessary */
+static char *get_read(const bam1_t *rec)
+{
+  int len = rec->core.l_qseq + 1;
+  char *read = calloc(1, len);
+  char *seq = (char *)bam_get_seq(rec);
+  int n;
+
+  if (!read) return NULL;
+
+  for (n=0; n < rec->core.l_qseq; n++) {
+    if (rec->core.flag & BAM_FREVERSE) read[n] = seq_nt16_str[seq_comp_table[bam_seqi(seq,n)]];
+    else                               read[n] = seq_nt16_str[bam_seqi(seq,n)];
+  }
+  if (rec->core.flag & BAM_FREVERSE) reverse(read);
+  return read;
+}
+
 typedef struct {
   int min_mq, flag, min_baseQ, max_depth, all;
   int n_align;
@@ -53,7 +94,7 @@ typedef struct {
   faidx_t *fai;
   void *bed;
   rnhash_t rnames;
-  samFile *outbam;
+  FILE *reads_fp;
   int argc;
   char **argv;
   char sep, empty;
@@ -344,6 +385,13 @@ static void print_counts(FILE *fp, pcounts *pc, int only_variants, int n, int mi
   } else if (n == 2) {
     // if rna + dna supplied,
     // filter using gDNA counts independent of strand
+    // and write out both plus and minus if only variants requested
+    // (to deal with RNA variants being on minus strand and
+    // gDNA variants on plus)
+    if(only_variants){
+      only_variants = !((kh_size(pc[0].pvar) > 0) || (kh_size(pc[0].mvar) > 0));
+    }
+
     if(pc[0].ptotal >= min_1 && (pc[1].ptotal+ pc[1].mtotal) >= min_2){
       print_plus_counts(fp, pc, only_variants, n, ctig, pos, pref) ;
     }
@@ -354,9 +402,27 @@ static void print_counts(FILE *fp, pcounts *pc, int only_variants, int n, int mi
   }
 }
 
+int write_fasta(bam1_t *b, mplp_conf_t *conf, char* ref, char read, int pos){
+  if(!conf->reads_fp){
+    return -1;
+  }
+  char* seq;
+  seq = get_read(b);
+  fprintf(conf->reads_fp,
+          ">%s_%c_%s_%i\n",
+          bam_get_qname(b),
+          read,
+          ref,
+          pos) ;
+  fprintf(conf->reads_fp, "%s\n", seq);
+  free(seq);
+
+  return 0;
+}
+
 // add/check for readname (with 1 or 2 appended if paired) to hash table
 // if unique write to bam file
-int write_reads(bam1_t *b, bam_hdr_t *h, mplp_conf_t *conf){
+int write_reads(bam1_t *b,  mplp_conf_t *conf, char* ref, int pos){
   size_t len = strlen(bam_get_qname(b));
 
   char *key;
@@ -369,6 +435,7 @@ int write_reads(bam1_t *b, bam_hdr_t *h, mplp_conf_t *conf){
     }
     strcpy(key, bam_get_qname(b));
     key[len] = '\0';
+    c = '0';
   } else {
     key = malloc(len + 2 + 1);
     if(!key) {
@@ -381,7 +448,7 @@ int write_reads(bam1_t *b, bam_hdr_t *h, mplp_conf_t *conf){
       c = '2';
     }
     strcpy(key, bam_get_qname(b));
-    key[len] = '-';
+    key[len] = '_';
     key[len + 1] = c;
     key[len + 2] = '\0';
   }
@@ -392,9 +459,9 @@ int write_reads(bam1_t *b, bam_hdr_t *h, mplp_conf_t *conf){
   kh_put(rname, conf->rnames, key, &rret);
   if (rret == 1) {
     int ret = 0;
-    ret = sam_write1(conf->outbam, h, b);
+    ret = write_fasta(b, conf, ref, c, pos + 1);
     if(ret < 0) {
-      REprintf( "sam_write1 failed\n");
+      Rf_error("writing read failed\n");
       exit(EXIT_FAILURE);
     }
   } else {
@@ -402,8 +469,6 @@ int write_reads(bam1_t *b, bam_hdr_t *h, mplp_conf_t *conf){
   }
   return 0;
 }
-
-
 
 int run_cpileup(const char** cbampaths,
                 int n,
@@ -421,7 +486,7 @@ int run_cpileup(const char** cbampaths,
                 char* n_align_tag,
                 int* event_filters,
                 int only_keep_variants,
-                char* outbam,
+                char* reads_fn,
                 SEXP ext) {
 
   if (n > 2 || n < 1) {
@@ -569,24 +634,18 @@ int run_cpileup(const char** cbampaths,
   }
 
   int write_mismatched_reads = 0;
-  if (outbam){
+  if (reads_fn){
     write_mismatched_reads = 1;
-    conf->outbam = sam_open(R_ExpandFileName(outbam), "wb");
-    if (!conf->outbam)
+    conf->reads_fp = fopen(R_ExpandFileName(reads_fn), "w");
+    if (!conf->reads_fp)
     {
-      Rf_error("failed to open %s: %s\n",R_ExpandFileName(outbam), strerror(errno));
+      Rf_error("failed to open %s: %s\n",R_ExpandFileName(reads_fn), strerror(errno));
       exit(EXIT_FAILURE);
     }
-    int ret = 0;
-    ret = sam_hdr_write(conf->outbam, data[0]->h);
-    if(ret != 0){
-      REprintf("sam_hdr_write failed\n");
-      exit(EXIT_FAILURE);
-    }
+
     conf->rnames = kh_init(rname);
   }
 
-  //Rprintf("confname: %s", data[0]->conf->outbam);
   iter = bam_mplp_init(n, readaln, (void**)data);
 
   // return type void in rhtslib (htslib v 1.7), current v1.14 htslib returns int
@@ -668,6 +727,7 @@ int run_cpileup(const char** cbampaths,
       for (i = 0; i < n; ++i) {
         int j;
 
+        // consider failing early if read # less than min_counts
         if (n_plp[i] == 0) continue;
 
   	      // want to count plus and minus reads separately
@@ -765,7 +825,7 @@ int run_cpileup(const char** cbampaths,
                 kh_put(varhash, pc[i].mvar, var, &hret);
                 if (hret == 0) free(var);
                 if(write_mismatched_reads){
-                  int wret = write_reads(p->b, data[0]->h, conf);
+                  int wret = write_reads(p->b, conf, h->target_name[tid], pos);
                   if(wret != 0){
                     Rf_error( "writing mismatched reads failed\n");
                     exit(EXIT_FAILURE);
@@ -808,7 +868,7 @@ int run_cpileup(const char** cbampaths,
                 kh_put(varhash, pc[i].pvar, var, &hret);
                 if (hret == 0) free(var);
                 if(write_mismatched_reads){
-                  int wret = write_reads(p->b, data[0]->h, conf);
+                  int wret = write_reads(p->b, conf, h->target_name[tid], pos);
                   if(wret != 0){
                     Rf_error( "writing mismatched reads failed\n");
                     exit(EXIT_FAILURE);
@@ -873,7 +933,7 @@ int run_cpileup(const char** cbampaths,
   if (write_mismatched_reads) {
     clear_rname_set(conf->rnames);
     kh_destroy(rname, conf->rnames);
-    sam_close(conf->outbam);
+    fclose(conf->reads_fp);
   }
   return 0;
 }

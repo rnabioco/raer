@@ -38,7 +38,7 @@
 #'  default is no filters applied (e.g. c(0,0,0,0)).
 #' @param only_keep_variants if TRUE, then only variant sites will be reported
 #' (FALSE by default)
-#' @param outbam if supplied a bam file will be written with reads that pass filters
+#' @param reads if supplied a fasta file will be written with reads that pass filters
 #'  and contain variants
 #' @param return_data return data as a Granges table?
 #'
@@ -66,7 +66,7 @@ get_pileup <- function(bamfile,
                    n_align_tag = "NH",
                    event_filters = c(0,0,0,0),
                    only_keep_variants = FALSE,
-                   outbam = NULL,
+                   reads = NULL,
                    return_data = TRUE){
 
   bamfile <- path.expand(bamfile)
@@ -157,12 +157,12 @@ get_pileup <- function(bamfile,
     lib_code <- c(lib_code, 0)
   }
 
-  if(!is.null(outbam)){
-    if(!is.character(outbam) | length(outbam) != 1){
-      stop("outbam must be a character vector of length 1")
+  if(!is.null(reads)){
+    if(!is.character(reads) | length(reads) != 1){
+      stop("reads must be a character vector of length 1")
     }
   } else {
-    outbam <- "."
+    reads <- "."
   }
 
   if(!is.logical(only_keep_variants)){
@@ -186,7 +186,7 @@ get_pileup <- function(bamfile,
                     n_align = as.integer(n_align),
                     n_align_tag = n_align_tag,
                     only_keep_variants,
-                    outbam,
+                    reads,
                     idx_ptr)
 
   if(res == 1){
