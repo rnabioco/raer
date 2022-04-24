@@ -55,6 +55,11 @@ test_that("2-bam pileup works", {
   b2_vals <- mcols(res)[paste0(count_cols, "_2")]
   colnames(b2_vals) <- colnames(b1_vals)
   expect_false(identical(b1_vals, b2_vals))
+
+  res_all_vars <- get_pileup(c(bamfn, bam2fn), fafn, bedfn,
+                             only_keep_variants = TRUE)
+  expect_equal(length(res_all_vars), 2)
+
 })
 
 

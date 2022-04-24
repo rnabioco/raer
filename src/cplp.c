@@ -389,7 +389,7 @@ static void print_counts(FILE *fp, pcounts *pc, int only_variants, int n, int mi
     // (to deal with RNA variants being on minus strand and
     // gDNA variants on plus)
     if(only_variants){
-      only_variants = !((kh_size(pc[0].mvar) > 0) || (kh_size(pc[1].mvar) > 0));
+      only_variants = !((kh_size(pc[0].pvar) > 0) || (kh_size(pc[0].mvar) > 0));
     }
 
     if(pc[0].ptotal >= min_1 && (pc[1].ptotal+ pc[1].mtotal) >= min_2){
