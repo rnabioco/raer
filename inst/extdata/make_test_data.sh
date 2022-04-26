@@ -53,4 +53,8 @@ STAR \
     --genomeDir star/ \
     --readFilesIn SRR5564269_1.fastq.gz SRR5564269_2.fastq.gz
 
-samtools index SRR5564269/SRR5564269_Aligned.sortedByCoord.out.bam
+samtools calmd -b SRR5564269_Aligned.sortedByCoord.out.bam human.fasta > SRR5564277_Aligned.sortedByCoord.out.md.bam
+samtools calmd -b SRR5564277_Aligned.sortedByCoord.out.bam human.fasta > SRR5564277_Aligned.sortedByCoord.out.md.bam
+
+samtools index SRR5564269/SRR5564269_Aligned.sortedByCoord.out.md.bam
+samtools index SRR5564277/SRR5564277_Aligned.sortedByCoord.out.md.bam

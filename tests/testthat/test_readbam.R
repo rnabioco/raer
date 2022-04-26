@@ -1,6 +1,6 @@
 context("read_bam")
 
-bam_file <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.bam", package = "raer")
+bam_file <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", package = "raer")
 
 test_that("reading bam works", {
   res <- bam_to_df(bam_file)

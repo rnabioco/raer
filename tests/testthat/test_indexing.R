@@ -1,7 +1,7 @@
 context("indexing")
 library(GenomicRanges)
 
-bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.bam", package = "raer")
+bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
 fafn <- system.file("extdata", "human.fasta", package = "raer")
 bedfn <- system.file("extdata", "regions.bed", package = "raer")
 idx <- indexBed(bedfn)

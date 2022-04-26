@@ -6,6 +6,57 @@ SEXP isnull(SEXP pointer) {
   return ScalarLogical(!R_ExternalPtrAddr(pointer));
 }
 
+// Based on pysam code Cython code
+// https://github.com/pysam-developers/pysam/blob/ef06e42ce98e4c81972a448ddab62289bf3ad22d/pysam/libcalignedsegment.pyx#L501
+
+int query_start(bam1_t *b){
+  const uint32_t *cigar = bam_get_cigar(b);
+  int start_offset = 0;
+  int n_cigar = b->core.n_cigar;
+  int i, op;
+
+  for (i = 0; i <  n_cigar; i++){
+    op = cigar[i] & BAM_CIGAR_MASK;
+    if (op == BAM_CHARD_CLIP){
+      if (start_offset != 0 && start_offset != b->core.l_qseq){
+        Rf_error("Invalid clipping in CIGAR string");
+      } else if (op == BAM_CSOFT_CLIP){
+        start_offset += cigar[i] >> BAM_CIGAR_SHIFT;
+      }  else {
+        break;
+      }
+    }
+  }
+  return start_offset;
+}
+
+int query_end(bam1_t *b){
+  const uint32_t *cigar = bam_get_cigar(b);
+  int n_cigar = b->core.n_cigar;
+  unsigned int i;
+  int op;
+  int end_offset = b->core.l_qseq;
+
+  if(end_offset == 0){
+    Rf_error("SEQ record missing from BAM file");
+  }
+
+  for (i = n_cigar; i-- > 0;){
+    op = cigar[i] & BAM_CIGAR_MASK;
+    if (op == BAM_CHARD_CLIP){
+      if (end_offset != 0 && end_offset != b->core.l_qseq){
+        Rf_error("Invalid clipping in CIGAR string");
+      } else if (op == BAM_CSOFT_CLIP){
+        end_offset += cigar[i] >> BAM_CIGAR_SHIFT;
+      } else {
+        break;
+      }
+    }
+  }
+
+  return end_offset;
+}
+
 int check_simple_repeat(char** ref, int* ref_len, int pos, int nmer){
   int start, n_pos;
   n_pos = (nmer * 2) - 1;
@@ -35,15 +86,21 @@ int check_simple_repeat(char** ref, int* ref_len, int pos, int nmer){
   return 0;
 }
 
-// check if query position is within dist from 5' end of read
-int trim_pos(bam1_t* b, int pos, int dist){
-  // pos is 0-based
+// check if query position is within dist from 5' or 3' end of alignment
+// pos = query position
+int trim_pos(bam1_t* b, int pos, int dist_5p, int dist_3p){
+  // pos is 0-based query position
+  // need to adjust to trim based on alignment start/end
+  int qs, qe;
+  qs = query_start(b);
+  qe = query_end(b);
+
   if(!(b->core.flag&BAM_FREVERSE)){
-    if(pos < dist){
+    if(pos < (dist_5p + qs) || (qe - pos) <= dist_3p){
       return 1;
     }
   } else if (b->core.flag&(BAM_FREVERSE)) {
-    if((b->core.l_qseq - pos) <= dist){
+    if((qe - pos) <= dist_5p || pos < (dist_3p + qs)){
       return 1;
     }
   } else {
@@ -119,3 +176,6 @@ int dist_to_indel(bam1_t* b, int pos, int dist){
   }
   return -1;
 }
+
+
+

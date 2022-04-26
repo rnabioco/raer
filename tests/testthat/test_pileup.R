@@ -5,8 +5,8 @@ library(Biostrings)
 library(Rsamtools)
 library(rtracklayer)
 
-bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.bam", package = "raer")
-bam2fn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.bam", package = "raer")
+bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
+bam2fn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", package = "raer")
 fafn <- system.file("extdata", "human.fasta", package = "raer")
 bedfn <- system.file("extdata", "regions.bed", package = "raer")
 
@@ -33,7 +33,7 @@ test_that("2-bam pileup works", {
                     library_type = c("fr-first-strand",
                                      "fr-first-strand"))
 
-  expect_equal(length(res$Ref), 182)
+  expect_equal(length(res$Ref), 214)
   expect_equal(ncol(as.data.frame(res)), 21)
   b1_vals <- mcols(res)[paste0(count_cols, "_1")]
   b2_vals <- mcols(res)[paste0(count_cols, "_2")]
@@ -43,7 +43,7 @@ test_that("2-bam pileup works", {
   # should default to fr-first-strand and unstranded
   res <- get_pileup(c(bamfn, bamfn), fafn, bedfn)
 
-  expect_equal(length(res$Ref), 182)
+  expect_equal(length(res$Ref), 214)
   expect_equal(ncol(as.data.frame(res)), 21)
   b1_vals <- mcols(res)[paste0(count_cols, "_1")]
   b2_vals <- mcols(res)[paste0(count_cols, "_2")]
@@ -58,7 +58,7 @@ test_that("2-bam pileup works", {
 
   res_all_vars <- get_pileup(c(bamfn, bam2fn), fafn, bedfn,
                              only_keep_variants = TRUE)
-  expect_equal(length(res_all_vars), 2)
+  expect_equal(length(res_all_vars), 3)
 
 })
 
@@ -213,25 +213,36 @@ test_that("pileup check flag filtering", {
 })
 
 test_that("pileup read trimming filter works", {
-  # reverse aligned reads trimmed
-  a <- get_pileup(bamfn, fafn, event_filters = c(6, 0, 0, 0), region = "SSR3:170-180")
-  b <- get_pileup(bamfn, fafn, event_filters = c(0, 0, 0, 0), region = "SSR3:170-180")
-  ex <- c(1L, 1L, 0L, 0L, 1L, 1L, 1L, 2L, 2L, 2L, 1L)
-  expect_equal(b$nRef - a$nRef, ex)
 
-  # forward aligned reads trimmed
-  a <- get_pileup(bamfn, fafn, event_filters = c(6, 0, 0, 0), region = "SSR3:133-136")
-  b <- get_pileup(bamfn, fafn, event_filters = c(0, 0, 0, 0), region = "SSR3:133-136")
-  ex <- c(2L, 2L, 1L, 1L)
-  expect_equal(b$nRef - a$nRef, ex)
+  a <- get_pileup(bamfn, fafn, event_filters = c(0, 0, 0, 0, 0, 0, 0), region = "SSR3:440-450")
+  b <- get_pileup(bamfn, fafn, event_filters = c(6, 0, 0, 0, 0, 0, 0), region = "SSR3:440-450")
+  d <- get_pileup(bamfn, fafn, event_filters = c(6, 6, 0, 0, 0, 0, 0), region = "SSR3:440-450")
+  e <- get_pileup(bamfn, fafn, event_filters = c(0, 6, 0, 0, 0, 0, 0), region = "SSR3:440-450")
+  ex1 <- c(0L, 0L, 0L, 1L, 1L, 1L, 1L, 1L, 1L, 0L, 0L)
+  ex2 <- c(1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)
+
+  expect_equal(a$nRef - b$nRef, ex1)
+  expect_equal(b$nRef - d$nRef, ex2)
+  expect_equal(a$nRef - e$nRef, ex2)
+
+  a <- get_pileup(bamfn, fafn, event_filters = c(0, 0, 0, 0, 0, 0, 0), region = "SSR3:128-130")
+  b <- get_pileup(bamfn, fafn, event_filters = c(6, 0, 0, 0, 0, 0, 0), region = "SSR3:128-130")
+  d <- get_pileup(bamfn, fafn, event_filters = c(6, 6, 0, 0, 0, 0, 0), region = "SSR3:128-130")
+  e <- get_pileup(bamfn, fafn, event_filters = c(0, 6, 0, 0, 0, 0, 0), region = "SSR3:128-130")
+  ex1 <- c(3L, 4L, 2L)
+  ex2 <- c(3L, 2L, 0L)
+  expect_equal(a$nRef - b$nRef, ex1)
+  expect_equal(b$nRef - d$nRef, ex2)
+  expect_equal(a$nRef - e$nRef, ex2)
+
 })
 
 fa <- scanFa(fafn)
 hp_matches <- vmatchPattern(strrep("A", 6), fa) %>% as(., "GRanges")
 
 test_that("pileup check homopolymer filter", {
-  a <- get_pileup(bamfn, fafn, event_filters = c(0, 0, 0, 6))
-  b <- get_pileup(bamfn, fafn, event_filters = c(0, 0, 0, 0))
+  a <- get_pileup(bamfn, fafn, event_filters = c(0, 0, 0, 0, 6, 0, 0))
+  b <- get_pileup(bamfn, fafn, event_filters = c(0, 0, 0, 0, 0, 0, 0))
   expect_false(identical(a, b))
 
   expect_equal(length(queryHits(findOverlaps(hp_matches, a))), 0)
@@ -243,14 +254,14 @@ test_that("filtering for splicing events works",{
   splices <- GRanges(coverage(junctions(GenomicAlignments::readGAlignmentPairs(bamfn))))
   splices <- splices[splices$score > 0]
   plp <- get_pileup(bamfn, fafn,
-                  event_filters = c(0, 0, 0, 0))
+                  event_filters = c(0, 0, 0, 0, 0, 0, 0))
   plp <- plp[plp$Var != "-"]
 
   # 3 sites, 1 is from all non-spliced reds, 2 sites are all from spliced reads,
   # (SPCS3  227, 347, 348)
   sites_near_splices <- plp[queryHits(findOverlaps(plp, splices, maxgap = 4))]
 
-  plp_b <- get_pileup(bamfn, fafn, event_filters = c(0, 5, 0, 0))
+  plp_b <- get_pileup(bamfn, fafn, event_filters = c(0, 0, 5, 0, 0, 0, 0))
   plp_b <- plp_b[plp_b$Var != "-"]
   bsites_near_splices <- plp_b[queryHits(findOverlaps(plp_b,
                                                       splices,
@@ -270,7 +281,7 @@ test_that("filtering for indel events works",{
   cig_pos <- unique(GRanges(cig_ops))
 
   plp <- get_pileup(bamfn, fafn,
-                    event_filters = c(0, 0, 0, 0),
+                    event_filters = c(0, 0, 0, 0, 0, 0, 0),
                     min_base_qual = 1)
   plp <- plp[plp$Var != "-"]
 
@@ -278,7 +289,7 @@ test_that("filtering for indel events works",{
   # SRR3 388 variant has 1 read with variant 3bp away from indel
   sites_near_indels <- plp[queryHits(findOverlaps(plp, cig_pos))]
 
-  plp_b <- get_pileup(bamfn, fafn, event_filters = c(0, 0, 5, 0),
+  plp_b <- get_pileup(bamfn, fafn, event_filters = c(0, 0, 0, 5, 0, 0, 0),
                       min_base_qual = 1)
   plp_b <- plp_b[plp_b$Var != "-"]
   bsites <- plp_b[queryHits(findOverlaps(plp_b,
@@ -300,4 +311,39 @@ test_that("writing reads with mismatches works", {
 })
 
 
+test_that("filtering for read-level mismatches works", {
+  plp <- get_pileup(bamfn, fafn, min_base_qual = 10, region = "SSR3:244-247", only_keep_variants = T)
+  expect_equal(length(plp), 2)
+
+  plp <- get_pileup(bamfn, fafn, min_base_qual = 10,
+                  region = "SSR3:244-247",
+                  only_keep_variants = T,
+                  event_filters = c(0, 0, 0, 0, 0, 1, 1))
+  expect_null(plp)
+
+  plp <- get_pileup(bamfn, fafn, min_base_qual = 10,
+                     region = "SSR3:244-247",
+                     only_keep_variants = T,
+                     event_filters = c(0, 0, 0, 0, 0, 0, 10))
+  expect_equal(length(plp), 2)
+
+  plp <- get_pileup(bamfn, fafn, min_base_qual = 10,
+                     region = "SSR3:244-247",
+                     only_keep_variants = T,
+                     event_filters = c(0, 0, 0, 0, 0, 0, 1))
+  expect_null(plp)
+
+  plp <- get_pileup(bamfn, fafn, min_base_qual = 10,
+                    region = "SSR3:244-247",
+                    only_keep_variants = T,
+                    event_filters = c(0, 0, 0, 0, 0, 8, 0))
+  expect_equal(length(plp), 2)
+
+  plp <- get_pileup(bamfn, fafn, min_base_qual = 10,
+                    region = "SSR3:244-247",
+                    only_keep_variants = T,
+                    event_filters = c(0, 0, 0, 0, 0, 1, 0))
+  expect_null(plp)
+
+})
 unlink(c(bout, fout))
