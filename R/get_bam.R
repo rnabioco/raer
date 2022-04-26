@@ -6,7 +6,7 @@
 #' "AS:i" for integer, and "CB:Z" for string. Bam entries with missing tags will return empty
 #' strings.
 #' @examples
-#' bam_file <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.bam", package = "raer")
+#' bam_file <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", package = "raer")
 #' res <- bam_to_df(bam_file)
 #' head(res)
 #'

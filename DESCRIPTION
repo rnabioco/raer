@@ -17,7 +17,6 @@ Imports:
     Rcpp,
     data.table,
     R.utils,
-    Rhtslib,
     GenomicRanges,
     IRanges,
     Rsamtools,
@@ -38,6 +37,8 @@ Suggests:
     DESeq2,
     edgeR,
     limma
+Remotes:  
+    kriemo/Rhtslib@a524c95
 LinkingTo: 
     Rcpp,
     Rhtslib,

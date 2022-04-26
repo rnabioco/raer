@@ -279,7 +279,8 @@ static void clear_pcounts(pcounts *p){
 
 // struct for event filter params
 typedef struct  {
-  int nmer, splice_dist, indel_dist, trim_dist;
+  int nmer, splice_dist, indel_dist, trim_5p_dist, trim_3p_dist;
+  int n_mm_type, n_mm;
 } efilter;
 
 static void get_var_string(varhash_t *vhash, char *out){
@@ -391,8 +392,9 @@ static void print_counts(FILE *fp, pcounts *pc, int only_variants, int n, int mi
     if(only_variants){
       only_variants = !((kh_size(pc[0].pvar) > 0) || (kh_size(pc[0].mvar) > 0));
     }
+    // need to write out DNA counts even in RNA no counts
 
-    if(pc[0].ptotal >= min_1 && (pc[1].ptotal+ pc[1].mtotal) >= min_2){
+    if((pc[0].ptotal >= min_1 || pc[0].mtotal >= min_1) && (pc[1].ptotal+ pc[1].mtotal) >= min_2){
       print_plus_counts(fp, pc, only_variants, n, ctig, pos, pref) ;
     }
 
@@ -469,6 +471,97 @@ int write_reads(bam1_t *b,  mplp_conf_t *conf, char* ref, int pos){
   }
   return 0;
 }
+
+// Parse MD tag and enumerate types and number of mismatches
+// Determine if read passes n_mis and n_types thresholds
+//
+//
+// returns: -1 if no MD tag
+//           0 if read passes filter
+//           >0 with # of unique mismatches if doesn't pass
+//
+// based on cigar and MD parsing code from htsbox (written Heng Li)
+// https://github.com/lh3/htsbox/blob/ffc1e8ad4f61291c676a323ed833ade3ee681f7c/samview.c#L117
+
+int parse_mismatches(bam1_t* b, int pos, int n_types, int n_mis){
+  int ret = 0;
+  if(n_types < 1 && n_mis < 1){
+    return ret;
+  }
+  const uint32_t *cigar = bam_get_cigar(b);
+  int k, x, y, c;
+
+  uint8_t *pMD = 0;
+  char *p;
+  int nm = 0;
+
+  char vars[3];
+  vars[2] = '\0';
+  varhash_t vh;
+  vh = kh_init(varhash);
+
+  if ((pMD = bam_aux_get(b, "MD")) != 0) {
+    for (k = x = y = 0; k < b->core.n_cigar; ++k) {
+        int op = bam_cigar_op(cigar[k]);
+        int len = bam_cigar_oplen(cigar[k]);
+        if (op == BAM_CMATCH || op == BAM_CEQUAL || op == BAM_CDIFF) {
+          x += len, y += len;
+        } else if (op == BAM_CINS || op == BAM_CSOFT_CLIP)
+          y += len;
+    }
+
+    p = bam_aux2Z(pMD);
+
+    y = 0;
+    while (isdigit(*p)) {
+      y += strtol(p, &p, 10);
+      if (*p == 0) {
+        break;
+      } else if (*p == '^') { // deletion
+        ++p;
+        while (isalpha(*p)) ++p;
+      } else {
+        while (isalpha(*p)) {
+          if (y >= x) {
+            y = -1;
+            break;
+          }
+          c = y < b->core.l_qseq
+            ? seq_nt16_str[bam_seqi(bam_get_seq(b), y)]
+          : 'N';
+          nm += 1;
+
+          vars[0] = *p;
+          vars[1] = c;
+          char *var = strdup(vars);
+          int rval = 0;
+          kh_put(varhash, vh, var, &rval);
+          if(rval == -1){
+            Rf_error("issue tabulating variants per read at, %s", bam_get_qname(b));
+          } else if (rval == 0){
+            free(var);
+          }
+          ++y, ++p;
+        }
+        if (y == -1) break;
+      }
+    }
+
+    if (x != y) {
+      REprintf("inconsistent MD for read '%s' (%d != %d); ignore MD\n", bam_get_qname(b), x, y);
+      ret = -1;
+    }
+
+    if(kh_size(vh) >= n_types && nm >= n_mis){
+      ret = kh_size(vh);
+    }
+    clear_varhash_set(vh);
+    kh_destroy(varhash, vh);
+  }
+  return ret;
+
+}
+
 
 int run_cpileup(const char** cbampaths,
                 int n,
@@ -565,10 +658,13 @@ int run_cpileup(const char** cbampaths,
 
   efilter *ef;
   ef = calloc(1, sizeof(efilter));
-  ef->trim_dist = event_filters[0];
-  ef->splice_dist = event_filters[1];
-  ef->indel_dist = event_filters[2];
-  ef->nmer = event_filters[3];
+  ef->trim_5p_dist = event_filters[0];
+  ef->trim_3p_dist = event_filters[1];
+  ef->splice_dist = event_filters[2];
+  ef->indel_dist = event_filters[3];
+  ef->nmer = event_filters[4];
+  ef->n_mm_type = event_filters[5];
+  ef->n_mm = event_filters[6];
 
   conf->output_fname = coutfn;
 
@@ -739,11 +835,14 @@ int run_cpileup(const char** cbampaths,
           // filter based on mapq as not able to filter per file in pileup
           if (p->b->core.qual < min_mapQ[i]) continue
             ;
+
           // check base quality
           int bq = p->qpos < p->b->core.l_qseq
                    ? bam_get_qual(p->b)[p->qpos]
                    : 0;
-
+          // note that overlap detection can fail if one mate has a cigar with
+          // splicing events
+          // this was fixed in htslib #802 and release v1.10
           if (bq < min_baseQ) continue ;
 
           // skip indel and ref skip ;
@@ -752,7 +851,7 @@ int run_cpileup(const char** cbampaths,
           // consider adding a counter to track each error
           // check if pos is within x dist from 5' end of read
           // qpos is 0-based
-          if(ef->trim_dist && trim_pos(p->b, p->qpos, ef->trim_dist)) continue;
+          if(trim_pos(p->b, p->qpos, ef->trim_5p_dist, ef->trim_3p_dist)) continue;
 
           // check for splice in alignment nearby
           if(ef->splice_dist && dist_to_splice(p->b, p->qpos, ef->splice_dist) >= 0) continue;
@@ -821,6 +920,14 @@ int run_cpileup(const char** cbampaths,
               // store variants in khash (for rna-seq only)
               mvar[1] = c;
               if(i == 0){
+                int m;
+                // drop read if >= mismatch different types and at least n_mm mismatches
+                m = parse_mismatches(p->b, pos, ef->n_mm_type, ef->n_mm);
+                if(m > 0){
+                  // exclude read
+                  continue;
+                }
+
                 char *var = strdup(mvar);
                 kh_put(varhash, pc[i].mvar, var, &hret);
                 if (hret == 0) free(var);
@@ -864,6 +971,14 @@ int run_cpileup(const char** cbampaths,
             } else {
               pvar[1] = c;
               if(i == 0){
+                int m;
+                // drop read if >= mismatch different types and at least n_mm mismatches
+                m = parse_mismatches(p->b, pos, ef->n_mm_type, ef->n_mm);
+                if(m > 0){
+                  // exclude read
+                  continue;
+                }
+
                 char *var = strdup(pvar);
                 kh_put(varhash, pc[i].pvar, var, &hret);
                 if (hret == 0) free(var);

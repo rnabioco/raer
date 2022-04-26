@@ -33,9 +33,11 @@
 #' @param n_align_tag Tag name that containing # of valid alignments
 #' @param event_filters integer vector of length 4 with values indicating
 #'  distance from pileup position to features to filter. Distance to trim from
-#'  5' ends of reads, distance from splicing events, distance from indels, and
+#'  5' ends of reads, from 3' end of reads, distance from splicing events, distance from indels, and
 #'  length of homopolymer stretch used to determine if a site is in a homopolymer.
-#'  default is no filters applied (e.g. c(0,0,0,0)).
+#'  # of read mismatch types (e.g. A->G or G->T) allowed in a single read,
+#'  and the required # of any mismatches that activate the mismatch type filter.
+#'  default is no filters applied (e.g. c(0,0,0,0,0,0,0)).
 #' @param only_keep_variants if TRUE, then only variant sites will be reported
 #' (FALSE by default)
 #' @param reads if supplied a fasta file will be written with reads that pass filters
@@ -64,7 +66,7 @@ get_pileup <- function(bamfile,
                    bam_flags = NULL,
                    n_align = 0,
                    n_align_tag = "NH",
-                   event_filters = c(0,0,0,0),
+                   event_filters = c(0,0,0,0,0,0,0),
                    only_keep_variants = FALSE,
                    reads = NULL,
                    return_data = TRUE){
@@ -125,8 +127,8 @@ get_pileup <- function(bamfile,
     bedfn <- "."
   }
 
-  if(length(event_filters) != 4 || !is.numeric(event_filters)){
-    stop("event_filters must be vector of 4 numeric values")
+  if(length(event_filters) != 7 || !is.numeric(event_filters)){
+    stop("event_filters must be vector of 7 numeric values")
   }
 
   if(is.null(bam_flags)){

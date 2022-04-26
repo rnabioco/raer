@@ -3,7 +3,7 @@ context("create_se")
 library(GenomicRanges)
 library(SummarizedExperiment)
 
-bamfn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.bam", package = "raer")
+bamfn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", package = "raer")
 fafn <- system.file("extdata", "human.fasta", package = "raer")
 bedfn <- system.file("extdata", "regions.bed", package = "raer")
 res <- get_pileup(bamfn, fafn, bedfn)
