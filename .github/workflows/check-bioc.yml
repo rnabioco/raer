@@ -48,6 +48,8 @@ jobs:
     container: ${{ matrix.config.cont }}
     ## Environment variables unique to this job.
 
+    timeout-minutes: ${{ matrix.config.os == 'macOS-latest' && 10 || 60 }}
+
     strategy:
       fail-fast: false
       matrix:
@@ -238,7 +240,7 @@ jobs:
           rcmdcheck::rcmdcheck(
               args = c("--no-manual", "--no-vignettes", "--timings"),
               build_args = c("--no-manual", "--keep-empty-dirs", "--no-resave-data"),
-              error_on = "warning",
+              error_on = "error",
               check_dir = "check"
           )
         shell: Rscript {0}

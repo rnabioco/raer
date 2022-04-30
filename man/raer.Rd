@@ -17,7 +17,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Kent Riemondy \email{kent.riemondy@cuanschutz.edu} (\href{https://orcid.org/0000-0003-0750-1273}{ORCID})
+\strong{Maintainer}: Kent Riemondy \email{kent.riemondy@gmail.com} (\href{https://orcid.org/0000-0003-0750-1273}{ORCID})
 
 Authors:
 \itemize{
