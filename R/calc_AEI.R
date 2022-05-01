@@ -41,7 +41,8 @@ calc_AEI <- function(bam_fn,
                      alu_ranges = NULL,
                      txdb = NULL,
                      snp_db = NULL,
-                     BPPARAM = SerialParam()){
+                     BPPARAM = SerialParam(),
+                     verbose = FALSE){
 
   chroms <- names(Rsamtools::scanBamHeader(bam_fn)[[1]]$targets)
 
@@ -60,8 +61,10 @@ calc_AEI <- function(bam_fn,
   }
 
   aei <- bplapply(seq_along(chroms), function(i){
-    start <- Sys.time()
-    message("\tworking on: ", chroms[i], " time: ", Sys.time())
+    if(verbose){
+      start <- Sys.time()
+      message("\tworking on: ", chroms[i], " time: ", Sys.time())
+    }
     plp <- get_pileup(bam_fn,
                       fafile = fasta_fn,
                       bedfile = alu_bed_fn,
@@ -72,7 +75,9 @@ calc_AEI <- function(bam_fn,
                       library_type = c("fr-first-strand"),
                       event_filters = c(5, 5, 0, 0, 0, 0, 0),
                       only_keep_variants = FALSE)
-    message("\tcompleted in : ", Sys.time() - start)
+    if(verbose){
+      message("\tcompleted in : ", Sys.time() - start)
+    }
 
     if(!is.null(snp_db)){
       plp <- annot_snps(plp, snp_db)

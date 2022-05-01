@@ -63,35 +63,53 @@ annot_snps.SummarizedExperiment <- function(obj,
 #' Annotate a RangedSummarizedExperiment using Granges objects
 #'
 #' @description Utility function to map annotations from GRanges
-#' to rowRanges of SummarizedExperiment. If multiple features overlap
-#' then they will be concatenated as comma separated values.
+#' to rowData of SummarizedExperiment or GRanges object . If multiple features
+#' overlap then they will be concatenated as comma separated values.
 #'
-#' @param obj RangedSummarizedExperiment
+#' @param obj RangedSummarizedExperiment or GRanges object
 #' @param gr GRanges with annotations to map to obj
-#' @param cols_to_map list of columns from gr to map
-#' to obj. If the list has names, the names will be used for
-#' colnames in the obj
+#' @param cols_to_map character vector of columns from gr to map
+#' to obj. If the vector has names, the names will be the
+#' column names in the output obj
+#'
+#' @examples
+#' example(create_se, echo = FALSE)
+#' library(SummarizedExperiment)
+#' gr <- GRanges(rep(c("SSR3", "SPCS3"), c(5, 15)),
+#'              IRanges(seq(1, 500, by = 25), width=50),
+#'              strand="+")
+#' gr$feature <- sample(1:100, size = 20)
+#' gr$id <- sample(LETTERS, size = 20)
+#'
+#' se <- annot_from_gr(se, gr, c(feature_set = "feature", "id"))
+#' rowData(se)
 #'
 #' @importFrom S4Vectors aggregate unstrsplit
 #' @importFrom GenomeInfoDb seqlevelsStyle seqlevelsStyle<-
 #' @export
 annot_from_gr <- function(obj, gr, cols_to_map){
 
-  gr_sites <- rowRanges(obj)
-  site_style <- seqlevelsStyle(gr_sites)
-  annot_style <- seqlevelsStyle(gr)
+  if(is(obj, "RangedSummarizedExperiment")){
+    gr_sites <- rowRanges(obj)
+    return_se <- TRUE
+  } else {
+    gr_sites <- obj
+    return_se <- FALSE
+  }
 
-  if(site_style != annot_style){
-    warning("gr and obj do not have the same chromosome convention\n",
-            "attempting to coerce gr seqnames to obj")
-    tryCatch( seqlevelsStyle(annot_style) <- annot_style,
-              error = function(e) e,
-              finally = print("unable to map chroms in gr to obj"))
+  missing_chroms <- setdiff(seqlevels(gr), seqlevels(se))
+  if(length(missing_chroms) != 0){
+    warning("The following chromosomes in gr are not present in obj\n",
+            missing_chroms)
   }
 
   overlaps <- findOverlaps(gr_sites, gr, ignore.strand = TRUE)
 
-  if(is.null(names(cols_to_map))){
+  if(!is.null(names(cols_to_map))){
+    names(cols_to_map) <- ifelse(names(cols_to_map) == "",
+                                 cols_to_map,
+                                 names(cols_to_map))
+  } else {
     names(cols_to_map) <- cols_to_map
   }
 
@@ -107,6 +125,11 @@ annot_from_gr <- function(obj, gr, cols_to_map){
     x$tmp <- ifelse(x$tmp == "", NA, x$tmp)
     mcols(gr_sites)[[col_id]] <- x$tmp
   }
-  mcols(rowRanges(obj)) <- mcols(gr_sites)
+  if(return_se){
+    mcols(rowRanges(obj)) <- mcols(gr_sites)
+  } else {
+    mcols(obj) <- mcols(gr_sites)
+  }
+
   obj
 }

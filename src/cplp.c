@@ -24,8 +24,6 @@ typedef khash_t(varhash) *varhash_t;
 KHASH_SET_INIT_STR(rname);
 typedef khash_t(rname) *rnhash_t;
 
-#define BUFFER_SIZE 0x40000
-
 static unsigned char comp_base[256] = {
   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,
   16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,

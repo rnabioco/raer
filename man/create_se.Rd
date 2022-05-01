@@ -24,3 +24,20 @@ Currently this doesn't add any sample info and can only take a list of results.
 Potential added functionality would be to allow the user to give an existing
 SE object as input or to give sample meta data.
 }
+\examples{
+library(SummarizedExperiment)
+bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
+bam2fn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", package = "raer")
+fafn <- system.file("extdata", "human.fasta", package = "raer")
+
+plps <- lapply(c(bamfn, bam2fn), function(x) get_pileup(x, fafn))
+names(plps) <- c("sample1", "sample2")
+se <- create_se(plps)
+
+assays(se)
+
+colData(se)
+
+rowRanges(se)
+
+}

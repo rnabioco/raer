@@ -11,32 +11,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// read_bam_tags
-DataFrame read_bam_tags(std::string bampath, std::vector<std::string> tag_ids, std::vector<std::string> tag_types, std::string region);
-RcppExport SEXP _raer_read_bam_tags(SEXP bampathSEXP, SEXP tag_idsSEXP, SEXP tag_typesSEXP, SEXP regionSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< std::string >::type bampath(bampathSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type tag_ids(tag_idsSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type tag_types(tag_typesSEXP);
-    Rcpp::traits::input_parameter< std::string >::type region(regionSEXP);
-    rcpp_result_gen = Rcpp::wrap(read_bam_tags(bampath, tag_ids, tag_types, region));
-    return rcpp_result_gen;
-END_RCPP
-}
-// read_bam
-DataFrame read_bam(std::string bampath, std::vector<std::string> tag_ids, std::vector<std::string> tag_types, std::string region);
-RcppExport SEXP _raer_read_bam(SEXP bampathSEXP, SEXP tag_idsSEXP, SEXP tag_typesSEXP, SEXP regionSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< std::string >::type bampath(bampathSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type tag_ids(tag_idsSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type tag_types(tag_typesSEXP);
-    Rcpp::traits::input_parameter< std::string >::type region(regionSEXP);
-    rcpp_result_gen = Rcpp::wrap(read_bam(bampath, tag_ids, tag_types, region));
-    return rcpp_result_gen;
-END_RCPP
-}
 // run_pileup
 int run_pileup(std::vector<std::string> bampaths, std::string fapath, std::string region, std::string outfn, std::string bedfn, std::vector<int> min_reads, std::vector<int> event_filters, std::vector<int> min_mapQ, std::vector<int> bam_flags, std::vector<int> libtype, int max_depth, int min_baseQ, int n_align, std::string n_align_tag, int only_keep_variants, std::string reads, SEXP ext);
 RcppExport SEXP _raer_run_pileup(SEXP bampathsSEXP, SEXP fapathSEXP, SEXP regionSEXP, SEXP outfnSEXP, SEXP bedfnSEXP, SEXP min_readsSEXP, SEXP event_filtersSEXP, SEXP min_mapQSEXP, SEXP bam_flagsSEXP, SEXP libtypeSEXP, SEXP max_depthSEXP, SEXP min_baseQSEXP, SEXP n_alignSEXP, SEXP n_align_tagSEXP, SEXP only_keep_variantsSEXP, SEXP readsSEXP, SEXP extSEXP) {

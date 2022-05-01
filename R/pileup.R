@@ -9,7 +9,7 @@
 #' The library type argument will only apply to the 1st bam file. The second will be set to
 #' "unstranded"
 #'
-#' @param bamfile paths to 1 or 2 bam files, pass 2 files to
+#' @param bamfile paths to 1 or 2 bam files
 #' @param fafile path to fasta file
 #' @param bedfile path to bed file with sites or regions to query
 #' @param region samtools region query string (i.e. chr1:100-1000)
@@ -208,9 +208,6 @@ get_pileup <- function(bamfile,
   read_pileup(tbxfile)
 }
 
-####################### Utils
-
-MAX_INT <- 536870912
 
 #' Read pileup, indexed by tabix
 #' @param tbx_fn filename
@@ -228,7 +225,7 @@ read_pileup <- function(tbx_fn, region = NULL){
     ivl_vals <- get_region(region)
     params <- GenomicRanges::GRanges(ivl_vals$chrom,
                                     IRanges::IRanges(start = ivl_vals$start + 1,
-                                                     end = min(ivl_vals$end, MAX_INT)))
+                                                     end = ivl_vals))
     tbx_vals <- Rsamtools::scanTabix(tbx, param = params)[[1]]
   } else {
     tbx_vals <- Rsamtools::scanTabix(tbx)[[1]]

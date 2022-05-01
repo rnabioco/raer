@@ -10,7 +10,8 @@ calc_AEI(
   alu_ranges = NULL,
   txdb = NULL,
   snp_db = NULL,
-  BPPARAM = SerialParam()
+  BPPARAM = SerialParam(),
+  verbose = FALSE
 )
 }
 \arguments{

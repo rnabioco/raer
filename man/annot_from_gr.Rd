@@ -7,16 +7,29 @@
 annot_from_gr(obj, gr, cols_to_map)
 }
 \arguments{
-\item{obj}{RangedSummarizedExperiment}
+\item{obj}{RangedSummarizedExperiment or GRanges object}
 
 \item{gr}{GRanges with annotations to map to obj}
 
-\item{cols_to_map}{list of columns from gr to map
-to obj. If the list has names, the names will be used for
-colnames in the obj}
+\item{cols_to_map}{character vector of columns from gr to map
+to obj. If the vector has names, the names will be the
+column names in the output obj}
 }
 \description{
 Utility function to map annotations from GRanges
-to rowRanges of SummarizedExperiment. If multiple features overlap
-then they will be concatenated as comma separated values.
+to rowData of SummarizedExperiment or GRanges object . If multiple features
+overlap then they will be concatenated as comma separated values.
+}
+\examples{
+example(create_se, echo = FALSE)
+library(SummarizedExperiment)
+gr <- GRanges(rep(c("SSR3", "SPCS3"), c(5, 15)),
+             IRanges(seq(1, 500, by = 25), width=50),
+             strand="+")
+gr$feature <- sample(1:100, size = 20)
+gr$id <- sample(LETTERS, size = 20)
+
+se <- annot_from_gr(se, gr, c(feature_set = "feature", "id"))
+rowData(se)
+
 }

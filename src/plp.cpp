@@ -127,7 +127,6 @@ List get_region(std::string region){
   if(!chr_pos){
     stop("could not parse region:%s", region);
   }
-  // i'm sure there is an easier way than this:
   char *chr_name = (char*)malloc(chr_pos - cregion + 1);
   memcpy(chr_name, cregion, chr_pos - cregion);
   chr_name[chr_pos - cregion] = '\0';
