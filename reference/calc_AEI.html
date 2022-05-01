@@ -69,7 +69,8 @@ return a summary AEI metric.</p>
   alu_ranges <span class="op">=</span> <span class="cn">NULL</span>,
   txdb <span class="op">=</span> <span class="cn">NULL</span>,
   snp_db <span class="op">=</span> <span class="cn">NULL</span>,
-  BPPARAM <span class="op">=</span> <span class="fu">SerialParam</span><span class="op">(</span><span class="op">)</span>
+  BPPARAM <span class="op">=</span> <span class="fu">SerialParam</span><span class="op">(</span><span class="op">)</span>,
+  verbose <span class="op">=</span> <span class="cn">FALSE</span>
 <span class="op">)</span></code></pre></div>
     </div>
 
@@ -108,12 +109,6 @@ alleles (T_C), which are most likely derived from noise or polymorphisms.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="va">bamfn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"SRR5564277_Aligned.sortedByCoord.out.md.bam"</span>, package <span class="op">=</span> <span class="st">"raer"</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"human.fasta"</span>, package <span class="op">=</span> <span class="st">"raer"</span><span class="op">)</span></span>
 <span class="r-in"><span class="fu">calc_AEI</span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">fafn</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 	working on: SSR3 time: 2022-04-30 19:55:20</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 	completed in : 0.0686225891113281</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 	working on: SPCS3 time: 2022-04-30 19:55:20</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 	completed in : 0.0476138591766357</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 	working on: DHFR time: 2022-04-30 19:55:20</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 	completed in : 0.0203061103820801</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $A_C</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

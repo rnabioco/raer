@@ -79,6 +79,48 @@ default names (ie sample_1, sample_2, ..., sample_n) will be given and
 a warning will be printed.</p></dd>
 </dl></div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
+<span class="r-in"><span class="va">bamfn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"SRR5564269_Aligned.sortedByCoord.out.md.bam"</span>, package <span class="op">=</span> <span class="st">"raer"</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">bam2fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"SRR5564277_Aligned.sortedByCoord.out.md.bam"</span>, package <span class="op">=</span> <span class="st">"raer"</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"human.fasta"</span>, package <span class="op">=</span> <span class="st">"raer"</span><span class="op">)</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="va">plps</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">bam2fn</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="get_pileup.html">get_pileup</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">fafn</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">plps</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sample1"</span>, <span class="st">"sample2"</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu">create_se</span><span class="op">(</span><span class="va">plps</span><span class="op">)</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> List of length 9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> names(9): Ref Var nRef nVar nA nT nC nG nN</span>
+<span class="r-in"></span>
+<span class="r-in"><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DataFrame with 2 rows and 1 column</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              sample</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         &lt;character&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> sample1     sample1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> sample2     sample2</span>
+<span class="r-in"></span>
+<span class="r-in"><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html" class="external-link">rowRanges</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 1695 ranges and 0 metadata columns:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          seqnames    ranges strand</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      [1]     SSR3         1      -</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      [2]     SSR3         2      -</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      [3]     SSR3         3      -</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      [4]     SSR3         4      -</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      [5]     SSR3         5      -</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      ...      ...       ...    ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1691]    SPCS3       342      +</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1692]    SPCS3       343      +</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1693]    SPCS3       344      +</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1694]    SPCS3       345      +</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1695]    SPCS3       346      +</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   -------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   seqinfo: 3 sequences from an unspecified genome; no seqlengths</span>
+<span class="r-in"></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>
 
