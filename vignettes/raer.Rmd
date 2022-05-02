@@ -1,9 +1,28 @@
+---
+title: Introducing the raer package
+author: 
+- name: Kent Riemondy
+  affiliation: University of Colorado School of Medicine
+date: "Revised: 2 May 2022"
+output:
+  BiocStyle::html_document
+package: raer 
+vignette: >
+  %\VignetteIndexEntry{Introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}    
+---
+
+```{r, echo=FALSE, results="hide"}
+knitr::opts_chunk$set(eval=FALSE, message=FALSE, warning=FALSE)
+```
+
 # DE tutorial
 
 Steps to perform differential editing using `Raer`
 
 ## Set up
-First load in requried packages
+First load in required packages
 
 ```{r}
 library(raer)
@@ -14,7 +33,6 @@ library(edgeR)
 library(DESeq2)
 library(ComplexHeatmap)
 ```
-
 
 Set directories and read in the data (eventually, we should make this downloadable)
 

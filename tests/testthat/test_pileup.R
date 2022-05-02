@@ -27,38 +27,35 @@ test_that("filtering for variants in pileup works", {
   expect_equal(vars, res_all_vars)
 })
 
-test_that("2-bam pileup works", {
-  count_cols <- c("nRef", "nVar", "nA", "nT", "nC", "nG", "nN")
+test_that("n-bam pileup works", {
   res <- get_pileup(c(bamfn, bamfn), fafn, bedfn,
                     library_type = c("fr-first-strand",
                                      "fr-first-strand"))
-
-  expect_equal(length(res$Ref), 214)
-  expect_equal(ncol(as.data.frame(res)), 21)
-  b1_vals <- mcols(res)[paste0(count_cols, "_1")]
-  b2_vals <- mcols(res)[paste0(count_cols, "_2")]
-  colnames(b2_vals) <- colnames(b1_vals)
-  expect_true(identical(b1_vals, b2_vals))
-
-  # should default to fr-first-strand and unstranded
-  res <- get_pileup(c(bamfn, bamfn), fafn, bedfn)
-
-  expect_equal(length(res$Ref), 214)
-  expect_equal(ncol(as.data.frame(res)), 21)
-  b1_vals <- mcols(res)[paste0(count_cols, "_1")]
-  b2_vals <- mcols(res)[paste0(count_cols, "_2")]
-  colnames(b2_vals) <- colnames(b1_vals)
-  expect_false(identical(b1_vals, b2_vals))
+  expect_true(identical(res[[1]], res[[2]]))
+  expect_equal(length(res[[1]]$Ref), 182)
+  expect_equal(ncol(as.data.frame(res[[1]])), 14)
 
   res <- get_pileup(c(bamfn, bam2fn), fafn, bedfn)
-  b1_vals <- mcols(res)[paste0(count_cols, "_1")]
-  b2_vals <- mcols(res)[paste0(count_cols, "_2")]
-  colnames(b2_vals) <- colnames(b1_vals)
-  expect_false(identical(b1_vals, b2_vals))
+  expect_equal(length(res[[1]]$Ref), 182)
+  expect_false(identical(res[[1]], res[[2]]))
 
-  res_all_vars <- get_pileup(c(bamfn, bam2fn), fafn, bedfn,
-                             only_keep_variants = TRUE)
-  expect_equal(length(res_all_vars), 3)
+  res <- get_pileup(c(bamfn, bamfn), fafn, bedfn,
+                    library_type = c("fr-first-strand",
+                                     "unstranded"))
+  expect_equal(length(res[[1]]$Ref), 214)
+  expect_equal(length(res[[1]]$Ref), length(res[[2]]$Ref))
+
+  res <- get_pileup(c(bamfn, bam2fn), fafn, bedfn,
+                    library_type = "fr-first-strand",
+                      only_keep_variants = TRUE)
+  # same sites reported in both files
+  expect_true(all(start(res[[1]]) == start(res[[2]])))
+  # sites are variant in at least 1 file
+  expect_true(all(res[[1]]$Var != "-" | res[[2]]$Var != "-"))
+
+  res <- get_pileup(rep(bamfn, 4), fafn, bedfn,
+                    library_type = "fr-first-strand")
+  expect_true(length(res) == 4)
 
 })
 
@@ -162,16 +159,6 @@ test_that("pileup check nRef and nVar", {
 })
 
 bout <- tempfile(fileext = ".bam")
-
-test_that("pileup check nh tag filter", {
-  bout <- filterBam(bamfn,
-                    param = ScanBamParam(tagFilter = list("NH"= 1)),
-                    destination = bout,
-                    indexDestination = TRUE)
-  a <- get_pileup(bamfn, fafn, n_align = 1, n_align_tag = "NH")
-  b <- get_pileup(bout, fafn)
-  expect_true(identical(a, b))
-})
 
 test_that("pileup check mapq filter", {
   bout <- filterBam(bamfn,

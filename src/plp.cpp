@@ -14,17 +14,15 @@ extern "C" {
 int run_pileup(std::vector<std::string> bampaths,
                std::string fapath,
                std::string region,
-               std::string outfn,
                std::string bedfn,
-               std::vector<int> min_reads,
+               int min_reads,
                std::vector<int> event_filters,
                std::vector<int> min_mapQ,
                std::vector<int> bam_flags,
                std::vector<int> libtype,
+               std::vector<std::string> outfns,
                int max_depth = 10000,
                int min_baseQ = 20,
-               int n_align = 0,
-               std::string n_align_tag = "NH",
                int only_keep_variants = 0,
                std::string reads = ".",
                SEXP ext = R_NilValue) {
@@ -38,7 +36,13 @@ int run_pileup(std::vector<std::string> bampaths,
   }
 
   char* cfapath = &*fapath.begin();
-  char* coutfn = &*outfn.begin();
+
+  std::vector<const char *> coutfns;
+  coutfns.reserve(outfns.size());
+  for(int i = 0; i < outfns.size(); ++i){
+    coutfns.push_back(outfns[i].c_str());
+  }
+
   char* cregion;
   if(region == "."){
     cregion = NULL;
@@ -53,25 +57,15 @@ int run_pileup(std::vector<std::string> bampaths,
     cbedfn = &*bedfn.begin();
   }
 
-  if(min_reads.size() == 0){
-    stop("please supply min_reads parameter");
-  }
-
-  int n_params = 0;
-  n_params = n_files - min_reads.size();
-
-  // set min reads to first parameter if not supplied for each file
-  if(n_params != 0){
-    for(int i = 0; i < n_params; i++){
-      min_reads.push_back(min_reads[0]);
-    }
+  if(min_reads < 0){
+    stop("min_reads must be positive");
   }
 
   if(min_mapQ.size() == 0){
     stop("please supply min_mapQ parameter");
   }
 
-  n_params = 0;
+  int n_params = 0;
   n_params = n_files - min_mapQ.size();
 
   // set min_mapQ to first parameter if not supplied for each file
@@ -99,16 +93,14 @@ int run_pileup(std::vector<std::string> bampaths,
                     cbampaths.size(),
                     cfapath,
                     cregion,
-                    coutfn,
+                    &coutfns[0],
                     cbedfn,
-                    &min_reads[0],
+                    min_reads,
                     max_depth,
                     min_baseQ,
                     &min_mapQ[0],
                     &libtype[0],
                     &*bam_flags.begin(),
-                    n_align,
-                    &*n_align_tag.begin(),
                     &event_filters[0],
                     only_keep_variants,
                     creadsoutfn,

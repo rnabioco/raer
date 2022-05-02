@@ -16,10 +16,12 @@ knitr::opts_chunk$set(
 # raer
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/rnabioco/raer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/rnabioco/raer/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check-bioc](https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml/badge.svg)](https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml)
 <!-- badges: end -->
 
-The goal of raer is to ...
+raer is an R package that facilitates rapid interactive analysis of RNA editing in R in the bioconductor ecosystem. 
+
+Vignettes *will be* provided to demonstrate how to quantify known events, identify novel editing sites, or examine editing in single cell datasets. 
 
 ## Installation
 
@@ -29,3 +31,49 @@ You can install the development version of raer from [GitHub](https://github.com
 # install.packages("devtools")
 devtools::install_github("rnabioco/raer")
 ```
+
+## Quick start
+
+The raer package provides methods to compute per site read count summaries from bam files, either for known sites, or for all detected sites.
+
+```{r}
+library(raer)
+bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
+bam2fn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", package = "raer")
+fafn <- system.file("extdata", "human.fasta", package = "raer")
+bedfn <- system.file("extdata", "regions.bed", package = "raer")
+
+res <- get_pileup(bamfn, fafn, bedfile = bedfn, only_keep_variants = T)
+res
+
+res <- get_pileup(bamfn, fafn, only_keep_variants = T)
+res
+```
+
+Multiple bam files can be processed, which enables rapid comparisons of RNA-Seq vs. WGS or WXS data, or RNA-Seq vs RNA-seq (ADAR WT VS ADAR KO).
+
+```{r}
+plps <- get_pileup(c(bam2fn, bamfn), 
+                  min_reads = 2,
+                  fafn, 
+                  library_type = c("fr-first-strand", "fr-first-strand"),
+                  only_keep_variants = T)
+plps
+```
+
+To facilitate comparisions across groups, the pileups can be stored in a 
+RangedSummarizedExperiment. 
+
+```{r}
+create_se(plps)
+```
+
+## Related work
+
+The functionality in `raer` builds off of previously published methods and software:  
+ - Python package: [REDItools](https://github.com/BioinfoUNIBA/REDItools) from [XXX](doi)  
+ - Java package: [JACUSA2](https://github.com/dieterich-lab/JACUSA2)  from [XXX](doi)  
+ - Python pipeline: [deNovo-Detect](https://github.com/a2iEditing/deNovo-Detect) from [Gabey et al](https://doi.org/10.1038/s41467-022-28841-4)    
+ - Snakemake pipeline:  [rnaedits](https://github.com/rnabioco/rnaedits) from [xxx](doi)
+
+

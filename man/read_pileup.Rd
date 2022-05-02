@@ -15,3 +15,11 @@ region specifiers are supported.}
 \description{
 Read pileup, indexed by tabix
 }
+\examples{
+bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
+fafn <- system.file("extdata", "human.fasta", package = "raer")
+
+plp <- get_pileup(bamfn, fafn, return_data = FALSE)
+read_pileup(plp)
+
+}
