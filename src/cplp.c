@@ -86,9 +86,8 @@ static char *get_read(const bam1_t *rec)
 
 typedef struct {
   int min_mq, flag, min_baseQ, max_depth, all;
-  int n_align;
   uint32_t keep_flag[2];
-  char *reg, *fai_fname, *output_fname, *n_align_tag;
+  char *reg, *fai_fname, *output_fname;
   faidx_t *fai;
   void *bed;
   rnhash_t rnames;
@@ -184,7 +183,6 @@ static int readaln(void *data, bam1_t *b) {
   int ret;
   int skip = 0;
   uint32_t test_flag;
-  int n_errors = 0 ;
   while (1) {
     ret = g->iter? sam_itr_next(g->fp, g->iter, b) : sam_read1(g->fp, g->h, b);
     if (ret < 0) break;
@@ -204,21 +202,6 @@ static int readaln(void *data, bam1_t *b) {
       if (skip) continue;
     }
 
-    // check # of alignments
-    if(g->conf->n_align && g->conf->n_align_tag){
-
-      uint8_t* aux_info = bam_aux_get(b, g->conf->n_align_tag) ;
-
-      if(!aux_info) {
-        if(n_errors < 5){
-          Rf_warning("Warning: missing tag info in reads, e.g: %s\n", bam_get_qname(b)) ;
-          n_errors += 1 ;
-        }
-        continue ;
-      }
-      int64_t mmap_tag = bam_aux2i(aux_info);
-      if(mmap_tag > g->conf->n_align) continue ;
-    }
     // check mapping quality
     if (b->core.qual < g->conf->min_mq) continue;
 
@@ -305,99 +288,81 @@ static void get_var_string(varhash_t *vhash, char *out){
   }
 }
 
-static void print_plus_counts(FILE *fp, pcounts *pc, int only_variants, int n, char* ctig, int pos, int pref){
-
-  if(only_variants){
-    if(!(kh_size(pc[0].pvar) > 0)){
-      return;
-    }
-  }
+static void print_plus_counts(FILE *fp, pcounts *p, char* ctig, int pos, int pref){
 
   char pout[12];
-  get_var_string(&pc[0].pvar, pout);
+  get_var_string(&(p->pvar), pout);
   fprintf(fp,
-          "%s\t%i\t%c\t%c\t%s",
+          "%s\t%i\t%c\t%c\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n",
           ctig,
           pos + 1,
           '+',
           pref,
-          pout) ;
-  int i;
-  for(i = 0; i < n; ++i){
-    fprintf(fp,
-            "\t%i\t%i\t%i\t%i\t%i\t%i\t%i",
-            pc[i].pnr,
-            pc[i].pnv,
-            pc[i].pna,
-            pc[i].pnt,
-            pc[i].pnc,
-            pc[i].png,
-            pc[i].pnn);
-  }
-  fprintf(fp,"\n");
+          pout,
+          p->pnr,
+          p->pnv,
+          p->pna,
+          p->pnt,
+          p->pnc,
+          p->png,
+          p->pnn);
 }
 
-static void print_minus_counts(FILE *fp, pcounts *pc, int only_variants, int n, char* ctig, int pos, int mref){
-
-  if(only_variants){
-    if(!(kh_size(pc[0].mvar) > 0)){
-      return;
-    }
-  }
+static void print_minus_counts(FILE *fp, pcounts *p, char* ctig, int pos, int mref){
 
   char mout[12];
-  get_var_string(&pc[0].mvar, mout);
+  get_var_string(&(p->mvar), mout);
   fprintf(fp,
-          "%s\t%i\t%c\t%c\t%s",
+          "%s\t%i\t%c\t%c\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n",
           ctig,
           pos + 1,
           '-',
           mref,
-          mout) ;
-  int i;
-  for(i = 0; i < n; ++i){
-    fprintf(fp,
-            "\t%i\t%i\t%i\t%i\t%i\t%i\t%i",
-            pc[i].mnr,
-            pc[i].mnv,
-            pc[i].mna,
-            pc[i].mnt,
-            pc[i].mnc,
-            pc[i].mng,
-            pc[i].mnn);
-  }
-  fprintf(fp,"\n");
+          mout,
+          p->mnr,
+          p->mnv,
+          p->mna,
+          p->mnt,
+          p->mnc,
+          p->mng,
+          p->mnn);
 }
 
-static void print_counts(FILE *fp, pcounts *pc, int only_variants, int n, int min_1, int min_2,
+static void print_counts(FILE **fps, pcounts *pc, int only_variants, int n, int min_depth,
                          char* ctig, int pos, int pref, int mref){
-
-  // determine if counts pass thresholds
-  if(n == 1){
-    if(pc[0].ptotal >= min_1){
-      print_plus_counts(fp, pc, only_variants, n, ctig, pos, pref) ;
+  int i;
+  // write out if any samples are > min_depth and any samples have a variant
+  int pv = 0;
+  int mv = 0;
+  int write_p = 0;
+  int write_m = 0;
+  for(i = 0; i < n; ++i){
+    if((pc + i)->ptotal >= min_depth){
+      write_p = 1;
     }
-
-    if(pc[0].mtotal >= min_1){
-      print_minus_counts(fp, pc, only_variants, n, ctig, pos, mref) ;
+    if((pc + i)->mtotal >= min_depth){
+      write_m = 1;
     }
-  } else if (n == 2) {
-    // if rna + dna supplied,
-    // filter using gDNA counts independent of strand
-    // and write out both plus and minus if only variants requested
-    // (to deal with RNA variants being on minus strand and
-    // gDNA variants on plus)
     if(only_variants){
-      only_variants = !((kh_size(pc[0].pvar) > 0) || (kh_size(pc[0].mvar) > 0));
+      if(kh_size((pc + i)->pvar) > 0){
+        pv = 1;
+      }
+      if(kh_size((pc + i)->mvar) > 0){
+        mv = 1;
+      }
     }
-    // need to write out DNA counts even in RNA no counts
+  }
+  if(only_variants){
+    write_p = pv && write_p;
+    write_m = mv && write_m;
+  }
 
-    if((pc[0].ptotal >= min_1 || pc[0].mtotal >= min_1) && (pc[1].ptotal+ pc[1].mtotal) >= min_2){
-      print_plus_counts(fp, pc, only_variants, n, ctig, pos, pref) ;
+  for(i = 0; i < n; ++i){
+    if(write_p){
+      print_plus_counts(fps[i], (pc + i), ctig, pos, pref) ;
     }
-
-    if(pc[0].mtotal >= min_1 && (pc[1].ptotal+ pc[1].mtotal) >= min_2){
-      print_minus_counts(fp, pc, only_variants, n, ctig, pos, mref) ;
+    if(write_m){
+      print_minus_counts(fps[i], (pc + i), ctig, pos, mref) ;
     }
   }
 }
@@ -478,7 +443,7 @@ int write_reads(bam1_t *b,  mplp_conf_t *conf, char* ref, int pos){
 //           0 if read passes filter
 //           >0 with # of unique mismatches if doesn't pass
 //
-// based on cigar and MD parsing code from htsbox (written Heng Li)
+// based on cigar and MD parsing code from htsbox (written by Heng Li)
 // https://github.com/lh3/htsbox/blob/ffc1e8ad4f61291c676a323ed833ade3ee681f7c/samview.c#L117
 
 int parse_mismatches(bam1_t* b, int pos, int n_types, int n_mis){
@@ -565,27 +530,21 @@ int run_cpileup(const char** cbampaths,
                 int n,
                 char* cfapath,
                 char* cregion,
-                char* coutfn,
+                char** coutfns,
                 char* cbedfn,
-                int* min_reads,
+                int min_reads,
                 int max_depth,
                 int min_baseQ,
                 int* min_mapQ,
                 int* libtype,
                 int* b_flags,
-                int n_align,
-                char* n_align_tag,
                 int* event_filters,
                 int only_keep_variants,
                 char* reads_fn,
                 SEXP ext) {
 
-  if (n > 2 || n < 1) {
-    Rf_error("pileup requires 1 or 2 bam files");
-    return 1;
-  }
   mplp_aux_t **data;
-  int i, tid, *n_plp, tid0 = 0;
+  int i, tid, *n_plp, tid0 = 0, ret = 0;
   int pos, beg0 = 0, end0 = INT32_MAX, ref_len;
 
   if(min_baseQ < 0) min_baseQ = 0;
@@ -596,7 +555,9 @@ int run_cpileup(const char** cbampaths,
   bam_mplp_t iter;
   bam_hdr_t *h = NULL; /* header of first file in input list */
   char *ref;
-  FILE *pileup_fp = NULL;
+
+  FILE **pileup_fps;
+  pileup_fps = malloc(n * sizeof(FILE *));
 
   mplp_pileup_t gplp;
 
@@ -629,24 +590,17 @@ int run_cpileup(const char** cbampaths,
     conf->reg = cregion;
   }
 
-  if(n_align && n_align_tag){
-
-    if(n_align < 0){
-      Rf_error("n_align must be >= 0, set to 0 to disable exclude multimappers by tag");
-      return 1;
-    }
-    conf->n_align = n_align;
-    conf->n_align_tag = n_align_tag;
-  }
-
   // if multiple bam files, use minimum mapQ for initial filtering,
   // then later filter in pileup loop
   if(min_mapQ[0] >= 0) {
-    if(n == 1){
-      conf->min_mq = min_mapQ[0];
-    } else {
-      conf->min_mq = min_mapQ[0] < min_mapQ[1] ? min_mapQ[0] : min_mapQ[1];
+    int mq;
+    mq = min_mapQ[0];
+    for(int i = 0; i < n; ++i){
+      if(min_mapQ[i] < mq){
+        mq = min_mapQ[i];
+      }
     }
+    conf->min_mq = mq;
   }
 
   if(b_flags){
@@ -664,8 +618,6 @@ int run_cpileup(const char** cbampaths,
   ef->n_mm_type = event_filters[5];
   ef->n_mm = event_filters[6];
 
-  conf->output_fname = coutfn;
-
   // read the header of each file in the list and initialize data
   for (i = 0; i < n; ++i) {
     bam_hdr_t *h_tmp;
@@ -675,14 +627,12 @@ int run_cpileup(const char** cbampaths,
     if ( !data[i]->fp )
     {
       Rf_error("failed to open %s: %s\n", cbampaths[i], strerror(errno));
-      exit(EXIT_FAILURE);
     }
 
     if (conf->fai_fname) {
       if (hts_set_fai_filename(data[i]->fp, conf->fai_fname) != 0) {
         Rf_error("failed to process %s: %s\n",
                  cfapath, strerror(errno));
-        exit(EXIT_FAILURE);
       }
     }
 
@@ -692,7 +642,6 @@ int run_cpileup(const char** cbampaths,
     h_tmp = sam_hdr_read(data[i]->fp);
     if ( !h_tmp ) {
       Rf_error("fail to read the header of %s\n", cbampaths[i]);
-      exit(EXIT_FAILURE);
     }
 
     if(conf->reg){
@@ -701,12 +650,10 @@ int run_cpileup(const char** cbampaths,
 
       if (idx == NULL) {
         Rf_error("fail to load bamfile index for %s\n", cbampaths[i]);
-        return 1;
       }
 
       if ( (data[i]->iter=sam_itr_querys(idx, h_tmp, conf->reg)) == 0) {
         Rf_error("Fail to parse region '%s' with %s\n", conf->reg, cbampaths[i]);
-        return 1;
       }
 
       if(i == 0){
@@ -729,14 +676,15 @@ int run_cpileup(const char** cbampaths,
 
   int write_mismatched_reads = 0;
   if (reads_fn){
+    if(n > 1){
+      Rf_error("writing mismatched reads for multiple files not implemented");
+    }
     write_mismatched_reads = 1;
     conf->reads_fp = fopen(R_ExpandFileName(reads_fn), "w");
     if (!conf->reads_fp)
     {
       Rf_error("failed to open %s: %s\n",R_ExpandFileName(reads_fn), strerror(errno));
-      exit(EXIT_FAILURE);
     }
-
     conf->rnames = kh_init(rname);
   }
 
@@ -754,30 +702,24 @@ int run_cpileup(const char** cbampaths,
     return 1;
   }
 
-  pileup_fp = conf->output_fname? fopen(conf->output_fname, "w") : stdout;
-  if (pileup_fp == NULL) {
-    Rf_error("Failed to write to %s: %s\n", conf->output_fname, strerror(errno));
-    return 1;
-  }
-
   pcounts *pc;
   pc = calloc(n, sizeof(pcounts));
-  if (pc[0].mvar == NULL) {
-    pc[0].mvar = kh_init(varhash);
-  }
-  if (pc[0].pvar == NULL) {
-    pc[0].pvar = kh_init(varhash);
+  for (i = 0; i < n; ++i) {
+    // initialize output files
+    pileup_fps[i] = fopen(R_ExpandFileName(coutfns[i]), "w");
+    if ( pileup_fps[i] == NULL) {
+      Rf_error("Failed to open file outputfile %s\n", R_ExpandFileName(coutfns[i]));
+    }
+
+    // initialize variant string hash (AG, AT, TC) etc.
+    if (pc[i].mvar == NULL) {
+      pc[i].mvar = kh_init(varhash);
+    }
+    if (pc[i].pvar == NULL) {
+      pc[i].pvar = kh_init(varhash);
+    }
   }
 
-  int min_1, min_2;
-  min_1 = min_2 = 0;
-  if(n == 1){
-    min_1 = min_reads[0];
-    min_2 = min_1;
-  } else if (n == 2){
-    min_1 = min_reads[0];
-    min_2 = min_reads[1];
-  }
   char mvar[3];
   char pvar[3];
   mvar[2] = '\0';
@@ -791,7 +733,12 @@ int run_cpileup(const char** cbampaths,
   while ((l = bam_mplp_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
       // check user interrupt
       // using a 2^k value (e.g. 256) can be 2-3x faster than say 1e6
-      if (n_iter % 262144 == 0) R_CheckUserInterrupt();
+      if (n_iter % 262144 == 0) {
+        if(checkInterrupt()){
+          goto fail;
+        }
+      }
+
       if (cregion && (pos < beg0 || pos >= end0)) continue; // out of the region requested
       mplp_get_ref(data[0], tid, &ref, &ref_len);
 
@@ -818,21 +765,27 @@ int run_cpileup(const char** cbampaths,
       // todo: find a  way to advance iterator past repeat
       if(ef->nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, ef->nmer)) continue;
 
+      int pass_reads = 0;
+      for(i = 0; i < n; ++i){
+        // fail early if read count less than min_reads
+        if (n_plp[i] >= min_reads) {
+          pass_reads = 1;
+        }
+      }
+      if(!pass_reads){
+        continue;
+      }
+
       for (i = 0; i < n; ++i) {
         int j;
 
-        // consider failing early if read # less than min_counts
-        if (n_plp[i] == 0) continue;
-
-  	      // want to count plus and minus reads separately
-  	      // iterate through reads that overlap position
+  	    // iterate through reads that overlap position
         for (j = 0; j < n_plp[i]; ++j) {
 
           const bam_pileup1_t *p = plp[i] + j;
 
           // filter based on mapq as not able to filter per file in pileup
-          if (p->b->core.qual < min_mapQ[i]) continue
-            ;
+          if (p->b->core.qual < min_mapQ[i]) continue ;
 
           // check base quality
           int bq = p->qpos < p->b->core.l_qseq
@@ -915,26 +868,25 @@ int run_cpileup(const char** cbampaths,
             if(mref_b == c){
               pc[i].mnr += 1;
             } else {
-              // store variants in khash (for rna-seq only)
+              // store variants in khash
               mvar[1] = c;
-              if(i == 0){
-                int m;
-                // drop read if >= mismatch different types and at least n_mm mismatches
-                m = parse_mismatches(p->b, pos, ef->n_mm_type, ef->n_mm);
-                if(m > 0){
-                  // exclude read
-                  continue;
-                }
+              int m;
+              // drop read if >= mismatch different types and at least n_mm mismatches
+              m = parse_mismatches(p->b, pos, ef->n_mm_type, ef->n_mm);
+              if(m > 0){
+                // exclude read
+                continue;
+              }
 
-                char *var = strdup(mvar);
-                kh_put(varhash, pc[i].mvar, var, &hret);
-                if (hret == 0) free(var);
-                if(write_mismatched_reads){
-                  int wret = write_reads(p->b, conf, h->target_name[tid], pos);
-                  if(wret != 0){
-                    Rf_error( "writing mismatched reads failed\n");
-                    exit(EXIT_FAILURE);
-                  }
+              char *var = strdup(mvar);
+              kh_put(varhash, pc[i].mvar, var, &hret);
+              if (hret == 0) free(var);
+              if(write_mismatched_reads){
+                int wret = write_reads(p->b, conf, h->target_name[tid], pos);
+                if(wret != 0){
+                  REprintf( "writing mismatched reads failed\n");
+                  ret = EXIT_FAILURE;
+                  goto fail;
                 }
               }
 
@@ -968,24 +920,23 @@ int run_cpileup(const char** cbampaths,
               pc[i].pnr += 1;
             } else {
               pvar[1] = c;
-              if(i == 0){
-                int m;
-                // drop read if >= mismatch different types and at least n_mm mismatches
-                m = parse_mismatches(p->b, pos, ef->n_mm_type, ef->n_mm);
-                if(m > 0){
-                  // exclude read
-                  continue;
-                }
+              int m;
+              // drop read if >= mismatch different types and at least n_mm mismatches
+              m = parse_mismatches(p->b, pos, ef->n_mm_type, ef->n_mm);
+              if(m > 0){
+                // exclude read
+                continue;
+              }
 
-                char *var = strdup(pvar);
-                kh_put(varhash, pc[i].pvar, var, &hret);
-                if (hret == 0) free(var);
-                if(write_mismatched_reads){
-                  int wret = write_reads(p->b, conf, h->target_name[tid], pos);
-                  if(wret != 0){
-                    Rf_error( "writing mismatched reads failed\n");
-                    exit(EXIT_FAILURE);
-                  }
+              char *var = strdup(pvar);
+              kh_put(varhash, pc[i].pvar, var, &hret);
+              if (hret == 0) free(var);
+              if(write_mismatched_reads){
+                int wret = write_reads(p->b, conf, h->target_name[tid], pos);
+                if(wret != 0){
+                  REprintf( "writing mismatched reads failed\n");
+                  ret = EXIT_FAILURE;
+                  goto fail;
                 }
               }
 
@@ -1013,10 +964,10 @@ int run_cpileup(const char** cbampaths,
         }
       }
       // print out lines if pass depth criteria
-      print_counts(pileup_fp, pc, only_keep_variants, n, min_1, min_2, h->target_name[tid], pos, pref_b, mref_b);
-
+      print_counts(pileup_fps, pc, only_keep_variants, n, min_reads, h->target_name[tid], pos, pref_b, mref_b);
   }
 
+fail:
   //clean up memory
   bam_mplp_destroy(iter);
   bam_hdr_destroy(h);
@@ -1031,22 +982,22 @@ int run_cpileup(const char** cbampaths,
     clear_pcounts(&pc[i]);
     kh_destroy(varhash, pc[i].mvar);
     kh_destroy(varhash, pc[i].pvar);
+    fclose(pileup_fps[i]);
   }
   free(data); free(plp); free(n_plp);
   free(pc); free(ef);
   free(mp_ref.ref[0]);
   free(mp_ref.ref[1]);
-
+  free(pileup_fps);
   if (conf->fai) fai_destroy(conf->fai);
 
   // don't destroy index if passed from R
   if (conf->bed && Rf_isNull(ext)) bed_destroy(conf->bed);
 
-  if (pileup_fp && conf->output_fname) fclose(pileup_fp);
   if (write_mismatched_reads) {
     clear_rname_set(conf->rnames);
     kh_destroy(rname, conf->rnames);
     fclose(conf->reads_fp);
   }
-  return 0;
+  return ret;
 }

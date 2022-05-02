@@ -15,7 +15,7 @@ int query_start(bam1_t *b){
   int n_cigar = b->core.n_cigar;
   int i, op;
 
-  for (i = 0; i <  n_cigar; i++){
+  for (i = 0; i <  n_cigar; ++i){
     op = cigar[i] & BAM_CIGAR_MASK;
     if (op == BAM_CHARD_CLIP){
       if (start_offset != 0 && start_offset != b->core.l_qseq){
@@ -72,7 +72,7 @@ int check_simple_repeat(char** ref, int* ref_len, int pos, int nmer){
   n_pos = ((n_pos + start) > *ref_len) ? (*ref_len - start): n_pos;
 
   // check for homopolymer using run-length-encoding approach
-  for (int i = 0;i < n_pos; i++) {
+  for (int i = 0;i < n_pos; ++i) {
     // Count occurrences of current character
     int count = 1;
     while (i < n_pos - 1 && (*ref)[start + i] == (*ref)[start + i + 1]) {
@@ -118,7 +118,7 @@ int dist_to_splice(bam1_t* b, int pos, int dist){
   ip = 0;
   sp = pos - dist;
   ep = pos + dist;
-  for (i = 0; i < n_cigar; i++){
+  for (i = 0; i < n_cigar; ++i){
     c = bam_cigar_op(cigar[i]);
     // is a M, I, S, =, or other query consuming operation
     if (bam_cigar_type(c)&1){
@@ -147,7 +147,7 @@ int dist_to_indel(bam1_t* b, int pos, int dist){
   sp = pos - dist;
   ep = pos + dist;
 
-  for (i = 0; i < n_cigar; i++){
+  for (i = 0; i < n_cigar; ++i){
     c = bam_cigar_op(cigar[i]);
 
     // is a M, I, S, =, or other query consuming operation
