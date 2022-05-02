@@ -38,7 +38,9 @@ Suggests:
     RColorBrewer,
     DESeq2,
     edgeR,
-    limma
+    limma,
+    rmarkdown,
+    BiocStyle
 Remotes:  
     kriemo/Rhtslib@a524c95
 LinkingTo: 
