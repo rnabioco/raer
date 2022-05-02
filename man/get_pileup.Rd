@@ -23,7 +23,8 @@ get_pileup(
   event_filters = c(0, 0, 0, 0, 0, 0, 0),
   only_keep_variants = FALSE,
   reads = NULL,
-  return_data = TRUE
+  return_data = TRUE,
+  BPPARAM = SerialParam()
 )
 }
 \arguments{
@@ -74,6 +75,9 @@ default is no filters applied (e.g. c(0,0,0,0,0,0,0)).}
 and contain variants}
 
 \item{return_data}{return data as a Granges table?}
+
+\item{BPPARAM}{A \link{BiocParallel} class to control parallel execution. Parallel
+processing occurs per chromosome, so is disabled when run on a single region.}
 
 \item{bamfiles}{paths to 1 or more bam files}
 }

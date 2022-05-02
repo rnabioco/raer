@@ -4,7 +4,7 @@ library(GenomicAlignments)
 library(Biostrings)
 library(Rsamtools)
 library(rtracklayer)
-
+library(BiocParallel)
 bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
 bam2fn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", package = "raer")
 fafn <- system.file("extdata", "human.fasta", package = "raer")
@@ -333,4 +333,19 @@ test_that("filtering for read-level mismatches works", {
   expect_null(plp)
 
 })
+
+
+test_that("parallel processing works", {
+  plp <- get_pileup(bamfn, fafn)
+  plp_serial <- get_pileup(bamfn, fafn, BPPARAM = SerialParam())
+  plp_mc <- get_pileup(bamfn, fafn, BPPARAM = MulticoreParam(workers = 2))
+  expect_equal(plp_mc$Ref, plp$Ref)
+  expect_equal(plp_serial$Ref, plp$Ref)
+  # note that there is a difference in counts in SPCS3, which
+  # happens when single chromosomes or regions are queried.
+  # this may have something to do with the overlapping mate quality score
+  # tweaking.
+})
+
+
 unlink(c(bout, fout))

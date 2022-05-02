@@ -35,6 +35,8 @@
 #' @param reads if supplied a fasta file will be written with reads that pass filters
 #'  and contain variants
 #' @param return_data return data as a Granges table?
+#' @param BPPARAM A [BiocParallel] class to control parallel execution. Parallel
+#' processing occurs per chromosome, so is disabled when run on a single region.
 #'
 #' @returns A list containing a `GRanges` object for each input bam file, or a vector
 #' of the output tabixed file names if `return_data` is FALSE.
@@ -51,6 +53,7 @@
 #' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges
 #' @importFrom data.table fread
+#' @importFrom BiocParallel SerialParam bpstop bplapply ipcid ipclock ipcunlock
 #' @export
 get_pileup <- function(bamfile,
                    fafile,
@@ -70,7 +73,8 @@ get_pileup <- function(bamfile,
                    event_filters = c(0,0,0,0,0,0,0),
                    only_keep_variants = FALSE,
                    reads = NULL,
-                   return_data = TRUE){
+                   return_data = TRUE,
+                   BPPARAM = SerialParam()){
 
   bamfile <- path.expand(bamfile)
   fafile <- path.expand(fafile)
@@ -115,11 +119,14 @@ get_pileup <- function(bamfile,
       if(!is.null(start) & !is.null(end)){
         region = paste0(region, ":", start, end)
       }
-
+      chroms_to_process <- chrom
     } else {
       # not sure how to catch NULL in rcpp so using "." to indicate no region instead
       region = "."
+      chroms_to_process <- names(Rsamtools::scanBamHeader(bamfile[1])[[1]]$targets)
     }
+  } else {
+    chroms_to_process <- get_region(region)$chrom
   }
 
   idx_ptr <- NULL
@@ -181,25 +188,60 @@ get_pileup <- function(bamfile,
     only_keep_variants = as.integer(only_keep_variants)
   }
 
-  res <- run_pileup(bampaths = bamfile,
-                    fapath = fafile,
-                    region = region,
-                    bedfn = bedfile,
-                    min_reads = min_reads,
-                    event_filters = event_filters,
-                    min_mapQ = min_mapq,
-                    max_depth = max_depth,
-                    min_baseQ = min_base_qual,
-                    libtype =  as.integer(lib_code),
-                    outfns = outfiles,
-                    bam_flags = bam_flags,
-                    only_keep_variants,
-                    reads,
-                    idx_ptr)
+  bpid <- BiocParallel::ipcid()
 
-  if(res == 1){
-    stop("Error occured during pileup", call. = FALSE)
+  if(is(BPPARAM, "SerialParam") || length(chroms_to_process) == 1){
+    res <- run_pileup(bampaths = bamfile,
+                      fapath = fafile,
+                      region = region,
+                      bedfn = bedfile,
+                      min_reads = min_reads,
+                      event_filters = event_filters,
+                      min_mapQ = min_mapq,
+                      max_depth = max_depth,
+                      min_baseQ = min_base_qual,
+                      libtype =  as.integer(lib_code),
+                      outfns = outfiles,
+                      bam_flags = bam_flags,
+                      only_keep_variants,
+                      reads,
+                      idx_ptr)
+  } else {
+    res <- bplapply(chroms_to_process, FUN = function(ctig, bpid) {
+      tmp_outfiles <- unlist(lapply(seq_along(outfiles), function(x) tempfile()))
+      ret <- run_pileup(bampaths = bamfile,
+                        fapath = fafile,
+                        region = ctig,
+                        bedfn = bedfile,
+                        min_reads = min_reads,
+                        event_filters = event_filters,
+                        min_mapQ = min_mapq,
+                        max_depth = max_depth,
+                        min_baseQ = min_base_qual,
+                        libtype =  as.integer(lib_code),
+                        outfns = tmp_outfiles,
+                        bam_flags = bam_flags,
+                        only_keep_variants,
+                        reads,
+                        idx_ptr)
+      if(ret == 1){
+        stop("Error occured during pileup", call. = FALSE)
+      }
+
+      BiocParallel::ipclock(bpid)
+      for(i in seq_along(outfiles)){
+        fw_status <- file.append(outfiles[i], tmp_outfiles[i])
+        if(!fw_status){
+          stop("Error writing tempfile to outfiles", call. = FALSE)
+        }
+      }
+      unlink(tmp_outfiles)
+      BiocParallel::ipcunlock(bpid)
+      ret
+    },  bpid = bpid, BPPARAM=BPPARAM)
+    bpstop(BPPARAM)
   }
+
   if(any(file.info(outfiles)$size == 0)){
     return()
   }
