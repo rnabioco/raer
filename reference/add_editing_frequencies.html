@@ -122,6 +122,90 @@ Default is 10.</p></dd>
 <dd><p>Options passed to <code>make_editing_plots</code></p></dd>
 </dl></div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: MatrixGenerics</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: matrixStats</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: ‘MatrixGenerics’</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from ‘package:matrixStats’:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     colCounts, colCummaxs, colCummins, colCumprods, colCumsums,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     colMads, colMaxs, colMeans2, colMedians, colMins,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     colOrderStats, colProds, colQuantiles, colRanges, colRanks,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     colSdDiffs, colSds, colSums2, colTabulates, colVarDiffs,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     colVars, colWeightedMads, colWeightedMeans,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     colWeightedMedians, colWeightedSds, colWeightedVars, rowAlls,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     rowAnyNAs, rowAnys, rowAvgsPerColSet, rowCollapse, rowCounts,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     rowCummaxs, rowCummins, rowCumprods, rowCumsums, rowDiffs,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     rowIQRDiffs, rowIQRs, rowLogSumExps, rowMadDiffs, rowMads,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     rowMaxs, rowMeans2, rowMedians, rowMins, rowOrderStats,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     rowProds, rowQuantiles, rowRanges, rowRanks, rowSdDiffs,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     rowSds, rowSums2, rowTabulates, rowVarDiffs, rowVars,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     rowWeightedMads, rowWeightedMeans, rowWeightedMedians,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     rowWeightedSds, rowWeightedVars</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: GenomicRanges</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: stats4</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: BiocGenerics</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: ‘BiocGenerics’</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from ‘package:stats’:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     IQR, mad, sd, var, xtabs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from ‘package:base’:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     Filter, Find, Map, Position, Reduce, anyDuplicated, append,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     as.data.frame, basename, cbind, colnames, dirname, do.call,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     duplicated, eval, evalq, get, grep, grepl, intersect,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     is.unsorted, lapply, mapply, match, mget, order, paste, pmax,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     pmax.int, pmin, pmin.int, rank, rbind, rownames, sapply,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     setdiff, sort, table, tapply, union, unique, unsplit,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     which.max, which.min</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: S4Vectors</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: ‘S4Vectors’</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from ‘package:base’:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     I, expand.grid, unname</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: IRanges</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: GenomeInfoDb</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: Biobase</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Welcome to Bioconductor</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     Vignettes contain introductory material; view with</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     'browseVignettes()'. To cite Bioconductor, see</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     'citation("Biobase")', and for packages</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     'citation("pkgname")'.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: ‘Biobase’</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The following object is masked from ‘package:MatrixGenerics’:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     rowMedians</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from ‘package:matrixStats’:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     anyMissing, rowMedians</span>
+<span class="r-in"><span class="va">bamfn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"SRR5564269_Aligned.sortedByCoord.out.md.bam"</span>, package <span class="op">=</span> <span class="st">"raer"</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">bam2fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"SRR5564277_Aligned.sortedByCoord.out.md.bam"</span>, package <span class="op">=</span> <span class="st">"raer"</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"human.fasta"</span>, package <span class="op">=</span> <span class="st">"raer"</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">plps</span> <span class="op">&lt;-</span> <span class="fu"><a href="get_pileup.html">get_pileup</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">bam2fn</span><span class="op">)</span>, <span class="va">fafn</span>, only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">plps</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sample1"</span>, <span class="st">"sample2"</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_se.html">create_se</a></span><span class="op">(</span><span class="va">plps</span><span class="op">)</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="fu">add_editing_frequencies</span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> class: RangedSummarizedExperiment </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> dim: 49 2 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> assays(9): Var nRef ... nN edit_freq</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(49): SSR3_176_2 SSR3_198_2 ... DHFR_397_2 DHFR_430_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(2): site_id Ref</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colnames(2): sample1 sample2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colData names(3): sample n_sites edit_idx</span>
+<span class="r-in"></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>
 
