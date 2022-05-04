@@ -87,7 +87,6 @@ int run_pileup(std::vector<std::string> bampaths,
     creadsoutfn = &*reads.begin();
   }
 
-
   int out;
   out = run_cpileup(&cbampaths[0],
                     cbampaths.size(),

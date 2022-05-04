@@ -1,9 +1,11 @@
 context("get_pileup")
+
 library(GenomicRanges)
 library(GenomicAlignments)
 library(Biostrings)
 library(Rsamtools)
 library(rtracklayer)
+library(BiocParallel)
 
 bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
 bam2fn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", package = "raer")
@@ -59,7 +61,6 @@ test_that("n-bam pileup works", {
 
 })
 
-
 test_that("pileup regional query works", {
 
   res <- get_pileup(bamfn, fafn, region = "SSR3:203-205")
@@ -68,14 +69,15 @@ test_that("pileup regional query works", {
   expect_equal(end(res), c(203, 204, 205))
 
   # chr1 does not exist
-  expect_error(get_pileup(bamfn, fafn, region = "chr1"))
+  expect_error(suppressWarnings(get_pileup(bamfn, fafn, region = "chr1")))
 
   res <- get_pileup(bamfn, fafn, bedfile = NULL, chrom = "SSR3")
   expect_equal(length(res$Ref), 529)
 })
 
 test_that("incorrect regional query is caught", {
-  expect_error(get_pileup(bamfn, fafn, region = "chrHello"))
+  # will produce warning that chrHello is not in bamfile and an error
+  expect_error(suppressWarnings(get_pileup(bamfn, fafn, region = "chrHello")))
 })
 
 test_that("missing files are caught", {
@@ -333,4 +335,35 @@ test_that("filtering for read-level mismatches works", {
   expect_null(plp)
 
 })
+
+
+test_that("parallel processing works", {
+  plp <- get_pileup(bamfn, fafn)
+  plp_serial <- get_pileup(bamfn, fafn, BPPARAM = SerialParam())
+  plp_mc <- get_pileup(bamfn, fafn, BPPARAM = MulticoreParam(workers = 2))
+  expect_equal(plp_mc$Ref, plp$Ref)
+  expect_equal(plp_serial$Ref, plp$Ref)
+  # note that there is a difference in counts in SPCS3, which
+  # happens when single chromosomes or regions are queried.
+  # this may have something to do with the overlapping mate quality score
+  # tweaking.
+})
+
+
+test_that("limiting chromosomes works", {
+  chroms_to_query <- names(scanBamHeader(bamfn)[[1]]$targets)
+  plp <- get_pileup(bamfn, fafn)
+  plp_2 <- get_pileup(bamfn, fafn, chroms = chroms_to_query)
+  expect_true(identical(plp_2, plp))
+
+  plp_2 <- get_pileup(bamfn, fafn, chroms = chroms_to_query[1])
+  plp <- plp[seqnames(plp) == chroms_to_query[1]]
+  expect_true(identical(plp_2$nRef, plp$nRef))
+
+  plp_mc <- get_pileup(bamfn, fafn, chroms = chroms_to_query[1:2],
+                       BPPARAM = MulticoreParam(workers = 2))
+  expect_true(all(unique(seqnames(plp_mc)) == chroms_to_query[1:2]))
+
+})
+
 unlink(c(bout, fout))

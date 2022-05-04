@@ -1,4 +1,4 @@
-
+#' @rdname annot_snps
 #' @importFrom BSgenome snpsByOverlaps
 #' @export
 annot_snps.GRanges <- function(obj,
@@ -42,6 +42,7 @@ annot_snps.GRanges <- function(obj,
 }
 
 
+#' @rdname annot_snps
 #' @export
 annot_snps.SummarizedExperiment <- function(obj,
                                dbsnp,
@@ -97,7 +98,7 @@ annot_from_gr <- function(obj, gr, cols_to_map){
     return_se <- FALSE
   }
 
-  missing_chroms <- setdiff(seqlevels(gr), seqlevels(se))
+  missing_chroms <- setdiff(seqlevels(gr), seqlevels(gr_sites))
   if(length(missing_chroms) != 0){
     warning("The following chromosomes in gr are not present in obj\n",
             missing_chroms)

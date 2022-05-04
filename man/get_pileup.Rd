@@ -5,13 +5,11 @@
 \title{Generate base counts using pileup}
 \usage{
 get_pileup(
-  bamfile,
+  bamfiles,
   fafile,
   bedfile = NULL,
   region = NULL,
-  chrom = NULL,
-  start = NULL,
-  end = NULL,
+  chroms = NULL,
   min_reads = 1L,
   min_base_qual = 20L,
   min_mapq = c(0L),
@@ -23,21 +21,20 @@ get_pileup(
   event_filters = c(0, 0, 0, 0, 0, 0, 0),
   only_keep_variants = FALSE,
   reads = NULL,
-  return_data = TRUE
+  return_data = TRUE,
+  BPPARAM = SerialParam()
 )
 }
 \arguments{
+\item{bamfiles}{paths to 1 or more bam files}
+
 \item{fafile}{path to fasta file}
 
 \item{bedfile}{path to bed file with sites or regions to query}
 
 \item{region}{samtools region query string (i.e. chr1:100-1000)}
 
-\item{chrom}{chrom to process, not to be used with region}
-
-\item{start}{start position, not to be used with region}
-
-\item{end}{end position, not to be used with region}
+\item{chroms}{chromosomes to process, not to be used with region}
 
 \item{min_reads}{min read depth needed to report site}
 
@@ -75,7 +72,8 @@ and contain variants}
 
 \item{return_data}{return data as a Granges table?}
 
-\item{bamfiles}{paths to 1 or more bam files}
+\item{BPPARAM}{A \link{BiocParallel} class to control parallel execution. Parallel
+processing occurs per chromosome, so is disabled when run on a single region.}
 }
 \value{
 A list containing a \code{GRanges} object for each input bam file, or a vector
