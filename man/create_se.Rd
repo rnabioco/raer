@@ -4,12 +4,22 @@
 \alias{create_se}
 \title{Create RangedSummarizedExperiment}
 \usage{
-create_se(pileup_res, sample_names = NULL)
+create_se(
+  plps,
+  rowdata_cols = c("Ref"),
+  assay_cols = c("Var", "nRef", "nVar", "nA", "nT", "nC", "nG"),
+  sample_names = NULL
+)
 }
 \arguments{
-\item{pileup_res}{results from running get_pileup.R, can be one result, a list
+\item{plps}{results from running get_pileup.R, can be one result, a list
 of results, or a named list of results. If a named list is give, the colData
 will be named using the names in the list.}
+
+\item{rowdata_cols}{character vector of columns to store in rowData
+. Values must be the same across all assays (excluding NA).}
+
+\item{assay_cols}{character vector of columns to store as assays}
 
 \item{sample_names}{OPTIONAL A list of names to be added to the SE object.
 If no sample names are given and pileup_res is not a named list, then

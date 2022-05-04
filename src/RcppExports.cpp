@@ -11,6 +11,27 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// cread_tabix
+List cread_tabix(std::string tbxpath, std::string region);
+RcppExport SEXP _raer_cread_tabix(SEXP tbxpathSEXP, SEXP regionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< std::string >::type tbxpath(tbxpathSEXP);
+    Rcpp::traits::input_parameter< std::string >::type region(regionSEXP);
+    rcpp_result_gen = Rcpp::wrap(cread_tabix(tbxpath, region));
+    return rcpp_result_gen;
+END_RCPP
+}
+// list_tabix_chroms
+CharacterVector list_tabix_chroms(std::string tbxpath);
+RcppExport SEXP _raer_list_tabix_chroms(SEXP tbxpathSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< std::string >::type tbxpath(tbxpathSEXP);
+    rcpp_result_gen = Rcpp::wrap(list_tabix_chroms(tbxpath));
+    return rcpp_result_gen;
+END_RCPP
+}
 // run_pileup
 int run_pileup(std::vector<std::string> bampaths, std::string fapath, std::string region, std::string bedfn, int min_reads, std::vector<int> event_filters, std::vector<int> min_mapQ, std::vector<int> bam_flags, std::vector<int> libtype, std::vector<std::string> outfns, int max_depth, int min_baseQ, int only_keep_variants, std::string reads, SEXP ext);
 RcppExport SEXP _raer_run_pileup(SEXP bampathsSEXP, SEXP fapathSEXP, SEXP regionSEXP, SEXP bedfnSEXP, SEXP min_readsSEXP, SEXP event_filtersSEXP, SEXP min_mapQSEXP, SEXP bam_flagsSEXP, SEXP libtypeSEXP, SEXP outfnsSEXP, SEXP max_depthSEXP, SEXP min_baseQSEXP, SEXP only_keep_variantsSEXP, SEXP readsSEXP, SEXP extSEXP) {

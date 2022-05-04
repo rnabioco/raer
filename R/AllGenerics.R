@@ -1,4 +1,7 @@
-#' Annotate snps
+#' Annotate known SNP positions
+#'
+#' @description This function will annotate a GRanges or rowRanges of
+#' a SummarizedExperiment with SNP positions from a SNP package
 #'
 #' @param obj GRanges or SummarizedExperiment  object
 #' @param dbsnp SNPlocs package, see available packages from
@@ -11,6 +14,19 @@
 #'
 #' @returns Either a GRanges or SummarizedExperiment object with
 #' a new column "snp" added with information from "col_to_aggr"
+#'
+#'
+#' @examples
+#' \dontrun{
+#' if(require(SNPlocs.Hsapiens.dbSNP151.GRCh38)){
+#'   gr <- GRanges(rep("22", 10),
+#'               IRanges(seq(10510077,10610077, by = 1000)[1:10], width=250),
+#'              strand="+")
+#'   annot_snps(gr, SNPlocs.Hsapiens.dbSNP151.GRCh38)
+#'  }
+#' }
+#'
+#' @seealso [SNPlocs.Hsapiens.dbSNP151.GRCh38](https://bioconductor.org/packages/release/data/annotation/html/SNPlocs.Hsapiens.dbSNP151.GRCh38.html)
 #' @export
 annot_snps <- function(obj, ...) {
   UseMethod("annot_snps", obj)

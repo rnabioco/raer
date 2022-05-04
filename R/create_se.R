@@ -6,9 +6,14 @@
 #' Currently this doesn't add any sample info and can only take a list of results.
 #' Potential added functionality would be to allow the user to give an existing
 #' SE object as input or to give sample meta data.
-#' @param pileup_res results from running get_pileup.R, can be one result, a list
+#'
+#'
+#' @param plps results from running get_pileup.R, can be one result, a list
 #' of results, or a named list of results. If a named list is give, the colData
 #' will be named using the names in the list.
+#' @param rowdata_cols character vector of columns to store in rowData
+#' . Values must be the same across all assays (excluding NA).
+#' @param assay_cols character vector of columns to store as assays
 #' @param sample_names OPTIONAL A list of names to be added to the SE object.
 #' If no sample names are given and pileup_res is not a named list, then
 #' default names (ie sample_1, sample_2, ..., sample_n) will be given and
@@ -35,47 +40,43 @@
 #' @importFrom IRanges extractList
 #' @export
 
-create_se <- function(pileup_res, sample_names = NULL){
-  if(!is.list(pileup_res)){
-    pileup_res <- list(pileup_res)
+create_se <- function(plps,
+                      rowdata_cols = c("Ref"),
+                      assay_cols = c("Var", "nRef", "nVar", "nA", "nT", "nC", "nG"),
+                      sample_names = NULL){
+  if(!is.list(plps)){
+    plps <- list(plps)
   }
   # Checks for sample names
   if(is.null(sample_names)){
-    if(is.null(names(pileup_res))){
-      sample_names <- paste0("sample_", 1:length(pileup_res))
-      message(paste0("Sample names not provided, using ",
-                   paste(sample_names, collapse = ", "), "!!!"))
-
+    if(is.null(names(plps))){
+      sample_names <- paste0("sample_", 1:length(plps))
     } else {
-      sample_names <- names(pileup_res)
+      sample_names <- names(plps)
     }
-
-
-  # Check that sample names match list
   } else {
-    if(length(pileup_res) != length(sample_names)){
+    if(length(plps) != length(sample_names)){
         stop(paste0("You must provide the same number of sample names as pileup results!!!
                     You supplied ",
-                    length(pileup_res), " pileup results but supplied ",
+                    length(plps), " pileup results but supplied ",
                     length(sample_names), " sample names!!!"))
 
     }
   }
 
   # Find all ranges in the list of results
-  all_ranges <- lapply(pileup_res, function(x){
-    row_range <- x
-    mcols(row_range) <- NULL
-    return(row_range)
+  all_ranges <- lapply(plps, function(x){
+    mcols(x) <- NULL
+    x
   })
 
   all_ranges <- GRangesList(all_ranges)
-  all_ranges <- unique(unlist(all_ranges))
+  all_ranges <- unique(unlist(all_ranges, use.names = FALSE))
 
   # Loop through all samples
-  names(pileup_res) <- sample_names
+  names(plps) <- sample_names
   se_list <- lapply(sample_names, function(sample_name){
-    pileup_sample <- pileup_res[[sample_name]]
+    pileup_sample <- plps[[sample_name]]
 
     # Add NA where there is no data
     ranges_sample <- pileup_sample
@@ -107,7 +108,7 @@ create_se <- function(pileup_res, sample_names = NULL){
     assay_list <- lapply(assay_names, function(x){
       return_df <- matrix(mcols(pileup_sample)[[x]])
       colnames(return_df) <- sample_name
-      return(return_df)
+      return_df
     })
 
     names(assay_list) <- assay_names
@@ -116,12 +117,28 @@ create_se <- function(pileup_res, sample_names = NULL){
     mcols(rowRanges) <- NULL
     colData <- data.frame(sample = sample_name)
 
-
     se <- SummarizedExperiment(assays = assay_list,
                                rowRanges = rowRanges, colData = colData)
-
-    return(se)
+    se
   })
+
   combined_se <- do.call(cbind, se_list)
-  return(combined_se)
+
+  site_id <- paste0(seqnames(rowRanges(combined_se)),
+                    "_",
+                    start(rowRanges(combined_se)),
+                    "_",
+                    as.integer(as.factor(strand(rowRanges(combined_se)))))
+  rowData(combined_se)$site_id <- site_id
+  rownames(combined_se) <- site_id
+
+  for(i in seq_along(rowdata_cols)){
+    rc <- rowdata_cols[i]
+    rowData(combined_se)[rc] <- apply(assay(combined_se, rc), 1, function(x) unique(x[!is.na(x)]))
+    assay(combined_se, rc) <- NULL
+  }
+  assays_to_drop <- setdiff(assay_cols, names(assays(combined_se)))
+  for(i in seq_along(assays_to_drop)) assay(combined_se,assays_to_drop[i]) <- NULL
+
+  combined_se
 }

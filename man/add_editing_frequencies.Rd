@@ -62,3 +62,15 @@ fraction of edits (edit_idx) is returned. If make_plots is set to true and no sa
 directory is specified, a list including the SummarizedExperiment object and plots
 of the number of sites editied and the fraction of editing events will be returned.
 }
+\examples{
+library(SummarizedExperiment)
+bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
+bam2fn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", package = "raer")
+fafn <- system.file("extdata", "human.fasta", package = "raer")
+plps <- get_pileup(c(bamfn, bam2fn), fafn, only_keep_variants = TRUE)
+names(plps) <- c("sample1", "sample2")
+se <- create_se(plps)
+
+add_editing_frequencies(se)
+
+}

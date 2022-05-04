@@ -8,9 +8,7 @@
 #' @param fafile path to fasta file
 #' @param bedfile path to bed file with sites or regions to query
 #' @param region samtools region query string (i.e. chr1:100-1000)
-#' @param chrom chrom to process, not to be used with region
-#' @param start start position, not to be used with region
-#' @param end end position, not to be used with region
+#' @param chroms chromosomes to process, not to be used with region
 #' @param min_reads min read depth needed to report site
 #' @param min_base_qual min base quality score to consider read for pileup
 #' @param min_mapq minimum required MAPQ score
@@ -55,13 +53,11 @@
 #' @importFrom data.table fread
 #' @importFrom BiocParallel SerialParam bpstop bplapply ipcid ipclock ipcunlock
 #' @export
-get_pileup <- function(bamfile,
+get_pileup <- function(bamfiles,
                    fafile,
                    bedfile = NULL,
                    region = NULL,
-                   chrom = NULL,
-                   start = NULL,
-                   end = NULL,
+                   chroms = NULL,
                    min_reads = 1L,
                    min_base_qual = 20L,
                    min_mapq = c(0L),
@@ -76,21 +72,19 @@ get_pileup <- function(bamfile,
                    return_data = TRUE,
                    BPPARAM = SerialParam()){
 
-  bamfile <- path.expand(bamfile)
+  bamfiles <- path.expand(bamfiles)
   fafile <- path.expand(fafile)
-  n_files <- length(bamfile)
+  n_files <- length(bamfiles)
 
   if(!is.null(bedfile)){
     bedfile <- path.expand(bedfile)
     if(!file.exists(bedfile)){
       stop("bedfile not found: ", bedfile, call. = FALSE)
     }
-  } else {
-    bedfile = "."
   }
 
-  if(!all(file.exists(bamfile))){
-    stop("bamfile not found: ", bamfile[!file.exists(bamfile)], call. = FALSE)
+  if(!all(file.exists(bamfiles))){
+    stop("bamfile(s) not found: ", bamfiles[!file.exists(bamfiles)], call. = FALSE)
   }
 
   if(!file.exists(fafile)){
@@ -107,26 +101,47 @@ get_pileup <- function(bamfile,
       dir.create(dirname(outfile_prefix), recursive = TRUE)
     }
     outfiles <- unlist(lapply(outfiles, function(x) path.expand(x)))
+    unlink(outfiles)
   }
 
   if(length(outfiles) != n_files){
     stop("# of outfiles does not match # of bam input files: ", outfiles)
   }
 
+  contig_info <- Rsamtools::scanBamHeader(bamfiles[1])[[1]]$targets
+  chroms_to_process <- names(contig_info)
   if(is.null(region)) {
-    if(!is.null(chrom)){
-      region = chrom
-      if(!is.null(start) & !is.null(end)){
-        region = paste0(region, ":", start, end)
-      }
-      chroms_to_process <- chrom
-    } else {
+    if(!is.null(chroms)){
+      if(length(chroms) == 1){
+        region <- chroms
+        chroms_to_process <- chroms
+      } else {
       # not sure how to catch NULL in rcpp so using "." to indicate no region instead
       region = "."
-      chroms_to_process <- names(Rsamtools::scanBamHeader(bamfile[1])[[1]]$targets)
+      chroms_to_process <- chroms
+      }
+    } else {
+      region <- "."
     }
   } else {
     chroms_to_process <- get_region(region)$chrom
+  }
+
+  missing_chroms <- chroms_to_process[!chroms_to_process %in% names(contig_info)]
+
+  if(length(missing_chroms) > 0){
+    warning("the following chromosomes are not present in the bamfile(s):\n",
+            paste(missing_chroms, collapse = "\n"),
+            call. = FALSE)
+    chroms_to_process <- setdiff(chroms_to_process, missing_chroms)
+  }
+
+  chroms_to_process <-
+       chroms_to_process[order(match(chroms_to_process, names(contig_info)))]
+
+  if(length(chroms_to_process) == 0){
+    stop("No chromosomes requested are found in bam file",
+         call. = FALSE)
   }
 
   idx_ptr <- NULL
@@ -142,8 +157,7 @@ get_pileup <- function(bamfile,
     } else {
       idx_ptr <- bedidx$.extptr
     }
-
-    bedfn <- "."
+    bedfile <- "."
   }
 
   if(length(event_filters) != 7 || !is.numeric(event_filters)){
@@ -188,13 +202,21 @@ get_pileup <- function(bamfile,
     only_keep_variants = as.integer(only_keep_variants)
   }
 
-  bpid <- BiocParallel::ipcid()
-
+  run_in_parallel <- FALSE
+  temp_bed_file <- FALSE
   if(is(BPPARAM, "SerialParam") || length(chroms_to_process) == 1){
-    res <- run_pileup(bampaths = bamfile,
+    if(length(chroms_to_process) > 1 && is.null(bedfile)){
+      temp_bed_file <- TRUE
+      bedfile <- tempfile(fileext = ".bed")
+      to_process <- contig_info[chroms_to_process]
+      bed_gr <- GRanges(paste0(names(to_process), ":", 1, "-", to_process))
+      rtracklayer::export(bed_gr, bedfile)
+    }
+
+    res <- run_pileup(bampaths = bamfiles,
                       fapath = fafile,
                       region = region,
-                      bedfn = bedfile,
+                      bedfn = ifelse(is.null(bedfile), ".", bedfile),
                       min_reads = min_reads,
                       event_filters = event_filters,
                       min_mapQ = min_mapq,
@@ -206,13 +228,23 @@ get_pileup <- function(bamfile,
                       only_keep_variants,
                       reads,
                       idx_ptr)
+    if(res == 1){
+      stop("Error occured during pileup", call. = FALSE)
+    }
+    if(temp_bed_file) unlink(bedfile)
   } else {
-    res <- bplapply(chroms_to_process, FUN = function(ctig, bpid) {
+
+    run_in_parallel <- TRUE
+    res <- bplapply(chroms_to_process, FUN = function(ctig) {
       tmp_outfiles <- unlist(lapply(seq_along(outfiles), function(x) tempfile()))
-      ret <- run_pileup(bampaths = bamfile,
+      fn_df <- data.frame(contig = ctig,
+                          bam_fn = bamfiles,
+                          tmpfn = tmp_outfiles)
+
+      ret <- run_pileup(bampaths = bamfiles,
                         fapath = fafile,
                         region = ctig,
-                        bedfn = bedfile,
+                        bedfn = ifelse(is.null(bedfile), ".", bedfile),
                         min_reads = min_reads,
                         event_filters = event_filters,
                         min_mapQ = min_mapq,
@@ -228,18 +260,25 @@ get_pileup <- function(bamfile,
         stop("Error occured during pileup", call. = FALSE)
       }
 
-      BiocParallel::ipclock(bpid)
-      for(i in seq_along(outfiles)){
-        fw_status <- file.append(outfiles[i], tmp_outfiles[i])
-        if(!fw_status){
-          stop("Error writing tempfile to outfiles", call. = FALSE)
-        }
-      }
-      unlink(tmp_outfiles)
-      BiocParallel::ipcunlock(bpid)
-      ret
-    },  bpid = bpid, BPPARAM=BPPARAM)
+      fn_df
+
+    },
+    BPPARAM=BPPARAM)
     bpstop(BPPARAM)
+
+    tmp_fns <- do.call(rbind, res)
+    tmp_fns <- split(tmp_fns, tmp_fns$bam_fn)
+    stopifnot(length(tmp_fns) == length(outfiles))
+
+    for(i in seq_along(tmp_fns)){
+      fns <- tmp_fns[[i]]$tmpfn
+      final_file <- outfiles[i]
+      fw <- file.append(final_file, fns)
+      if(!all(fw)){
+        stop("error occured writing pileup files")
+      }
+      unlink(fns)
+    }
   }
 
   if(any(file.info(outfiles)$size == 0)){
@@ -254,6 +293,7 @@ get_pileup <- function(bamfile,
   })
 
   if(!return_data){
+    unlink(outfiles)
     return(unlist(tbxfiles))
   }
 
@@ -262,10 +302,12 @@ get_pileup <- function(bamfile,
   } else {
     res <- lapply(tbxfiles, function(x) read_pileup(x, region = NULL))
   }
+
   if(using_temp_files){
     unlink(tbxfiles)
     unlink(paste0(tbxfiles, ".tbi"))
   }
+  unlink(outfiles)
 
   res
 }
