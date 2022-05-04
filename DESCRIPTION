@@ -14,6 +14,7 @@ Description: Toolkit for identification, visualization, and statistical testing
     of RNA editing signals from within R.
 License: MIT + file LICENSE
 Imports: 
+    stats,
     Rcpp,
     data.table,
     R.utils,
@@ -40,9 +41,8 @@ Suggests:
     edgeR,
     limma,
     rmarkdown,
-    BiocStyle
-Remotes:  
-    kriemo/Rhtslib@a524c95
+    BiocStyle,
+    SNPlocs.Hsapiens.dbSNP151.GRCh38
 LinkingTo: 
     Rcpp,
     Rhtslib,

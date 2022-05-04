@@ -25,10 +25,13 @@
 #' bam2fn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", package = "raer")
 #' fafn <- system.file("extdata", "human.fasta", package = "raer")
 #'
-#' plps <- get_pileup(c(bamfn, bam2fn), fafn)
-#' names(plps) <- c("sample1", "sample2")
-#' se <- create_se(plps)
+#' bams <- rep(c(bamfn, bam2fn), each = 3)
+#' sample_ids <- paste0(rep(c("KO", "WT"), each = 3), 1:3)
 #'
+#' plps <- get_pileup(bams, fafn, only_keep_variants = TRUE)
+#' names(plps) <- sample_ids
+#' se <- create_se(plps)
+#' se$condition <- substr(se$sample, 1, 2)
 #' assays(se)
 #'
 #' colData(se)
@@ -39,7 +42,6 @@
 #' @import SummarizedExperiment
 #' @importFrom IRanges extractList
 #' @export
-
 create_se <- function(plps,
                       rowdata_cols = c("Ref"),
                       assay_cols = c("Var", "nRef", "nVar", "nA", "nT", "nC", "nG"),

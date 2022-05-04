@@ -35,8 +35,25 @@ in your condition_col of colData(deobj). No default provided.}
 \item{condition_treatment}{The name of the treatment condition. This must be a variable
 in your condition_col of colData(deobj).}
 }
+\value{
+A named list
+\itemize{
+\item de_obj: The edgeR or deseq object used for differential editing analysis
+\item results_full: Unfiltered differenital editing results
+\item sig_results: Filtered differenial editing (FDR < 0.05)
+\item model_matrix: The model matrix used for generating DE results
+}
+}
 \description{
 At the moment, this function will only find editing events specific
 to the treatment, but it will be pretty straight forward to add other
 possible return values.
+}
+\examples{
+example(create_se, echo = FALSE)
+se <- add_editing_frequencies(se)
+dse <- prep_for_de(se)
+res <- perform_de(dse, condition_control = "WT", condition_treatment = "KO")
+res$sig_results[1:5, ]
+
 }

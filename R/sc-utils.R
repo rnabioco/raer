@@ -17,7 +17,7 @@ build_tag_index <- function(bamfn){
 #' @param barcodes character vector of tag values to extract
 #' @param outbam optional output bam file name
 #'
-#' @return  Returns name of output bam file
+#' @return Returns name of output bam file
 #' @export
 get_cell_bam <- function(inbam,
                          barcodes,
@@ -26,7 +26,10 @@ get_cell_bam <- function(inbam,
   inbam <- path.expand(inbam)
   idx_file <- paste0(inbam, ".bri")
   if(!file.exists(idx_file)){
-    stop("bam file must be sorted by CB tag, and indexed with build_index")
+    stop("bam file must be sorted by CB tag, and indexed with build_index\n",
+         "samtools sort -t CB your.bam\n",
+         "then index in R:\n",
+         "raer::build_tag_index('your_sorted.bam')")
   }
   stopifnot(is.character(barcodes))
 

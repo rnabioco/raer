@@ -5,7 +5,8 @@ annot_snps.GRanges <- function(obj,
                        dbsnp,
                        chrom = NULL,
                        col_to_aggr = "RefSNP_id",
-                       drop = FALSE){
+                       drop = FALSE,
+                       ...){
 
   if(!is(dbsnp, "ODLT_SNPlocs")){
     stop(dbsnp, " not valid SNP package, please install SNP db")
@@ -48,7 +49,8 @@ annot_snps.SummarizedExperiment <- function(obj,
                                dbsnp,
                                chrom = NULL,
                                col_to_aggr = "RefSNP_id",
-                               drop = FALSE){
+                               drop = FALSE,
+                               ...){
   gr <- rowRanges(obj)
   res <- annot_snps.GRanges(gr,
                             dbsnp,
@@ -86,7 +88,7 @@ annot_snps.SummarizedExperiment <- function(obj,
 #' rowData(se)
 #'
 #' @importFrom S4Vectors aggregate unstrsplit
-#' @importFrom GenomeInfoDb seqlevelsStyle seqlevelsStyle<-
+#' @importFrom GenomeInfoDb seqlevelsStyle seqlevelsStyle<- seqlevels
 #' @export
 annot_from_gr <- function(obj, gr, cols_to_map){
 

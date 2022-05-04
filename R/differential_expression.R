@@ -37,16 +37,9 @@
 #' @param ... Options passed to `make_editing_plots`
 #'
 #' @examples
-#' library(SummarizedExperiment)
-#' bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
-#' bam2fn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", package = "raer")
-#' fafn <- system.file("extdata", "human.fasta", package = "raer")
-
-#' plps <- get_pileup(c(bamfn, bam2fn), fafn, only_keep_variants = TRUE)
-#' names(plps) <- c("sample1", "sample2")
-#' se <- create_se(plps)
-#'
-#' add_editing_frequencies(se)
+#' example(create_se, echo = FALSE)
+#' se <- add_editing_frequencies(se)
+#' assay(se, "edit_freq")[1:5, ]
 #'
 #' @import SummarizedExperiment
 #' @export
@@ -134,8 +127,6 @@ add_editing_frequencies <- function(se_object, type = "AI",
 #' Default is 10.
 #'
 #' @import SummarizedExperiment
-#' @export
-
 count_edits <- function(se_filtered, edit_frequency = 0.01, min_count = 10,
                          edit_from = NULL, edit_to = NULL){
 
@@ -172,8 +163,6 @@ count_edits <- function(se_filtered, edit_frequency = 0.01, min_count = 10,
 #' replicates. Default is "rep".
 #'
 #' @import ggplot2
-#' @export
-
 make_editing_plots <- function(se_object, colors = NULL,
                                meta_col = "genotype_treatment",
                                replicate = "rep"){
@@ -242,8 +231,13 @@ make_editing_plots <- function(se_object, colors = NULL,
 #' to keep a site. Default is 3.
 #'
 #' @import SummarizedExperiment
+#' @examples
+#' example(create_se, echo = FALSE)
+#' se <- add_editing_frequencies(se)
+#' dse <- prep_for_de(se)
+#' assay(dse, "counts")
+#' dse
 #' @export
-
 prep_for_de <- function(se,
                         type = "AI",
                         edit_from = NULL, edit_to = NULL,
@@ -310,6 +304,19 @@ prep_for_de <- function(se,
 #' in your condition_col of colData(deobj). No default provided.
 #' @param condition_treatment The name of the treatment condition. This must be a variable
 #' in your condition_col of colData(deobj).
+#'
+#' @examples
+#' example(create_se, echo = FALSE)
+#' se <- add_editing_frequencies(se)
+#' dse <- prep_for_de(se)
+#' res <- perform_de(dse, condition_control = "WT", condition_treatment = "KO")
+#' res$sig_results[1:5, ]
+#'
+#' @returns A named list
+#' - de_obj: The edgeR or deseq object used for differential editing analysis
+#' - results_full: Unfiltered differenital editing results
+#' - sig_results: Filtered differenial editing (FDR < 0.05)
+#' - model_matrix: The model matrix used for generating DE results
 #'
 #' @import stringr
 #' @export
@@ -409,8 +416,6 @@ perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
 #' in your condition_col of colData(deobj).
 #'
 #' @importFrom stats model.matrix
-#' @export
-
 run_deseq2 <- function(deobj, condition_control = NULL,
                        condition_treatment = NULL){
   if (!requireNamespace("DESeq2", quietly = TRUE)){
@@ -426,7 +431,7 @@ run_deseq2 <- function(deobj, condition_control = NULL,
                                          colData = colData(deobj),
                                          design = design), silent = TRUE)
 
-  if (class(test_mat) == "try-error"){
+  if (is(test_mat,"try-error")){
     sample <- deobj$sample
     condition <- deobj$condition
     count <- deobj$count
@@ -472,7 +477,7 @@ run_deseq2 <- function(deobj, condition_control = NULL,
   deseq_res <- deseq_res[deseq_res$padj < 0.05, ]
   deseq_res <- deseq_res[order(deseq_res$log2FoldChange, decreasing = TRUE), ]
 
-  return(list(deseq_obj = dds,
+  return(list(de_obj = dds,
               results_full = treatment_vs_control,
               sig_results = deseq_res,
               model_matrix = mod_mat))
@@ -497,9 +502,6 @@ run_deseq2 <- function(deobj, condition_control = NULL,
 #' in your condition_col of colData(deobj). No default provided.
 #' @param condition_treatment The name of the treatment condition. This must be a variable
 #' in your condition_col of colData(deobj).
-#'
-#' @export
-
 run_edger <- function(deobj, condition_control = NULL,
                        condition_treatment = NULL){
 
@@ -547,7 +549,7 @@ run_edger <- function(deobj, condition_control = NULL,
   edger_res <- edger_res[edger_res$FDR < 0.05, ]
   edger_res <- edger_res[order(edger_res$PValue), ]
 
-  return(list(deseq_obj = fit,
+  return(list(de_obj = fit,
               results_full = treatment_vs_control,
               sig_results = edger_res,
               model_matrix = design))

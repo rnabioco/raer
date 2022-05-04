@@ -9,7 +9,10 @@
 \arguments{
 \item{con}{BedFile class}
 
-\item{...}{present for consistency}
+\item{...}{present for consistency
+bed_fn <- system.file("extdata", "regions.bed", package = "raer")
+bed <- indexBed(bed_fn)
+close(bed)}
 }
 \description{
 Close a BedFile index connection

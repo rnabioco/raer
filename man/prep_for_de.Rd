@@ -49,3 +49,10 @@ Make summarized experiment object for DE
 Generates a SummarizedExperiment object for use with edgeR or DESeq2
 will generate a counts assay with a matrix formated with 2 columns per sample
 }
+\examples{
+example(create_se, echo = FALSE)
+se <- add_editing_frequencies(se)
+dse <- prep_for_de(se)
+assay(dse, "counts")
+dse
+}

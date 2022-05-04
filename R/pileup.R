@@ -312,7 +312,7 @@ get_pileup <- function(bamfiles,
   res
 }
 
-
+MAX_INT <- 536870912
 #' Read pileup, indexed by tabix
 #' @param tbx_fn filename
 #' @param region region to read from file, samtools style
@@ -331,13 +331,16 @@ read_pileup <- function(tbx_fn, region = NULL){
   tbx <- Rsamtools::TabixFile(tbx_fn)
 
   # using Rsamtools read in tabix file
-  # note that file is read in as a character vector
+  # note that file is read in as a list of character vectors
   # consider using our own read_tabix function if this is a bottleneck
   if(!is.null(region)){
     ivl_vals <- get_region(region)
+    # note that samtools will return a larger INT than IRANGES can handle
+    # if no ranges are supplied in the region
+    ivl_end <- min(MAX_INT, ivl_vals$end)
     params <- GenomicRanges::GRanges(ivl_vals$chrom,
                                     IRanges::IRanges(start = ivl_vals$start + 1,
-                                                     end = ivl_vals))
+                                                     end = ivl_end))
     tbx_vals <- Rsamtools::scanTabix(tbx, param = params)[[1]]
   } else {
     tbx_vals <- Rsamtools::scanTabix(tbx)[[1]]
@@ -353,13 +356,12 @@ read_pileup <- function(tbx_fn, region = NULL){
     from <- data.table::fread(text = tbx_vals,
                               stringsAsFactors = FALSE,
                               data.table = FALSE,
+                              showProgress = FALSE,
                               sep="\t")
   }
 
   count_cols <- c("nRef", "nVar", "nA", "nT", "nC", "nG", "nN")
-  if(ncol(from) > 12){
-    count_cols <- paste0(rep(count_cols, 2), rep(c("_1", "_2"), each = length(count_cols)))
-  }
+
   colnames(from)[4:ncol(from)] = c("Ref", "Var", count_cols)
 
   GenomicRanges::GRanges(seqnames=from$V1,

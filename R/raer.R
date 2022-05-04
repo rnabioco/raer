@@ -4,5 +4,8 @@
 #' @importFrom Rcpp sourceCpp
 #' @importFrom utils download.file
 #' @importFrom R.utils gzip
+#' @importFrom Biostrings vmatchPattern
+#' @importFrom GenomicAlignments readGAlignmentPairs
+#'
 #' @useDynLib raer, .registration = TRUE
 "_PACKAGE"

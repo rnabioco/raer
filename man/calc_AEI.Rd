@@ -30,6 +30,8 @@ prior to calculating the AEI.}
 
 \item{BPPARAM}{A \link{BiocParallelParam} object for specifying parallel options for
 operating over chromosomes.}
+
+\item{verbose}{report progress on each chromosome?}
 }
 \value{
 A named list with the AEI index computed for all allelic combinations.

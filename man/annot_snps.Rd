@@ -8,12 +8,29 @@
 \usage{
 annot_snps(obj, ...)
 
-\method{annot_snps}{GRanges}(obj, dbsnp, chrom = NULL, col_to_aggr = "RefSNP_id", drop = FALSE)
+\method{annot_snps}{GRanges}(
+  obj,
+  dbsnp,
+  chrom = NULL,
+  col_to_aggr = "RefSNP_id",
+  drop = FALSE,
+  ...
+)
 
-\method{annot_snps}{SummarizedExperiment}(obj, dbsnp, chrom = NULL, col_to_aggr = "RefSNP_id", drop = FALSE)
+\method{annot_snps}{SummarizedExperiment}(
+  obj,
+  dbsnp,
+  chrom = NULL,
+  col_to_aggr = "RefSNP_id",
+  drop = FALSE,
+  ...
+)
 }
 \arguments{
 \item{obj}{GRanges or SummarizedExperiment  object}
+
+\item{...}{For the generic, further arguments to pass to specific methods.
+Unused for now.}
 
 \item{dbsnp}{SNPlocs package, see available packages from
 \code{\link[BSgenome:injectSNPs]{BSgenome::available.SNPs()}}}

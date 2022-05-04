@@ -7,6 +7,11 @@
 #' to the bed file index.
 #'
 #' @importFrom methods as is new
+#'
+#' @rdname index_bed
+#' @examples
+#' bed_fn <- system.file("extdata", "regions.bed", package = "raer")
+#' indexBed(bed_fn)
 #' @export
 setMethod(indexBed, "character",
           function(file)
@@ -31,6 +36,9 @@ setMethod(indexBed, "character",
 #'
 #' @param con BedFile class
 #' @param ... present for consistency
+#' bed_fn <- system.file("extdata", "regions.bed", package = "raer")
+#' bed <- indexBed(bed_fn)
+#' close(bed)
 #' @export
 close.BedFile <-
   function(con, ...)

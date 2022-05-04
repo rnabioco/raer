@@ -21,6 +21,7 @@
 #' prior to calculating the AEI.
 #' @param BPPARAM A [BiocParallelParam] object for specifying parallel options for
 #' operating over chromosomes.
+#' @param verbose report progress on each chromosome?
 #'
 #' @returns A named list with the AEI index computed for all allelic combinations.
 #' If correctly computed the signal from the A_G index should be higher than other
@@ -35,6 +36,8 @@
 #' @importFrom GenomicFeatures genes
 #' @importFrom rtracklayer export
 #' @importFrom Rsamtools scanBamHeader
+#' @importFrom IRanges subsetByOverlaps
+#' @import GenomicRanges
 #' @export
 calc_AEI <- function(bam_fn,
                      fasta_fn,
@@ -46,13 +49,17 @@ calc_AEI <- function(bam_fn,
 
   chroms <- names(Rsamtools::scanBamHeader(bam_fn)[[1]]$targets)
 
+  if(length(bam_fn) != 1){
+    stop("calc_AEI only operates on 1 bam file at a time")
+  }
+
   if(!is.null(alu_ranges)){
     alu_bed_fn <- tempfile(fileext = ".bed")
 
     if(!is.null(txdb)){
     gene_gr <- GenomicFeatures::genes(txdb)
-    alu_ranges <- GRanges::subsetByOverlaps(alu_ranges, gene_gr, ignore.strand = TRUE)
-    alu_ranges <- GRanges::reduce(alu_ranges)
+    alu_ranges <- subsetByOverlaps(alu_ranges, gene_gr, ignore.strand = TRUE)
+    alu_ranges <- reduce(alu_ranges)
     }
     rtracklayer::export(alu_ranges, alu_bed_fn)
     chroms <- intersect(chroms, as.character(unique(seqnames(alu_ranges))))

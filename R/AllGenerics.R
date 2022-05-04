@@ -11,6 +11,8 @@
 #' input. If multiple SNPs overlap these values will be concatenated
 #' as comma separated values.
 #' @param drop If TRUE, remove sites overlap SNPs
+#' @param ... For the generic, further arguments to pass to specific methods.
+#' Unused for now.
 #'
 #' @returns Either a GRanges or SummarizedExperiment object with
 #' a new column "snp" added with information from "col_to_aggr"
@@ -32,7 +34,9 @@ annot_snps <- function(obj, ...) {
   UseMethod("annot_snps", obj)
 }
 
-#' Index Bed
+#' @param ... For the generic, further arguments to pass to specific methods.
+#' Unused for now.
+#' @rdname index_bed
 #' @export
 setGeneric("indexBed",
            function(file, ...) standardGeneric("indexBed"))
