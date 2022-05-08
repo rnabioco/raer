@@ -1,9 +1,7 @@
 #include "cpp_utils.h"
-
-#include "raer.h"
-#include "htslib/hts.h"
-#include "htslib/sam.h"
-#include "htslib/tbx.h"
+#include <htslib/hts.h>
+#include <htslib/sam.h>
+#include <htslib/tbx.h>
 
 #include <Rcpp.h>
 using namespace Rcpp;

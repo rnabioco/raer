@@ -13,6 +13,8 @@
 #include <getopt.h>
 #include "bri_index.h"
 
+
+#include <Rinternals.h>
 //
 // Getopt
 //
@@ -29,7 +31,7 @@ static const struct option longopts[] = {
 
 void print_usage_get()
 {
-    fprintf(stderr, "usage: bri get [-i <index_filename.bri>] <input.bam> <output.bam> <readname>\n");
+    Rf_error("usage: bri get [-i <index_filename.bri>] <input.bam> <output.bam> <readname>\n");
 }
 
 // comparator used by bsearch, direct strcmp through the name pointer
@@ -72,7 +74,7 @@ void bam_read_idx_get_range(const bam_read_idx* bri, const char* readname, bam_r
         eri += 1;
     } while(eri < bri->record_count && bri->records[eri].read_name.ptr == bri->records[sri].read_name.ptr);
     assert(eri == bri->record_count || strcmp(bri->records[eri].read_name.ptr, readname) != 0);
-    //fprintf(stderr, "r: %zu sri: %zu eri: %zu\n", rec - bri->records, sri, eri);
+    //Rf_error("r: %zu sri: %zu eri: %zu\n", rec - bri->records, sri, eri);
     *start = &bri->records[sri];
     *end = &bri->records[eri];
 }
@@ -82,14 +84,12 @@ void bam_read_idx_get_by_record(htsFile* fp, bam_hdr_t* hdr, bam1_t* b, bam_read
 {
     int ret = bgzf_seek(fp->fp.bgzf, bri_record->file_offset, SEEK_SET);
     if(ret != 0) {
-        fprintf(stderr, "[bri] bgzf_seek failed\n");
-        exit(EXIT_FAILURE);
+        Rf_error("[bri] bgzf_seek failed\n");
     }
 
     ret = sam_read1(fp, hdr, b);
     if(ret < 0) {
-        fprintf(stderr, "[bri] sam_read1 failed\n");
-        exit(EXIT_FAILURE);
+        Rf_error("[bri] sam_read1 failed\n");
     }
 }
 
@@ -109,8 +109,7 @@ int bam_read_idx_get(const char* input_bam,
   int ret = 0;
   ret = sam_hdr_write(out_fp, h);
   if(ret != 0){
-    fprintf(stderr, "[bri] sam_hdr_write failed\n");
-    exit(EXIT_FAILURE);
+    Rf_error("[bri] sam_hdr_write failed\n");
   }
 
   bam_read_idx_record* start;
@@ -125,20 +124,17 @@ int bam_read_idx_get(const char* input_bam,
     while(start != end) {
       int ret = bgzf_seek(bam_fp->fp.bgzf , start->file_offset, SEEK_SET);
       if(ret != 0) {
-        fprintf(stderr, "[bri] bgzf_seek failed\n");
-        exit(EXIT_FAILURE);
+        Rf_error("[bri] bgzf_seek failed\n");
       }
 
       while(n_rec < start->n_aln){
         ret = sam_read1(bam_fp, h, b);
         if(ret < 0) {
-          fprintf(stderr, "[bri] sam_read1 failed\n");
-          exit(EXIT_FAILURE);
+          Rf_error("[bri] sam_read1 failed\n");
         }
         int ret = sam_write1(out_fp, h, b);
         if(ret < 0) {
-          fprintf(stderr, "[bri] sam_write1 failed\n");
-          exit(EXIT_FAILURE);
+          Rf_error("[bri] sam_write1 failed\n");
         }
         n_rec += 1;
 
@@ -176,13 +172,12 @@ int bam_read_idx_get_main(int argc, char** argv)
     }
 
     if (argc - optind < 2) {
-        fprintf(stderr, "bri get: not enough arguments\n");
+        Rf_error("bri get: not enough arguments\n");
         die = 1;
     }
 
     if(die) {
         print_usage_get();
-        exit(EXIT_FAILURE);
     }
 
     char* input_bam = argv[optind++];
@@ -197,8 +192,7 @@ int bam_read_idx_get_main(int argc, char** argv)
     int ret = 0;
     ret = sam_hdr_write(out_fp, h);
     if(ret != 0){
-      fprintf(stderr, "[bri] sam_hdr_write failed\n");
-      exit(EXIT_FAILURE);
+      Rf_error("[bri] sam_hdr_write failed\n");
     }
 
     bam_read_idx_record* start;
@@ -213,20 +207,18 @@ int bam_read_idx_get_main(int argc, char** argv)
         while(start != end) {
             int ret = bgzf_seek(bam_fp->fp.bgzf , start->file_offset, SEEK_SET);
             if(ret != 0) {
-                fprintf(stderr, "[bri] bgzf_seek failed\n");
-                exit(EXIT_FAILURE);
+                Rf_error("[bri] bgzf_seek failed\n");
             }
 
             while(n_rec < start->n_aln){
                 ret = sam_read1(bam_fp, h, b);
                 if(ret < 0) {
-                    fprintf(stderr, "[bri] sam_read1 failed\n");
-                    exit(EXIT_FAILURE);
+                    Rf_error("[bri] sam_read1 failed\n");
+
                 }
                 int ret = sam_write1(out_fp, h, b);
                 if(ret < 0) {
-                    fprintf(stderr, "[bri] sam_write1 failed\n");
-                    exit(EXIT_FAILURE);
+                    Rf_error("[bri] sam_write1 failed\n");
                 }
                 n_rec += 1;
 

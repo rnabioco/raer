@@ -35,6 +35,7 @@
 #' @param return_data return data as a Granges table?
 #' @param BPPARAM A [BiocParallel] class to control parallel execution. Parallel
 #' processing occurs per chromosome, so is disabled when run on a single region.
+#' @param verbose if TRUE, then report progress.
 #'
 #' @returns A list containing a `GRanges` object for each input bam file, or a vector
 #' of the output tabixed file names if `return_data` is FALSE.
@@ -70,7 +71,8 @@ get_pileup <- function(bamfiles,
                    only_keep_variants = FALSE,
                    reads = NULL,
                    return_data = TRUE,
-                   BPPARAM = SerialParam()){
+                   BPPARAM = SerialParam(),
+                   verbose = FALSE){
 
   bamfiles <- path.expand(bamfiles)
   fafile <- path.expand(fafile)
@@ -236,6 +238,7 @@ get_pileup <- function(bamfiles,
 
     run_in_parallel <- TRUE
     res <- bplapply(chroms_to_process, FUN = function(ctig) {
+      start_time <- Sys.time()
       tmp_outfiles <- unlist(lapply(seq_along(outfiles), function(x) tempfile()))
       fn_df <- data.frame(contig = ctig,
                           bam_fn = bamfiles,
@@ -258,6 +261,10 @@ get_pileup <- function(bamfiles,
                         idx_ptr)
       if(ret == 1){
         stop("Error occured during pileup", call. = FALSE)
+      }
+      if(verbose){
+        time_elapsed <- Sys.time() - start_time
+        message("Completed pileup on ", ctig, " in ", time_elapsed)
       }
 
       fn_df
@@ -282,7 +289,7 @@ get_pileup <- function(bamfiles,
   }
 
   if(any(file.info(outfiles)$size == 0)){
-    return()
+    return(empty_plp_record())
   }
 
   # run_pileup writes to a (temp)file, next the file will be tabix indexed
@@ -370,3 +377,25 @@ read_pileup <- function(tbx_fn, region = NULL){
                          strand=from$V3,
                          from[,4:ncol(from)])
 }
+
+
+
+# generate empty pileup record
+# idea from @user2462304 https://stackoverflow.com/a/48180979/6276041
+empty_plp_record <-  function(){
+  col_types <- list(Ref = character(),
+                                 Var = character(),
+                                 nRef = integer(),
+                                 nVar = integer(),
+                                 nA = integer(),
+                                 nT = integer(),
+                                 nC = integer(),
+                                 nG = integer(),
+                                 nN = integer())
+  df <- do.call(data.frame,col_types)
+  gr <- GRanges(c(seqnames=NULL,ranges=NULL,strand=NULL))
+  mcols(gr) <- df
+  gr
+}
+
+

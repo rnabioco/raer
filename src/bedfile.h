@@ -2,7 +2,7 @@
 #define BEDFILE_H
 
 #include <Rdefines.h>
-#include "bedidx.h"
+#include <bedidx.h>
 
 typedef struct {
   void *index;

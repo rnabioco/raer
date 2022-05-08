@@ -308,7 +308,8 @@ test_that("filtering for read-level mismatches works", {
                   region = "SSR3:244-247",
                   only_keep_variants = T,
                   event_filters = c(0, 0, 0, 0, 0, 1, 1))
-  expect_null(plp)
+  expect_equal(length(plp), 0)
+  expect_s4_class(plp, "GRanges")
 
   plp <- get_pileup(bamfn, fafn, min_base_qual = 10,
                      region = "SSR3:244-247",
@@ -320,7 +321,8 @@ test_that("filtering for read-level mismatches works", {
                      region = "SSR3:244-247",
                      only_keep_variants = T,
                      event_filters = c(0, 0, 0, 0, 0, 0, 1))
-  expect_null(plp)
+  expect_equal(length(plp), 0)
+  expect_s4_class(plp, "GRanges")
 
   plp <- get_pileup(bamfn, fafn, min_base_qual = 10,
                     region = "SSR3:244-247",
@@ -332,7 +334,8 @@ test_that("filtering for read-level mismatches works", {
                     region = "SSR3:244-247",
                     only_keep_variants = T,
                     event_filters = c(0, 0, 0, 0, 0, 1, 0))
-  expect_null(plp)
+  expect_equal(length(plp), 0)
+  expect_s4_class(plp, "GRanges")
 
 })
 

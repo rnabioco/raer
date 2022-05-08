@@ -43,6 +43,8 @@ Suggests:
     rmarkdown,
     BiocStyle,
     SNPlocs.Hsapiens.dbSNP151.GRCh38
+Remotes:
+    Bioconductor/Rhtslib
 LinkingTo: 
     Rcpp,
     Rhtslib,

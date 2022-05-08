@@ -1,7 +1,7 @@
-#include "htslib/sam.h"
-#include "htslib/faidx.h"
-#include "htslib/khash.h"
-#include "bedidx.h"
+#include <htslib/sam.h>
+#include <htslib/faidx.h>
+#include <htslib/khash.h>
+#include <bedidx.h>
 #include "bedfile.h"
 #include "utils.h"
 
@@ -21,6 +21,7 @@
 
 KHASH_SET_INIT_STR(varhash);
 typedef khash_t(varhash) *varhash_t;
+
 KHASH_SET_INIT_STR(rname);
 typedef khash_t(rname) *rnhash_t;
 

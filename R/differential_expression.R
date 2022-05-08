@@ -183,7 +183,7 @@ make_editing_plots <- function(se_object, colors = NULL,
   plot_dat  <- as.data.frame(colData(se_object))
   names(plot_dat)[names(plot_dat) == meta_col] <- "sample_info"
 
-  p1 <- ggplot2::ggplot(plot_dat, ggplot2::aes(sample_info, n_sites)) +
+  p1 <- ggplot2::ggplot(plot_dat, ggplot2::aes_string("sample_info", "n_sites")) +
     ggplot2::geom_col(ggplot2::aes(fill = rep),
                       position = ggplot2::position_dodge()) +
     ggplot2::scale_fill_manual(values = cols) +
@@ -192,7 +192,7 @@ make_editing_plots <- function(se_object, colors = NULL,
     ggplot2::theme(axis.text.x = element_text(angle = 90, hjust = 1,
                                               vjust = 0.5))
 
-  p2 <- ggplot2::ggplot(plot_dat, ggplot2::aes(sample_info, edit_idx)) +
+  p2 <- ggplot2::ggplot(plot_dat, ggplot2::aes_string("sample_info", "edit_idx")) +
     ggplot2::geom_col(ggplot2::aes(fill = rep),
                       position = ggplot2::position_dodge()) +
     ggplot2::scale_fill_manual(values = cols) +

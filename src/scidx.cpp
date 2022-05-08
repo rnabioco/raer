@@ -1,5 +1,3 @@
-#include "raer.h"
-
 #include <Rcpp.h>
 using namespace Rcpp;
 

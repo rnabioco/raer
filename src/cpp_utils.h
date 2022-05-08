@@ -1,8 +1,8 @@
 #ifndef raer_cpp_utils_H
 #define raer_cpp_utils_H
 
-#include "htslib/sam.h"
-#include "htslib/tbx.h"
+#include <htslib/sam.h>
+#include <htslib/tbx.h>
 #include <Rcpp.h>
 
 class TabixReader {

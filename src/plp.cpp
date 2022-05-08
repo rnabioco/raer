@@ -1,7 +1,6 @@
-#include "raer.h"
-#include "htslib/sam.h"
-#include "htslib/faidx.h"
-#include "htslib/hts.h"
+#include <htslib/sam.h>
+#include <htslib/faidx.h>
+#include <htslib/hts.h>
 
 #include <Rcpp.h>
 using namespace Rcpp;

@@ -18,25 +18,27 @@
 #include "bri_index.h"
 #include "sort_r.h"
 
+#include <Rinternals.h>
+
 //#define BRI_INDEX_DEBUG 1
 char verbose = 0;
 
 // make the index filename based on the name of input_bam
 // caller must free the returned pointer
-char* generate_index_filename(const char* input_bam, const char* input_bri) 
+char* generate_index_filename(const char* input_bam, const char* input_bri)
 {
     char* out_fn;
 
     if(input_bri != NULL) {
         out_fn = malloc(strlen(input_bri));
         if(out_fn == NULL) {
-            exit(EXIT_FAILURE);
+            Rf_error("error making index: %s", input_bri);
         }
         strcpy(out_fn, input_bri);
     } else {
         out_fn = malloc(strlen(input_bam) + 5);
         if(out_fn == NULL) {
-            exit(EXIT_FAILURE);
+          Rf_error("error making index: %s", input_bri);
         }
         strcpy(out_fn, input_bam);
         strcat(out_fn, ".bri");
@@ -65,7 +67,7 @@ bam_read_idx* bam_read_idx_init()
 void bam_read_idx_destroy(bam_read_idx* bri)
 {
 #ifdef BRI_INDEX_DEBUG
-    fprintf(stderr, "[bri-destroy] %zu name bytes %zu records\n", bri->name_count_bytes, bri->record_count);
+    REprintf("[bri-destroy] %zu name bytes %zu records\n", bri->name_count_bytes, bri->record_count);
 #endif
     free(bri->readnames);
     bri->readnames = NULL;
@@ -93,15 +95,15 @@ void bam_read_idx_save(bam_read_idx* bri, const char* filename)
 
     // Sort records by readname
     sort_r(bri->records, bri->record_count, sizeof(bam_read_idx_record), compare_records_by_readname_offset, bri->readnames);
-    
+
     // write header, containing file version, the size (in bytes) of the read names
     // and the number of records. The readnames size is a placeholder and will be
     // corrected later.
-    
+
     // version
     size_t FILE_VERSION = 1;
     fwrite(&FILE_VERSION, sizeof(FILE_VERSION), 1, fp);
-    
+
     // readname length
     size_t readname_bytes = 0;
     fwrite(&readname_bytes, sizeof(readname_bytes), 1, fp);
@@ -112,13 +114,13 @@ void bam_read_idx_save(bam_read_idx* bri, const char* filename)
     // Pass 1: count up the number of non-redundant read names, write them to disk
     // Also store the position in the file where the read name for each record was written
     size_t* disk_offsets_by_record = malloc(bri->record_count * sizeof(size_t));
-    const char* rn = bri->readnames; // for convenience 
+    const char* rn = bri->readnames; // for convenience
 
     for(size_t i = 0; i < bri->record_count; ++i) {
-        
-        int redundant = i > 0 && 
+
+        int redundant = i > 0 &&
             strcmp(rn + bri->records[i].read_name.offset, rn + bri->records[i - 1].read_name.offset) == 0;
-        
+
         if(!redundant) {
             disk_offsets_by_record[i] = readname_bytes; // current position in file
             size_t len = strlen(rn + bri->records[i].read_name.offset) + 1;
@@ -129,7 +131,7 @@ void bam_read_idx_save(bam_read_idx* bri, const char* filename)
         }
 
 #ifdef BRI_INDEX_DEBUG
-        fprintf(stderr, "record %zu name: %s redundant: %d do: %zu offset: %zu\n", 
+        REprintf("record %zu name: %s redundant: %d do: %zu offset: %zu\n",
             i, bri->readnames + bri->records[i].read_name.offset, redundant, disk_offsets_by_record[i], bri->records[i].file_offset);
 #endif
     }
@@ -141,11 +143,11 @@ void bam_read_idx_save(bam_read_idx* bri, const char* filename)
         brir.read_name.offset = disk_offsets_by_record[i];
         fwrite(&brir, sizeof(brir), 1, fp);
 #ifdef BRI_INDEX_DEBUG
-        fprintf(stderr, "[bri-save] record %zu %s name offset: %zu file offset: %zu\n", 
+        REprintf("[bri-save] record %zu %s name offset: %zu file offset: %zu\n",
             i, bri->readnames + bri->records[i].read_name.offset, disk_offsets_by_record[i], bri->records[i].file_offset);
 #endif
     }
-    
+
     // finish by writing the actual size of the read name segment
     fseek(fp, sizeof(FILE_VERSION), SEEK_SET);
     fwrite(&readname_bytes, sizeof(readname_bytes), 1, fp);
@@ -157,43 +159,41 @@ void bam_read_idx_save(bam_read_idx* bri, const char* filename)
 // add a record to the index, growing the dynamic arrays as necessary
 void bam_read_idx_add(bam_read_idx* bri, const char* readname, size_t offset)
 {
-    // 
+    //
     // add readname to collection if not seen, otherwise keep original offset
     //
 
     if(bri->record_count > 0){
         const char* orn = bri->readnames + bri->records[bri->record_count - 1].read_name.offset ;
         if(strcmp(orn, readname) == 0) {
-            bri->records[bri->record_count - 1].n_aln += 1; 
+            bri->records[bri->record_count - 1].n_aln += 1;
           //  bri->records[bri->record_count - 1].file_offset = offset;
            // printf("%s %s\n", bri->readnames + bri->records[bri->record_count - 1].read_name.offset, readname);
             return;
         }
     }
-    
+
     size_t len = strlen(readname) + 1;
     if(bri->name_capacity_bytes <= bri->name_count_bytes + len) {
 
         // if already allocated double size, if initialization start with 1Mb
         bri->name_capacity_bytes = bri->name_capacity_bytes > 0 ? 2 * bri->name_capacity_bytes : 1024*1024;
 #ifdef BRI_INDEX_DEBUG
-        fprintf(stderr, "[bri] allocating %zu bytes for names\n", bri->name_capacity_bytes);
+        REprintf("[bri] allocating %zu bytes for names\n", bri->name_capacity_bytes);
 #endif
-    
+
         bri->readnames = realloc(bri->readnames, bri->name_capacity_bytes);
         if(bri->readnames == NULL) {
-            fprintf(stderr, "[bri] malloc failed\n");
-            exit(EXIT_FAILURE);
+            Rf_error("[bri] malloc failed\n");
         }
     }
-    
+
     // in principle this incoming name can be so larger than doubling the size
     // doesn't allow it to fit. This really shouldn't happen so we'll just exit here
     if(bri->name_capacity_bytes <= bri->name_count_bytes + len) {
-        fprintf(stderr, "[bri] incoming name with length %zu is too large (%zu %zu)\n", len, bri->name_count_bytes + len, bri->name_capacity_bytes);
-        exit(EXIT_FAILURE);
+        Rf_error("[bri] incoming name with length %zu is too large (%zu %zu)\n", len, bri->name_count_bytes + len, bri->name_capacity_bytes);
     }
-    
+
     // copy name
     size_t name_offset = bri->name_count_bytes;
     strncpy(bri->readnames + bri->name_count_bytes, readname, len);
@@ -207,15 +207,14 @@ void bam_read_idx_add(bam_read_idx* bri, const char* readname, size_t offset)
         bri->record_capacity = bri->record_capacity > 0 ? 2 * bri->record_capacity : 1024;
         bri->records = realloc(bri->records, sizeof(bam_read_idx_record) * bri->record_capacity);
         if(bri->records == NULL) {
-            fprintf(stderr, "[bri] malloc failed\n");
-            exit(EXIT_FAILURE);
+            Rf_error("[bri] malloc failed\n");
         }
     }
     bri->records[bri->record_count].n_aln = 1;
     bri->records[bri->record_count].read_name.offset = name_offset;
     bri->records[bri->record_count].file_offset = offset;
     bri->record_count += 1;
-    
+
 }
 
 //
@@ -223,8 +222,7 @@ void bam_read_idx_build(const char* filename, const char* output_bri)
 {
     htsFile *fp = hts_open(filename, "r");
     if(fp == NULL) {
-        fprintf(stderr, "[bri] could not open %s\n", filename);
-        exit(EXIT_FAILURE);
+        Rf_error("[bri] could not open %s\n", filename);
     }
 
     bam_read_idx* bri = bam_read_idx_init();
@@ -242,12 +240,12 @@ void bam_read_idx_build(const char* filename, const char* output_bri)
         } else {
             continue;
         }
-        
+
         bam_read_idx_add(bri, readname, file_offset);
 
         bam_read_idx_record brir = bri->records[bri->record_count - 1];
         if(verbose && (niter == 1 || niter % 100000 == 0)) {
-            fprintf(stderr, "[bri-build] record %zu [%zu %zu] %s\n",
+            REprintf("[bri-build] record %zu [%zu %zu] %s\n",
                 bri->record_count,
                 brir.read_name.offset,
                 brir.file_offset,
@@ -265,14 +263,14 @@ void bam_read_idx_build(const char* filename, const char* output_bri)
 
     // save to disk and cleanup
     if(verbose) {
-        fprintf(stderr, "[bri-build] writing to disk...\n");
+        REprintf("[bri-build] writing to disk...\n");
     }
 
     char* out_fn = generate_index_filename(filename, output_bri);
     bam_read_idx_save(bri, out_fn);
 
     if(verbose) {
-        fprintf(stderr, "[bri-build] wrote index for %zu records.\n", bri->record_count);
+        REprintf("[bri-build] wrote index for %zu records.\n", bri->record_count);
     }
 
     free(out_fn);
@@ -281,8 +279,7 @@ void bam_read_idx_build(const char* filename, const char* output_bri)
 
 void print_error_and_exit(const char* msg)
 {
-    fprintf(stderr, "[bri] %s\n", msg);
-    exit(EXIT_FAILURE);
+    Rf_error("[bri] %s\n", msg);
 }
 
 //
@@ -291,8 +288,7 @@ bam_read_idx* bam_read_idx_load(const char* input_bam, const char* input_bri)
     char* index_fn = generate_index_filename(input_bam, input_bri);
     FILE* fp = fopen(index_fn, "rb");
     if(fp == NULL) {
-        fprintf(stderr, "[bri] index file not found for %s\n", input_bam);
-        exit(EXIT_FAILURE);
+        Rf_error("[bri] index file not found for %s\n", input_bam);
     }
 
     bam_read_idx* bri = bam_read_idx_init();
@@ -321,8 +317,7 @@ bam_read_idx* bam_read_idx_load(const char* input_bam, const char* input_bri)
     // allocate filenames
     bri->readnames = malloc(bri->name_capacity_bytes);
     if(bri->readnames == NULL) {
-        fprintf(stderr, "[bri] failed to allocate %zu bytes for read names\n", bri->name_capacity_bytes);
-        exit(EXIT_FAILURE);
+        Rf_error("[bri] failed to allocate %zu bytes for read names\n", bri->name_capacity_bytes);
     }
 
     // allocate records
@@ -344,7 +339,7 @@ bam_read_idx* bam_read_idx_load(const char* input_bam, const char* input_bri)
     for(size_t i = 0; i < bri->record_count; ++i) {
         bri->records[i].read_name.ptr = bri->readnames + bri->records[i].read_name.offset;
 #ifdef BRI_INDEX_DEBUG
-        fprintf(stderr, "[bri-load] record %zu %s %zu\n", i, bri->records[i].read_name.ptr, bri->records[i].file_offset);
+        REprintf("[bri-load] record %zu %s %zu\n", i, bri->records[i].read_name.ptr, bri->records[i].file_offset);
 #endif
     }
 
@@ -371,7 +366,7 @@ static const struct option longopts[] = {
 //
 void print_usage_index()
 {
-    fprintf(stderr, "usage: bri index [-v] [-i <index_filename.bri>] <input.bam>\n");
+    Rf_error("usage: bri index [-v] [-i <index_filename.bri>] <input.bam>\n");
 }
 
 //
@@ -384,7 +379,6 @@ int bam_read_idx_index_main(int argc, char** argv)
         switch (c) {
             case OPT_HELP:
                 print_usage_index();
-                exit(EXIT_SUCCESS);
             case 'i':
                 output_bri = optarg;
                 break;
@@ -393,15 +387,14 @@ int bam_read_idx_index_main(int argc, char** argv)
                 break;
         }
     }
-    
+
     if (argc - optind < 1) {
-        fprintf(stderr, "bri index: not enough arguments\n");
+        Rf_error("bri index: not enough arguments\n");
         die = 1;
     }
 
     if(die) {
         print_usage_index();
-        exit(EXIT_FAILURE);
     }
 
     char* input_bam = argv[optind++];

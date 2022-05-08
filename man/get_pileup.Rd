@@ -22,7 +22,8 @@ get_pileup(
   only_keep_variants = FALSE,
   reads = NULL,
   return_data = TRUE,
-  BPPARAM = SerialParam()
+  BPPARAM = SerialParam(),
+  verbose = FALSE
 )
 }
 \arguments{
@@ -74,6 +75,8 @@ and contain variants}
 
 \item{BPPARAM}{A \link{BiocParallel} class to control parallel execution. Parallel
 processing occurs per chromosome, so is disabled when run on a single region.}
+
+\item{verbose}{if TRUE, then report progress.}
 }
 \value{
 A list containing a \code{GRanges} object for each input bam file, or a vector

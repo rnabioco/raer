@@ -10,6 +10,8 @@ calc_AEI(
   alu_ranges = NULL,
   txdb = NULL,
   snp_db = NULL,
+  min_mapq = 255,
+  library_type = c("fr-first-strand", "fr-second-strand", "unstranded"),
   BPPARAM = SerialParam(),
   verbose = FALSE
 )
@@ -19,14 +21,22 @@ calc_AEI(
 
 \item{fasta_fn}{fasta}
 
-\item{alu_ranges}{GRanges with regions to query for calculating the AEI,
-typically ALU repeats.}
+\item{alu_ranges}{GRanges or the name of a BEDfile with regions to query for calculating the AEI,
+typically ALU repeats. If a BED file is supplied it will not be filtered by the txdb option.}
 
-\item{txdb}{A txdb object, if supplied,  will be used to subset the alu_ranges to
+\item{txdb}{A txdb object, if supplied, will be used to subset the alu_ranges to
 those found overlapping genes.}
 
-\item{snp_db}{a SNP package, if supplied, will be used to exclude polymorphic positions
-prior to calculating the AEI.}
+\item{snp_db}{either a SNPlocs package, GPos, or GRanges object. If supplied,
+will be used to exclude polymorphic positions prior to calculating the AEI. If
+\code{calc_AEI()} will be used many times, one could save some time by first identifying
+SNPs that overlap the supplied alu_ranges, and passing these as a GRanges to snp_db
+rather than supplying all known SNPs. Combined with using a bedfile for alu_ranges can
+also will save time.}
+
+\item{min_mapq}{minimum required MAPQ for alignment to be counted}
+
+\item{library_type}{library type, one of \verb{fr-first-strand'}, \code{fr-second-strand}, or \code{unstranded}}
 
 \item{BPPARAM}{A \link{BiocParallelParam} object for specifying parallel options for
 operating over chromosomes.}
@@ -47,9 +57,11 @@ such as coding exons. This function will perform pileup at specified repeat regi
 return a summary AEI metric.
 }
 \examples{
+suppressPackageStartupMessages(library(Rsamtools))
 bamfn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", package = "raer")
 fafn <- system.file("extdata", "human.fasta", package = "raer")
-calc_AEI(bamfn, fafn)
+dummy_alu_ranges <- scanFaIndex(fafn)
+calc_AEI(bamfn, fafn, dummy_alu_ranges)
 
 }
 \references{

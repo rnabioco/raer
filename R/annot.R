@@ -27,6 +27,11 @@ annot_snps.GRanges <- function(obj,
 
   # now annot if site is a SNP
   snp_overlaps <- findOverlaps(sites, snps, ignore.strand = TRUE)
+  if(length(snp_overlaps) == 0){
+    mcols(sites)[col_to_aggr] <- NA
+    seqlevelsStyle(sites) <- in_style
+    return(sites)
+  }
   mcols(sites)[col_to_aggr] <- aggregate(snps,
                             snp_overlaps,
                             snp = unstrsplit(eval(parse(text=col_to_aggr)),
