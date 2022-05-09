@@ -329,14 +329,22 @@ static void print_minus_counts(FILE *fp, pcounts *p, char* ctig, int pos, int mr
           p->mnn);
 }
 
-static void print_counts(FILE **fps, pcounts *pc, int only_variants, int n, int min_depth,
+static void print_counts(FILE **fps, pcounts *pc, int *only_variants, int n, int min_depth,
                          char* ctig, int pos, int pref, int mref){
   int i;
-  // write out if any samples are > min_depth and any samples have a variant
   int pv = 0;
   int mv = 0;
   int write_p = 0;
   int write_m = 0;
+  int write_only_v = 0;
+
+  for(i = 0; i < n; ++i){
+    if(only_variants[i]){
+      write_only_v = 1;
+    }
+  }
+  // write out if any samples are > min_depth and any samples have a variant
+  // predicated on the true or false values in only_variants
   for(i = 0; i < n; ++i){
     if((pc + i)->ptotal >= min_depth){
       write_p = 1;
@@ -344,7 +352,7 @@ static void print_counts(FILE **fps, pcounts *pc, int only_variants, int n, int 
     if((pc + i)->mtotal >= min_depth){
       write_m = 1;
     }
-    if(only_variants){
+    if(write_only_v && only_variants[i]){
       if(kh_size((pc + i)->pvar) > 0){
         pv = 1;
       }
@@ -353,7 +361,8 @@ static void print_counts(FILE **fps, pcounts *pc, int only_variants, int n, int 
       }
     }
   }
-  if(only_variants){
+
+  if(write_only_v){
     write_p = pv && write_p;
     write_m = mv && write_m;
   }
@@ -540,7 +549,7 @@ int run_cpileup(const char** cbampaths,
                 int* libtype,
                 int* b_flags,
                 int* event_filters,
-                int only_keep_variants,
+                int* only_keep_variants,
                 char* reads_fn,
                 SEXP ext) {
 
@@ -763,7 +772,6 @@ int run_cpileup(const char** cbampaths,
       }
 
       // check if site is in a homopolymer
-      // todo: find a  way to advance iterator past repeat
       if(ef->nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, ef->nmer)) continue;
 
       int pass_reads = 0;

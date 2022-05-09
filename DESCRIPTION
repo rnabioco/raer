@@ -15,6 +15,7 @@ Description: Toolkit for identification, visualization, and statistical testing
 License: MIT + file LICENSE
 Imports: 
     stats,
+    utils,
     Rcpp,
     data.table,
     R.utils,

@@ -49,7 +49,7 @@ test_that("n-bam pileup works", {
 
   res <- get_pileup(c(bamfn, bam2fn), fafn, bedfn,
                     library_type = "fr-first-strand",
-                      only_keep_variants = TRUE)
+                    only_keep_variants = TRUE)
   # same sites reported in both files
   expect_true(all(start(res[[1]]) == start(res[[2]])))
   # sites are variant in at least 1 file
@@ -58,6 +58,18 @@ test_that("n-bam pileup works", {
   res <- get_pileup(rep(bamfn, 4), fafn, bedfn,
                     library_type = "fr-first-strand")
   expect_true(length(res) == 4)
+
+  # all sites in first bam are variant
+  res <- get_pileup(c(bamfn, bam2fn), fafn, bedfn,
+                    library_type = "fr-first-strand",
+                    only_keep_variants = c(TRUE, FALSE))
+  expect_true(all(res[[1]]$Var != "-"))
+
+  # all sites in first bam are variant
+  res <- get_pileup(c(bamfn, bam2fn), fafn, bedfn,
+                    library_type = "fr-first-strand",
+                    only_keep_variants = c(FALSE, TRUE))
+  expect_true(all(res[[2]]$Var != "-"))
 
 })
 
@@ -236,6 +248,7 @@ test_that("pileup check homopolymer filter", {
 
   expect_equal(length(queryHits(findOverlaps(hp_matches, a))), 0)
   expect_equal(length(queryHits(findOverlaps(hp_matches, b))), 120)
+
 })
 
 test_that("filtering for splicing events works",{

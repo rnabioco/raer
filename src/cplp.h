@@ -14,7 +14,7 @@ int run_cpileup(const char** cbampath,
                 int* libtype,
                 int* b_flags,
                 int* event_filters,
-                int only_keep_variants,
+                int* only_keep_variants,
                 char* outbam,
                 SEXP ext);
 

@@ -9,8 +9,8 @@ list_tabix_chroms <- function(tbxpath) {
     .Call(`_raer_list_tabix_chroms`, tbxpath)
 }
 
-run_pileup <- function(bampaths, fapath, region, bedfn, min_reads, event_filters, min_mapQ, bam_flags, libtype, outfns, max_depth = 10000L, min_baseQ = 20L, only_keep_variants = 0L, reads = ".", ext = NULL) {
-    .Call(`_raer_run_pileup`, bampaths, fapath, region, bedfn, min_reads, event_filters, min_mapQ, bam_flags, libtype, outfns, max_depth, min_baseQ, only_keep_variants, reads, ext)
+run_pileup <- function(bampaths, fapath, region, bedfn, min_reads, event_filters, min_mapQ, bam_flags, libtype, outfns, only_keep_variants, max_depth = 10000L, min_baseQ = 20L, reads = ".", ext = NULL) {
+    .Call(`_raer_run_pileup`, bampaths, fapath, region, bedfn, min_reads, event_filters, min_mapQ, bam_flags, libtype, outfns, only_keep_variants, max_depth, min_baseQ, reads, ext)
 }
 
 get_region <- function(region) {

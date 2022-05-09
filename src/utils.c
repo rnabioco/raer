@@ -20,11 +20,11 @@ int query_start(bam1_t *b){
     if (op == BAM_CHARD_CLIP){
       if (start_offset != 0 && start_offset != b->core.l_qseq){
         Rf_error("Invalid clipping in CIGAR string");
-      } else if (op == BAM_CSOFT_CLIP){
-        start_offset += cigar[i] >> BAM_CIGAR_SHIFT;
-      }  else {
-        break;
       }
+    } else if (op == BAM_CSOFT_CLIP){
+      start_offset += cigar[i] >> BAM_CIGAR_SHIFT;
+    } else {
+      break;
     }
   }
   return start_offset;
@@ -46,11 +46,11 @@ int query_end(bam1_t *b){
     if (op == BAM_CHARD_CLIP){
       if (end_offset != 0 && end_offset != b->core.l_qseq){
         Rf_error("Invalid clipping in CIGAR string");
-      } else if (op == BAM_CSOFT_CLIP){
-        end_offset += cigar[i] >> BAM_CIGAR_SHIFT;
-      } else {
-        break;
       }
+    } else if (op == BAM_CSOFT_CLIP){
+      end_offset += cigar[i] >> BAM_CIGAR_SHIFT;
+    } else {
+      break;
     }
   }
 

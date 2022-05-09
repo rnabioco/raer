@@ -20,9 +20,9 @@ int run_pileup(std::vector<std::string> bampaths,
                std::vector<int> bam_flags,
                std::vector<int> libtype,
                std::vector<std::string> outfns,
+               std::vector<int> only_keep_variants,
                int max_depth = 10000,
                int min_baseQ = 20,
-               int only_keep_variants = 0,
                std::string reads = ".",
                SEXP ext = R_NilValue) {
 
@@ -65,8 +65,10 @@ int run_pileup(std::vector<std::string> bampaths,
   }
 
   int n_params = 0;
+  if(min_mapQ.size() > n_files){
+    stop("incorrect # of entries for min_mapQ");
+  }
   n_params = n_files - min_mapQ.size();
-
   // set min_mapQ to first parameter if not supplied for each file
   if(n_params != 0){
     for(int i = 0; i < n_params; i++){
@@ -74,6 +76,16 @@ int run_pileup(std::vector<std::string> bampaths,
     }
   }
 
+  if(only_keep_variants.size() > n_files){
+    stop("incorrect # of entries for min_mapQ");
+  }
+  n_params = n_files - only_keep_variants.size();
+  // set min_mapQ to first parameter if not supplied for each file
+  if(n_params != 0){
+    for(int i = 0; i < n_params; i++){
+      only_keep_variants.push_back(only_keep_variants[0]);
+    }
+  }
 
   if(event_filters.size() != 7){
     stop("event filters must be a vector of 7 positive integers ");
@@ -100,7 +112,7 @@ int run_pileup(std::vector<std::string> bampaths,
                     &libtype[0],
                     &*bam_flags.begin(),
                     &event_filters[0],
-                    only_keep_variants,
+                    &only_keep_variants[0],
                     creadsoutfn,
                     ext);
 
