@@ -416,3 +416,125 @@ empty_plp_record <-  function(){
 }
 
 
+.adjust_arg_length <- function(obj, slot, len){
+  if(length(obj@slot) != len){
+    if(length(obj@slot) == 1){
+      obj@slot <- rep(obj@slot, len)
+    } else {
+      stop("%s requires either 1 value, or individual values,",
+           "for all input bamfiles", slot)
+    }
+  }
+  obj@slot
+}
+## Check validity and adjust
+.adjustParams <- function(filterParam, nFiles) {
+  if(!inherits(filterParam, "FilterParam")) {
+    stop("'filterParam' must inherit from 'FilterParam', got '%s'",
+         class(filterParam))
+  }
+  filterParam@min_mapq <- .adjust_arg_length(filterParam,
+                                             "min_mapq",
+                                             nFiles)
+  filterParam@only_keep_variants <- .adjust_arg_length(filterParam,
+                                                       "only_keep_variants",
+                                                       nFiles)
+  filterParam@library_type <- .adjust_arg_length(filterParam,
+                                                 "library_type",
+                                                 nFiles)
+  filterParam
+}
+
+
+.FilterParam <- setClass("FilterParam",
+                         representation(
+                           max_depth = "integer", #pileupParams elt 0 (in C code)
+                           min_base_quality = "integer", # 1
+                           min_mapq = "integer", # 2
+                           min_nucleotide_depth= "integer",
+                           library_type = "character", # 5
+                           only_keep_variants = "logical", # 6
+                           ignore_query_Ns = "logical", # 7
+                           include_deletions="logical", # 8
+                           include_insertions="logical",
+                           trim_5p = "integer",
+                           trim_3p ="integer",
+                           indel_dist = "integer",
+                           splice_dist = "integer",
+                           homopolymer_len = "integer",
+                           max_mismatch_type = "integer", # length 2
+                           min_read_qual = "integer" # length 2
+                           ))
+
+setMethod(show, "FilterParam", function(object) {
+  cat("class: ", class(object), "\n")
+  values <- sapply(slotNames(object), slot, object=object)
+  info <- paste(slotNames(object), values, sep=": ", collapse="; ")
+  cat(strwrap(info, exdent=2), sep="\n")
+})
+
+.as.list_FilterParam <- function(x, ...) {
+  slotnames <- slotNames(x)
+  names(slotnames) <- slotnames
+  lapply(slotnames, slot, object=x)
+}
+
+
+FilterParam <-
+  function(max_depth = 1e4L, min_base_quality = 20L,
+           min_mapq = 0L, min_nucleotide_depth = 1L,
+           library_type = "fr-first-strand",
+           only_keep_variants = FALSE, ignore_query_Ns = TRUE,
+           trim_5p = 0L, trim_3p = 0L, indel_dist = 0L,
+           splice_dist = 0L, homopolymer_len = 0L,
+           max_mismatch_type = c(0L, 0L), min_read_qual = c(0L, 0L))
+  {
+
+    stopifnot(isSingleNumber(max_depth))
+    stopifnot(isSingleNumber(min_base_quality))
+    stopifnot(isSingleNumber(min_nucleotide_depth))
+    stopifnot(isSingleNumber(trim_5p))
+    stopifnot(isSingleNumber(trim_3p))
+    stopifnot(isSingleNumber(indel_dist))
+    stopifnot(isSingleNumber(splice_dist))
+    stopifnot(isSingleNumber(homopolymer_len))
+
+    max_depth <- as.integer(max_depth)
+    min_base_quality <- as.integer(min_base_quality)
+
+    min_nucleotide_depth <- as.integer(min_nucleotide_depth)
+    trim_5p <- as.integer(trim_5p)
+    trim_3p <- as.integer(trim_3p)
+    indel_dist <- as.integer(indel_dist)
+    splice_dist <- as.integer(splice_dist)
+    min_mapq <- as.integer(min_mapq)
+    homopolymer_len <- as.integer(homopolymer_len)
+    max_mismatch_type <- as.integer(max_mismatch_type)
+    min_read_qual <- as.integer(min_read_qual)
+
+    stopifnot(length(max_mismatch_type) == 2 && is.numeric(max_mismatch_type))
+    stopifnot(length(min_read_qual) == 2 && is.numeric(min_read_qual))
+
+    min_read_qual <- as.integer(min_read_qual)
+    max_mismatch_type <- as.integer(max_mismatch_type)
+
+    stopifnot(isTRUEorFALSE(ignore_query_Ns))
+
+    # variable length depending on n_files
+    stopifnot(is.character(library_type))
+    stopifnot(is.numeric(min_mapq))
+    stopifnot(is.logical(only_keep_variants))
+
+    min_mapq <- as.integer(min_mapq)
+
+    ## creation
+    .FilterParam(max_depth = max_depth, min_base_quality = min_base_quality,
+                 min_mapq = min_mapq, min_nucleotide_depth = min_nucleotide_depth,
+                 library_type = library_type, only_keep_variants = only_keep_variants,
+                 ignore_query_Ns = ignore_query_Ns,
+                 trim_5p = trim_5p, trim_3p = trim_3p, indel_dist = indel_dist,
+                 splice_dist = splice_dist, homopolymer_len = homopolymer_len,
+                 max_mismatch_type = max_mismatch_type, min_read_qual)
+
+  }
+
