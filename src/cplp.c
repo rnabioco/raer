@@ -155,6 +155,7 @@ typedef struct {
   bam_pileup1_t **plp;
 } mplp_pileup_t;
 
+/* from bam_plcmd.c */
 static int mplp_get_ref(mplp_aux_t *ma, int tid, char **ref, int *ref_len) {
   mplp_ref_t *r = ma->ref;
 
@@ -283,6 +284,12 @@ static int readaln(void *data, bam1_t *b) {
 
     // check for proper pair, if paired end
     if((b->core.flag&BAM_FPAIRED) && !(b->core.flag&BAM_FPROPER_PAIR)) continue ;
+
+    // check if read quality is > 20 in at least 25% of read
+    // disable until options can promoted to R parameters
+    int inactive = 0;
+    if(inactive && !read_base_quality(b, 0.25, 20)) continue;
+
     break;
   }
 

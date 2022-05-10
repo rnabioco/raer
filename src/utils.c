@@ -177,5 +177,25 @@ int dist_to_indel(bam1_t* b, int pos, int dist){
   return -1;
 }
 
+/* return 1 if read passes quality thresholds
+ * otherwise return 0 */
+int read_base_quality(bam1_t* b, float pc, int mq){
+  int c, i, ret, lq;
+  ret = lq = 0;
+  double qual_pct;
 
+  if(!b->core.l_qseq){
+    return 0;
+  }
+
+  for(i = 0; i < b->core.l_qseq; ++i){
+    c = bam_get_qual(b)[i];
+    if(c < mq){
+      lq += 1;
+    }
+  }
+  qual_pct = (double)lq / b->core.l_qseq;
+  ret = qual_pct <= pc ? 1: 0;
+  return ret;
+}
 
