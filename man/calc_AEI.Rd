@@ -10,8 +10,7 @@ calc_AEI(
   alu_ranges = NULL,
   txdb = NULL,
   snp_db = NULL,
-  min_mapq = 255,
-  library_type = c("fr-first-strand", "fr-second-strand", "unstranded"),
+  filterParam = FilterParam(),
   BPPARAM = SerialParam(),
   verbose = FALSE
 )
@@ -34,9 +33,8 @@ SNPs that overlap the supplied alu_ranges, and passing these as a GRanges to snp
 rather than supplying all known SNPs. Combined with using a bedfile for alu_ranges can
 also will save time.}
 
-\item{min_mapq}{minimum required MAPQ for alignment to be counted}
-
-\item{library_type}{library type, one of \verb{fr-first-strand'}, \code{fr-second-strand}, or \code{unstranded}}
+\item{filterParam}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
+filters to apply to reads and sites during pileup.}
 
 \item{BPPARAM}{A \link{BiocParallelParam} object for specifying parallel options for
 operating over chromosomes.}

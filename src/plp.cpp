@@ -88,7 +88,7 @@ int run_pileup(std::vector<std::string> bampaths,
     }
   }
 
-  if(event_filters.size() != 7){
+  if(event_filters.size() < 7){
     stop("event filters must be a vector of 7 positive integers ");
   }
 

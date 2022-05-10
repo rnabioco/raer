@@ -120,7 +120,13 @@ static char *get_read(const bam1_t *rec)
 }
 
 typedef struct {
+  int qc;
+  double pct;
+} read_qual_t;
+
+typedef struct {
   int min_mq, flag, min_baseQ, max_depth, all;
+  read_qual_t read_qual;
   uint32_t keep_flag[2];
   char *reg, *fai_fname, *output_fname;
   faidx_t *fai;
@@ -726,6 +732,11 @@ int run_cpileup(const char** cbampaths,
   ef->nmer = event_filters[4];
   ef->n_mm_type = event_filters[5];
   ef->n_mm = event_filters[6];
+
+  // need to pass in event_filters as a type flexible
+  // object.
+  //conf->read_qual.pct = event_filters[7];
+  //conf->read_qual.qc = event_filters[8];
 
   // read the header of each file in the list and initialize data
   for (i = 0; i < n; ++i) {

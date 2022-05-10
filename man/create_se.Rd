@@ -42,8 +42,8 @@ fafn <- system.file("extdata", "human.fasta", package = "raer")
 
 bams <- rep(c(bamfn, bam2fn), each = 3)
 sample_ids <- paste0(rep(c("KO", "WT"), each = 3), 1:3)
-
-plps <- get_pileup(bams, fafn, only_keep_variants = TRUE)
+fp <- FilterParam(only_keep_variants = TRUE)
+plps <- get_pileup(bams, fafn, filterParam = fp)
 names(plps) <- sample_ids
 se <- create_se(plps)
 se$condition <- substr(se$sample, 1, 2)

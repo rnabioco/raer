@@ -38,21 +38,33 @@ bam2fn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", 
 fafn <- system.file("extdata", "human.fasta", package = "raer")
 bedfn <- system.file("extdata", "regions.bed", package = "raer")
 
-res <- get_pileup(bamfn, fafn, bedfile = bedfn, only_keep_variants = T)
-res
-#> GRanges object with 2 ranges and 9 metadata columns:
+res <- get_pileup(bamfn, fafn, bedfile = bedfn)
+res[1:5, ]
+#> GRanges object with 5 ranges and 9 metadata columns:
 #>       seqnames    ranges strand |         Ref         Var      nRef      nVar
 #>          <Rle> <IRanges>  <Rle> | <character> <character> <integer> <integer>
-#>   [1]     SSR3       228      - |           A          AG        13         1
-#>   [2]    SPCS3       227      + |           G          GA         0         2
+#>   [1]     SSR3       201      - |           A           -        14         0
+#>   [2]     SSR3       202      - |           T           -        14         0
+#>   [3]     SSR3       203      - |           T           -        14         0
+#>   [4]     SSR3       204      - |           T           -        15         0
+#>   [5]     SSR3       205      - |           T           -        16         0
 #>              nA        nT        nC        nG        nN
 #>       <integer> <integer> <integer> <integer> <integer>
-#>   [1]        13         0         0         1         0
-#>   [2]         2         0         0         0         0
+#>   [1]        14         0         0         0         0
+#>   [2]         0        14         0         0         0
+#>   [3]         0        14         0         0         0
+#>   [4]         0        15         0         0         0
+#>   [5]         0        16         0         0         0
 #>   -------
-#>   seqinfo: 2 sequences from an unspecified genome; no seqlengths
+#>   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+```
 
-res <- get_pileup(bamfn, fafn, only_keep_variants = T)
+The `FilterParam()` class holds multiple options for customizing the
+output of `get_pileup()`.
+
+``` r
+fp <- FilterParam(only_keep_variants = TRUE)
+res <- get_pileup(bamfn, fafn, filterParam = fp)
 res
 #> GRanges object with 31 ranges and 9 metadata columns:
 #>        seqnames    ranges strand |         Ref         Var      nRef      nVar
@@ -89,11 +101,13 @@ Multiple bam files can be processed, which enables rapid comparisons of
 RNA-Seq vs. WGS or WXS data, or RNA-Seq vs RNA-seq (ADAR WT VS ADAR KO).
 
 ``` r
+fp <- FilterParam(only_keep_variants = TRUE,
+                  library_type = "fr-first-strand",
+                  min_nucleotide_depth = 2)
+
 plps <- get_pileup(c(bam2fn, bamfn), 
-                  min_reads = 2,
                   fafn, 
-                  library_type = c("fr-first-strand", "fr-first-strand"),
-                  only_keep_variants = T)
+                  filterParam = fp)
 plps
 #> [[1]]
 #> GRanges object with 74 ranges and 9 metadata columns:
@@ -158,18 +172,17 @@ plps
 #>   seqinfo: 3 sequences from an unspecified genome; no seqlengths
 ```
 
-To facilitate comparisions across groups, the pileups can be stored in a
-RangedSummarizedExperiment.
+To facilitate comparisons across groups, the pileups can be stored in a
+`RangedSummarizedExperiment`.
 
 ``` r
 create_se(plps)
-#> Sample names not provided, using sample_1, sample_2!!!
 #> class: RangedSummarizedExperiment 
 #> dim: 74 2 
 #> metadata(0):
-#> assays(9): Ref Var ... nG nN
-#> rownames: NULL
-#> rowData names(0):
+#> assays(8): Var nRef ... nG nN
+#> rownames(74): SSR3_102_2 SSR3_125_2 ... DHFR_430_2 DHFR_513_2
+#> rowData names(2): site_id Ref
 #> colnames(2): sample_1 sample_2
 #> colData names(1): sample
 ```

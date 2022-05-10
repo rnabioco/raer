@@ -23,8 +23,8 @@
 #' SNPs that overlap the supplied alu_ranges, and passing these as a GRanges to snp_db
 #' rather than supplying all known SNPs. Combined with using a bedfile for alu_ranges can
 #' also will save time.
-#' @param library_type library type, one of `fr-first-strand'`, `fr-second-strand`, or `unstranded`
-#' @param min_mapq minimum required MAPQ for alignment to be counted
+#' @param filterParam object of class [FilterParam()] which specify various
+#' filters to apply to reads and sites during pileup.
 #' @param BPPARAM A [BiocParallelParam] object for specifying parallel options for
 #' operating over chromosomes.
 #' @param verbose report progress on each chromosome?
@@ -53,8 +53,7 @@ calc_AEI <- function(bam_fn,
                      alu_ranges = NULL,
                      txdb = NULL,
                      snp_db = NULL,
-                     min_mapq = 255,
-                     library_type = c("fr-first-strand", "fr-second-strand", "unstranded"),
+                     filterParam = FilterParam(),
                      BPPARAM = SerialParam(),
                      verbose = FALSE){
 
@@ -126,8 +125,7 @@ calc_AEI <- function(bam_fn,
                     MoreArgs = list(bam_fn = bam_fn,
                                     fasta_fn = fasta_fn,
                                     alu_bed_fn = alu_bed_fn,
-                                    min_mapq = min_mapq,
-                                    library_type = library_type[1],
+                                    filterParam = filterParam,
                                     snp_gr = NULL,
                                     verbose = verbose),
                     BPPARAM = BPPARAM,
@@ -142,8 +140,7 @@ calc_AEI <- function(bam_fn,
                     MoreArgs = list(bam_fn = bam_fn,
                                     fasta_fn = fasta_fn,
                                     alu_bed_fn = alu_bed_fn,
-                                    min_mapq = min_mapq,
-                                    library_type = library_type[1],
+                                    filterParam = filterParam,
                                     verbose = verbose),
                     BPPARAM = BPPARAM,
                     SIMPLIFY = FALSE)
@@ -174,24 +171,23 @@ calc_AEI <- function(bam_fn,
                                  fasta_fn,
                                  alu_bed_fn,
                                  chrom,
-                                 min_mapq,
-                                 library_type,
+                                 filterParam,
                                  snp_gr,
                                  verbose) {
   if(verbose){
     start <- Sys.time()
     message("\tworking on: ", chrom, " time: ", Sys.time())
   }
+  filterParam@min_nucleotide_depth <- 1L
+  filterParam@trim_5p <- 5L
+  filterParam@trim_3p <- 5L
+  filterParam@min_base_quality <- 30L
+  filterParam@only_keep_variants <- FALSE
   plp <- get_pileup(bam_fn,
                     fafile = fasta_fn,
                     bedfile = alu_bed_fn,
                     chroms = chrom,
-                    min_reads = 1,
-                    min_base_qual = 30,
-                    min_mapq = min_mapq,
-                    library_type = library_type,
-                    event_filters = c(5, 5, 0, 0, 0, 0, 0),
-                    only_keep_variants = FALSE)
+                    filterParam = filterParam)
   if(verbose){
     message("\tcompleted in : ", Sys.time() - start)
   }

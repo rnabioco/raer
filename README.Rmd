@@ -43,26 +43,34 @@ bam2fn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", 
 fafn <- system.file("extdata", "human.fasta", package = "raer")
 bedfn <- system.file("extdata", "regions.bed", package = "raer")
 
-res <- get_pileup(bamfn, fafn, bedfile = bedfn, only_keep_variants = T)
-res
+res <- get_pileup(bamfn, fafn, bedfile = bedfn)
+res[1:5, ]
+```
 
-res <- get_pileup(bamfn, fafn, only_keep_variants = T)
+The `FilterParam()` class holds multiple options for customizing the output of 
+`get_pileup()`.
+
+```{r params}
+fp <- FilterParam(only_keep_variants = TRUE)
+res <- get_pileup(bamfn, fafn, filterParam = fp)
 res
 ```
 
 Multiple bam files can be processed, which enables rapid comparisons of RNA-Seq vs. WGS or WXS data, or RNA-Seq vs RNA-seq (ADAR WT VS ADAR KO).
 
 ```{r}
+fp <- FilterParam(only_keep_variants = TRUE,
+                  library_type = "fr-first-strand",
+                  min_nucleotide_depth = 2)
+
 plps <- get_pileup(c(bam2fn, bamfn), 
-                  min_reads = 2,
                   fafn, 
-                  library_type = c("fr-first-strand", "fr-first-strand"),
-                  only_keep_variants = T)
+                  filterParam = fp)
 plps
 ```
 
-To facilitate comparisions across groups, the pileups can be stored in a 
-RangedSummarizedExperiment. 
+To facilitate comparisons across groups, the pileups can be stored in a 
+`RangedSummarizedExperiment`. 
 
 ```{r}
 create_se(plps)

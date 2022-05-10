@@ -16,6 +16,7 @@ License: MIT + file LICENSE
 Imports: 
     stats,
     utils,
+    methods,
     Rcpp,
     data.table,
     R.utils,
@@ -31,7 +32,6 @@ Imports:
     GenomicFeatures,
     BiocParallel,
     rtracklayer,
-    methods,
     ggplot2,
     stringr
 Suggests:
