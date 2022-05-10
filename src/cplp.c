@@ -25,6 +25,9 @@ typedef khash_t(varhash) *varhash_t;
 KHASH_SET_INIT_STR(rname);
 typedef khash_t(rname) *rnhash_t;
 
+KHASH_SET_INIT_STR(str)
+  typedef khash_t(str) *strhash_t;
+
 static unsigned char comp_base[256] = {
   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,
   16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,
@@ -66,6 +69,37 @@ int8_t seq_comp_table[16] = { 0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 
     return str;
   }
 
+
+/* from samtools bam_view.c */
+
+static int populate_lookup_from_file(strhash_t lookup, char *fn)
+{
+  FILE *fp;
+  char buf[1024];
+  int ret = 0;
+  fp = fopen(fn, "r");
+  if (fp == NULL) {
+    Rf_error("failed to open \"%s\" for reading", fn);
+    return -1;
+  }
+
+  while (ret != -1 && !feof(fp) && fscanf(fp, "%1023s", buf) > 0) {
+    char *d = strdup(buf);
+    if (d != NULL) {
+      kh_put(str, lookup, d, &ret);
+      if (ret == 0) free(d); /* Duplicate */
+    } else {
+      ret = -1;
+    }
+  }
+  if (ferror(fp)) ret = -1;
+  if (ret == -1) {
+    Rf_error("failed to read \"%s\"", fn);
+  }
+  fclose(fp);
+  return (ret != -1) ? 0 : -1;
+}
+
 /* from samtools bam_fastq.c */
 /* return the read, reverse complemented if necessary */
 static char *get_read(const bam1_t *rec)
@@ -92,6 +126,7 @@ typedef struct {
   faidx_t *fai;
   void *bed;
   rnhash_t rnames;
+  strhash_t brhash;
   FILE *reads_fp;
   int argc;
   char **argv;
@@ -190,6 +225,46 @@ static int readaln(void *data, bam1_t *b) {
 
     // exclude unmapped reads
     if (b->core.tid < 0 || (b->core.flag&BAM_FUNMAP)) continue;
+
+    // exclude reads in the "bad read hash"
+    // should only occur if 1 bamfile is passed
+    if (g->conf->brhash) {
+      char* key;
+      char c;
+      size_t len = strlen(bam_get_qname(b));
+
+      if(!((b)->core.flag&BAM_FPAIRED)){
+        key = malloc(len + 1);
+        if(!key) {
+          Rf_error( "malloc failed\n");
+          exit(EXIT_FAILURE);
+        }
+        strcpy(key, bam_get_qname(b));
+        key[len] = '\0';
+        c = '0';
+      } else {
+        key = malloc(len + 2 + 1);
+        if(!key) {
+          Rf_error( "malloc failed\n");
+          exit(EXIT_FAILURE);
+        }
+        if((b)->core.flag&BAM_FREAD1){
+          c = '1' ;
+        } else {
+          c = '2';
+        }
+        strcpy(key, bam_get_qname(b));
+        key[len] = '_';
+        key[len + 1] = c;
+        key[len + 2] = '\0';
+      }
+
+      if (!key || kh_get(str, g->conf->brhash, key) != kh_end(g->conf->brhash)) {
+        free(key);
+        continue;
+      }
+      if(key) free(key);
+    }
 
     // test required and filter flags
     test_flag = (g->conf->keep_flag[0] & ~b->core.flag) |
@@ -398,10 +473,11 @@ int write_fasta(bam1_t *b, mplp_conf_t *conf, char* ref, char read, int pos){
 // add/check for readname (with 1 or 2 appended if paired) to hash table
 // if unique write to bam file
 int write_reads(bam1_t *b,  mplp_conf_t *conf, char* ref, int pos){
+
+  char* key;
+  char c;
   size_t len = strlen(bam_get_qname(b));
 
-  char *key;
-  char c;
   if(!((b)->core.flag&BAM_FPAIRED)){
     key = malloc(len + 1);
     if(!key) {
@@ -551,6 +627,7 @@ int run_cpileup(const char** cbampaths,
                 int* event_filters,
                 int* only_keep_variants,
                 char* reads_fn,
+                char* mismatches,
                 SEXP ext) {
 
   mplp_aux_t **data;
@@ -600,6 +677,21 @@ int run_cpileup(const char** cbampaths,
     conf->reg = cregion;
   }
 
+  if(mismatches){
+    int chk = 0;
+    if(n > 1){
+      Rf_error("unable to exclude bad reads with multiple input files");
+    }
+    conf->brhash = kh_init(str);
+    if (conf->brhash == NULL) {
+      Rf_error("issue building hash");
+    }
+    chk = populate_lookup_from_file(conf->brhash, mismatches);
+    if(chk < 0){
+      Rf_error("issue building hash");
+    }
+  }
+
   // if multiple bam files, use minimum mapQ for initial filtering,
   // then later filter in pileup loop
   if(min_mapQ[0] >= 0) {
@@ -645,7 +737,6 @@ int run_cpileup(const char** cbampaths,
                  cfapath, strerror(errno));
       }
     }
-
     data[i]->conf = conf;
     data[i]->ref = &mp_ref;
 
@@ -686,9 +777,6 @@ int run_cpileup(const char** cbampaths,
 
   int write_mismatched_reads = 0;
   if (reads_fn){
-    if(n > 1){
-      Rf_error("writing mismatched reads for multiple files not implemented");
-    }
     write_mismatched_reads = 1;
     conf->reads_fp = fopen(R_ExpandFileName(reads_fn), "w");
     if (!conf->reads_fp)
@@ -890,7 +978,7 @@ int run_cpileup(const char** cbampaths,
               char *var = strdup(mvar);
               kh_put(varhash, pc[i].mvar, var, &hret);
               if (hret == 0) free(var);
-              if(write_mismatched_reads){
+              if(i == 0 && write_mismatched_reads){
                 int wret = write_reads(p->b, conf, h->target_name[tid], pos);
                 if(wret != 0){
                   REprintf( "writing mismatched reads failed\n");
@@ -940,7 +1028,7 @@ int run_cpileup(const char** cbampaths,
               char *var = strdup(pvar);
               kh_put(varhash, pc[i].pvar, var, &hret);
               if (hret == 0) free(var);
-              if(write_mismatched_reads){
+              if(i == 0 && write_mismatched_reads){
                 int wret = write_reads(p->b, conf, h->target_name[tid], pos);
                 if(wret != 0){
                   REprintf( "writing mismatched reads failed\n");
@@ -1008,5 +1096,13 @@ fail:
     kh_destroy(rname, conf->rnames);
     fclose(conf->reads_fp);
   }
+
+  if (mismatches) {
+    khint_t k;
+    for (k = 0; k < kh_end(conf->brhash); ++k)
+      if (kh_exist(conf->brhash, k)) free((char*)kh_key(conf->brhash, k));
+      kh_destroy(str, conf->brhash);
+  }
+
   return ret;
 }

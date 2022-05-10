@@ -32,6 +32,9 @@
 #' (FALSE by default)
 #' @param reads if supplied a fasta file will be written with reads that pass filters
 #'  and contain variants
+#' @param bad_reads a textfile containing read names to exclude from pileup. Readnames
+#' should be formated as readid_1 or readid_2 or readid for paired end first read
+#' paired-end second read or single end data.
 #' @param return_data return data as a Granges table?
 #' @param BPPARAM A [BiocParallel] class to control parallel execution. Parallel
 #' processing occurs per chromosome, so is disabled when run on a single region.
@@ -72,6 +75,7 @@ get_pileup <- function(bamfiles,
                    reads = NULL,
                    return_data = TRUE,
                    BPPARAM = SerialParam(),
+                   bad_reads = NULL,
                    verbose = FALSE){
 
   bamfiles <- path.expand(bamfiles)
@@ -198,6 +202,14 @@ get_pileup <- function(bamfiles,
     reads <- "."
   }
 
+  if(!is.null(bad_reads)){
+    if(!is.character(bad_reads) | length(bad_reads) != 1){
+      stop("bad_reads must be a character vector of length 1")
+    }
+  } else {
+    bad_reads <- "."
+  }
+
   if(!is.logical(only_keep_variants)){
     stop("only_keep_variants must be a logical value or vector ")
   } else if(length(only_keep_variants) != length(bamfiles) &&
@@ -232,6 +244,7 @@ get_pileup <- function(bamfiles,
                       bam_flags = bam_flags,
                       only_keep_variants,
                       reads,
+                      bad_reads,
                       idx_ptr)
     if(res == 1){
       stop("Error occured during pileup", call. = FALSE)
@@ -261,6 +274,7 @@ get_pileup <- function(bamfiles,
                         bam_flags = bam_flags,
                         only_keep_variants,
                         reads,
+                        bad_reads,
                         idx_ptr)
       if(ret == 1){
         stop("Error occured during pileup", call. = FALSE)

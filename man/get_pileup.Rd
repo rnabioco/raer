@@ -23,6 +23,7 @@ get_pileup(
   reads = NULL,
   return_data = TRUE,
   BPPARAM = SerialParam(),
+  bad_reads = NULL,
   verbose = FALSE
 )
 }
@@ -75,6 +76,10 @@ and contain variants}
 
 \item{BPPARAM}{A \link{BiocParallel} class to control parallel execution. Parallel
 processing occurs per chromosome, so is disabled when run on a single region.}
+
+\item{bad_reads}{a textfile containing read names to exclude from pileup. Readnames
+should be formated as readid_1 or readid_2 or readid for paired end first read
+paired-end second read or single end data.}
 
 \item{verbose}{if TRUE, then report progress.}
 }

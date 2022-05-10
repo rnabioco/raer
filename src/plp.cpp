@@ -24,6 +24,7 @@ int run_pileup(std::vector<std::string> bampaths,
                int max_depth = 10000,
                int min_baseQ = 20,
                std::string reads = ".",
+               std::string bad_reads = ".",
                SEXP ext = R_NilValue) {
 
   int n_files;
@@ -98,6 +99,13 @@ int run_pileup(std::vector<std::string> bampaths,
     creadsoutfn = &*reads.begin();
   }
 
+  char* cbad_reads;
+  if(bad_reads == "."){
+    cbad_reads = NULL;
+  } else {
+    cbad_reads = &*bad_reads.begin();
+  }
+
   int out;
   out = run_cpileup(&cbampaths[0],
                     cbampaths.size(),
@@ -114,6 +122,7 @@ int run_pileup(std::vector<std::string> bampaths,
                     &event_filters[0],
                     &only_keep_variants[0],
                     creadsoutfn,
+                    cbad_reads,
                     ext);
 
   return out;

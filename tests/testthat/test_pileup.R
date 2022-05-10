@@ -313,6 +313,32 @@ test_that("writing reads with mismatches works", {
 })
 
 
+fout <- tempfile(fileext = ".fa")
+test_that("writing reads with mismatches works", {
+  plp <- get_pileup(bamfn, fafn, reads = fout)
+  plp <- plp[plp$Var != "-"]
+  seqs <- Rsamtools::scanFa(fout)
+  expect_false(any(duplicated(names(seqs))))
+})
+
+seqs <- Rsamtools::scanFa(fout)
+ids <- unlist(lapply(str_split(names(seqs), "_"), function(x) paste0(x[1], "_", x[2])))
+writeLines(ids, fout)
+test_that("excluding reads with mismatches works", {
+  plp <- get_pileup(bamfn, fafn, region = "DHFR:513-513")
+  plp2 <- get_pileup(bamfn, fafn,
+                     region = "DHFR:513-513",
+                     bad_reads = fout)
+  expect_true(length(plp) == 1)
+  expect_true(length(plp2) == 1)
+  expect_true(plp2$nVar == 0)
+
+  plp <- get_pileup(bamfn, fafn)
+  plp2 <- get_pileup(bamfn, fafn, bad_reads = fout)
+  expect_true(length(plp2) > 0)
+  expect_true(sum(plp$nVar) - sum(plp2$nVar) > 0)
+})
+
 test_that("filtering for read-level mismatches works", {
   plp <- get_pileup(bamfn, fafn, min_base_qual = 10, region = "SSR3:244-247", only_keep_variants = T)
   expect_equal(length(plp), 2)
