@@ -19,3 +19,12 @@ Returns name of output bam file
 \description{
 Subset a bam file to contain only certain cell barcodes
 }
+\examples{
+library(GenomicAlignments)
+bam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_cbsort.bam", package = "raer")
+build_tag_index(bam_fn)
+cbs <- c("AGGATAATCTCAGAAC-1", "TTCGATTTCCCGAGGT-1")
+bam_out <- get_cell_bam(bam_fn, barcodes = cbs)
+readGAlignments(bam_out, param = ScanBamParam(tag = "CB"))
+
+}

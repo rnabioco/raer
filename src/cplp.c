@@ -815,7 +815,7 @@ int run_cpileup(const char** cbampaths,
 
   if (!iter) {
     Rf_error("issue with iterator");
-    return 1;
+    return -1;
   }
 
   pcounts *pc;
@@ -845,8 +845,7 @@ int run_cpileup(const char** cbampaths,
 
   int last_tid = -1;
   int n_iter = 0;
-  int l;
-  while ((l = bam_mplp_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
+  while ((ret = bam_mplp_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
       // check user interrupt
       // using a 2^k value (e.g. 256) can be 2-3x faster than say 1e6
       if (n_iter % 262144 == 0) {
@@ -871,6 +870,7 @@ int run_cpileup(const char** cbampaths,
 
       int pref_b, mref_b;
       pref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
+      pref_b = toupper(pref_b);
       mref_b = comp_base[(unsigned char) pref_b];
 
       for(i = 0; i < n; ++i){
@@ -1000,7 +1000,7 @@ int run_cpileup(const char** cbampaths,
                 int wret = write_reads(p->b, conf, h->target_name[tid], pos);
                 if(wret != 0){
                   REprintf( "writing mismatched reads failed\n");
-                  ret = EXIT_FAILURE;
+                  ret = -1;
                   goto fail;
                 }
               }
@@ -1050,7 +1050,7 @@ int run_cpileup(const char** cbampaths,
                 int wret = write_reads(p->b, conf, h->target_name[tid], pos);
                 if(wret != 0){
                   REprintf( "writing mismatched reads failed\n");
-                  ret = EXIT_FAILURE;
+                  ret = -1;
                   goto fail;
                 }
               }

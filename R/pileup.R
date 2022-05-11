@@ -225,7 +225,7 @@ get_pileup <- function(bamfiles,
                       reads,
                       bad_reads,
                       idx_ptr)
-    if(res == 1){
+    if(res != 0){
       stop("Error occured during pileup", call. = FALSE)
     }
     if(temp_bed_file) unlink(bedfile)
@@ -255,7 +255,7 @@ get_pileup <- function(bamfiles,
                         reads,
                         bad_reads,
                         idx_ptr)
-      if(ret == 1){
+      if(ret != 0){
         stop("Error occured during pileup", call. = FALSE)
       }
       if(verbose){

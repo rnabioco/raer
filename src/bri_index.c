@@ -22,7 +22,6 @@
 
 //#define BRI_INDEX_DEBUG 1
 char verbose = 0;
-
 // make the index filename based on the name of input_bam
 // caller must free the returned pointer
 char* generate_index_filename(const char* input_bam, const char* input_bri)

@@ -411,3 +411,24 @@ test_that("limiting chromosomes works", {
 })
 
 unlink(c(bout, fout))
+
+
+####### Other bam files
+
+cbbam <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_cbsort.bam", package = "raer")
+tmp <- tempfile()
+sort_cbbam <- sortBam(cbbam, tmp)
+idx <- indexBam(sort_cbbam)
+
+cbfa <- system.file("extdata", "mouse_tiny.fasta", package = "raer")
+
+test_that("unsorted bam file fails",{
+  expect_error(get_pileup(cbbam, cbfa))
+})
+
+test_that("single end libary types are respected", {
+  fp <- FilterParam(library_type = "fr-second-strand")
+  plp <- get_pileup(sort_cbbam, cbfa, filterParam = fp)
+})
+
+unlink(c(tmp, sort_cbbam, idx))
