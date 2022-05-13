@@ -4,7 +4,7 @@
 \alias{annot_from_gr}
 \title{Annotate a RangedSummarizedExperiment using Granges objects}
 \usage{
-annot_from_gr(obj, gr, cols_to_map)
+annot_from_gr(obj, gr, cols_to_map, ...)
 }
 \arguments{
 \item{obj}{RangedSummarizedExperiment or GRanges object}
@@ -14,6 +14,8 @@ annot_from_gr(obj, gr, cols_to_map)
 \item{cols_to_map}{character vector of columns from gr to map
 to obj. If the vector has names, the names will be the
 column names in the output obj}
+
+\item{...}{additional arguments to pass to \code{\link[GenomicRanges:findOverlaps-methods]{GenomicRanges::findOverlaps()}}}
 }
 \description{
 Utility function to map annotations from GRanges

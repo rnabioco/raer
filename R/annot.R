@@ -79,6 +79,7 @@ annot_snps.SummarizedExperiment <- function(obj,
 #' @param cols_to_map character vector of columns from gr to map
 #' to obj. If the vector has names, the names will be the
 #' column names in the output obj
+#' @param ... additional arguments to pass to [GenomicRanges::findOverlaps()]
 #'
 #' @examples
 #' example(create_se, echo = FALSE)
@@ -95,7 +96,7 @@ annot_snps.SummarizedExperiment <- function(obj,
 #' @importFrom S4Vectors aggregate unstrsplit
 #' @importFrom GenomeInfoDb seqlevelsStyle seqlevelsStyle<- seqlevels
 #' @export
-annot_from_gr <- function(obj, gr, cols_to_map){
+annot_from_gr <- function(obj, gr, cols_to_map, ...){
 
   if(is(obj, "RangedSummarizedExperiment")){
     gr_sites <- rowRanges(obj)
@@ -106,12 +107,12 @@ annot_from_gr <- function(obj, gr, cols_to_map){
   }
 
   missing_chroms <- setdiff(seqlevels(gr), seqlevels(gr_sites))
-  if(length(missing_chroms) != 0){
-    warning("The following chromosomes in gr are not present in obj\n",
-            missing_chroms)
-  }
+  # if(length(missing_chroms) != 0){
+  #   warning("The following chromosomes in gr are not present in obj\n",
+  #           missing_chroms)
+  # }
 
-  overlaps <- findOverlaps(gr_sites, gr, ignore.strand = TRUE)
+  overlaps <- findOverlaps(gr_sites, gr, ...)
 
   if(!is.null(names(cols_to_map))){
     names(cols_to_map) <- ifelse(names(cols_to_map) == "",
@@ -124,6 +125,9 @@ annot_from_gr <- function(obj, gr, cols_to_map){
   for(i in seq_along(cols_to_map)){
     col <- cols_to_map[[i]]
     col_id <- names(cols_to_map)[i]
+    if(!col %in% names(mcols(gr))){
+      stop(col, " not present in mcols() of input")
+    }
     mcols(gr)[[col]] <- as.character(mcols(gr)[[col]])
     x <- aggregate(gr,
                    overlaps,
@@ -141,3 +145,5 @@ annot_from_gr <- function(obj, gr, cols_to_map){
 
   obj
 }
+
+

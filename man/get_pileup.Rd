@@ -85,8 +85,9 @@ for each bam file}
 \item{min_nucleotide_depth}{min read depth needed to report site}
 
 \item{library_type}{read orientation, one of fr-first-strand,
-fr-second-strand, or unstranded. Can supply as a vector to specify for each
-input bam.}
+fr-second-strand, unstranded, and genomic-unstranded. Can supply as a vector to specify for each
+input bam. Unstranded library type will be reported based on read alignment.
+genomic-unstranded will report all variants w.r.t the + strand.}
 
 \item{only_keep_variants}{if TRUE, then only variant sites will be reported
 (FALSE by default), can be a vector for each input bamfile}

@@ -16,7 +16,7 @@
 #' @param alu_ranges GRanges or the name of a BEDfile with regions to query for calculating the AEI,
 #' typically ALU repeats. If a BED file is supplied it will not be filtered by the txdb option.
 #' @param txdb A txdb object, if supplied, will be used to subset the alu_ranges to
-#' those found overlapping genes.
+#' those found overlapping genes. Alternatively a GRanges object with gene coordinates.
 #' @param snp_db either a SNPlocs package, GPos, or GRanges object. If supplied,
 #' will be used to exclude polymorphic positions prior to calculating the AEI. If
 #' `calc_AEI()` will be used many times, one could save some time by first identifying
@@ -70,8 +70,22 @@ calc_AEI <- function(bam_fn,
             "or related repeats for your species ")
   }
 
+  genes_gr <- NULL
   tmp_files <- NULL
   alu_bed_fn <- NULL
+  if(filterParam@library_type %in% c("unstranded", "genomic-unstranded")){
+    if(is.null(txdb)){
+      stop("txdb required for processing unstranded data")
+    }
+    filterParam@library_type == "genomic-unstranded"
+    if(is(txdb, "TxDb")){
+      genes_gr <- suppressWarnings(GenomicFeatures::genes(txdb))
+    } else {
+      genes_gr <- txdb
+    }
+
+  }
+
   if(!is.null(alu_ranges)){
     if(is(alu_ranges, "character")){
       if(!file.exists(alu_ranges)){
@@ -85,8 +99,12 @@ calc_AEI <- function(bam_fn,
      alu_bed_fn <- tempfile(fileext = ".bed")
      tmp_files <- c(tmp_files, alu_bed_fn)
      if(!is.null(txdb)){
-       gene_gr <- GenomicFeatures::genes(txdb)
-       alu_ranges <- subsetByOverlaps(alu_ranges, gene_gr, ignore.strand = TRUE)
+       if(is(txdb, "TxDb")){
+         genes_gr <- suppressWarnings(GenomicFeatures::genes(txdb))
+       } else {
+         genes_gr <- txdb
+       }
+       alu_ranges <- subsetByOverlaps(alu_ranges, genes_gr, ignore.strand = TRUE)
        alu_ranges <- reduce(alu_ranges)
      }
      chroms <- intersect(chroms, as.character(unique(seqnames(alu_ranges))))
@@ -127,6 +145,7 @@ calc_AEI <- function(bam_fn,
                                     alu_bed_fn = alu_bed_fn,
                                     filterParam = filterParam,
                                     snp_gr = NULL,
+                                    genes_gr = genes_gr,
                                     verbose = verbose),
                     BPPARAM = BPPARAM,
                     SIMPLIFY = FALSE)
@@ -141,6 +160,7 @@ calc_AEI <- function(bam_fn,
                                     fasta_fn = fasta_fn,
                                     alu_bed_fn = alu_bed_fn,
                                     filterParam = filterParam,
+                                    genes_gr = genes_gr,
                                     verbose = verbose),
                     BPPARAM = BPPARAM,
                     SIMPLIFY = FALSE)
@@ -168,12 +188,13 @@ calc_AEI <- function(bam_fn,
 
 
 .calc_AEI_per_chrom <- function(bam_fn,
-                                 fasta_fn,
-                                 alu_bed_fn,
-                                 chrom,
-                                 filterParam,
-                                 snp_gr,
-                                 verbose) {
+                                fasta_fn,
+                                alu_bed_fn,
+                                chrom,
+                                filterParam,
+                                snp_gr,
+                                genes_gr,
+                                verbose) {
   if(verbose){
     start <- Sys.time()
     message("\tworking on: ", chrom, " time: ", Sys.time())
@@ -183,6 +204,7 @@ calc_AEI <- function(bam_fn,
   filterParam@trim_3p <- 5L
   filterParam@min_base_quality <- 30L
   filterParam@only_keep_variants <- FALSE
+
   plp <- get_pileup(bam_fn,
                     fafile = fasta_fn,
                     bedfile = alu_bed_fn,
@@ -196,6 +218,10 @@ calc_AEI <- function(bam_fn,
     plp <- subsetByOverlaps(plp, snp_gr,
                             invert = TRUE,
                             ignore.strand = TRUE)
+  }
+
+  if(filterParam@library_type == "genomic-unstranded"){
+    plp <- correct_strand(plp, genes_gr)
   }
 
   bases <- c("A", "T", "C", "G")
@@ -216,3 +242,63 @@ calc_AEI <- function(bam_fn,
   }
   var_list
 }
+
+#' @importFrom stringr str_count
+correct_strand <- function(gr, genes_gr){
+
+  if(length(gr) == 0){
+    return(gr)
+  }
+
+  stopifnot(all(strand(gr) == "+"))
+  stopifnot(all(c("Ref", "Var", "nA", "nT", "nC", "nG") %in% names(mcols(gr))))
+
+  genes_gr$gene_strand <- strand(genes_gr)
+  gr <- annot_from_gr(gr, genes_gr, "gene_strand", ignore.strand = T)
+
+  # drop non-genic and multi-strand (overlapping annotations)
+  gr <- gr[!is.na(gr$gene_strand)]
+  gr <- gr[stringr::str_count(gr$gene_strand, ",") == 0]
+
+  flip_rows <- as.vector(strand(gr) != gr$gene_strand)
+
+  gr$Ref[flip_rows] <- BASE_MAP[gr$Ref[flip_rows]]
+
+  gr$Var[flip_rows] <- unlist(lapply(str_split(gr$Var[flip_rows], ","),
+                                     function(x) paste0(unname(ALLELE_MAP[x]),
+                                                        collapse = ",")))
+
+  # complement the nucleotide counts by reordering the columns
+  cols_to_swap <- c("nA", "nT", "nC", "nG")
+  bp_swap <- mcols(gr)[flip_rows, cols_to_swap]
+  bp_swap <- bp_swap[, c(2, 1, 4, 3)]
+  colnames(bp_swap) <- cols_to_swap
+  mcols(gr)[flip_rows, cols_to_swap] <- bp_swap
+
+  strand(gr) <- gr$gene_strand
+  gr$gene_strand <- NULL
+  gr
+}
+
+
+ALLELE_MAP <- c(TA = "CT",
+                CA = "GT",
+                GA = "AT",
+                AT = "TC",
+                CT = "GC",
+                GT = "AC",
+                AC = "TG",
+                TC = "CG",
+                GC = "AG",
+                AG = "TA",
+                TG = "CA",
+                CG = "GA",
+                `-` = "-")
+
+BASE_MAP <- c(
+  "A" = "T",
+  "G" = "C",
+  "C" = "G",
+  "T" = "A",
+  "N" = "N"
+)

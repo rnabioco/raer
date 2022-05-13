@@ -972,7 +972,12 @@ int run_cpileup(const char** cbampaths,
                 invert = 1;
               }
             }
+          } else if (libtype[i] == 3){
+            if(is_neg){
+              invert = 1;
+            }
           }
+          // if libtype == 0, do nothing, report as plus strand
 
   	      // count reads that align to minus strand
           if(invert){

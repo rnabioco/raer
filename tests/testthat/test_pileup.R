@@ -44,7 +44,7 @@ test_that("n-bam pileup works", {
 
   res <- get_pileup(c(bamfn, bamfn), fafn, bedfn,
                     filterParam = FilterParam(library_type = c("fr-first-strand",
-                                                                 "unstranded")))
+                                                              "genomic-unstranded")))
   expect_equal(length(res[[1]]$Ref), 214)
   expect_equal(length(res[[1]]$Ref), length(res[[2]]$Ref))
 
@@ -116,8 +116,12 @@ test_that("library types are respected", {
   expect_true(all(strand(res[seqnames(res) == "SPCS3"]) == "-"))
 
   res <- get_pileup(bamfn, fafn,
-                    filterParam = FilterParam(library_type =  "unstranded"))
+                    filterParam = FilterParam(library_type =  "genomic-unstranded"))
   expect_true(all(strand(res) == "+"))
+
+  res <- get_pileup(bamfn, fafn,
+                    filterParam = FilterParam(library_type =  "unstranded"))
+  expect_true(all(strand(res) %in% c("+", "-")))
 
   expect_error(get_pileup(bamfn, fafn, bedfn,
                           filterParam = FilterParam(library_type = "unknown-string")))

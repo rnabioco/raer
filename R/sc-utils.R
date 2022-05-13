@@ -4,7 +4,8 @@
 #' @return name of index generated, which is the bam file + ".bri"
 #'
 #' @examples
-#' /dontrun{bam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_cbsort.bam", package = "raer")
+#' \dontrun{
+#' bam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_cbsort.bam", package = "raer")
 #' build_tag_index(bam_fn)
 #' }
 #' @export
@@ -24,7 +25,8 @@ build_tag_index <- function(bamfn){
 #'
 #' @return Returns name of output bam file
 #' @examples
-#' /dontrun{library(GenomicAlignments)
+#' \dontrun{
+#' library(GenomicAlignments)
 #' bam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_cbsort.bam", package = "raer")
 #' build_tag_index(bam_fn)
 #' cbs <- c("AGGATAATCTCAGAAC-1", "TTCGATTTCCCGAGGT-1")

@@ -179,8 +179,14 @@ get_pileup <- function(bamfiles,
   filterParam <- .adjustParams(filterParam, n_files)
   fp <- .as.list_FilterParam(filterParam)
 
-  # encode libtype as 0 = unstranded, 1 = fr-first-strand, 2 = fr-second-strand
-  lib_values <- c("unstranded", "fr-first-strand", "fr-second-strand")
+  # encode libtype as 0 = genomic-unstranded,
+  #                   1 = fr-first-strand,
+  #                   2 = fr-second-strand
+  #                   3 = unstranded
+  lib_values <- c("genomic-unstranded",
+                  "fr-first-strand",
+                  "fr-second-strand",
+                  "unstranded")
   lib_code <- match(fp$library_type, lib_values)
   if(any(is.na(lib_code))){
     stop("library_type must be one of :", paste(lib_values, collapse = " "))
@@ -464,8 +470,9 @@ setMethod(show, "FilterParam", function(object) {
 #' @param min_mapq minimum required MAPQ score, can be a vector of values
 #' for each bam file
 #' @param library_type read orientation, one of fr-first-strand,
-#' fr-second-strand, or unstranded. Can supply as a vector to specify for each
-#' input bam.
+#' fr-second-strand, unstranded, and genomic-unstranded. Can supply as a vector to specify for each
+#' input bam. Unstranded library type will be reported based on read alignment.
+#' genomic-unstranded will report all variants w.r.t the + strand.
 #' @param only_keep_variants if TRUE, then only variant sites will be reported
 #' (FALSE by default), can be a vector for each input bamfile
 #' @param trim_5p Bases to trim from 5' ends of read alignments
