@@ -52,7 +52,10 @@ LinkingTo:
     zlibbioc
 SystemRequirements: 
     C++11, 
-    GNU make
+    GNU make, 
+    libbz2, 
+    liblzma,
+    libcurl
 VignetteBuilder: knitr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
