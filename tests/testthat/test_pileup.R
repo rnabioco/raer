@@ -431,8 +431,10 @@ test_that("unsorted bam file fails",{
 })
 
 test_that("single end libary types are respected", {
-  fp <- FilterParam(library_type = "fr-second-strand")
+  fp <- FilterParam(library_type = "genomic-unstranded")
   plp <- get_pileup(sort_cbbam, cbfa, filterParam = fp)
+  expect_true(all(strand(plp) == "+"))
+
 })
 
 unlink(c(tmp, sort_cbbam, idx))

@@ -33,7 +33,8 @@ Imports:
     BiocParallel,
     rtracklayer,
     ggplot2,
-    stringr
+    stringr,
+    Rhtslib
 Suggests:
     testthat,
     knitr,
@@ -44,8 +45,6 @@ Suggests:
     rmarkdown,
     BiocStyle,
     SNPlocs.Hsapiens.dbSNP151.GRCh38
-Remotes:
-    Bioconductor/Rhtslib
 LinkingTo: 
     Rcpp,
     Rhtslib,
