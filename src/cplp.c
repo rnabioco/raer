@@ -1,7 +1,7 @@
 #include <htslib/sam.h>
 #include <htslib/faidx.h>
 #include <htslib/khash.h>
-#include <bedidx.h>
+#include "bedidx.h"
 #include "bedfile.h"
 #include "utils.h"
 
