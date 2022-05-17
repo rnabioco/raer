@@ -34,7 +34,7 @@ Imports:
     rtracklayer,
     ggplot2,
     stringr,
-    Rhtslib
+    zlibbioc
 Suggests:
     testthat,
     knitr,
@@ -47,8 +47,7 @@ Suggests:
     SNPlocs.Hsapiens.dbSNP151.GRCh38
 LinkingTo: 
     Rcpp,
-    Rhtslib,
-    zlibbioc
+    Rhtslib
 SystemRequirements: 
     C++11, 
     GNU make, 
