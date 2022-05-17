@@ -243,7 +243,36 @@ calc_AEI <- function(bam_fn,
   var_list
 }
 
+#' Apply strand correction using gene annotations
+#'
+#' @description Gene annotations are used to infer the
+#' likely strand of editing sites. This function will operate
+#' on unstranded datasets which have been processed using "genomic-unstranded"
+#' library type which reports variants with respect to the
+#' + strand for all sites. The strand of the editing site will be
+#' assigned the strand of overlapping features in the `genes_gr`
+#' object. Sites with no-overlap, or overlapping features
+#' with conflicting strands (+ and -) will be removed.
+#'
+#' @param gr GRanges object containing editing sites processed with
+#' "genomic-unstranded" setting
+#' @param genes_gr GRanges object containing reference features to
+#' annotate the strand of the editing sites.
+#'
+#' @examples
+#' suppressPackageStartupMessages(library("GenomicRanges"))
+#' bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
+#' fafn <- system.file("extdata", "human.fasta", package = "raer")
+#' fp <- FilterParam(library_type = "genomic-unstranded")
+#' plp <- get_pileup(bamfn, fafn, filterParam = fp)
+#'
+#' genes <- GRanges(c("DHFR:200-400:+",
+#'                    "SPCS3:100-200:-",
+#'                    "SSR3:3-10:-",
+#'                    "SSR3:6-12:+"))
+#' correct_strand(plp, genes)
 #' @importFrom stringr str_count
+#' @export
 correct_strand <- function(gr, genes_gr){
 
   if(length(gr) == 0){

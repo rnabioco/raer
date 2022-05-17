@@ -24,7 +24,7 @@ calc_AEI(
 typically ALU repeats. If a BED file is supplied it will not be filtered by the txdb option.}
 
 \item{txdb}{A txdb object, if supplied, will be used to subset the alu_ranges to
-those found overlapping genes.}
+those found overlapping genes. Alternatively a GRanges object with gene coordinates.}
 
 \item{snp_db}{either a SNPlocs package, GPos, or GRanges object. If supplied,
 will be used to exclude polymorphic positions prior to calculating the AEI. If
