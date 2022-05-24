@@ -388,9 +388,14 @@ test_that("filtering for read-level mismatches works", {
 test_that("parallel processing works", {
   plp <- get_pileup(bamfn, fafn)
   plp_serial <- get_pileup(bamfn, fafn, BPPARAM = SerialParam())
-  plp_mc <- get_pileup(bamfn, fafn, BPPARAM = MulticoreParam(workers = 2))
-  expect_equal(plp_mc$Ref, plp$Ref)
   expect_equal(plp_serial$Ref, plp$Ref)
+
+  if (.Platform$OS.type !="windows") {
+    BiocParallel::MulticoreParam(nworkers)
+    plp_mc <- get_pileup(bamfn, fafn, BPPARAM = MulticoreParam(workers = 2))
+    expect_equal(plp_mc$Ref, plp$Ref)
+  }
+
   # note that there is a difference in counts in SPCS3, which
   # happens when single chromosomes or regions are queried.
   # this may have something to do with the overlapping mate quality score
@@ -408,10 +413,11 @@ test_that("limiting chromosomes works", {
   plp <- plp[seqnames(plp) == chroms_to_query[1]]
   expect_true(identical(plp_2$nRef, plp$nRef))
 
-  plp_mc <- get_pileup(bamfn, fafn, chroms = chroms_to_query[1:2],
-                       BPPARAM = MulticoreParam(workers = 2))
-  expect_true(all(unique(seqnames(plp_mc)) == chroms_to_query[1:2]))
-
+  if (.Platform$OS.type !="windows") {
+    plp_mc <- get_pileup(bamfn, fafn, chroms = chroms_to_query[1:2],
+                         BPPARAM = MulticoreParam(workers = 2))
+    expect_true(all(unique(seqnames(plp_mc)) == chroms_to_query[1:2]))
+  }
 })
 
 unlink(c(bout, fout))
