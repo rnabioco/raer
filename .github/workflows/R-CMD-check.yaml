@@ -20,10 +20,10 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-latest,   r: 'release'}
+        #  - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
+        #  - {os: ubuntu-latest,   r: 'release'}
           - {os: windows-latest, r: 'release'}
-          - {os: 'windows-2022', r: 'release'}
+        #  - {os: 'windows-2022', r: 'release'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -47,6 +47,9 @@ jobs:
         with:
           extra-packages: any::rcmdcheck
           needs: check
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
 
       - uses: r-lib/actions/check-r-package@v2
         with:
