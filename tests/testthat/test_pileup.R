@@ -392,7 +392,6 @@ test_that("parallel processing works", {
   expect_equal(plp_serial$Ref, plp$Ref)
 
   if (.Platform$OS.type !="windows") {
-    BiocParallel::MulticoreParam(nworkers)
     plp_mc <- get_pileup(bamfn, fafn, BPPARAM = MulticoreParam(workers = 2))
     expect_equal(plp_mc$Ref, plp$Ref)
   }
