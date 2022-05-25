@@ -27,6 +27,7 @@ test_that("filtering for variants in pileup works", {
   seqlevels(vars) <- seqlevelsInUse(vars)
   res_all_vars <- get_pileup(bamfn, fafn, bedfn,
                              filterParam = FilterParam(only_keep_variants = TRUE))
+  expect_equal(length(vars), 2)
   expect_equal(vars, res_all_vars)
 })
 
@@ -239,7 +240,7 @@ test_that("pileup read trimming filter works", {
 })
 
 fa <- scanFa(fafn)
-hp_matches <- vmatchPattern(strrep("A", 6), fa) %>% as(., "GRanges")
+hp_matches <- vmatchPattern(strrep("A", 6), fa) |> as("GRanges")
 
 test_that("pileup check homopolymer filter", {
   a <- get_pileup(bamfn, fafn, filterParam = FilterParam(homopolymer_len = 6))
