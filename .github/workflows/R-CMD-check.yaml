@@ -48,9 +48,9 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+      #   timeout-minutes: 30
      # - uses: r-lib/actions/check-r-package@v2
      #   with:
      #     error-on: '"error"'
