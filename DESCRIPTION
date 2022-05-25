@@ -44,7 +44,8 @@ Suggests:
     limma,
     rmarkdown,
     BiocStyle,
-    SNPlocs.Hsapiens.dbSNP151.GRCh38
+    ComplexHeatmap,
+    viridis
 LinkingTo: 
     Rcpp,
     Rhtslib

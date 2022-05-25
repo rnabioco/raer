@@ -1,9 +1,11 @@
 ---
 title: Introducing the raer package
 author: 
-- name: Kent Riemondy
-  affiliation: University of Colorado School of Medicine
-date: "Revised: 2 May 2022"
+  - name: Kent Riemondy
+    affiliation: University of Colorado School of Medicine
+  - name: Kristen Wells-Wrasman
+    affiliation: University of Colorado School of Medicine
+date: '`r Sys.Date()`'
 output:
   BiocStyle::html_document
 package: raer 
@@ -14,37 +16,118 @@ vignette: >
 ---
 
 ```{r, echo=FALSE, results="hide"}
-knitr::opts_chunk$set(eval=FALSE, message=FALSE, warning=FALSE)
+knitr::opts_chunk$set(message=FALSE, warning=FALSE)
 ```
 
-# DE tutorial
+# Differential Editing tutorial
 
-Steps to perform differential editing using `Raer`
+This vignette will demonstrate how to identify RNA editing sites with condition-specific editing frequencies using the `raer` package
 
 ## Set up
-First load in required packages
 
 ```{r}
 library(raer)
-library(here)
-library(tidyverse)
 library(SummarizedExperiment)
-library(edgeR)
 library(DESeq2)
 library(ComplexHeatmap)
+library(viridis)
+library(stringr)
 ```
 
-Set directories and read in the data (eventually, we should make this downloadable)
+
+The public RNA-seq dataset,  [GSE99249](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE99249), consists of ADAR1 mutants and control human cell lines, conditionally treated with Interferon-Beta. For simplicity we will examine the ADAR1 WT and KO samples both treated with IFN-B, with triplicate samples. 
+
+Aligned BAM files and other necessary files have been preprocessed for this vignette. These files occupy ~250 Mb of space. 
 
 ```{r}
-res_dir <- here("../working_dir/results/GSE99249/")
-
-# Read in data
-se <- readRDS(file.path(res_dir, "merged_se_with_meta.rds"))
+data_dir <- file.path(tempdir(), "tmpdata")
+dir.create(data_dir)
+s3url <- "https://raer-test-data.s3.us-west-2.amazonaws.com/GSE99249/GSE99249_data.tar.gz"
+download.file(s3url, file.path(data_dir, "GSE99249_data.tar.gz"))
+untar(file.path(data_dir, "GSE99249_data.tar.gz"), exdir = data_dir)
+unlink(file.path(data_dir, "GSE99249_data.tar.gz"))
 ```
 
-## Preprocess
-We start by using the `add_editing_frequencies` function to identify the percent of edits for each position and sample. Several pre-built options are available: A to I ("AI"), U to C ("UC"), C to U ("CU"), and G to A ("GA"). You can specify A to I editing by setting `type = AI` (this is also the default).
+Next we'll collect a vector containing the paths to each BAM file These BAM files are a subset of the full BAM files, containing only alignments from chromosome 18.
+
+```{r}
+bam_files <- dir(data_dir, pattern = ".bam$", full.names = TRUE)
+names(bam_files) <- sub("_dedup_sorted.bam", "", basename(bam_files))
+bam_files[1:2]
+```
+
+Next we'll need a FASTA file to use with the pileup. We'll use a FASTA file only containing chromosome 18 for this demo. The fasta can be compressed. 
+
+```{r}
+fafn <- file.path(data_dir, "chr18.fasta.bgz")
+```
+
+Lastly, we'll use a BED file containing the coordinates of known human editing sites from the REDIPortal database. This file can also be optionally compressed.
+
+```{r}
+bedfn <- file.path(data_dir, "rediportal_hg38_chr18.bed.gz")
+```
+
+## Generate editing site read counts 
+
+The `get_pileup()` function will calculate base counts across multiple BAM files. The base counts will be returned as a list of `GRanges` objects for each bam file. The `FilterParam()` function provides numerous filters to exclude reads and bases based on commonly used filters for detecting RNA-editing events. Specific regions can be queried using the `region` argument, or specific positions can be queried by providing `bedfile` a path to a BED-file. 
+
+Internally, `get_pileup()` will write the pileups to temporary files. However, these files can also be stored in a tabix-indexed format, for later retrieval, or for querying specific regions.
+
+```{r}
+fp <- FilterParam(only_keep_variants = TRUE,
+                  trim_5p = 5, 
+                  trim_3p = 5, 
+                  min_base_quality = 30L,
+                  min_mapq = 255L, 
+                  library_type = "fr-first-strand")
+
+plps <- get_pileup(bam_files, 
+                   fafile = fafn, 
+                   bedfile = bedfn,
+                   region = "chr18", 
+                   filterParam = fp)
+
+plps[[1]]
+```
+
+The base counts are returned in a stand specific fashion depending on the `library-type` parameter. The `Ref` and `Var` bases are in reference to the strand. 
+
+Pileups from multiple BAM files can be stored in a `summarizedExperiment` object, which permits comparisons across each sample. The `rowData()` and `rowRanges()` slots can be populated with information related to each editing site, and similarly the `colData()` slot can be used to store sample metadata. The summarizedExperiment objectcan also interface with other derivative classes, such as `singleCellExperiment()`. 
+
+```{r}
+names(plps) <- names(bam_files) 
+se <- create_se(plps)
+```
+
+Each column from the pileup can be stored as an assay, which can be specified by the `assay_cols` parameter
+
+```{r}
+se
+```
+
+Next we will add sample metadata to the `summarizedExperiment`, which will be used to conduct differential editing analysis. Sample metadata is provided in a text file. 
+
+```{r}
+mdata <- read.table(file.path(data_dir, "PRJNA386593_download_log.txt"),
+                    sep = "\t",
+                    header = TRUE)
+
+mdata <- mdata[, c("run_accession", "library_name")]
+mdata$library_name <-  str_replace(mdata$library_name, " biological replicate", "")
+mdata$genotype <- str_extract(mdata$library_name , "^[A-Za-z0-9]+")
+mdata$treatment <- str_extract(mdata$library_name , "Interferon beta|mock")
+mdata$rep <- str_extract(mdata$library_name , "[0-9]$")
+mdata$genotype_treatment <- str_c(mdata$genotype, " ", mdata$treatment)
+mdata <- mdata[match(rownames(colData(se)), mdata$run_accession), ]
+colData(se) <- cbind(colData(se), mdata)
+colData(se)
+```
+
+## Prepare for differential editing 
+
+We next use the `add_editing_frequencies` function to identify the percent of edits for each position and sample. Several pre-built options are available: A to I ("AI"), U to C ("UC"), C to U ("CU"), and G to A ("GA"). You can specify A to I editing by setting `type = AI` (this is also the default). The editing frequencies will not be used for differential editing analysis, which will be conducted using the raw counts, however these are useful for filtering and visualization. 
+
 
 ```{r}
 se_filtered <- add_editing_frequencies(se, type = "AI",
@@ -52,45 +135,26 @@ se_filtered <- add_editing_frequencies(se, type = "AI",
                                        min_count = 10)
 ```
 
-If you are interested in some other kind of editing, you can use a custom event. To do this, set `type = "none"` and `edit_from = nucleotide_1` and `edit_to = nucleotide_2`. Here, the `edit_from` should be the nucleotide in the reference (for A to I this would be `A`) and `edit_to` should be the nucleotide after editing (for A to I this would be `G`). Both `edit_from` and `edit_to` must be a valid nucleotide (A, T, C, G).
+We can next subset the `summarizedExperiment` object to low frequency editing events. For this analysis we will require than an editing site shows editing in at least 1 sample, and have at least 5 counts in each sample. 
 
 ```{r}
-se_filtered <- add_editing_frequencies(se, type = "none",
-                                       edit_frequency = 0.01,
-                                       min_count = 10,
-                                       edit_from = "C", edit_to = "T")
+has_editing <- rowSums(assay(se_filtered, "edit_freq") > 0) >= 1
+has_depth <- rowSums(((assay(se_filtered, "nRef") + 
+                         assay(se_filtered, "nVar")) >= 5)) == ncol(se_filtered)
+
+se_filtered <- se_filtered[has_editing & has_depth, ]
+se_filtered
 ```
 
-You can also make plots that show the number of edited sites and the frequency of editing per sample. You can make these plots using `make_plots = TRUE`. If `make_plots = TRUE` and no save dir is specified, the plots and the filtered object will be returned as a list
-
-```{r}
-se_results <- add_editing_frequencies(se, type = "AI",
-                                      edit_frequency = 0.01,
-                                      min_count = 10,
-                                      make_plots = TRUE)
-                                      
-se_filtered <- se_results[[1]]
-site_plot <- se_results[[2]]
-frequency_plot <- se_results[[3]]
-```
-
-If you would rather directly save these plots, you can provide a save directory. The plots will be saved as "number_of_sites.pdf" and "editing_index.pdf". If the plots are saved, only the filtered object will be returned.
-
-```{r}
-se_filtered <- add_editing_frequencies(se, type = "AI",
-                                       edit_frequency = 0.01,
-                                       min_count = 10,
-                                       make_plots = TRUE,
-                                       save_dir = "results")
-```
-
-Once your object has been filtered, you can prepare it for DE. This means making an assay of counts that contains both your alt and ref allele.
+Once the object has been filtered, you can prepare it for DE. This means making a new object that contains an assay with read counts if both the alt and ref alleles in a single matrix.
 
 ```{r}
 deobj <- prep_for_de(se_filtered,
                      min_prop = 0.1,
                      max_prop = 0.9,
                      min_samples = 3)
+
+assay(deobj, "counts")[1:3, ]
 ```
 
 ## Run differential editing (DESeq2)
@@ -103,7 +167,7 @@ For the samples, you can leave as is or combine so the same sample name shows up
 
 It is probably best to update the levels of your object, but if you don't, this will still work.
 
-To run using `DESEq2`, set `type = DESEq2` in the `de_results` function. This function requires you to specify what your control and treatment are from your condition column of your `deobj`.
+To run using `DESeq2`, set `type = DESeq2` in the `de_results` function. This function requires you to specify what your control and treatment are from your condition column of your `deobj`. `edgeR` is also supported. 
 
 ```{r}
 de_results <- perform_de(deobj, type = "DESeq2", sample_col = "sample",
@@ -112,204 +176,36 @@ de_results <- perform_de(deobj, type = "DESeq2", sample_col = "sample",
                          condition_treatment = "ADAR1KO")
 ```
 
-This returns a list of the dds object, the full results, the significant results, and the model matrix.
-
-
-If you'd rather use the sample information as described in the `DESEq2` vignette, you can make your sample names go across your treatment and control
+This returns a list containing the dds object, the full results, the significant results, and the model matrix. 
 
 ```{r}
-sample_mapping = c("SRR5564260" = "s1",
-                   "SRR5564270" = "s1",
-                   "SRR5564261" = "s2",
-                   "SRR5564271" = "s2",
-                   "SRR5564268" = "s3",
-                   "SRR5564274" = "s3",
-                   "SRR5564269" = "s4",
-                   "SRR5564275" = "s4",
-                   "SRR5564272" = "s5",
-                   "SRR5564276" = "s5",
-                   "SRR5564273" = "s6",
-                   "SRR5564277" = "s6")
-
-deobj$sample_new <- sample_mapping[deobj$sample]
-
-deobj$sample_new <- factor(deobj$sample_new)
-
-de_results <- perform_de(deobj, type = "DESeq2", sample_col = "sample_new",
-                         condition_col = "genotype",
-                         condition_control = "Wildtype",
-                         condition_treatment = "ADAR1KO")
-
+de_results$sig_results[1:5, ]
 ```
 
-## Run differential editing (edgeR)
+```{r, fig.height=7, fig.width=5}
+top_sites <- rownames(de_results$sig_results)[1:20]
 
-At this stage, you can use the object to perform DE yourself or you can continue with our pre built functions
-
-For differential editing, we use the design `design <- ~0 + condition:sample + condition:count`.
-
-For the samples, you can leave as is or combine so the same sample name shows up in both the treatment and control. These results are not identical but they are close. In my hands, the same genes come out, but the p values and log fold change values are slightly different.
-
-It is probably best to update the levels of your object, but if you don't, this will still work.
-
-To run using `edgeR`, set `type = edgeR` in the `de_results` function. This function requires you to specify what your control and treatment are from your condition column of your `deobj`.
-
-```{r}
-de_edger_results <- perform_de(deobj, type = "edgeR",
-                               sample_col = "sample",
-                               condition_col = "genotype",
-                               condition_control = "Wildtype",
-                               condition_treatment = "ADAR1KO")
-```
-
-This returns a list of the dds object, the full results, the significant results, and the model matrix.
-
-
-If you'd rather use the sample information as described in the `DESEq2` vignette, you can make your sample names go across your treatment and control
-
-```{r}
-sample_mapping = c("SRR5564260" = "s1",
-                   "SRR5564270" = "s1",
-                   "SRR5564261" = "s2",
-                   "SRR5564271" = "s2",
-                   "SRR5564268" = "s3",
-                   "SRR5564274" = "s3",
-                   "SRR5564269" = "s4",
-                   "SRR5564275" = "s4",
-                   "SRR5564272" = "s5",
-                   "SRR5564276" = "s5",
-                   "SRR5564273" = "s6",
-                   "SRR5564277" = "s6")
-
-deobj$sample_new <- sample_mapping[deobj$sample]
-
-deobj$sample_new <- factor(deobj$sample_new)
-
-de_edger_results <- perform_de(deobj, type = "edgeR",
-                               sample_col = "sample_new",
-                               condition_col = "genotype",
-                               condition_control = "Wildtype",
-                               condition_treatment = "ADAR1KO")
-
+Heatmap(assay(se_filtered, "edit_freq")[top_sites, ], 
+        col = viridis(100), 
+        column_labels = se_filtered$genotype_treatment)
 ```
 
 
-## Perform your own comparisons (DESeq2)
 
-I have found it more straight forward to pull out comparisions of interest following [this tutorial](https://github.com/tavareshugo/tutorial_DESeq2_contrasts/blob/main/DESeq2_contrasts.md). To ask for other comparisons with this dataset, you first need to identify the specific matrix design of the comparison.
-
-The model matrix used for your experiment will be returned from the `perform_de` function. To get these results, first pull them out of the return list
 
 ```{r}
-mod_mat <- de_results$model_matrix
+unlink(data_dir, recursive = TRUE)
 ```
 
-We will also need to get the DESeq object from this list
-```{r}
-dds <- de_results$deseq_obj
-```
-
-We now can subset this matrix to the conditions we are interested in
+<details style="margin-bottom:10px;">
+<summary>
+    Session info
+</summary>
 
 ```{r}
-alt_treatment <- colMeans(mod_mat[dds$condition == condition_treatment &
-                                  dds$count == "alt",])
-ref_treatment <- colMeans(mod_mat[dds$condition == condition_treatment &
-                                  dds$count == "ref",])
-
-alt_control <- colMeans(mod_mat[dds$condition == condition_control &
-                                dds$count == "alt",])
-ref_control <- colMeans(mod_mat[dds$condition == condition_control &
-                                dds$count == "ref",])
+sessionInfo()
 ```
 
-We can now use these to pull out specific comparisions using the `results` function.
+</details>
 
-We can look at the differences between treatment and control for just the alt allele:
 
-```{r}
-alt_treat_control <- results(dds, contrast = alt_treatment - alt_control)
-```
-
-Or just the ref allele:
-
-```{r}
-ref_treat_control <- results(dds, contrast = ref_treatment - ref_control)
-```
-
-Or just find the alt vs ref allele for treatment:
-```{r}
-alt_ref_treat <- results(dds, contrast = alt_treatment - ref_treatment)
-```
-
-To find the alt vs ref specific to the treatment (what we returned as the results from `perform_de`):
-
-```{r}
-  treatment_vs_control <- results(dds,
-                                  contrast = (alt_treatment - ref_treatment) - 
-                                    (alt_control - ref_control))
-```
-
-## Perform your own comparisons (edgeR)
-
-I have found it more straight forward to pull out comparisions of interest following [this tutorial](https://github.com/tavareshugo/tutorial_DESeq2_contrasts/blob/main/DESeq2_contrasts.md). To ask for other comparisons with this dataset, you first need to identify the specific matrix design of the comparison.
-
-The model matrix used for your experiment will be returned from the `perform_de` function. To get these results, first pull them out of the return list
-
-```{r}
-mod_mat <- de_results$model_matrix
-```
-
-We will also need to get the DESeq object from this list
-```{r}
-deobj <- de_results$deseq_obj
-```
-
-We now can subset this matrix to the conditions we are interested in
-
-```{r}
-alt_treatment <- colMeans(mod_mat[deobj$condition == condition_treatment &
-                                 deobj$count == "alt",])
-ref_treatment <- colMeans(mod_mat[deobj$condition == condition_treatment &
-                                 deobj$count == "ref",])
-
-alt_control <- colMeans(mod_mat[deobj$condition == condition_control &
-                               deobj$count == "alt",])
-ref_control <- colMeans(mod_mat[deobj$condition == condition_control &
-                               deobj$count == "ref",])
-```
-
-We can now use these to pull out specific comparisions using the `results` function.
-
-We can look at the differences between treatment and control for just the alt allele:
-
-```{r}
-alt_treat_control <- glmLRT(deobj, contrast = alt_treatment - alt_control)
-
-alt_treat_control <- topTags(alt_treat_control, n = nrow(alt_treat_control))
-```
-
-Or just the ref allele:
-
-```{r}
-ref_treat_control <- glmLRT(deobj, contrast = ref_treatment - ref_control)
-
-ref_treat_control <- topTags(ref_treat_control, n = nrow(ref_treat_control))
-```
-
-Or just find the alt vs ref allele for treatment:
-```{r}
-alt_ref_treat <- glmLRT(deobj, contrast = alt_treatment - ref_treatment)
-
-alt_ref_treat <- topTags(alt_ref_treat, n = nrow(alt_ref_treat))
-```
-
-To find the alt vs ref specific to the treatment (what we returned as the results from `perform_de`):
-
-```{r}
-treatment_vs_control <- glmLRT(deobj, contrast = (alt_treatment - ref_treatment) - 
-                  (alt_control - ref_control))
-
-treatment_vs_control <- topTags(treatment_vs_control,
-                              n = nrow(treatment_vs_control))
-```

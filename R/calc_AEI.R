@@ -283,7 +283,7 @@ correct_strand <- function(gr, genes_gr){
   stopifnot(all(c("Ref", "Var", "nA", "nT", "nC", "nG") %in% names(mcols(gr))))
 
   genes_gr$gene_strand <- strand(genes_gr)
-  gr <- annot_from_gr(gr, genes_gr, "gene_strand", ignore.strand = T)
+  gr <- annot_from_gr(gr, genes_gr, "gene_strand", ignore.strand = TRUE)
 
   # drop non-genic and multi-strand (overlapping annotations)
   gr <- gr[!is.na(gr$gene_strand)]

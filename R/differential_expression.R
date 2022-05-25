@@ -86,12 +86,12 @@ add_editing_frequencies <- function(se_object, type = "AI",
     if(!is.null(save_dir)){
       ggplot2::ggsave(file.path(save_dir, "number_of_sites.pdf"),
                          plot_list[[1]],
-                         heighjt = 3.71,
+                         height = 3.71,
                          width = 3.71)
 
       ggplot2::ggsave(file.path(save_dir, "editing_index.pdf"),
                          plot_list[[2]],
-                         heighjt = 3.71,
+                         height = 3.71,
                          width = 3.71)
 
       return(se_filtered)
@@ -451,7 +451,7 @@ run_deseq2 <- function(deobj, condition_control = NULL,
   # TODO - figure out what modeling is best, also try local
   dds <- DESeq2::DESeq(dds, fitType = "parametric")
 
-  if (class(test_mat) != "try-error"){
+  if (!is(test_mat, "try-error")){
     mod_mat <- model.matrix(design(dds), colData(dds))
   }
 

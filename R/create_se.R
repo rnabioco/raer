@@ -139,8 +139,8 @@ create_se <- function(plps,
     rowData(combined_se)[rc] <- apply(assay(combined_se, rc), 1, function(x) unique(x[!is.na(x)]))
     assay(combined_se, rc) <- NULL
   }
-  assays_to_drop <- setdiff(assay_cols, names(assays(combined_se)))
-  for(i in seq_along(assays_to_drop)) assay(combined_se,assays_to_drop[i]) <- NULL
+  assay_cols <- intersect(assay_cols, names(assays(combined_se)))
+  assays(combined_se) <- assays(combined_se)[assay_cols]
 
   combined_se
 }
