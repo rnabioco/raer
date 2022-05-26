@@ -21,8 +21,6 @@ jobs:
       matrix:
         config:
           - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-latest,   r: 'release'}
-          - {os: windows-latest, r: 'release'}
           - {os: 'windows-2022', r: 'release'}
 
     env:
@@ -48,9 +46,6 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
-      #   timeout-minutes: 30
       - uses: r-lib/actions/check-r-package@v2
         with:
           error-on: '"error"'

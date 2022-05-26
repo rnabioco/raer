@@ -79,9 +79,10 @@ create_se(plps)
 ## Related work
 
 The functionality in `raer` builds off of previously published methods and software:  
- - Python package: [REDItools](https://github.com/BioinfoUNIBA/REDItools) from [XXX](doi)  
- - Java package: [JACUSA2](https://github.com/dieterich-lab/JACUSA2)  from [XXX](doi)  
- - Python pipeline: [deNovo-Detect](https://github.com/a2iEditing/deNovo-Detect) from [Gabey et al](https://doi.org/10.1038/s41467-022-28841-4)    
- - Snakemake pipeline:  [rnaedits](https://github.com/rnabioco/rnaedits) from [xxx](doi)
+
+ - Python package: [REDItools](https://github.com/BioinfoUNIBA/REDItools) from [Picardi E, Pesole G](https://doi.org/10.1093/bioinformatics/btt287)   
+ - Java tool: [JACUSA2](https://github.com/dieterich-lab/JACUSA2)  from [Piechotta M et al ](https://doi.org/10.1186/s12859-016-1432-8)    
+ - Python-based pipeline: [deNovo-Detect](https://github.com/a2iEditing/deNovo-Detect) from [Gabey O et al ](https://doi.org/10.1038/s41467-022-28841-4)   
+ - Java-based tool: [RNAEditingIndexer](https://github.com/a2iEditing/RNAEditingIndexer) from [Roth SH et al](https://doi.org/10.1038/s41592-019-0610-9)  
 
 
