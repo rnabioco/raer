@@ -11,9 +11,7 @@
 raer is an R package that facilitates rapid interactive analysis of RNA
 editing in R in the bioconductor ecosystem.
 
-Vignettes *will be* provided to demonstrate how to quantify known
-events, identify novel editing sites, or examine editing in single cell
-datasets.
+**raer is under active development and functionality may change**
 
 ## Installation
 

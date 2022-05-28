@@ -2,8 +2,8 @@
 using namespace Rcpp;
 
 extern "C" {
-  #include "bri_index.h"
-  #include "bri_get.h"
+  #include "bri/bri_index.h"
+  #include "bri/bri_get.h"
 }
 
 // [[Rcpp::export(rng = false)]]
