@@ -31,10 +31,10 @@ sites.
 
 ``` r
 library(raer)
-bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
-bam2fn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", package = "raer")
-fafn <- system.file("extdata", "human.fasta", package = "raer")
-bedfn <- system.file("extdata", "regions.bed", package = "raer")
+bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
+fafn <- raer_example("human.fasta")
+bedfn <- raer_example("regions.bed")
 
 res <- get_pileup(bamfn, fafn, bedfile = bedfn)
 res[1:5, ]
@@ -178,7 +178,7 @@ create_se(plps)
 #> class: RangedSummarizedExperiment 
 #> dim: 74 2 
 #> metadata(0):
-#> assays(8): Var nRef ... nG nN
+#> assays(7): Var nRef ... nC nG
 #> rownames(74): SSR3_102_2 SSR3_125_2 ... DHFR_430_2 DHFR_513_2
 #> rowData names(2): site_id Ref
 #> colnames(2): sample_1 sample_2

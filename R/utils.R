@@ -66,3 +66,15 @@ PILEUP_COLS <-  c("chrom",
 get_tabix_chroms <- function(filename){
   list_tabix_chroms(path.expand(filename))
 }
+
+#' Provide working directory for raer example files.
+#'
+#' @param path path to file
+#'
+#' @examples
+#' raer_example('human.fasta')
+#'
+#' @export
+raer_example <- function(path) {
+  system.file("extdata", path, package = "raer", mustWork = TRUE)
+}
