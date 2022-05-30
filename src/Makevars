@@ -11,3 +11,10 @@ CXX_STD = CXX11
 SOURCES = $(wildcard samtools/*.c bri/*.c )
 
 OBJECTS = RcppExports.o bedfile.o cplp.o cpp_utils.o init.o plp.o scidx.o utils.o $(SOURCES:.c=.o)
+
+.PHONY: all clean
+
+all: $(SHLIB)
+
+clean:
+	rm -f samtools/*.o bri/*.o
