@@ -14,7 +14,7 @@
 #' @param rowdata_cols character vector of columns to store in rowData
 #' . Values must be the same across all assays (excluding NA).
 #' @param assay_cols character vector of columns to store as assays
-#' @param sample_names OPTIONAL A list of names to be added to the SE object.
+#' @param sample_names A list of names to be added to the SE object.
 #' If no sample names are given and pileup_res is not a named list, then
 #' default names (ie sample_1, sample_2, ..., sample_n) will be given and
 #' a warning will be printed.

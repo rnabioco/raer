@@ -1,106 +1,70 @@
 #' Adds editing frequencies
 #'
 #' Adds editing frequencies to an existing SummarizedExperimentobject (created by
-#' `create_se`). Currently A to I editing is supported as well as any custom editing
-#' events. The SummarizedExperiment with a new assay for editing requences for each site
+#' `create_se`). The SummarizedExperiment with a new assay for editing frequences for each site
 #'  (edit_freq) and new colData columns with the number of edited sites (n_sites) and the
-#' fraction of edits (edit_idx) is returned. If make_plots is set to true and no save
-#' directory is specified, a list including the SummarizedExperiment object and plots
-#' of the number of sites editied and the fraction of editing events will be returned.
+#' fraction of edits (edit_idx) is returned.
 #'
 #' @param se_object A SummarizedExperiment object created by `create_se`
-#' @param type OPTIONAL the type of editing event to add. Currently, the options
-#' are A to I ("AI"), U to C ("UC"), C to U ("CU"), and G to A ("GA"). "AI" is the
-#' default. If you want an editing option outside of these, your own custom can
-#' be added by setting this to "none".
-#' @param edit_from OPTIONAL if not using a pre-built type, you can specify
-#' your own editing. This should be a nucleotide (A, C, G, or T) and should
-#' correspond to the nucleotide you expect in the reference. Ex. for A to I
-#' editing events, this would be "A". If type is not "AI", both edit from
-#' and edit_to must be set.
-#' @param edit_to OPTIONAL if not using a pre-built type, you can specify
-#' your own editing. This should be a nucleotide (A, C, G, or T) and should
+#' @param edit_from This should be a nucleotide (A, C, G, or T)
+#' corresponding to the nucleotide you expect in the reference. Ex. for A to I
+#' editing events, this would be "A". If NULL, then editing frequencies will be
+#' calculated using the `nVar` and `nRef` values.
+#' @param edit_to This should be a nucleotide (A, C, G, or T) and should
 #' correspond to the nucleotide you expect after the editing event. Ex. for A to I
-#' editing events, this would be "G". If type is not "AI", both edit from
-#' and edit_to must be set.
-#' @param make_plots OPTIONAL if plots showing the number and frequency of editing
-#' events should be made. Default is False. If True, the colData columns containing
-#' the treatment and replicate information should be provided. See `make_editing_plots`
-#' @param save_dir OPTIONAL if the plots created should be saved, include a path to
-#' the directory. The plots will be saved as "number_of_sites.pdf" and "editing_index.pdf".
-#' If no directory is provided, the plots will be returned in a list with the
-#' SummarizedExperiment object.
-#' @param edit_frequency OPTIONAL the edit frequency used to determine the number of sites.
-#' Default is 0.01.
-#' @param min_count OPTIONAL the number of reads used to determine the number of edited sites.
-#' Default is 10.
-#' @param ... Options passed to `make_editing_plots`
+#' editing events, this would be "G". If NULL, then editing frequencies will be
+#' calculated using the `nVar` and `nRef` values.
+#' @param drop If TRUE, the summarizedExperiment returned will only retain sites
+#' matching the specified `edit_from` and `edit_to` bases.
+#' @param replace_na If TRUE, NA and NaN editing frequencies will be coerced to 0.
+#' @param edit_frequency  The edit frequency cutoff used when calculating the
+#' number of sites. Set to 0 to require any non-zero editing frequency. The number of sites is
+#' stored as n_sites in the colData.
+#' @param min_count The minimum number of reads required when enumerating number of
+#' editing sites detected.
 #'
 #' @examples
 #' example(create_se, echo = FALSE)
-#' se <- add_editing_frequencies(se)
+#' se <- calc_edit_frequency(se)
 #' assay(se, "edit_freq")[1:5, ]
 #'
 #' @import SummarizedExperiment
 #' @export
-
-# TODO look up other editing events
-add_editing_frequencies <- function(se_object, type = "AI",
-                                    edit_from = NULL, edit_to = NULL,
-                                    make_plots = FALSE, save_dir = NULL,
-                                    edit_frequency = 0.01, min_count = 10,
-                                    ...){
+calc_edit_frequency <- function(se_object,
+                                edit_from = NULL,
+                                edit_to = NULL,
+                                drop = FALSE,
+                                replace_na = TRUE,
+                                edit_frequency = 0,
+                                min_count = 1){
 
   # Set edit to and from for pre defined types
-  if(type == "AI"){
-    edit_from <- "A"
-    edit_to <- "G"
-  } else if (type == "CU"){
-    edit_from <- "C"
-    edit_to <- "T"
-  } else if (type =="UC"){
-    edit_from <- "T"
-    edit_to <- "U"
-  } else if (type == "GA"){
-    edit_from <- "G"
-    edit_to <- "A"
-  } else if (is.null(edit_from) | is.null(edit_to)){
-    stop("If not using a pre built type 'AI', 'CU', 'UC' or 'GA', `edit_from` and `edit_to` must be set")
-  } else if (!(edit_from %in% c("A", "C", "G", "T")) | !(edit_to %in% c("A", "C", "G", "T"))) {
+  if (is.null(edit_from) | is.null(edit_to)){
+    edit_from <- "Ref"
+    edit_to <- "Var"
+  } else if (!(edit_from %in% c("A", "C", "G", "T")) |
+             !(edit_to %in% c("A", "C", "G", "T"))) {
     stop("`edit_to` and `edit_from` must be nucleotides!")
   }
 
-  # Only keep the sites with the edit of interest
-  se_filtered <- se_object[mcols(rowRanges(se_object))$Ref == edit_from, ] # Use %in% if you want to try multiple
-  assay(se_filtered, "edit_freq") <- assay(se_filtered, paste0("n", edit_to)) /
-    (assay(se_filtered, paste0("n", edit_from)) +
-       assay(se_filtered, paste0("n", edit_to)))
-  assay(se_filtered, "edit_freq")[is.na(assay(se_filtered, "edit_freq"))] <- 0
+  from_col <- paste0("n", edit_from)
+  to_col <- paste0("n", edit_to)
 
-  se_filtered <- count_edits(se_filtered, edit_frequency, min_count,
-                              edit_from, edit_to)
-
-  if(make_plots){
-    plot_list <- make_editing_plots (se_filtered, ...)
-
-    if(!is.null(save_dir)){
-      ggplot2::ggsave(file.path(save_dir, "number_of_sites.pdf"),
-                         plot_list[[1]],
-                         height = 3.71,
-                         width = 3.71)
-
-      ggplot2::ggsave(file.path(save_dir, "editing_index.pdf"),
-                         plot_list[[2]],
-                         height = 3.71,
-                         width = 3.71)
-
-      return(se_filtered)
-    } else {
-      plot_list$se_filtered <- se_filtered
-      return(plot_list)    }
-  } else {
-    return(se_filtered)
+  if(drop && from_col != "nRef"){
+    se_object <- se_object[mcols(rowRanges(se_object))$Ref == edit_from, ]
   }
+
+  assay(se_object, "edit_freq") <- assay(se_object, to_col) /
+    (assay(se_object, from_col) + assay(se_object, to_col))
+
+  if(replace_na){
+    assay(se_object, "edit_freq")[is.na(assay(se_object, "edit_freq"))] <- 0
+  }
+
+  se_object <- count_edits(se_object, edit_frequency, min_count,
+                           edit_from, edit_to)
+
+  se_object
 }
 
 #' Counts edits

@@ -21,7 +21,7 @@ knitr::opts_chunk$set(message=FALSE, warning=FALSE)
 
 # Differential Editing tutorial
 
-This vignette will demonstrate how to identify RNA editing sites with condition-specific editing frequencies using the `raer` package
+This vignette will demonstrate how to identify RNA editing sites with condition-specific editing frequencies using the `raer` package.
 
 ## Set up
 
@@ -35,12 +35,12 @@ library(stringr)
 ```
 
 
-The public RNA-seq dataset,  [GSE99249](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE99249), consists of ADAR1 mutants and control human cell lines, conditionally treated with Interferon-Beta. For simplicity we will examine the ADAR1 WT and KO samples both treated with IFN-B, with triplicate samples. 
+In this vignette a public RNA-seq dataset will be analyzed,  [GSE99249](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE99249), which consists of ADAR1 mutants and control human cell lines, conditionally treated with Interferon-Beta. For simplicity we will examine the ADAR1 WT and KO samples both treated with IFN-B, with triplicate samples. 
 
 Aligned BAM files and other necessary files have been preprocessed for this vignette. These files occupy ~250 Mb of space. 
 
 ```{r}
-data_dir <- file.path(tempdir(), "tmpdata")
+data_dir <- file.path(tempdir(), "adarko_data")
 dir.create(data_dir)
 s3url <- "https://raer-test-data.s3.us-west-2.amazonaws.com/GSE99249/GSE99249_data.tar.gz"
 download.file(s3url, file.path(data_dir, "GSE99249_data.tar.gz"))
@@ -56,7 +56,7 @@ names(bam_files) <- sub("_dedup_sorted.bam", "", basename(bam_files))
 bam_files[1:2]
 ```
 
-Next we'll need a FASTA file to use with the pileup. We'll use a FASTA file only containing chromosome 18 for this demo. The fasta can be compressed. 
+Next we'll need a FASTA file to quantify the editing sites. We'll use a FASTA file only containing chromosome 18 for this demo. The fasta can be compressed. 
 
 ```{r}
 fafn <- file.path(data_dir, "chr18.fasta.bgz")
@@ -106,33 +106,30 @@ Each column from the pileup can be stored as an assay, which can be specified by
 se
 ```
 
-Next we will add sample metadata to the `summarizedExperiment`, which will be used to conduct differential editing analysis. Sample metadata is provided in a text file. 
+Next we will add sample metadata to the `summarizedExperiment`, which will be used to conduct differential editing analysis. 
+
 
 ```{r}
-mdata <- read.table(file.path(data_dir, "PRJNA386593_download_log.txt"),
-                    sep = "\t",
-                    header = TRUE)
+colData(se)$genotype_treatment <- rep(c("ADAR1KO Interferon beta",  
+                                        "Wildtype Interferon beta"), 
+                                      each = 3)
 
-mdata <- mdata[, c("run_accession", "library_name")]
-mdata$library_name <-  str_replace(mdata$library_name, " biological replicate", "")
-mdata$genotype <- str_extract(mdata$library_name , "^[A-Za-z0-9]+")
-mdata$treatment <- str_extract(mdata$library_name , "Interferon beta|mock")
-mdata$rep <- str_extract(mdata$library_name , "[0-9]$")
-mdata$genotype_treatment <- str_c(mdata$genotype, " ", mdata$treatment)
-mdata <- mdata[match(rownames(colData(se)), mdata$run_accession), ]
-colData(se) <- cbind(colData(se), mdata)
+colData(se)$genotype <- rep(c("ADAR1KO", 
+                              "Wildtype"),
+                            each = 3)
 colData(se)
 ```
 
 ## Prepare for differential editing 
 
-We next use the `add_editing_frequencies` function to identify the percent of edits for each position and sample. Several pre-built options are available: A to I ("AI"), U to C ("UC"), C to U ("CU"), and G to A ("GA"). You can specify A to I editing by setting `type = AI` (this is also the default). The editing frequencies will not be used for differential editing analysis, which will be conducted using the raw counts, however these are useful for filtering and visualization. 
+We next use the `calc_edit_frequency` function to identify the percent of edits for each position and sample. With the `drop = TRUE` argument we will also exclude sites without an adenosine. The editing frequencies will not be used for differential editing analysis, which will be conducted using the raw counts, however these are useful for filtering and visualization. 
 
 
 ```{r}
-se_filtered <- add_editing_frequencies(se, type = "AI",
-                                       edit_frequency = 0.01,
-                                       min_count = 10)
+se_filtered <- calc_edit_frequency(se, 
+                                   edit_from = "A",
+                                   edit_to = "G",
+                                   drop = TRUE)
 ```
 
 We can next subset the `summarizedExperiment` object to low frequency editing events. For this analysis we will require than an editing site shows editing in at least 1 sample, and have at least 5 counts in each sample. 
@@ -170,7 +167,8 @@ It is probably best to update the levels of your object, but if you don't, this 
 To run using `DESeq2`, set `type = DESeq2` in the `de_results` function. This function requires you to specify what your control and treatment are from your condition column of your `deobj`. `edgeR` is also supported. 
 
 ```{r}
-de_results <- perform_de(deobj, type = "DESeq2", sample_col = "sample",
+de_results <- perform_de(deobj, type = "DESeq2", 
+                         sample_col = "sample",
                          condition_col = "genotype",
                          condition_control = "Wildtype",
                          condition_treatment = "ADAR1KO")
