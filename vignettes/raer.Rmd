@@ -40,32 +40,28 @@ In this vignette a public RNA-seq dataset will be analyzed,  [GSE99249](https://
 Aligned BAM files and other necessary files have been preprocessed for this vignette. These files occupy ~250 Mb of space. 
 
 ```{r}
-data_dir <- file.path(tempdir(), "adarko_data")
-dir.create(data_dir)
-s3url <- "https://raer-test-data.s3.us-west-2.amazonaws.com/GSE99249/GSE99249_data.tar.gz"
-download.file(s3url, file.path(data_dir, "GSE99249_data.tar.gz"))
-untar(file.path(data_dir, "GSE99249_data.tar.gz"), exdir = data_dir)
-unlink(file.path(data_dir, "GSE99249_data.tar.gz"))
+fns <- download_GSE99249("raer_vignette")
 ```
 
 Next we'll collect a vector containing the paths to each BAM file These BAM files are a subset of the full BAM files, containing only alignments from chromosome 18.
 
 ```{r}
-bam_files <- dir(data_dir, pattern = ".bam$", full.names = TRUE)
-names(bam_files) <- sub("_dedup_sorted.bam", "", basename(bam_files))
+bam_files <- fns$bams 
 bam_files[1:2]
 ```
 
 Next we'll need a FASTA file to quantify the editing sites. We'll use a FASTA file only containing chromosome 18 for this demo. The fasta can be compressed. 
 
 ```{r}
-fafn <- file.path(data_dir, "chr18.fasta.bgz")
+fafn <- fns$fasta 
+fafn
 ```
 
 Lastly, we'll use a BED file containing the coordinates of known human editing sites from the REDIPortal database. This file can also be optionally compressed.
 
 ```{r}
-bedfn <- file.path(data_dir, "rediportal_hg38_chr18.bed.gz")
+bedfn <- fns$bed
+bedfn
 ```
 
 ## Generate editing site read counts 
@@ -188,12 +184,6 @@ Heatmap(assay(se_filtered, "edit_freq")[top_sites, ],
         column_labels = se_filtered$genotype_treatment)
 ```
 
-
-
-
-```{r}
-unlink(data_dir, recursive = TRUE)
-```
 
 <details style="margin-bottom:10px;">
 <summary>

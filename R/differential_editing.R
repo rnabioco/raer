@@ -71,10 +71,10 @@ calc_edit_frequency <- function(se_object,
 #'
 #' Counts edits per sample and add new colData columns with the number of edited sites
 #' (n_sites) and the  fraction of edits (edit_idx). This function should be called by
-#' `add_editing_frequencies` and is not meant to be used directly.
+#' `calc_edit_frequency` and is not meant to be used directly.
 #'
 #' @param se_filtered A SummarizedExperiment object created by `create_se` and
-#' processed by `add_editing_frequencies`
+#' processed by `calc_edit_frequency`
 #' @param edit_from OPTIONAL if not using a pre-built type, you can specify
 #' your own editing. This should be a nucleotide (A, C, G, or T) and should
 #' correspond to the nucleotide you expect in the reference. Ex. for A to I
@@ -115,7 +115,7 @@ count_edits <- function(se_filtered, edit_frequency = 0.01, min_count = 10,
 #'
 #' Generates plots of the number of sites edited per sample and the percent
 #' of editing events per sample. This function is written to be called directly
-#' by `add_editing_frequencies`
+#' by `calc_edit_frequency`
 #'
 #' @param se_object A SummarizedExperiment object created by `create_se`
 #' @param colors OPTIONAL The colors of the replicates. If no colors are
@@ -197,7 +197,7 @@ make_editing_plots <- function(se_object, colors = NULL,
 #' @import SummarizedExperiment
 #' @examples
 #' example(create_se, echo = FALSE)
-#' se <- add_editing_frequencies(se)
+#' se <- calc_edit_frequency(se)
 #' dse <- prep_for_de(se)
 #' assay(dse, "counts")
 #' dse
@@ -271,7 +271,7 @@ prep_for_de <- function(se,
 #'
 #' @examples
 #' example(create_se, echo = FALSE)
-#' se <- add_editing_frequencies(se)
+#' se <- calc_edit_frequency(se)
 #' dse <- prep_for_de(se)
 #' res <- perform_de(dse, condition_control = "WT", condition_treatment = "KO")
 #' res$sig_results[1:5, ]

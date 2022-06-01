@@ -51,7 +51,7 @@ possible return values.
 }
 \examples{
 example(create_se, echo = FALSE)
-se <- add_editing_frequencies(se)
+se <- calc_edit_frequency(se)
 dse <- prep_for_de(se)
 res <- perform_de(dse, condition_control = "WT", condition_treatment = "KO")
 res$sig_results[1:5, ]

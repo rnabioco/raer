@@ -27,5 +27,5 @@ replicates. Default is "rep".}
 \description{
 Generates plots of the number of sites edited per sample and the percent
 of editing events per sample. This function is written to be called directly
-by \code{add_editing_frequencies}
+by \code{calc_edit_frequency}
 }

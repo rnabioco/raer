@@ -14,7 +14,7 @@ count_edits(
 }
 \arguments{
 \item{se_filtered}{A SummarizedExperiment object created by \code{create_se} and
-processed by \code{add_editing_frequencies}}
+processed by \code{calc_edit_frequency}}
 
 \item{edit_frequency}{OPTIONAL the edit frequency used to determine the number of sites.
 Default is 0.01.}
@@ -37,5 +37,5 @@ and edit_to must be set.}
 \description{
 Counts edits per sample and add new colData columns with the number of edited sites
 (n_sites) and the  fraction of edits (edit_idx). This function should be called by
-\code{add_editing_frequencies} and is not meant to be used directly.
+\code{calc_edit_frequency} and is not meant to be used directly.
 }
