@@ -32,7 +32,8 @@ download_GSE99249 <- function(path){
     out_fns <- unlist(lapply(fns, function(x){
       fn <- file.path(path, x)
       if(!file.exists(fn)){
-        download.file(paste0(baseURL, x), fn)
+        # wb  necessary to avoid windows mangling line endings...
+        download.file(paste0(baseURL, x), fn, mode = "wb")
       }
       fn
     }))
@@ -73,7 +74,8 @@ download_NA12878 <- function(path){
     out_fns <- unlist(lapply(fns, function(x){
       fn <- file.path(path, x)
       if(!file.exists(fn)){
-        download.file(paste0(baseURL, x), fn)
+        # wb  necessary to avoid windows mangling line endings...
+        download.file(paste0(baseURL, x), fn, mode = "wb")
       }
       fn
     }))
