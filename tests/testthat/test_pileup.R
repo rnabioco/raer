@@ -443,4 +443,37 @@ test_that("single end libary types are respected", {
 
 })
 
+test_that("poor quality reads get excluded with min_read_bqual",{
+  res_no_filter <- get_pileup(bamfn, fafn,
+                              filterParam = FilterParam(min_base_quality = 0L,
+                                                        library_type = c("genomic-unstranded")))
+
+  bqual_cutoff <- c(0.25, 20.0)
+  bam_recs <- readGAlignments(bamfn,
+                              param = ScanBamParam(what = c("qname", "qual")))
+  strand(bam_recs) <- "+"
+  bad_reads <- lapply(as(mcols(bam_recs)$qual, "IntegerList"),
+         function(x) (sum(x < bqual_cutoff[2]) / length(x)) >= bqual_cutoff[1])
+  bad_reads <- bam_recs[unlist(bad_reads)]
+  bad_reads <- subsetByOverlaps(bad_reads, res_no_filter)
+
+  res <- get_pileup(bamfn, fafn,
+                    filterParam = FilterParam(min_read_bqual = bqual_cutoff,
+                                              min_base_quality = 0L,
+                                              library_type = c("genomic-unstranded")))
+
+  res_no_filter <- subsetByOverlaps(res_no_filter, bad_reads)
+  res <- subsetByOverlaps(res, bad_reads)
+
+  n_diff <- (res_no_filter$nRef + res_no_filter$nVar) - (res$nRef + res$nVar)
+
+  # we don't count deletions as coverage
+  cov <- coverage(bad_reads, drop.D.ranges=TRUE)
+  cov <- cov[cov != 0]
+  cov <- as.integer(unlist(cov))
+
+  expect_equal(n_diff, cov)
+})
+
+
 unlink(c(tmp, sort_cbbam, idx))

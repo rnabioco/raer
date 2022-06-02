@@ -224,6 +224,7 @@ get_pileup <- function(bamfiles,
                       min_mapQ = fp$min_mapq,
                       max_depth = fp$max_depth,
                       min_baseQ = fp$min_base_quality,
+                      read_bqual_filter = fp$min_read_bqual,
                       libtype =  as.integer(lib_code),
                       outfns = outfiles,
                       bam_flags = bam_flags,
@@ -254,6 +255,7 @@ get_pileup <- function(bamfiles,
                         min_mapQ = fp$min_mapq,
                         max_depth = fp$max_depth,
                         min_baseQ = fp$min_base_quality,
+                        read_bqual_filter = fp$min_read_bqual,
                         libtype =  as.integer(lib_code),
                         outfns = tmp_outfiles,
                         bam_flags = bam_flags,
@@ -322,6 +324,7 @@ get_pileup <- function(bamfiles,
 }
 
 MAX_INT <- 536870912
+
 #' Read pileup, indexed by tabix
 #' @param tbx_fn filename
 #' @param region region to read from file, samtools style
@@ -447,7 +450,7 @@ empty_plp_record <-  function(){
                            splice_dist = "integer",
                            homopolymer_len = "integer",
                            max_mismatch_type = "integer", # length 2
-                           min_read_qual = "integer" # length 2
+                           min_read_bqual = "numeric" # length 2
                            ))
 
 setMethod(show, "FilterParam", function(object) {
@@ -483,11 +486,12 @@ setMethod(show, "FilterParam", function(object) {
 #' distance from indel event in the read
 #' @param homopolymer_len Exclude site if occurs within homopolymer of given
 #' length
-#' @param max_mismatch_type Exclude read if it has N different mismatch types
+#' @param max_mismatch_type Exclude read if it has X different mismatch types
 #' (e.g A-to-G, G-to-C, C-to-G, is 3 mismatch types) or Y # of mismatches,
 #' must be supplied as a integer vector of length 2. e.g.
 #' c(X, Y).
-#' @param min_read_qual ignored for now
+#' @param min_read_bqual Exclude read if more than X percent of the bases have
+#' base qualities less than Y. Numeric vector of length 2. e.g. c(0.25, 20)
 #' @param ignore_query_Ns ignored for now
 
 #'
@@ -500,7 +504,7 @@ FilterParam <-
            only_keep_variants = FALSE,
            trim_5p = 0L, trim_3p = 0L, indel_dist = 0L,
            splice_dist = 0L, homopolymer_len = 0L,
-           max_mismatch_type = c(0L, 0L), min_read_qual = c(0L, 0L),
+           max_mismatch_type = c(0L, 0L), min_read_bqual = c(0.0, 0.0),
            ignore_query_Ns = FALSE)
   {
 
@@ -524,22 +528,16 @@ FilterParam <-
     min_mapq <- as.integer(min_mapq)
     homopolymer_len <- as.integer(homopolymer_len)
     max_mismatch_type <- as.integer(max_mismatch_type)
-    min_read_qual <- as.integer(min_read_qual)
+    min_read_bqual <- as.numeric(min_read_bqual)
 
-    stopifnot(length(max_mismatch_type) == 2 && is.numeric(max_mismatch_type))
-    stopifnot(length(min_read_qual) == 2 && is.numeric(min_read_qual))
-
-    min_read_qual <- as.integer(min_read_qual)
-    max_mismatch_type <- as.integer(max_mismatch_type)
-
+    stopifnot(length(max_mismatch_type) == 2 && !any(is.na(max_mismatch_type)))
+    stopifnot(length(min_read_bqual) == 2 && !any(is.na(min_read_bqual)))
     stopifnot(isTRUEorFALSE(ignore_query_Ns))
 
     # variable length depending on n_files
     stopifnot(is.character(library_type))
-    stopifnot(is.numeric(min_mapq))
+    stopifnot(is.integer(min_mapq))
     stopifnot(is.logical(only_keep_variants))
-
-    min_mapq <- as.integer(min_mapq)
 
     # to implement
     if(ignore_query_Ns){
@@ -554,7 +552,7 @@ FilterParam <-
                  ignore_query_Ns = ignore_query_Ns,
                  trim_5p = trim_5p, trim_3p = trim_3p, indel_dist = indel_dist,
                  splice_dist = splice_dist, homopolymer_len = homopolymer_len,
-                 max_mismatch_type = max_mismatch_type, min_read_qual = min_read_qual)
+                 max_mismatch_type = max_mismatch_type, min_read_bqual = min_read_bqual)
 
   }
 

@@ -15,8 +15,9 @@ int run_cpileup(const char** cbampath,
                 int* b_flags,
                 int* event_filters,
                 int* only_keep_variants,
-                char* outbam,
+                char* reads_fn,
                 char* mismatches,
+                double* read_bqual_filter,
                 SEXP ext);
 
 #endif

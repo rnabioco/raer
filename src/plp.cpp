@@ -21,6 +21,7 @@ int run_pileup(std::vector<std::string> bampaths,
                std::vector<int> libtype,
                std::vector<std::string> outfns,
                std::vector<int> only_keep_variants,
+               std::vector<double> read_bqual_filter,
                int max_depth = 10000,
                int min_baseQ = 20,
                std::string reads = ".",
@@ -106,6 +107,10 @@ int run_pileup(std::vector<std::string> bampaths,
     cbad_reads = &*bad_reads.begin();
   }
 
+  if(read_bqual_filter.size() != 2){
+    stop("read_bqual_filter must be a numeric vector of length 2");
+  }
+
   int out;
   out = run_cpileup(&cbampaths[0],
                     cbampaths.size(),
@@ -123,6 +128,7 @@ int run_pileup(std::vector<std::string> bampaths,
                     &only_keep_variants[0],
                     creadsoutfn,
                     cbad_reads,
+                    &read_bqual_filter[0],
                     ext);
 
   return out;
