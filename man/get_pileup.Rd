@@ -35,7 +35,7 @@ FilterParam(
   splice_dist = 0L,
   homopolymer_len = 0L,
   max_mismatch_type = c(0L, 0L),
-  min_read_qual = c(0L, 0L),
+  min_read_bqual = c(0, 0),
   ignore_query_Ns = FALSE
 )
 }
@@ -105,12 +105,13 @@ distance from splicing event in the read}
 \item{homopolymer_len}{Exclude site if occurs within homopolymer of given
 length}
 
-\item{max_mismatch_type}{Exclude read if it has N different mismatch types
+\item{max_mismatch_type}{Exclude read if it has X different mismatch types
 (e.g A-to-G, G-to-C, C-to-G, is 3 mismatch types) or Y # of mismatches,
 must be supplied as a integer vector of length 2. e.g.
 c(X, Y).}
 
-\item{min_read_qual}{ignored for now}
+\item{min_read_bqual}{Exclude read if more than X percent of the bases have
+base qualities less than Y. Numeric vector of length 2. e.g. c(0.25, 20)}
 
 \item{ignore_query_Ns}{ignored for now}
 }

@@ -120,7 +120,7 @@ static char *get_read(const bam1_t *rec)
 }
 
 typedef struct {
-  int qc;
+  int minq;
   double pct;
 } read_qual_t;
 
@@ -291,10 +291,10 @@ static int readaln(void *data, bam1_t *b) {
     // check for proper pair, if paired end
     if((b->core.flag&BAM_FPAIRED) && !(b->core.flag&BAM_FPROPER_PAIR)) continue ;
 
-    // check if read quality is > 20 in at least 25% of read
-    // disable until options can promoted to R parameters
-    int inactive = 0;
-    if(inactive && !read_base_quality(b, 0.25, 20)) continue;
+    // check if read quality is > x in at least y% of read
+    if(g->conf->read_qual.pct &&
+       g->conf->read_qual.minq &&
+       !read_base_quality(b, g->conf->read_qual.pct, g->conf->read_qual.minq)) continue;
 
     break;
   }
@@ -641,6 +641,7 @@ int run_cpileup(const char** cbampaths,
                 int* only_keep_variants,
                 char* reads_fn,
                 char* mismatches,
+                double* read_bqual_filter,
                 SEXP ext) {
 
   mplp_aux_t **data;
@@ -733,10 +734,10 @@ int run_cpileup(const char** cbampaths,
   ef->n_mm_type = event_filters[5];
   ef->n_mm = event_filters[6];
 
-  // need to pass in event_filters as a type flexible
-  // object.
-  //conf->read_qual.pct = event_filters[7];
-  //conf->read_qual.qc = event_filters[8];
+  if(read_bqual_filter){
+    conf->read_qual.pct = read_bqual_filter[0];
+    conf->read_qual.minq = (int)read_bqual_filter[1];
+  }
 
   // read the header of each file in the list and initialize data
   for (i = 0; i < n; ++i) {
@@ -744,8 +745,7 @@ int run_cpileup(const char** cbampaths,
     data[i] = calloc(1, sizeof(mplp_aux_t));
     data[i]->fp = sam_open(cbampaths[i], "rb");
 
-    if ( !data[i]->fp )
-    {
+    if ( !data[i]->fp ) {
       Rf_error("failed to open %s: %s\n", cbampaths[i], strerror(errno));
     }
 
@@ -797,8 +797,7 @@ int run_cpileup(const char** cbampaths,
   if (reads_fn){
     write_mismatched_reads = 1;
     conf->reads_fp = fopen(R_ExpandFileName(reads_fn), "w");
-    if (!conf->reads_fp)
-    {
+    if (!conf->reads_fp) {
       Rf_error("failed to open %s: %s\n",R_ExpandFileName(reads_fn), strerror(errno));
     }
     conf->rnames = kh_init(rname);
