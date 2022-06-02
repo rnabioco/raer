@@ -45,7 +45,9 @@ Suggests:
     rmarkdown,
     BiocStyle,
     ComplexHeatmap,
-    viridis
+    viridis,
+    TxDb.Hsapiens.UCSC.hg38.knownGene,
+    AnnotationHub
 LinkingTo: 
     Rcpp,
     Rhtslib

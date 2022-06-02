@@ -40,7 +40,8 @@ In this vignette a public RNA-seq dataset will be analyzed,  [GSE99249](https://
 Aligned BAM files and other necessary files have been preprocessed for this vignette. These files occupy ~250 Mb of space. 
 
 ```{r}
-fns <- download_GSE99249("raer_vignette")
+data_dir <- tempdir()
+fns <- download_GSE99249(data_dir)
 ```
 
 Next we'll collect a vector containing the paths to each BAM file These BAM files are a subset of the full BAM files, containing only alignments from chromosome 18.
@@ -184,6 +185,9 @@ Heatmap(assay(se_filtered, "edit_freq")[top_sites, ],
         column_labels = se_filtered$genotype_treatment)
 ```
 
+```{r}
+unlink(data_dir)
+```
 
 <details style="margin-bottom:10px;">
 <summary>

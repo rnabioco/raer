@@ -57,12 +57,13 @@ download_NA12878 <- function(path){
 
   baseURL <- "https://raer-test-data.s3.us-west-2.amazonaws.com/NA12878/"
 
-  bam_fns <- c("ERR262996_dedup_chr4.bam",
-               "SRR1258218_Aligned.sorted.dedup.bam")
+  bam_fns <- c("ERR262996_dedup_chr4_sub.bam",
+               "SRR1258218_Aligned.sorted.dedup_sub.bam")
   NA12878_files <- list(
     bams = bam_fns,
     bai = paste0(bam_fns, ".bai"),
-    fasta = "hg38_chr4.fa.bgz"
+    fasta = "hg38_chr4.fa.bgz",
+    snps = "chr4snps.bed.gz"
   )
 
   options(timeout = max(5000, getOption("timeout")))
