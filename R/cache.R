@@ -62,7 +62,8 @@ download_NA12878 <- function(path){
   NA12878_files <- list(
     bams = bam_fns,
     bai = paste0(bam_fns, ".bai"),
-    fasta = "hg38_chr4.fa.bgz"
+    fasta = "hg38_chr4.fa.bgz",
+    snps = "chr4snps.bed.gz"
   )
 
   options(timeout = max(5000, getOption("timeout")))

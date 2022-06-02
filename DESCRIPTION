@@ -46,7 +46,6 @@ Suggests:
     BiocStyle,
     ComplexHeatmap,
     viridis,
-    SNPlocs.Hsapiens.dbSNP155.GRCh38,
     TxDb.Hsapiens.UCSC.hg38.knownGene,
     AnnotationHub
 LinkingTo: 

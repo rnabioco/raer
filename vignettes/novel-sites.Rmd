@@ -1,5 +1,5 @@
 ---
-title: Identifying RNA editing sites using RNA-Seq and DNA-seq sequencing
+title: Identifying RNA editing sites using RNA and DNA sequencing data
 author: 
   - name: Kent Riemondy
     affiliation: University of Colorado School of Medicine
@@ -23,6 +23,9 @@ knitr::opts_chunk$set(echo = TRUE)
 library(raer)
 library(GenomicFeatures)
 library(SummarizedExperiment)
+library(rtracklayer)
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+library(AnnotationHub)
 ```
 
 # Novel RNA editing site detection tutorial
@@ -36,21 +39,22 @@ Aligned BAM files and a genome fasta file have been preprocessed for this vignet
 ```{r}
 data_dir <- tempdir()
 fns <- download_NA12878(data_dir)
+fns
 ```
 
-Additionally we will require the following additional annotation resources:  
+Additionally we will use the following additional annotation resources:  
   
-  - A database of known SNPs. We will use the `SNPlocs.Hsapiens.dbSNP155.GRCh38` package.  
+  - A database of known SNPs, for example the `SNPlocs.Hsapiens.dbSNP155.GRCh38` package. Due to space and memory constraints , in this vignette we will use a BED file containing SNPs from the first 1Mb region of chr4.  
   - `TxDb.Hsapiens.UCSC.hg38.knownGene`, a database of transcript models. Alternatively these can be generated from a `.gtf` file using `makeTxDbFromGRanges()` from the `GenomicFeatures` package.  
   - RepeatMasker annotations, which we will obtain from the `AnnotationHub()`. 
 
 ```{r}
-library(SNPlocs.Hsapiens.dbSNP155.GRCh38)
-library(TxDb.Hsapiens.UCSC.hg38.knownGene)
-library(AnnotationHub)
 ah <- AnnotationHub()
 rmskhg38 <- ah[["AH99003"]]
+
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+
+chr4snps <- import(fns$snps)
 ```
 
 
@@ -105,7 +109,7 @@ nrow(se)
 
 Next we filter to remove any multi-allelic sites. These sites are stored as comma-separated
 strings in the `Var` assay (e.g. `AG,AC`). Non-variant sites are stored as `-`. 
-`remove_multiallelic()` will remove any sites that have multiple variants in the samples present in the `summarizedExperiment` object. It will add a new column to the `row`Data()` to indicate the variant for each site, and will calculate an `allele_freq` assay with variant allele frequencies for each sample. 
+`remove_multiallelic()` will remove any sites that have multiple variants in the samples present in the `summarizedExperiment` object. It will add a new column to the `rowData()` to indicate the variant for each site, and will calculate an `allele_freq` assay with variant allele frequencies for each sample. 
 
 ```{r}
 se <- remove_multiallelic(se)
@@ -140,23 +144,26 @@ Next, sites with 4bp of known splicing events will be excluded. These variants a
 se <- remove_splice_variants(se, txdb)
 se
 ```
-Next, we'll annotate if the site is a known SNP and remove any known SNPs. 
+Next, we'll annotate if the site is a known SNP and remove any known SNPs. If using a SNPlocs package you can use the `annot_snp()` function. However we will use the `annot_from_gr()` function to annotate using the prebuilt `chr4snps` object.
 
 ```{r}
-se <- annot_snps(se, SNPlocs.Hsapiens.dbSNP155.GRCh38)
-rowData(se)[c("RefSNP_id")]
+se <- annot_from_gr(se, chr4snps, "name")
+rowData(se)[c("name")]
 
-se <- se[rowData(se)$RefSNP_id == ""]
+se <- se[is.na(rowData(se)$name), ]
 se
 ```
-Lastly, we'll further filter the edit sites to require that the editing frequency is > 0.5 and that at least 2 reads support the editing site. 
+Lastly, we'll further filter the edit sites to require that the editing frequency is > 0.05 and that at least 2 reads support the editing site. 
 
 ```{r}
 to_keep <- assay(se, "edit_freq")[, 1] > 0.05
 se <- se[to_keep, ]
 
 se <- se[assay(se, "nVar")[, 1] >= 2]
+```
 
+
+```{r}
 rowRanges(se)
 ```
 
