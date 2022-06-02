@@ -11,7 +11,7 @@ vignette: >
   %\VignetteIndexEntry{Find-Novel-Sites}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}    
-  %\VignetteDepends{SNPlocs.Hsapiens.dbSNP155.GRCh38, TxDb.Hsapiens.UCSC.hg38.knownGene, AnnotationHub}
+  %\VignetteDepends{TxDb.Hsapiens.UCSC.hg38.knownGene, AnnotationHub}
 ---
 
 ```{r setup, include=FALSE}
