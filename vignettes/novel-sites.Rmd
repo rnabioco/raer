@@ -59,8 +59,6 @@ The `get_pileup()` function can accept multiple bam files, here we supply one fr
 ```{r}
 wgs_bam <- fns$bams[1]
 rna_bam <- fns$bams[2]
-wgs_bam <- "raer_vignette/ERR262996_dedup_chr4_sub.bam"
-rna_bam <- "raer_vignette/SRR1258218_Aligned.sorted.dedup_sub.bam"
 fafn <- fns$fasta
 ```
 
