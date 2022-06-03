@@ -29,7 +29,7 @@ char* generate_index_filename(const char* input_bam, const char* input_bri)
     char* out_fn;
 
     if(input_bri != NULL) {
-        out_fn = malloc(strlen(input_bri));
+        out_fn = malloc(strlen(input_bri) + 1);
         if(out_fn == NULL) {
             Rf_error("error making index: %s", input_bri);
         }
@@ -217,7 +217,9 @@ void bam_read_idx_add(bam_read_idx* bri, const char* readname, size_t offset)
 }
 
 //
-void bam_read_idx_build(const char* filename, const char* output_bri)
+void bam_read_idx_build(const char* filename,
+                        const char* output_bri,
+                        const char* tag)
 {
     htsFile *fp = hts_open(filename, "r");
     if(fp == NULL) {
@@ -233,7 +235,7 @@ void bam_read_idx_build(const char* filename, const char* output_bri)
     size_t file_offset = bgzf_tell(fp->fp.bgzf);
     while ((ret = sam_read1(fp, h, b)) >= 0) {
         char* readname ;
-        uint8_t* aux_info = bam_aux_get(b, "CB") ;
+        uint8_t* aux_info = bam_aux_get(b, tag) ;
         if (aux_info) {
             readname = bam_aux2Z(aux_info) ;
         } else {
@@ -350,17 +352,17 @@ bam_read_idx* bam_read_idx_load(const char* input_bam, const char* input_bri)
 //
 // Getopt
 //
-enum {
-    OPT_HELP = 1,
-};
-
-static const char* shortopts = ":i:v"; // placeholder
-static const struct option longopts[] = {
-    { "help",                      no_argument,       NULL, OPT_HELP },
-    { "index",               required_argument,       NULL,      'i' },
-    { "verbose",                   no_argument,       NULL,      'v' },
-    { NULL, 0, NULL, 0 }
-};
+// enum {
+//     OPT_HELP = 1,
+// };
+//
+// static const char* shortopts = ":i:v"; // placeholder
+// static const struct option longopts[] = {
+//     { "help",                      no_argument,       NULL, OPT_HELP },
+//     { "index",               required_argument,       NULL,      'i' },
+//     { "verbose",                   no_argument,       NULL,      'v' },
+//     { NULL, 0, NULL, 0 }
+// };
 
 //
 void print_usage_index()
@@ -369,35 +371,35 @@ void print_usage_index()
 }
 
 //
-int bam_read_idx_index_main(int argc, char** argv)
-{
-    char* output_bri = NULL;
-
-    int die = 0;
-    for (char c; (c = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1;) {
-        switch (c) {
-            case OPT_HELP:
-                print_usage_index();
-            case 'i':
-                output_bri = optarg;
-                break;
-            case 'v':
-                verbose = 1;
-                break;
-        }
-    }
-
-    if (argc - optind < 1) {
-        Rf_error("bri index: not enough arguments\n");
-        die = 1;
-    }
-
-    if(die) {
-        print_usage_index();
-    }
-
-    char* input_bam = argv[optind++];
-    bam_read_idx_build(input_bam, output_bri);
-
-    return 0;
-}
+// int bam_read_idx_index_main(int argc, char** argv)
+// {
+//     char* output_bri = NULL;
+//
+//     int die = 0;
+//     for (char c; (c = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1;) {
+//         switch (c) {
+//             case OPT_HELP:
+//                 print_usage_index();
+//             case 'i':
+//                 output_bri = optarg;
+//                 break;
+//             case 'v':
+//                 verbose = 1;
+//                 break;
+//         }
+//     }
+//
+//     if (argc - optind < 1) {
+//         Rf_error("bri index: not enough arguments\n");
+//         die = 1;
+//     }
+//
+//     if(die) {
+//         print_usage_index();
+//     }
+//
+//     char* input_bam = argv[optind++];
+//     bam_read_idx_build(input_bam, output_bri);
+//
+//     return 0;
+// }

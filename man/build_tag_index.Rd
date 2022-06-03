@@ -4,10 +4,15 @@
 \alias{build_tag_index}
 \title{Build index for tag sorted bam file}
 \usage{
-build_tag_index(bamfn)
+build_tag_index(bamfn, tag = "CB", n_records_to_check = 1000)
 }
 \arguments{
-\item{bamfn}{CB tag sorted bamfile}
+\item{bamfn}{tag sorted bamfile}
+
+\item{tag}{name of tag in bamfile used for sorting. The tag must be of type "Z".}
+
+\item{n_records_to_check}{The number of bam records to query to validate that the
+tag is present and of the correct type. Set to 0 to disable checks.}
 }
 \value{
 name of index generated, which is the bam file + ".bri"
@@ -16,8 +21,10 @@ name of index generated, which is the bam file + ".bri"
 Build index for tag sorted bam file
 }
 \examples{
-\dontrun{
 bam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_cbsort.bam", package = "raer")
 build_tag_index(bam_fn)
-}
+
+bam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_ubsort.bam", package = "raer")
+build_tag_index(bam_fn, tag = "UB")
+
 }

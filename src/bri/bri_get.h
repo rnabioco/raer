@@ -30,7 +30,7 @@ void bam_read_idx_get_range(const bam_read_idx* bri,
 void bam_read_idx_get_by_record(htsFile* fp, bam_hdr_t* hdr, bam1_t* b, bam_read_idx_record* bri_record);
 
 // main of the "get" subprogram
-int bam_read_idx_get_main(int argc, char** argv);
+//int bam_read_idx_get_main(int argc, char** argv);
 
 // call get by argument
 int bam_read_idx_get(const char* input_bam,
