@@ -17,8 +17,8 @@ get_region <- function(region) {
     .Call(`_raer_get_region`, region)
 }
 
-c_build_index <- function(bampath, idxpath) {
-    .Call(`_raer_c_build_index`, bampath, idxpath)
+c_build_index <- function(bampath, idxpath, tag) {
+    .Call(`_raer_c_build_index`, bampath, idxpath, tag)
 }
 
 fetch_cb_reads <- function(bampath, outpath, cbs) {

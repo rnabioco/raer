@@ -8,10 +8,12 @@ extern "C" {
 
 // [[Rcpp::export(rng = false)]]
 int c_build_index(std::string bampath,
-                std::string idxpath) {
+                  std::string idxpath,
+                  std::string tag) {
   const char* cbampath = bampath.c_str();
   const char* cidxpath = idxpath.c_str();
-  bam_read_idx_build(cbampath, cidxpath) ;
+  const char* ctag = tag.c_str();
+  bam_read_idx_build(cbampath, cidxpath, ctag) ;
   return 0;
 }
 

@@ -68,13 +68,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // c_build_index
-int c_build_index(std::string bampath, std::string idxpath);
-RcppExport SEXP _raer_c_build_index(SEXP bampathSEXP, SEXP idxpathSEXP) {
+int c_build_index(std::string bampath, std::string idxpath, std::string tag);
+RcppExport SEXP _raer_c_build_index(SEXP bampathSEXP, SEXP idxpathSEXP, SEXP tagSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< std::string >::type bampath(bampathSEXP);
     Rcpp::traits::input_parameter< std::string >::type idxpath(idxpathSEXP);
-    rcpp_result_gen = Rcpp::wrap(c_build_index(bampath, idxpath));
+    Rcpp::traits::input_parameter< std::string >::type tag(tagSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_build_index(bampath, idxpath, tag));
     return rcpp_result_gen;
 END_RCPP
 }

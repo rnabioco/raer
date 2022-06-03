@@ -18,16 +18,16 @@
 //
 // Getopt
 //
-enum {
-    OPT_HELP = 1,
-};
-
-static const char* shortopts = ":i:"; // placeholder
-static const struct option longopts[] = {
-    { "help",                      no_argument,       NULL, OPT_HELP },
-    { "index",               required_argument,       NULL,      'i' },
-    { NULL, 0, NULL, 0 }
-};
+// enum {
+//     OPT_HELP = 1,
+// };
+//
+// static const char* shortopts = ":i:"; // placeholder
+// static const struct option longopts[] = {
+//     { "help",                      no_argument,       NULL, OPT_HELP },
+//     { "index",               required_argument,       NULL,      'i' },
+//     { NULL, 0, NULL, 0 }
+// };
 
 void print_usage_get()
 {
@@ -156,83 +156,83 @@ int bam_read_idx_get(const char* input_bam,
 }
 
 //
-int bam_read_idx_get_main(int argc, char** argv)
-{
-    char* input_bri = NULL;
-
-    int die = 0;
-    for (char c; (c = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1;) {
-        switch (c) {
-            case OPT_HELP:
-                print_usage_get();
-                exit(EXIT_SUCCESS);
-            case 'i':
-                input_bri = optarg;
-        }
-    }
-
-    if (argc - optind < 2) {
-        Rf_error("bri get: not enough arguments\n");
-        die = 1;
-    }
-
-    if(die) {
-        print_usage_get();
-    }
-
-    char* input_bam = argv[optind++];
-    char* output_bam = argv[optind++];
-    bam_read_idx* bri = bam_read_idx_load(input_bam, input_bri);
-
-    htsFile *bam_fp = sam_open(input_bam, "r");
-    bam_hdr_t *h = sam_hdr_read(bam_fp);
-    htsFile *out_fp ;
-    out_fp = hts_open(output_bam, "wb");
-
-    int ret = 0;
-    ret = sam_hdr_write(out_fp, h);
-    if(ret != 0){
-      Rf_error("[bri] sam_hdr_write failed\n");
-    }
-
-    bam_read_idx_record* start;
-    bam_read_idx_record* end;
-
-    for(int i = optind; i < argc; i++) {
-        char* readname = argv[i];
-        bam_read_idx_get_range(bri, readname, &start, &end);
-
-        bam1_t *b = bam_init1();
-        int n_rec = 0;
-        while(start != end) {
-            int ret = bgzf_seek(bam_fp->fp.bgzf , start->file_offset, SEEK_SET);
-            if(ret != 0) {
-                Rf_error("[bri] bgzf_seek failed\n");
-            }
-
-            while(n_rec < start->n_aln){
-                ret = sam_read1(bam_fp, h, b);
-                if(ret < 0) {
-                    Rf_error("[bri] sam_read1 failed\n");
-
-                }
-                int ret = sam_write1(out_fp, h, b);
-                if(ret < 0) {
-                    Rf_error("[bri] sam_write1 failed\n");
-                }
-                n_rec += 1;
-
-            }
-            start++;
-        }
-        bam_destroy1(b);
-    }
-
-    hts_close(out_fp);
-    bam_hdr_destroy(h);
-    hts_close(bam_fp);
-    bam_read_idx_destroy(bri);
-    bri = NULL;
-
-    return 0;
-}
+// int bam_read_idx_get_main(int argc, char** argv)
+// {
+//     char* input_bri = NULL;
+//
+//     int die = 0;
+//     for (char c; (c = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1;) {
+//         switch (c) {
+//             case OPT_HELP:
+//                 print_usage_get();
+//                 exit(EXIT_SUCCESS);
+//             case 'i':
+//                 input_bri = optarg;
+//         }
+//     }
+//
+//     if (argc - optind < 2) {
+//         Rf_error("bri get: not enough arguments\n");
+//         die = 1;
+//     }
+//
+//     if(die) {
+//         print_usage_get();
+//     }
+//
+//     char* input_bam = argv[optind++];
+//     char* output_bam = argv[optind++];
+//     bam_read_idx* bri = bam_read_idx_load(input_bam, input_bri);
+//
+//     htsFile *bam_fp = sam_open(input_bam, "r");
+//     bam_hdr_t *h = sam_hdr_read(bam_fp);
+//     htsFile *out_fp ;
+//     out_fp = hts_open(output_bam, "wb");
+//
+//     int ret = 0;
+//     ret = sam_hdr_write(out_fp, h);
+//     if(ret != 0){
+//       Rf_error("[bri] sam_hdr_write failed\n");
+//     }
+//
+//     bam_read_idx_record* start;
+//     bam_read_idx_record* end;
+//
+//     for(int i = optind; i < argc; i++) {
+//         char* readname = argv[i];
+//         bam_read_idx_get_range(bri, readname, &start, &end);
+//
+//         bam1_t *b = bam_init1();
+//         int n_rec = 0;
+//         while(start != end) {
+//             int ret = bgzf_seek(bam_fp->fp.bgzf , start->file_offset, SEEK_SET);
+//             if(ret != 0) {
+//                 Rf_error("[bri] bgzf_seek failed\n");
+//             }
+//
+//             while(n_rec < start->n_aln){
+//                 ret = sam_read1(bam_fp, h, b);
+//                 if(ret < 0) {
+//                     Rf_error("[bri] sam_read1 failed\n");
+//
+//                 }
+//                 int ret = sam_write1(out_fp, h, b);
+//                 if(ret < 0) {
+//                     Rf_error("[bri] sam_write1 failed\n");
+//                 }
+//                 n_rec += 1;
+//
+//             }
+//             start++;
+//         }
+//         bam_destroy1(b);
+//     }
+//
+//     hts_close(out_fp);
+//     bam_hdr_destroy(h);
+//     hts_close(bam_fp);
+//     bam_read_idx_destroy(bri);
+//     bri = NULL;
+//
+//     return 0;
+// }

@@ -2,30 +2,33 @@
 % Please edit documentation in R/sc-utils.R
 \name{get_cell_bam}
 \alias{get_cell_bam}
-\title{Subset a bam file to contain only certain cell barcodes}
+\title{Subset a bam file to contain only certain tags (e.g. cell barcords)}
 \usage{
-get_cell_bam(inbam, barcodes, outbam = NULL)
+get_cell_bam(inbam, barcodes, outbam = NULL, pos_sort_output = TRUE)
 }
 \arguments{
 \item{inbam}{input tag indexed bam file}
 
 \item{barcodes}{character vector of tag values to extract}
 
-\item{outbam}{optional output bam file name}
+\item{outbam}{optional output bam file name, if not supplied a temporary
+file will be used}
+
+\item{pos_sort_output}{if TRUE, sort output bamfile by position and generate
+a samtools style index}
 }
 \value{
-Returns name of output bam file
+Returns name of output bam file. the output bam file will be
+positionally sorted and positionally indexed using Rsamtools.
 }
 \description{
-Subset a bam file to contain only certain cell barcodes
+Subset a bam file to contain only certain tags (e.g. cell barcords)
 }
 \examples{
-\dontrun{
 library(GenomicAlignments)
 bam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_cbsort.bam", package = "raer")
 build_tag_index(bam_fn)
 cbs <- c("AGGATAATCTCAGAAC-1", "TTCGATTTCCCGAGGT-1")
 bam_out <- get_cell_bam(bam_fn, barcodes = cbs)
 readGAlignments(bam_out, param = ScanBamParam(tag = "CB"))
-}
 }
