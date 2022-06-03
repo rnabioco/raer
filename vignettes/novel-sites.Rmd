@@ -11,7 +11,7 @@ vignette: >
   %\VignetteIndexEntry{Find-Novel-Sites}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}    
-  %\VignetteDepends{TxDb.Hsapiens.UCSC.hg38.knownGene, AnnotationHub}
+  %\VignetteDepends{TxDb.Hsapiens.UCSC.hg38.knownGene}
 ---
 
 ```{r setup, include=FALSE}
@@ -25,7 +25,6 @@ library(GenomicFeatures)
 library(SummarizedExperiment)
 library(rtracklayer)
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
-library(AnnotationHub)
 ```
 
 # Novel RNA editing site detection tutorial
@@ -46,15 +45,17 @@ Additionally we will use the following additional annotation resources:
   
   - A database of known SNPs, for example the `SNPlocs.Hsapiens.dbSNP155.GRCh38` package. Due to space and memory constraints , in this vignette we will use a BED file containing SNPs from the first 1Mb region of chr4.  
   - `TxDb.Hsapiens.UCSC.hg38.knownGene`, a database of transcript models. Alternatively these can be generated from a `.gtf` file using `makeTxDbFromGRanges()` from the `GenomicFeatures` package.  
-  - RepeatMasker annotations, which we will obtain from the `AnnotationHub()`. 
+  - RepeatMasker annotations, which can be obtained from the `AnnotationHub()` for hg38. For space reasons these annotations for chr4 have been included as a text file. 
 
 ```{r}
-ah <- AnnotationHub()
-rmskhg38 <- ah[["AH99003"]]
-
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 
 chr4snps <- import(fns$snps)
+
+rmskhg38 <- read.table(fns$rmsk)
+rmskhg38 <- makeGRangesFromDataFrame(rmskhg38,
+                                     keep.extra.columns = TRUE, 
+                                     starts.in.df.are.0based = TRUE)
 ```
 
 
