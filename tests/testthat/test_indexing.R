@@ -96,3 +96,35 @@ test_that("other tag (UB) retrival works", {
   unlink(c(bam_out, paste0(bam_out, ".bai")))
   unlink(paste0(ubbam_fn, ".bri"))
 })
+
+test_that("invalid input is caught", {
+  expect_error(build_tag_index("hello.bam"))
+  tmpfn <- tempfile()
+  writeLines("hello", tmpfn)
+  expect_error(build_tag_index(tmpfn))
+  unlink(tmpfn)
+
+  idx_fn <- build_tag_index(cbbam_fn, tag = "CB")
+  expect_error(get_cell_bam(cbbam_fn, barcodes = NA))
+  expect_error(get_cell_bam(cbbam_fn, barcodes = 1))
+  expect_error(get_cell_bam(cbbam_fn, barcodes = character()))
+
+  # barcodes not in bam produce empty bam
+  tmp_bam <- get_cell_bam(cbbam_fn, barcodes = "hello")
+  alns <- scanBam(tmp_bam)
+  expect_true(all(unlist(lapply(alns[[1]], length)) == 0))
+
+  unlink(c(idx_fn, tmp_bam))
+})
+
+
+
+
+
+
+
+
+
+
+
+

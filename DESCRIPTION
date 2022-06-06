@@ -34,7 +34,10 @@ Imports:
     rtracklayer,
     ggplot2,
     stringr,
-    zlibbioc
+    zlibbioc,
+    fastmap,
+    VariantTools,
+    Matrix
 Suggests:
     testthat,
     knitr,

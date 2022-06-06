@@ -78,3 +78,5 @@ get_tabix_chroms <- function(filename){
 raer_example <- function(path) {
   system.file("extdata", path, package = "raer", mustWork = TRUE)
 }
+
+

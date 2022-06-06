@@ -33,3 +33,40 @@ int fetch_cb_reads(std::string bampath,
                          cstrings.size()) ;
   return ret;
 }
+
+// [[Rcpp::export(rng = false)]]
+IntegerMatrix cpp_fill_sparse_matrix(const std::vector<std::vector<int> >& vals,
+                                     const std::vector<std::vector<int> >& hits) {
+
+  int nv = vals.size();
+  int nh = hits.size();
+  if(nv != nh){
+    stop("mismatched vals and hits lists");
+  }
+  if(nv == 0){
+    stop("No entries to populate matrix");
+  }
+  // determine total # of entries
+  int n = 0;
+  for(int i = 0; i < nv; ++i){
+    n += hits[i].size();
+  }
+
+  IntegerMatrix sm(n, 3);
+  int pos = 0;
+  for(int i = 0; i < nv; ++i){
+    int vs = vals[i].size();
+    int hs = hits[i].size();
+    if(vs != hs){
+      stop("mismatched vals and hits lists");
+    }
+    for (int j = 0; j < vs; ++j){
+      sm(pos, 0) = hits[i][j];
+      sm(pos, 1) = i + 1;
+      sm(pos, 2) = vals[i][j];
+      pos += 1;
+    }
+  }
+
+  return sm;
+}

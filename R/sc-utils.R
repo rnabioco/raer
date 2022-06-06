@@ -62,6 +62,7 @@ build_tag_index <- function(bamfn, tag = "CB", n_records_to_check = 1e3){
 #' file will be used
 #' @param pos_sort_output if TRUE, sort output bamfile by position and generate
 #' a samtools style index
+#' @param ... Additional arguments passed to [Rsamtools::sortBam()]
 #'
 #' @returns Returns name of output bam file. the output bam file will be
 #' positionally sorted and positionally indexed using Rsamtools.
@@ -77,7 +78,8 @@ build_tag_index <- function(bamfn, tag = "CB", n_records_to_check = 1e3){
 get_cell_bam <- function(inbam,
                          barcodes,
                          outbam = NULL,
-                         pos_sort_output = TRUE){
+                         pos_sort_output = TRUE,
+                         ...){
   stopifnot(file.exists(inbam))
   inbam <- path.expand(inbam)
   idx_file <- paste0(inbam, ".bri")
@@ -87,7 +89,7 @@ get_cell_bam <- function(inbam,
          "then index in R:\n",
          "raer::build_tag_index('your_sorted.bam', tag = 'CB')")
   }
-  stopifnot(is.character(barcodes))
+  stopifnot(is.character(barcodes) && length(barcodes) > 0)
 
   tmp_bam <- tempfile(fileext = ".bam")
   if(is.null(outbam)){
@@ -100,10 +102,115 @@ get_cell_bam <- function(inbam,
   if(pos_sort_output){
     # Rsamtools will add .bam to end of the output bam file
     outbam <- gsub(pattern = ".bam$", "", outbam)
-    outbam <- Rsamtools::sortBam(tmp_bam, outbam)
+    outbam <- Rsamtools::sortBam(tmp_bam, outbam, ...)
     Rsamtools::indexBam(outbam)
   }
 
   unlink(tmp_bam)
   return(outbam)
+}
+
+#' @importFrom GenomicAlignments coverage
+#' @importFrom VariantTools extractCoverageForPositions
+filter_by_coverage <- function(bamfile, gr, min_counts, ...){
+  cov <- GenomicAlignments::coverage(bamfile, ...)
+  cov <- cov[names(cov) %in% seqlevels(gr)]
+  cov <- VariantTools::extractCoverageForPositions(cov, gr)
+  gr[cov >= min_counts]
+}
+
+
+get_cell_pileup <- function(bamfn, fafn, cellbarcodes, ...){
+  cluster_bam <- get_cell_bam(bamfn,
+                              barcodes = cellbarcodes,
+                              NULL,
+                              maxMemory = 1024)
+  on.exit(unlink(c(cluster_bam, paste0(cluster_bam, ".bri"))))
+
+  out <- get_pileup(cluster_bam,
+                    fafile = fafn,
+                    bedfile = NULL,
+                    ...)
+
+  unlink(cluster_bam)
+  out
+}
+
+
+#' Calculate editing frequencies
+#'
+#' @param bamfn BAM file name
+#' @param fafn FASTA file name
+#' @param bedfn BED file containing editing sites
+#' @param cell_barcodes List of character vectors containing cell barcodes
+#' to query. See examples for specification.
+#' @param cell_bc_tag tag in bam file containing cell barcodes
+#' @param min_counts Minimum read counts required to consider a site for editing.
+#' This is calculated across all reads in the bamfile prior to running `get_pileup()`
+#' per cell to remove low-frequency events. Read alignments are required to be
+#' non-duplicate, primary, QC passing, and non-supplemental.
+#' @param assay_cols assays to store in returned se. Set to "A" and "G". Note that
+#' storing multiple assays can require large amounts of memory.
+#' @param ... additional arguments passed to `[get_pileup()]`.
+#' @param BPPARAM BiocParallel instance. Parallel computation occurs across
+#' each entry in the cell_barcodes list
+#' @param verbose Display messages
+#'
+#'
+#' @importFrom rtracklayer import
+#' @importFrom Rsamtools ScanBamParam scanBamFlag
+
+#' @export
+sc_editing <- function(bamfn,
+                       fafn,
+                       bedfn,
+                       cell_barcodes,
+                       cell_bc_tag = "CB",
+                       min_counts = 25L,
+                       assay_cols = c("nA", "nG"),
+                       ...,
+                       BPPARAM = SerialParam(),
+                       verbose = TRUE){
+  if(min_counts > 0){
+    if(verbose) message("calculating coverage using all reads")
+    bed <- rtracklayer::import(bedfn)
+    n_sites <- length(bed)
+    bed <- filter_by_coverage(bamfn, bed, min_counts,
+                              param = ScanBamParam(flag = scanBamFlag(isSecondaryAlignment = FALSE,
+                                                                      isDuplicate = FALSE,
+                                                                      isSupplementaryAlignment = FALSE,
+                                                                      isNotPassingQualityControls = FALSE)))
+
+    message("Input bed contained ", n_sites, " sites\n",
+            "After filtering by min_count, ", length(bed), " sites remain")
+    tmp_bed <- tempfile(fileext = ".bed")
+    on.exit(unlink(tmp_bed))
+    export(bed, tmp_bed)
+    bedfn <- tmp_bed
+  }
+
+  if(!file.exists(paste0(bamfn, ".bri"))){
+    if(verbose) message("building cellbarcode index for bam file")
+    build_tag_index(bamfn)
+  }
+
+  # build c-level hash of regions to keep once, rather at every iteration
+  idx <- indexBed(bedfn)
+
+  if(verbose) message("beginning pileup")
+  res <- bplapply(seq_along(cell_barcodes), function(i){
+    if(verbose){
+      message("working on: ", names(cell_barcodes)[i])
+    }
+    get_cell_pileup(bamfn, fafn, cell_barcodes[[i]],
+                    bedidx = idx, return_data = TRUE, ...)
+  }, BPPARAM = BPPARAM)
+  bpstop(BPPARAM)
+
+  if(verbose) message("collecting pileups into summarizedExperiment")
+  se <- create_se(res,
+                  assay_cols = assay_cols,
+                  sparse = TRUE,
+                  fill_na = 0L)
+  se
 }

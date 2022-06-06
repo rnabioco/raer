@@ -4,7 +4,7 @@
 \alias{get_cell_bam}
 \title{Subset a bam file to contain only certain tags (e.g. cell barcords)}
 \usage{
-get_cell_bam(inbam, barcodes, outbam = NULL, pos_sort_output = TRUE)
+get_cell_bam(inbam, barcodes, outbam = NULL, pos_sort_output = TRUE, ...)
 }
 \arguments{
 \item{inbam}{input tag indexed bam file}
@@ -16,6 +16,8 @@ file will be used}
 
 \item{pos_sort_output}{if TRUE, sort output bamfile by position and generate
 a samtools style index}
+
+\item{...}{Additional arguments passed to \code{\link[Rsamtools:scanBam]{Rsamtools::sortBam()}}}
 }
 \value{
 Returns name of output bam file. the output bam file will be

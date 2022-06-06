@@ -91,3 +91,14 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_fill_sparse_matrix
+IntegerMatrix cpp_fill_sparse_matrix(const std::vector<std::vector<int> >& vals, const std::vector<std::vector<int> >& hits);
+RcppExport SEXP _raer_cpp_fill_sparse_matrix(SEXP valsSEXP, SEXP hitsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int> >& >::type vals(valsSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int> >& >::type hits(hitsSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_fill_sparse_matrix(vals, hits));
+    return rcpp_result_gen;
+END_RCPP
+}

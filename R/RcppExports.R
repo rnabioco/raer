@@ -25,3 +25,7 @@ fetch_cb_reads <- function(bampath, outpath, cbs) {
     .Call(`_raer_fetch_cb_reads`, bampath, outpath, cbs)
 }
 
+cpp_fill_sparse_matrix <- function(vals, hits) {
+    .Call(`_raer_cpp_fill_sparse_matrix`, vals, hits)
+}
+

@@ -10,6 +10,7 @@
 
 /* .Call calls */
 extern SEXP _raer_c_build_index(SEXP, SEXP, SEXP);
+extern SEXP _raer_cpp_fill_sparse_matrix(SEXP, SEXP);
 extern SEXP _raer_cread_tabix(SEXP, SEXP);
 extern SEXP _raer_fetch_cb_reads(SEXP, SEXP, SEXP);
 extern SEXP _raer_get_region(SEXP);
@@ -20,6 +21,7 @@ extern SEXP bedfile_close(SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
   {"_raer_c_build_index",  (DL_FUNC) &_raer_c_build_index,  3},
+  {"_raer_cpp_fill_sparse_matrix", (DL_FUNC) &_raer_cpp_fill_sparse_matrix, 2},
   {"_raer_cread_tabix",   (DL_FUNC) &_raer_cread_tabix,    2},
   {"_raer_fetch_cb_reads", (DL_FUNC) &_raer_fetch_cb_reads, 3},
   {"_raer_get_region",     (DL_FUNC) &_raer_get_region,     1},
