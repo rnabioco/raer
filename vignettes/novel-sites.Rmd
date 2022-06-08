@@ -36,6 +36,7 @@ In this vignette a public RNA-seq and Whole-Genome sequencing dataset will be an
 Aligned BAM files and a genome fasta file have been preprocessed for this vignette. These files occupy ~100 Mb of space and contain alignments from the first 1MB of chromosome 4. By default these files are stored in a temporary directory. Change the `data_dir` variable to a valid file path to keep the files for reuse.
 
 ```{r}
+data_dir <- tempdir()
 fns <- download_NA12878(data_dir)
 fns
 ```
