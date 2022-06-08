@@ -91,6 +91,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// c_show_index
+DataFrame c_show_index(std::string bamfn, std::string idxfn);
+RcppExport SEXP _raer_c_show_index(SEXP bamfnSEXP, SEXP idxfnSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< std::string >::type bamfn(bamfnSEXP);
+    Rcpp::traits::input_parameter< std::string >::type idxfn(idxfnSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_show_index(bamfn, idxfn));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_fill_sparse_matrix
 IntegerMatrix cpp_fill_sparse_matrix(const std::vector<std::vector<int> >& vals, const std::vector<std::vector<int> >& hits);
 RcppExport SEXP _raer_cpp_fill_sparse_matrix(SEXP valsSEXP, SEXP hitsSEXP) {

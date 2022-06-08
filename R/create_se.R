@@ -12,12 +12,15 @@
 #' @param sample_names A list of names to be added to the SE object.
 #' If no sample names are given and plps is not a named list, then
 #' default names (ie sample_1, sample_2, ..., sample_n) will be given and
-#' a warn will be printed.
+#' a warning will be printed.
+#' @param sparse If TRUE, numeric matrices will be stored as sparseMatrices. All
+#' missing values will be coerced to 0 in the sparseMatrices.
 #' @param fill_na Numeric value to replace NAs in numeric matrices Should only be
 #'  used when plps were computed independently with a min_nucleotide_count = 1,
 #'  otherwise sites may be set to 0, although they may have coverage > 0 but less
-#'  than the min_nucleotide_count parameter.
-#'  @param verbose print information on progress
+#'  than the min_nucleotide_count parameter. Not applied when sparse = TRUE, which
+#'  coerces missing values to 0.
+#' @param verbose print information on progress
 #'
 #' @examples
 #' library(SummarizedExperiment)
@@ -76,7 +79,7 @@ create_se <- function(plps,
   ref_nt <- mcols(all_ranges)[["Ref"]]
   mcols(all_ranges) <- NULL
   mcols(all_ranges)$Ref <- ref_nt
-  all_ranges <- sort(unique(all_ranges))
+  all_ranges <- sort(unique(all_ranges), ignore.strand = TRUE)
   assay_cols <- setdiff(assay_cols, "Ref")
 
   if(!sparse){
@@ -106,7 +109,7 @@ create_se <- function(plps,
   colnames(se) <- se$sample
   rownames(se) <- site_names(rowRanges(se))
 
-  if(!is.null(fill_na)){
+  if(!is.null(fill_na) && !sparse){
     assays(se) <- lapply(assays(se), function(x){
       if(is.numeric(x)) x[is.na(x)] <- fill_na
       x
@@ -121,6 +124,8 @@ fill_matrices <- function(plps, assays, gr, verbose = TRUE){
   if(length(assays) == 0){
     return(NULL)
   }
+
+  plps <- as(plps, "GRangesList")
 
   plp_assays <- lapply(assays, function(x){
     matrix(NA,
@@ -183,8 +188,12 @@ fill_sparse_matrices <- function(plps, assays, gr, use_hashmap = TRUE, verbose =
           message("processed ", i, " pileups")
        }
       }
-      all_hits[[i]] <- unlist(hm$mget(site_names(plps[[i]])),
-                                      use.names = FALSE)
+      if(length(plps[[i]]) == 0){
+        all_hits[[i]] <- integer(0)
+      } else {
+        all_hits[[i]] <- sort(unlist(hm$mget(site_names(plps[[i]])),
+                                use.names = FALSE))
+      }
     }
     hm$reset()
     rm(hm)
@@ -210,6 +219,9 @@ fill_sparse_matrices <- function(plps, assays, gr, use_hashmap = TRUE, verbose =
 
 #' @importFrom stringr str_c
 site_names <- function(gr){
+  if(length(gr) == 0){
+    return(NULL)
+  }
   stringr::str_c(seqnames(gr),
                  "_",
                  start(gr),

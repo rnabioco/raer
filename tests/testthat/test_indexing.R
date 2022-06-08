@@ -52,10 +52,10 @@ test_that("CB tag retrival works", {
     query_cbs <- cbs[seq_len(n_cbs)]
     # idx doesn't exist
     unlink(paste0(cbbam_fn, ".bri"))
-    expect_error(get_cell_bam(cbbam_fn, barcodes = cbs))
+    expect_error(get_tag_bam(cbbam_fn, barcodes = cbs))
 
     idx_fn <- build_tag_index(cbbam_fn, tag = tag_val)
-    bam_out <- get_cell_bam(cbbam_fn, barcodes = query_cbs)
+    bam_out <- get_tag_bam(cbbam_fn, barcodes = query_cbs)
     alns <- scanBam(bam_out, param = ScanBamParam(tag = tag_val))
 
     bam_cbs <- alns[[1]]$tag[[tag_val]]
@@ -82,10 +82,10 @@ test_that("other tag (UB) retrival works", {
   query_cbs <- cbs[seq_len(n_cbs)]
   # idx doesn't exist
   unlink(paste0(ubbam_fn, ".bri"))
-  expect_error(get_cell_bam(ubbam_fn, barcodes = cbs))
+  expect_error(get_tag_bam(ubbam_fn, barcodes = cbs))
 
   idx_fn <- build_tag_index(ubbam_fn, tag = tag_val)
-  bam_out <- get_cell_bam(ubbam_fn, barcodes = query_cbs)
+  bam_out <- get_tag_bam(ubbam_fn, barcodes = query_cbs)
   alns <- scanBam(bam_out, param = ScanBamParam(tag = tag_val))
 
   bam_cbs <- alns[[1]]$tag[[tag_val]]
@@ -105,19 +105,34 @@ test_that("invalid input is caught", {
   unlink(tmpfn)
 
   idx_fn <- build_tag_index(cbbam_fn, tag = "CB")
-  expect_error(get_cell_bam(cbbam_fn, barcodes = NA))
-  expect_error(get_cell_bam(cbbam_fn, barcodes = 1))
-  expect_error(get_cell_bam(cbbam_fn, barcodes = character()))
+  expect_error(get_tag_bam(cbbam_fn, barcodes = NA))
+  expect_error(get_tag_bam(cbbam_fn, barcodes = 1))
+  expect_error(get_tag_bam(cbbam_fn, barcodes = character()))
 
   # barcodes not in bam produce empty bam
-  tmp_bam <- get_cell_bam(cbbam_fn, barcodes = "hello")
+  tmp_bam <- get_tag_bam(cbbam_fn, barcodes = "hello")
   alns <- scanBam(tmp_bam)
   expect_true(all(unlist(lapply(alns[[1]], length)) == 0))
 
   unlink(c(idx_fn, tmp_bam))
 })
 
+test_that("tag values can be obtained from index", {
+  idx_fn <- build_tag_index(cbbam_fn, tag = "CB")
+  df <- show_tag_index(cbbam_fn)
+  expect_equal(ncol(df), 2)
+  expect_true(is(df, "data.frame"))
+  expect_true("AAACCCAGTCACTTAG-1" %in% df$tag)
 
+  # check # of CB containing reads == #s reported in index
+  alns <- scanBam(cbbam_fn, param = ScanBamParam(tag = "CB"))
+  tags <- alns[[1]]$tag$CB
+  ex <- as.data.frame(table(tags))
+  colnames(ex) <- c("tag", "n")
+  expect_true(all(df == ex))
+
+  unlink(idx_fn)
+})
 
 
 

@@ -36,7 +36,6 @@ Imports:
     stringr,
     zlibbioc,
     fastmap,
-    VariantTools,
     Matrix
 Suggests:
     testthat,

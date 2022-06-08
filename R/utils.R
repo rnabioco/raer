@@ -80,3 +80,21 @@ raer_example <- function(path) {
 }
 
 
+#' Copy of VariantTools::extractCoverageForPositions
+#' Authors: Michael Lawrence, Jeremiah Degenhardt, Robert Gentleman
+#' @param cov coverage produced by [GenomicAlignments::coverage()]
+#' @param pos GRanges containing editing sites
+#' @importFrom GenomeInfoDb `seqlevels<-` seqlevels
+getCoverageAtPositions <- function(cov, pos){
+  if (length(setdiff(seqlevels(pos), names(cov))) > 0L)
+    stop("Some seqlevels are missing from coverage")
+  if (any(width(pos) > 1L))
+    stop("Some ranges are of width > 1")
+  seqlevels(pos) <- names(cov)
+  ord <- order(seqnames(pos))
+  ans <- integer(length(pos))
+  ans[ord] <- unlist(mapply(function(v, p) {
+    runValue(v)[findRun(p, v)]
+  }, cov, split(start(pos), seqnames(pos)), SIMPLIFY=FALSE), use.names=FALSE)
+  ans
+}

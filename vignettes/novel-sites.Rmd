@@ -33,10 +33,9 @@ This vignette will demonstrate how to identify novel RNA editing sites using the
 
 In this vignette a public RNA-seq and Whole-Genome sequencing dataset will be analyzed. High coverage whole-genome sequencing was conducted [ERR262997](https://www.ebi.ac.uk/ena/browser/view/ERR262997?show=reads) along with paired-end RNA-seq [SRR1258218](https://www.ebi.ac.uk/ena/browser/view/SRR1258218?show=reads). 
 
-Aligned BAM files and a genome fasta file have been preprocessed for this vignette. These files occupy ~100 Mb of space and contain alignments from the first 1MB of chromosome 4. 
+Aligned BAM files and a genome fasta file have been preprocessed for this vignette. These files occupy ~100 Mb of space and contain alignments from the first 1MB of chromosome 4. By default these files are stored in a temporary directory. Change the `data_dir` variable to a valid file path to keep the files for reuse.
 
 ```{r}
-data_dir <- tempdir()
 fns <- download_NA12878(data_dir)
 fns
 ```
@@ -79,20 +78,21 @@ fp <- FilterParam(min_nucleotide_depth = 1,
                   indel_dist = 4,
                   homopolymer_len = 6,
                   max_mismatch_type = c(3, 3),
+                  min_read_bqual = c(0.25, 20),
                   only_keep_variants = c(TRUE, FALSE))
 
-res <- get_pileup(c(rna_bam, wgs_bam),
+plps <- get_pileup(c(rna_bam, wgs_bam),
                   fafile = fafn,
                   chrom = "chr4",
                   filterParam = fp)
-names(res) <- c("rna", "dna")
-res
+names(plps) <- c("rna", "dna")
+plps
 ```
 
 
 
 ```{r}
-se <- create_se(res)
+se <- create_se(plps)
 se
 ```
 
@@ -165,6 +165,7 @@ se <- se[assay(se, "nVar")[, 1] >= 2]
 
 
 ```{r}
+stopifnot(all(rowData(se)$Var == "AG"))
 rowRanges(se)
 ```
 

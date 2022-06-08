@@ -23,13 +23,18 @@ will be named using the names in the list.}
 \item{sample_names}{A list of names to be added to the SE object.
 If no sample names are given and plps is not a named list, then
 default names (ie sample_1, sample_2, ..., sample_n) will be given and
-a warn will be printed.}
+a warning will be printed.}
+
+\item{sparse}{If TRUE, numeric matrices will be stored as sparseMatrices. All
+missing values will be coerced to 0 in the sparseMatrices.}
 
 \item{fill_na}{Numeric value to replace NAs in numeric matrices Should only be
 used when plps were computed independently with a min_nucleotide_count = 1,
 otherwise sites may be set to 0, although they may have coverage > 0 but less
-than the min_nucleotide_count parameter.
-@param verbose print information on progress}
+than the min_nucleotide_count parameter. Not applied when sparse = TRUE, which
+coerces missing values to 0.}
+
+\item{verbose}{print information on progress}
 }
 \description{
 This function will take either a single result from running get_pileup() or a list of

@@ -42,7 +42,6 @@
 #' @importFrom Rsamtools bgzip indexTabix TabixFile scanTabix
 #' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges
-#' @importFrom data.table fread
 #' @importFrom BiocParallel SerialParam bpstop bplapply ipcid ipclock ipcunlock
 #' @rdname get_pileup
 #' @export
@@ -179,10 +178,11 @@ get_pileup <- function(bamfiles,
   filterParam <- .adjustParams(filterParam, n_files)
   fp <- .as.list_FilterParam(filterParam)
 
-  # encode libtype as 0 = genomic-unstranded,
-  #                   1 = fr-first-strand,
-  #                   2 = fr-second-strand
-  #                   3 = unstranded
+  # encode libtype as
+  # 0 = genomic-unstranded  all reads on + strand
+  # 1 = fr-first-strand     strand based on R1/antisense, R2/sense
+  # 2 = fr-second-strand    strand based on R1/sense, R2/antisense
+  # 3 = unstranded          strand based on alignment
   lib_values <- c("genomic-unstranded",
                   "fr-first-strand",
                   "fr-second-strand",
@@ -336,7 +336,7 @@ MAX_INT <- 536870912
 #'
 #' plp <- get_pileup(bamfn, fafn, return_data = FALSE)
 #' read_pileup(plp)
-#'
+#' @importFrom data.table fread
 #' @export
 read_pileup <- function(tbx_fn, region = NULL){
 

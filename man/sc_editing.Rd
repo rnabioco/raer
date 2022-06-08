@@ -5,37 +5,37 @@
 \title{Calculate editing frequencies}
 \usage{
 sc_editing(
-  bamfn,
-  fafn,
-  bedfn,
+  bamfile,
+  fafile,
+  bedfile,
   cell_barcodes,
-  cell_bc_tag = "CB",
-  min_counts = 25L,
+  min_reads = 25L,
   assay_cols = c("nA", "nG"),
+  tag_index_args = list(tag = "CB"),
   ...,
   BPPARAM = SerialParam(),
   verbose = TRUE
 )
 }
 \arguments{
-\item{bamfn}{BAM file name}
+\item{bamfile}{BAM file name}
 
-\item{fafn}{FASTA file name}
+\item{fafile}{FASTA file name}
 
-\item{bedfn}{BED file containing editing sites}
+\item{bedfile}{BED file containing editing sites}
 
 \item{cell_barcodes}{List of character vectors containing cell barcodes
 to query. See examples for specification.}
 
-\item{cell_bc_tag}{tag in bam file containing cell barcodes}
-
-\item{min_counts}{Minimum read counts required to consider a site for editing.
-This is calculated across all reads in the bamfile prior to running \code{get_pileup()}
+\item{min_reads}{Minimum read counts required to consider a site for editing.
+This is calculated across all reads in the bamfile prior to running \verb{[get_pileup()]}
 per cell to remove low-frequency events. Read alignments are required to be
 non-duplicate, primary, QC passing, and non-supplemental.}
 
 \item{assay_cols}{assays to store in returned se. Set to "A" and "G". Note that
 storing multiple assays can require large amounts of memory.}
+
+\item{tag_index_args}{arguments pass to \code{\link[=build_tag_index]{build_tag_index()}}}
 
 \item{...}{additional arguments passed to \verb{[get_pileup()]}.}
 
@@ -46,4 +46,44 @@ each entry in the cell_barcodes list}
 }
 \description{
 Calculate editing frequencies
+}
+\examples{
+suppressPackageStartupMessages(SummarizedExperiment)
+# get vector of cell barcodes in bam file (for use in this example)
+bamfn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
+idxfn <- build_tag_index(bamfn)
+cbs <- show_tag_index(bamfn)$tag
+cbs[1:5]
+
+# process each cell individually
+# will be slow with many sites and cells
+# bam file will be indexed by build_tag_index() if not already done.
+fp <- FilterParam(library_type = "fr-second-strand")
+se <- sc_editing(bamfile = bamfn,
+                 fafile = raer_example("mouse_tiny.fasta"),
+                 bedfile = raer_example("5k_neuron_sites.bed.gz"),
+                 min_reads = 0,
+                 cell_barcodes = cbs[1:15],
+                 filterParam = fp,
+                 verbose = FALSE)
+
+
+# pool cell barcodes across clusters
+# pass a named list, with each list entry corresponding to a vector
+# of cell barcodes from a cluster
+
+# simulate 5 clusters
+cb_lst <- split(cbs, cut(seq_along(cbs), breaks = 5))
+names(cb_lst) <- paste0("cluster", 1:5)
+
+se <- sc_editing(bamfile = bamfn,
+                 fafile = raer_example("mouse_tiny.fasta"),
+                 bedfile = raer_example("5k_neuron_sites.bed.gz"),
+                 min_reads = 0,
+                 cell_barcodes = cb_lst,
+                 filterParam = fp,
+                 verbose = FALSE)
+assays(se)$nA
+assays(se)$nG
+
 }
