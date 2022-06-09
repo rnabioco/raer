@@ -1,23 +1,26 @@
 #' Create RangedSummarizedExperiment
 #'
-#' This function will take either a single result from running pileup_res or a list of
+#' This function will take either a single result from running get_pileup() or a list of
 #' results (ie for different samples) from running pileup_res and will return a summarized
-#' experiment object that contains assays for each column in the pileup_res output.
-#' Currently this doesn't add any sample info and can only take a list of results.
-#' Potential added functionality would be to allow the user to give an existing
-#' SE object as input or to give sample meta data.
+#' experiment object that contains assays for specified columns in the get_pileup() output.
 #'
 #'
-#' @param plps results from running get_pileup.R, can be one result, a list
-#' of results, or a named list of results. If a named list is give, the colData
+#' @param plps results from running [get_pileup()], can be one result, a list
+#' of results, or a named list of results. If a named list is given, the colData
 #' will be named using the names in the list.
-#' @param rowdata_cols character vector of columns to store in rowData
-#' . Values must be the same across all assays (excluding NA).
 #' @param assay_cols character vector of columns to store as assays
 #' @param sample_names A list of names to be added to the SE object.
-#' If no sample names are given and pileup_res is not a named list, then
+#' If no sample names are given and plps is not a named list, then
 #' default names (ie sample_1, sample_2, ..., sample_n) will be given and
 #' a warning will be printed.
+#' @param sparse If TRUE, numeric matrices will be stored as sparseMatrices. All
+#' missing values will be coerced to 0 in the sparseMatrices.
+#' @param fill_na Numeric value to replace NAs in numeric matrices Should only be
+#'  used when plps were computed independently with a min_nucleotide_count = 1,
+#'  otherwise sites may be set to 0, although they may have coverage > 0 but less
+#'  than the min_nucleotide_count parameter. Not applied when sparse = TRUE, which
+#'  coerces missing values to 0.
+#' @param verbose print information on progress
 #'
 #' @examples
 #' library(SummarizedExperiment)
@@ -41,11 +44,14 @@
 #' @import GenomicRanges
 #' @import SummarizedExperiment
 #' @importFrom IRanges extractList
+#' @importFrom Matrix sparseMatrix
 #' @export
 create_se <- function(plps,
-                      rowdata_cols = c("Ref"),
                       assay_cols = c("Var", "nRef", "nVar", "nA", "nT", "nC", "nG"),
-                      sample_names = NULL){
+                      sample_names = NULL,
+                      sparse = FALSE,
+                      fill_na = NULL,
+                      verbose = FALSE){
   if(!is.list(plps)){
     plps <- list(plps)
   }
@@ -58,89 +64,166 @@ create_se <- function(plps,
     }
   } else {
     if(length(plps) != length(sample_names)){
-        stop(paste0("You must provide the same number of sample names as pileup results!!!
-                    You supplied ",
-                    length(plps), " pileup results but supplied ",
-                    length(sample_names), " sample names!!!"))
+      stop("You must provide the same number of sample names as pileup results",
+           "You supplied ", length(plps), " pileup results but supplied ",
+           length(sample_names), " sample names.")
+    }
+    names(plps) <- sample_names
+  }
 
+  stopifnot(all(assay_cols %in% colnames(mcols(plps[[1]]))))
+
+  # determine all ranges for across plps,
+  # store Ref nt in mcols (should be invariant)
+  all_ranges <- unlist(as(plps, "GRangesList"), use.names = FALSE)
+  ref_nt <- mcols(all_ranges)[["Ref"]]
+  mcols(all_ranges) <- NULL
+  mcols(all_ranges)$Ref <- ref_nt
+  all_ranges <- sort(unique(all_ranges), ignore.strand = TRUE)
+  assay_cols <- setdiff(assay_cols, "Ref")
+
+  if(!sparse){
+    non_sparse_assays <- assay_cols
+  } else {
+    # character matrices aren't handled by Matrix
+    ns <- !unlist(lapply(mcols(plps[[1]])[, assay_cols],
+                         function(x) is.numeric(x)))
+    non_sparse_assays <- assay_cols[ns]
+    if(any(ns)){
+      warning("sparseMatrices can only be generated for numeric values.\n",
+              non_sparse_assays, " will be stored as dense matrices ",
+              "which may consume excessive memory.")
     }
   }
 
-  # Find all ranges in the list of results
-  all_ranges <- lapply(plps, function(x){
-    mcols(x) <- NULL
-    x
-  })
+  sparse_assays <- setdiff(assay_cols, non_sparse_assays)
 
-  all_ranges <- GRangesList(all_ranges)
-  all_ranges <- unique(unlist(all_ranges, use.names = FALSE))
+  plp_assays <- fill_matrices(plps, non_sparse_assays, all_ranges, verbose)
+  sp_plp_assays <- fill_sparse_matrices(plps, sparse_assays, all_ranges,
+                                        verbose)
+  plp_assays <- c(plp_assays, sp_plp_assays)
 
-  # Loop through all samples
-  names(plps) <- sample_names
-  se_list <- lapply(sample_names, function(sample_name){
-    pileup_sample <- plps[[sample_name]]
+  se <- SummarizedExperiment(assays = plp_assays,
+                            rowRanges = all_ranges,
+                            colData = DataFrame(sample = sample_names))
+  colnames(se) <- se$sample
+  rownames(se) <- site_names(rowRanges(se))
 
-    # Add NA where there is no data
-    ranges_sample <- pileup_sample
-    mcols(ranges_sample) <- NULL
-
-    # Make a granges object of only the ranges that aren't in the current
-    # sample
-    hits <- findOverlaps(all_ranges, ranges_sample, type = "equal")
-    grl <- extractList(ranges_sample, as(hits, "List"))
-    unique_hits <- unlist(psetdiff(all_ranges, grl))
-
-    # Add an empty metadata df to the newly made granges object
-    meta_data <- matrix( NA,
-                         nrow = NROW(unique_hits),
-                         ncol = ncol(mcols(ranges_sample)))
-
-    colnames(meta_data) <- colnames(mcols(ranges_sample))
-    mcols(unique_hits) <- meta_data
-
-    # Add the "empty" object to the
-    pileup_sample <- c(pileup_sample, unique_hits)
-
-    pileup_sample <- pileup_sample[order(match(pileup_sample, all_ranges))]
-
-    assay_names <- colnames(mcols(pileup_sample))
-
-    # Pull out data frame for each column in the results, these will become
-    # the assays
-    assay_list <- lapply(assay_names, function(x){
-      return_df <- matrix(mcols(pileup_sample)[[x]])
-      colnames(return_df) <- sample_name
-      return_df
+  if(!is.null(fill_na) && !sparse){
+    assays(se) <- lapply(assays(se), function(x){
+      if(is.numeric(x)) x[is.na(x)] <- fill_na
+      x
     })
-
-    names(assay_list) <- assay_names
-
-    rowRanges <- pileup_sample
-    mcols(rowRanges) <- NULL
-    colData <- data.frame(sample = sample_name)
-
-    se <- SummarizedExperiment(assays = assay_list,
-                               rowRanges = rowRanges, colData = colData)
-    se
-  })
-
-  combined_se <- do.call(cbind, se_list)
-
-  site_id <- paste0(seqnames(rowRanges(combined_se)),
-                    "_",
-                    start(rowRanges(combined_se)),
-                    "_",
-                    as.integer(as.factor(strand(rowRanges(combined_se)))))
-  rowData(combined_se)$site_id <- site_id
-  rownames(combined_se) <- site_id
-
-  for(i in seq_along(rowdata_cols)){
-    rc <- rowdata_cols[i]
-    rowData(combined_se)[rc] <- apply(assay(combined_se, rc), 1, function(x) unique(x[!is.na(x)]))
-    assay(combined_se, rc) <- NULL
   }
-  assay_cols <- intersect(assay_cols, names(assays(combined_se)))
-  assays(combined_se) <- assays(combined_se)[assay_cols]
+  se
+}
 
-  combined_se
+# standardize and bind matrices from pileups
+# into dense matrices
+fill_matrices <- function(plps, assays, gr, verbose = TRUE){
+  if(length(assays) == 0){
+    return(NULL)
+  }
+
+  plps <- as(plps, "GRangesList")
+  plp_assays <- lapply(assays, function(x){
+    matrix(NA,
+           nrow = NROW(gr),
+           ncol = length(plps))
+  })
+  names(plp_assays) <- assays
+
+  for(i in seq_along(plps)){
+    if(verbose){
+      if(i %% 128 == 0){
+        message("processed ", i, " pileups")
+      }
+    }
+    hits <- findOverlaps(gr, plps[[i]], type = "equal")
+    hits <- queryHits(hits)
+    for(j in seq_along(plp_assays)){
+      id <- names(plp_assays)[j]
+      plp_assays[[j]][hits, i] <- mcols(plps[[i]])[[id]]
+    }
+  }
+  plp_assays
+}
+
+# standardize and bind matrices from pileups
+# into sparseMatrices
+#' @import fastmap
+fill_sparse_matrices <- function(plps, assays, gr, use_hashmap = TRUE, verbose = TRUE){
+  if(length(assays) == 0){
+    return(NULL)
+  }
+  plps <- as(plps, "GRangesList")
+
+  plp_assays <- vector("list", length(assays))
+  names(plp_assays) <- assays
+
+  all_hits <- vector("list", length(plps))
+  if(!use_hashmap){
+    ## use findOverlaps to find shared indexes
+    for(i in seq_along(plps)){
+      if(verbose){
+        if(i %% 128 == 0){
+          message("processed ", i, " pileups")
+        }
+      }
+      hits <- findOverlaps(gr, plps[[i]], type = "equal")
+      all_hits[[i]] <- queryHits(hits)
+    }
+  } else {
+    ## use rownames and hashmap to find shared indexes
+    names(gr) <- site_names(gr)
+    hm <- fastmap::fastmap()
+    vals <- 1:length(gr)
+    names(vals) <- names(gr)
+    hm$mset(.list = as.list(vals))
+
+    for(i in seq_along(plps)){
+      if(verbose){
+       if(i %% 128 == 0){
+          message("processed ", i, " pileups")
+       }
+      }
+      if(length(plps[[i]]) == 0){
+        all_hits[[i]] <- integer(0)
+      } else {
+        all_hits[[i]] <- sort(unlist(hm$mget(site_names(plps[[i]])),
+                                use.names = FALSE))
+      }
+    }
+    hm$reset()
+    rm(hm)
+  }
+
+  for(i in seq_along(plp_assays)){
+    id <- names(plp_assays)[i]
+
+    # drop zero value entries, otherwise stored in sparseMatrix
+    vals <- lapply(plps, function(x) mcols(x)[, id])
+    to_keep <- lapply(vals, function(v) v != 0)
+    hits <- all_hits
+    for(vi in seq_along(vals)){
+      vals[[vi]] <- vals[[vi]][to_keep[[vi]]]
+      hits[[vi]] <- hits[[vi]][to_keep[[vi]]]
+    }
+    x <- cpp_fill_sparse_matrix(vals, hits)
+    plp_assays[[i]] <- sparseMatrix(i = x[, 1], j = x[, 2], x = x[, 3],
+                                    dims = c(length(gr), length(plps)))
+  }
+  plp_assays
+}
+
+#' @importFrom stringr str_c
+site_names <- function(gr){
+  if(length(gr) == 0){
+    return(NULL)
+  }
+  stringr::str_c(seqnames(gr),
+                 "_",
+                 start(gr),
+                 "_",
+                 as.integer(strand(gr)))
 }

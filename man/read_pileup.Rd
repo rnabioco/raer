@@ -21,5 +21,4 @@ fafn <- system.file("extdata", "human.fasta", package = "raer")
 
 plp <- get_pileup(bamfn, fafn, return_data = FALSE)
 read_pileup(plp)
-
 }

@@ -6,33 +6,40 @@
 \usage{
 create_se(
   plps,
-  rowdata_cols = c("Ref"),
   assay_cols = c("Var", "nRef", "nVar", "nA", "nT", "nC", "nG"),
-  sample_names = NULL
+  sample_names = NULL,
+  sparse = FALSE,
+  fill_na = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
-\item{plps}{results from running get_pileup.R, can be one result, a list
-of results, or a named list of results. If a named list is give, the colData
+\item{plps}{results from running \code{\link[=get_pileup]{get_pileup()}}, can be one result, a list
+of results, or a named list of results. If a named list is given, the colData
 will be named using the names in the list.}
-
-\item{rowdata_cols}{character vector of columns to store in rowData
-. Values must be the same across all assays (excluding NA).}
 
 \item{assay_cols}{character vector of columns to store as assays}
 
 \item{sample_names}{A list of names to be added to the SE object.
-If no sample names are given and pileup_res is not a named list, then
+If no sample names are given and plps is not a named list, then
 default names (ie sample_1, sample_2, ..., sample_n) will be given and
 a warning will be printed.}
+
+\item{sparse}{If TRUE, numeric matrices will be stored as sparseMatrices. All
+missing values will be coerced to 0 in the sparseMatrices.}
+
+\item{fill_na}{Numeric value to replace NAs in numeric matrices Should only be
+used when plps were computed independently with a min_nucleotide_count = 1,
+otherwise sites may be set to 0, although they may have coverage > 0 but less
+than the min_nucleotide_count parameter. Not applied when sparse = TRUE, which
+coerces missing values to 0.}
+
+\item{verbose}{print information on progress}
 }
 \description{
-This function will take either a single result from running pileup_res or a list of
+This function will take either a single result from running get_pileup() or a list of
 results (ie for different samples) from running pileup_res and will return a summarized
-experiment object that contains assays for each column in the pileup_res output.
-Currently this doesn't add any sample info and can only take a list of results.
-Potential added functionality would be to allow the user to give an existing
-SE object as input or to give sample meta data.
+experiment object that contains assays for specified columns in the get_pileup() output.
 }
 \examples{
 library(SummarizedExperiment)

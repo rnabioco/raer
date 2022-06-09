@@ -154,5 +154,6 @@ List get_region(std::string region){
   res = List::create(Named("chrom") = chr_name_r,
                      Named("start") = beg,
                      Named("end") = end);
+  free(chr_name);
   return res;
 }

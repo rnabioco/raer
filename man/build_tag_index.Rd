@@ -4,15 +4,22 @@
 \alias{build_tag_index}
 \title{Build index for tag sorted bam file}
 \usage{
-build_tag_index(bamfn, tag = "CB", n_records_to_check = 1000)
+build_tag_index(
+  bamfile,
+  tag = "CB",
+  n_records_to_check = 1e+06,
+  overwrite = TRUE
+)
 }
 \arguments{
-\item{bamfn}{tag sorted bamfile}
+\item{bamfile}{tag sorted bamfile}
 
 \item{tag}{name of tag in bamfile used for sorting. The tag must be of type "Z".}
 
 \item{n_records_to_check}{The number of bam records to query to validate that the
 tag is present and of the correct type. Set to 0 to disable checks.}
+
+\item{overwrite}{if TRUE, regenerate index if it already exists}
 }
 \value{
 name of index generated, which is the bam file + ".bri"

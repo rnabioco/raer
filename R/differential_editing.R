@@ -29,6 +29,7 @@
 #' assay(se, "edit_freq")[1:5, ]
 #'
 #' @import SummarizedExperiment
+#' @importFrom Matrix colSums
 #' @export
 calc_edit_frequency <- function(se_object,
                                 edit_from = NULL,
@@ -91,19 +92,20 @@ calc_edit_frequency <- function(se_object,
 #' Default is 10.
 #'
 #' @import SummarizedExperiment
+#' @importFrom Matrix colSums
 count_edits <- function(se_filtered, edit_frequency = 0.01, min_count = 10,
                          edit_from = NULL, edit_to = NULL){
 
-  n_pass_filter <- colSums((assay(se_filtered, "edit_freq") > edit_frequency) &
+  n_pass_filter <- Matrix::colSums((assay(se_filtered, "edit_freq") > edit_frequency) &
                              ((assay(se_filtered, paste0("n", edit_from)) +
                                  assay(se_filtered, paste0("n", edit_to))) >=
                                 min_count))
 
   colData(se_filtered)$n_sites <- n_pass_filter
 
-  edit_idx <- colSums(assay(se_filtered, paste0("n", edit_to))) /
-    (colSums(assay(se_filtered, paste0("n", edit_from))) +
-       colSums(assay(se_filtered, paste0("n", edit_to))))
+  edit_idx <- Matrix::colSums(assay(se_filtered, paste0("n", edit_to))) /
+    (Matrix::colSums(assay(se_filtered, paste0("n", edit_from))) +
+       Matrix::colSums(assay(se_filtered, paste0("n", edit_to))))
 
   colData(se_filtered)$edit_idx <- edit_idx
 

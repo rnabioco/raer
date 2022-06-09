@@ -42,7 +42,7 @@
 #' @importFrom Rsamtools bgzip indexTabix TabixFile scanTabix
 #' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges
-#' @importFrom data.table fread
+#' @importFrom GenomeInfoDb seqlevels seqinfo seqlengths
 #' @importFrom BiocParallel SerialParam bpstop bplapply ipcid ipclock ipcunlock
 #' @rdname get_pileup
 #' @export
@@ -97,7 +97,8 @@ get_pileup <- function(bamfiles,
     stop("# of outfiles does not match # of bam input files: ", outfiles)
   }
 
-  contig_info <- Rsamtools::scanBamHeader(bamfiles[1])[[1]]$targets
+  contigs <- GenomeInfoDb::seqinfo(Rsamtools::BamFile(bamfiles[1]))
+  contig_info <- GenomeInfoDb::seqlengths(contigs)
   chroms_to_process <- names(contig_info)
   if(is.null(region)) {
     if(!is.null(chroms)){
@@ -179,10 +180,11 @@ get_pileup <- function(bamfiles,
   filterParam <- .adjustParams(filterParam, n_files)
   fp <- .as.list_FilterParam(filterParam)
 
-  # encode libtype as 0 = genomic-unstranded,
-  #                   1 = fr-first-strand,
-  #                   2 = fr-second-strand
-  #                   3 = unstranded
+  # encode libtype as
+  # 0 = genomic-unstranded  all reads on + strand
+  # 1 = fr-first-strand     strand based on R1/antisense, R2/sense
+  # 2 = fr-second-strand    strand based on R1/sense, R2/antisense
+  # 3 = unstranded          strand based on alignment
   lib_values <- c("genomic-unstranded",
                   "fr-first-strand",
                   "fr-second-strand",
@@ -310,8 +312,15 @@ get_pileup <- function(bamfiles,
 
   if(length(tbxfiles) == 1){
     res <- read_pileup(tbxfiles[[1]], region = NULL)
+    GenomeInfoDb::seqlevels(res) <- GenomeInfoDb::seqlevels(contigs)
+    GenomeInfoDb::seqinfo(res) <- contigs
   } else {
-    res <- lapply(tbxfiles, function(x) read_pileup(x, region = NULL))
+    res <- lapply(tbxfiles, function(x) {
+      xx <- read_pileup(x, region = NULL)
+      GenomeInfoDb::seqlevels(xx) <- GenomeInfoDb::seqlevels(contigs)
+      GenomeInfoDb::seqinfo(xx) <- contigs
+      xx
+      })
   }
 
   if(using_temp_files){
@@ -336,7 +345,7 @@ MAX_INT <- 536870912
 #'
 #' plp <- get_pileup(bamfn, fafn, return_data = FALSE)
 #' read_pileup(plp)
-#'
+#' @importFrom data.table fread
 #' @export
 read_pileup <- function(tbx_fn, region = NULL){
 
