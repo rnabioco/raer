@@ -42,6 +42,7 @@
 #' @importFrom Rsamtools bgzip indexTabix TabixFile scanTabix
 #' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges
+#' @importFrom GenomeInfoDb seqlevels seqinfo seqlengths
 #' @importFrom BiocParallel SerialParam bpstop bplapply ipcid ipclock ipcunlock
 #' @rdname get_pileup
 #' @export
@@ -96,7 +97,8 @@ get_pileup <- function(bamfiles,
     stop("# of outfiles does not match # of bam input files: ", outfiles)
   }
 
-  contig_info <- Rsamtools::scanBamHeader(bamfiles[1])[[1]]$targets
+  contigs <- GenomeInfoDb::seqinfo(Rsamtools::BamFile(bamfiles[1]))
+  contig_info <- GenomeInfoDb::seqlengths(contigs)
   chroms_to_process <- names(contig_info)
   if(is.null(region)) {
     if(!is.null(chroms)){
@@ -310,8 +312,15 @@ get_pileup <- function(bamfiles,
 
   if(length(tbxfiles) == 1){
     res <- read_pileup(tbxfiles[[1]], region = NULL)
+    GenomeInfoDb::seqlevels(res) <- GenomeInfoDb::seqlevels(contigs)
+    GenomeInfoDb::seqinfo(res) <- contigs
   } else {
-    res <- lapply(tbxfiles, function(x) read_pileup(x, region = NULL))
+    res <- lapply(tbxfiles, function(x) {
+      xx <- read_pileup(x, region = NULL)
+      GenomeInfoDb::seqlevels(xx) <- GenomeInfoDb::seqlevels(contigs)
+      GenomeInfoDb::seqinfo(xx) <- contigs
+      xx
+      })
   }
 
   if(using_temp_files){

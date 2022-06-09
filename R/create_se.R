@@ -126,7 +126,6 @@ fill_matrices <- function(plps, assays, gr, verbose = TRUE){
   }
 
   plps <- as(plps, "GRangesList")
-
   plp_assays <- lapply(assays, function(x){
     matrix(NA,
            nrow = NROW(gr),

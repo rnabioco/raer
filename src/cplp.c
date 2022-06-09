@@ -1,6 +1,7 @@
 #include <htslib/sam.h>
 #include <htslib/faidx.h>
 #include <htslib/khash.h>
+#include <htslib/hts_log.h>
 #include "samtools/bedidx.h"
 #include "bedfile.h"
 #include "utils.h"
@@ -643,6 +644,8 @@ int run_cpileup(const char** cbampaths,
                 char* mismatches,
                 double* read_bqual_filter,
                 SEXP ext) {
+
+  hts_set_log_level(HTS_LOG_ERROR);
 
   mplp_aux_t **data;
   int i, tid, *n_plp, tid0 = 0, ret = 0;

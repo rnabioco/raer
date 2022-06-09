@@ -48,7 +48,7 @@ each entry in the cell_barcodes list}
 Calculate editing frequencies
 }
 \examples{
-suppressPackageStartupMessages(SummarizedExperiment)
+suppressPackageStartupMessages(library(SummarizedExperiment))
 # get vector of cell barcodes in bam file (for use in this example)
 bamfn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
 idxfn <- build_tag_index(bamfn)

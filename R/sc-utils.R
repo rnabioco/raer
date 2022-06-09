@@ -201,7 +201,7 @@ get_cell_pileup <- function(bamfn, fafn, cellbarcodes, ...){
 #' @param verbose Display messages
 #'
 #' @examples
-#' suppressPackageStartupMessages(SummarizedExperiment)
+#' suppressPackageStartupMessages(library(SummarizedExperiment))
 #' # get vector of cell barcodes in bam file (for use in this example)
 # usually these would come from the single cell analysis
 

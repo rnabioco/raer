@@ -24,7 +24,6 @@ test_that("pileup works", {
 
 test_that("filtering for variants in pileup works", {
   vars <- res[res$Var != "-"]
-  seqlevels(vars) <- seqlevelsInUse(vars)
   res_all_vars <- get_pileup(bamfn, fafn, bedfn,
                              filterParam = FilterParam(only_keep_variants = TRUE))
   expect_equal(length(vars), 2)
@@ -132,8 +131,7 @@ test_that("pileup chrom start end args", {
   res <- get_pileup(
     bamfn, fafn, chrom = "DHFR"
   )
-
-  expect_identical(seqlevels(res), "DHFR")
+  expect_true(all(seqnames(res) == "DHFR"))
 })
 
 test_that("pileup depth lims", {
