@@ -281,7 +281,7 @@ get_pileup <- function(bamfiles,
                         idx_ptr)
 
       if(!in_memory){
-        if(ret != 0){
+        if(res != 0){
           stop("Error occured during pileup", call. = FALSE)
         }
         res <- fn_df
