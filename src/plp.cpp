@@ -10,7 +10,7 @@ extern "C" {
 }
 
 //[[Rcpp::export(rng = false)]]
-int run_pileup(std::vector<std::string> bampaths,
+SEXP run_pileup(std::vector<std::string> bampaths,
                std::string fapath,
                std::string region,
                std::string bedfn,
@@ -22,6 +22,7 @@ int run_pileup(std::vector<std::string> bampaths,
                std::vector<std::string> outfns,
                std::vector<int> only_keep_variants,
                std::vector<double> read_bqual_filter,
+               SEXP in_memory,
                int max_depth = 10000,
                int min_baseQ = 20,
                std::string reads = ".",
@@ -111,11 +112,19 @@ int run_pileup(std::vector<std::string> bampaths,
     stop("read_bqual_filter must be a numeric vector of length 2");
   }
 
-  int out;
+  int in_mem = 0;
+  if(!Rf_isLogical(in_memory)){
+    stop("in_memory must be TRUE/FALSE");
+  } else {
+    in_mem = Rf_asLogical(in_memory);
+  }
+
+  SEXP out;
   out = run_cpileup(&cbampaths[0],
                     cbampaths.size(),
                     cfapath,
                     cregion,
+                    in_mem,
                     &coutfns[0],
                     cbedfn,
                     min_reads,

@@ -15,7 +15,7 @@ extern SEXP _raer_cread_tabix(SEXP, SEXP);
 extern SEXP _raer_fetch_cb_reads(SEXP, SEXP, SEXP);
 extern SEXP _raer_get_region(SEXP);
 extern SEXP _raer_list_tabix_chroms(SEXP);
-extern SEXP _raer_run_pileup(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP _raer_run_pileup(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _raer_c_show_index(SEXP, SEXP);
 extern SEXP bedfile_open(SEXP);
 extern SEXP bedfile_close(SEXP);
@@ -27,7 +27,7 @@ static const R_CallMethodDef CallEntries[] = {
   {"_raer_fetch_cb_reads", (DL_FUNC) &_raer_fetch_cb_reads, 3},
   {"_raer_get_region",     (DL_FUNC) &_raer_get_region,     1},
   {"_raer_list_tabix_chroms", (DL_FUNC) &_raer_list_tabix_chroms,     1},
-  {"_raer_run_pileup",     (DL_FUNC) &_raer_run_pileup,     17},
+  {"_raer_run_pileup",     (DL_FUNC) &_raer_run_pileup,     18},
   {"_raer_c_show_index", (DL_FUNC) &_raer_c_show_index,     2},
   {".bedfile_open", (DL_FUNC) &bedfile_open, 1},
   {".bedfile_close", (DL_FUNC) &bedfile_close, 1},

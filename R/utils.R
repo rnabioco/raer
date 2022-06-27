@@ -15,10 +15,16 @@ is_null_extptr <- function(pointer) {
 #' @examples
 #' bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
 #' fafn <- system.file("extdata", "human.fasta", package = "raer")
+#' plp_fn <- tempfile()
+#' plp <- get_pileup(bamfn, fafn, return_data = FALSE, outfile_prefix = plp_fn)
 #'
-#' tbx_fn <- get_pileup(bamfn, fafn, return_data = FALSE)
-#' head(read_tabix(tbx_fn))
-#' read_tabix(tbx_fn, region = "SPCS3:498-500")
+#' head(read_tabix(plp))
+#'
+#' read_tabix(plp, region = "SPCS3:498-500")
+#'
+#' get_tabix_chroms(plp)
+#'
+#' unlink(c(plp, plp_fn, paste0(plp, ".tbi")))
 #' @rdname read_tabix
 #' @export
 read_tabix <- function(filename,
@@ -39,28 +45,9 @@ read_tabix <- function(filename,
   df
 }
 
-PILEUP_COLS <-  c("chrom",
-                  "pos",
-                  "strand",
-                  "Ref",
-                  "Var",
-                  "nRef",
-                  "nVar",
-                  "nA",
-                  "nT",
-                  "nC",
-                  "nG",
-                  "nN")
-
 #' List chromosomes in a tabix index
 #' @param filename path to indexed tabix file
 #'
-#' @examples
-#' bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
-#' fafn <- system.file("extdata", "human.fasta", package = "raer")
-#'
-#' tbx_fn <- get_pileup(bamfn, fafn, return_data = FALSE)
-#' get_tabix_chroms(tbx_fn)
 #' @rdname read_tabix
 #' @export
 get_tabix_chroms <- function(filename){
@@ -98,3 +85,10 @@ getCoverageAtPositions <- function(cov, pos){
   }, cov, split(start(pos), seqnames(pos)), SIMPLIFY=FALSE), use.names=FALSE)
   ans
 }
+
+# transpose a list
+# https://stackoverflow.com/questions/30164803/fastest-way-to-transpose-a-list-in-r-rcpp
+t_lst <- function(x){
+  split(unlist(x), sequence(lengths(x)))
+}
+

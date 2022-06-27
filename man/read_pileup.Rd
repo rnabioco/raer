@@ -18,7 +18,8 @@ Read pileup, indexed by tabix
 \examples{
 bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
 fafn <- system.file("extdata", "human.fasta", package = "raer")
-
-plp <- get_pileup(bamfn, fafn, return_data = FALSE)
+plp_fn <- tempfile()
+plp <- get_pileup(bamfn, fafn, return_data = FALSE, outfile_prefix = plp_fn)
 read_pileup(plp)
+unlink(c(plp, plp_fn, paste0(plp, ".tbi")))
 }
