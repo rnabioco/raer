@@ -2,7 +2,7 @@
 #define BEDFILE_H
 
 #include <Rdefines.h>
-#include "samtools/bedidx.h"
+#include <bedidx.h> /* packaged with Rhtslib */
 
 typedef struct {
   void *index;

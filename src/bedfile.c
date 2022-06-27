@@ -1,6 +1,5 @@
 #include <stdlib.h>             /* free */
 #include "bedfile.h"
-#include "samtools/bedidx.h"
 // Largely templated on approaches used in Rsamtools
 // to load, protect, and reuse fasta/bam/tabix indexes from R
 

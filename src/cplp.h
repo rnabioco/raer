@@ -1,11 +1,12 @@
 #ifndef raer_pileup_H
 #define raer_pileup_H
 
-
-int run_cpileup(const char** cbampath,
+#include <Rinternals.h>
+SEXP run_cpileup(const char** cbampath,
                 int n,
                 char* fapath,
                 char* cregion,
+                int in_mem,
                 const char** outfn,
                 char* bedfn,
                 int min_reads,

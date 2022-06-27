@@ -1,5 +1,6 @@
 #include <Rinternals.h>
 #include <htslib/sam.h>
+#include "utils.h"
 
 // https://stackoverflow.com/questions/26666614/how-do-i-check-if-an-externalptr-is-null-from-within-r
 SEXP isnull(SEXP pointer) {
@@ -198,4 +199,5 @@ int read_base_quality(bam1_t* b, float pc, int mq){
   ret = qual_pct <= pc ? 1: 0;
   return ret;
 }
+
 

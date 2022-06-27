@@ -2,9 +2,10 @@
 #include <htslib/faidx.h>
 #include <htslib/khash.h>
 #include <htslib/hts_log.h>
-#include "samtools/bedidx.h"
+#include <bedidx.h>
 #include "bedfile.h"
 #include "utils.h"
+#include "plp_data.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -18,7 +19,21 @@
 #include <sys/stat.h>
 #include <getopt.h>
 #include <inttypes.h>
+
 #include <Rinternals.h>
+
+#define STRICT_R_HEADERS
+#define R_NO_REMAP
+
+//From https://stat.ethz.ch/pipermail/r-devel/2011-April/060702.html
+static void chkIntFn(void *dummy) {
+  R_CheckUserInterrupt();
+}
+
+// this will call the above in a top-level context so it won't longjmp-out of your context
+int checkInterrupt() {
+  return (R_ToplevelExec(chkIntFn, NULL) == FALSE);
+}
 
 KHASH_SET_INIT_STR(varhash);
 typedef khash_t(varhash) *varhash_t;
@@ -271,7 +286,7 @@ static int readaln(void *data, bam1_t *b) {
         free(key);
         continue;
       }
-      if(key) free(key);
+      if(key)  free(key);
     }
 
     // test required and filter flags
@@ -282,7 +297,7 @@ static int readaln(void *data, bam1_t *b) {
 
     // test overlap
     if (g->conf->bed) {
-      skip = !bed_overlap(g->conf->bed, g->h->target_name[b->core.tid], b->core.pos, bam_endpos(b));
+      skip = !bed_overlap(g->conf->bed, sam_hdr_tid2name(g->h, b->core.tid), b->core.pos, bam_endpos(b));
       if (skip) continue;
     }
 
@@ -302,17 +317,6 @@ static int readaln(void *data, bam1_t *b) {
 
   return ret;
 }
-
-// struct for holding counts
-typedef struct  {
-  int pos;
-  int ptotal, pnr, pnv, pna, pnt, png, pnc, pnn;
-  int mtotal, mnr, mnv, mna, mnt, mng, mnc, mnn;
-  int pref_b;
-  int mref_b;
-  varhash_t pvar;
-  varhash_t mvar;
-} pcounts;
 
 static void clear_rname_set(rnhash_t rnames)
 {
@@ -340,12 +344,29 @@ static void clear_varhash_set(varhash_t vhash)
   }
 }
 
+// structs for holding counts
+typedef struct {
+  int total, nr, nv, na, nt, ng, nc, nn;
+  int ref_b;
+  varhash_t var;
+} counts;
+
+typedef struct  {
+  int pos;
+  counts *pc;
+  counts *mc;
+} pcounts;
+
+static void clear_counts(counts *p){
+  p->na = p->nc = p->ng = p->nn = p->nr = p->nt = p->nv = p->total = 0;
+   p->ref_b = 0;
+  clear_varhash_set(p->var);
+}
+
 static void clear_pcounts(pcounts *p){
-  p->mna = p->mnc = p->mng = p->mnn = p->mnr = p->mnt = p->mnv = p->mtotal = 0;
-  p->pna = p->pnc = p->png = p->pnn = p->pnr = p->pnt = p->pnv = p->ptotal = 0;
-  p->mref_b = p->pref_b = p->pos = 0;
-  clear_varhash_set(p->mvar);
-  clear_varhash_set(p->pvar);
+  clear_counts(p->mc);
+  clear_counts(p->pc);
+  p->pos = 0;
 }
 
 // struct for event filter params
@@ -378,48 +399,99 @@ static void get_var_string(varhash_t *vhash, char *out){
   }
 }
 
-static void print_plus_counts(FILE *fp, pcounts *p, char* ctig, int pos, int pref){
-
-  char pout[12];
-  get_var_string(&(p->pvar), pout);
+static void print_counts(FILE *fp, counts *p, const char* ctig, int pos, int ref, int strand){
+  char vout[12];
+  get_var_string(&(p->var), vout);
   fprintf(fp,
           "%s\t%i\t%c\t%c\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n",
           ctig,
           pos + 1,
-          '+',
-          pref,
-          pout,
-          p->pnr,
-          p->pnv,
-          p->pna,
-          p->pnt,
-          p->pnc,
-          p->png,
-          p->pnn);
+          strand,
+          ref,
+          vout,
+          p->nr,
+          p->nv,
+          p->na,
+          p->nt,
+          p->nc,
+          p->ng,
+          p->nn);
 }
 
-static void print_minus_counts(FILE *fp, pcounts *p, char* ctig, int pos, int mref){
+static void add_counts(PLP_DATA pd, int fi, counts *p, const char* ctig, int gpos, int ref, int strand){
 
-  char mout[12];
-  get_var_string(&(p->mvar), mout);
-  fprintf(fp,
-          "%s\t%i\t%c\t%c\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n",
-          ctig,
-          pos + 1,
-          '-',
-          mref,
-          mout,
-          p->mnr,
-          p->mnv,
-          p->mna,
-          p->mnt,
-          p->mnc,
-          p->mng,
-          p->mnn);
+  if(fi >= pd->nfiles || fi < 0){
+    Rf_error("[raer internal] issue with file index %d", fi);
+  }
+
+  SEXP r = get_or_grow_PLP_DATA(pd, -1), s;
+  int li;
+  int idx = pd->icnt;
+  char *buf;
+  char vout[12];
+  get_var_string(&(p->var), vout);
+
+  for (li = 0; li < LENGTH(r); ++li) {
+    if (R_NilValue == (s = VECTOR_ELT(r, li)))
+      continue;
+    switch (li) {
+    case SEQNAME_IDX:
+      buf = R_Calloc(strlen(ctig) + 1, char);
+      if (!buf)
+        Rf_error("add_plp_data: failed to allocate memory");
+      strcpy(buf, ctig);
+      pd->pdat[fi].seqnames[idx] = buf;
+      break;
+    case POS_IDX:
+      pd->pdat[fi].pos[idx] = gpos + 1;
+      break;
+    case STRAND_IDX:
+      buf = R_Calloc(2, char);
+      buf[0] = (char)strand;
+      pd->pdat[fi].strand[idx] = buf;
+      break;
+    case REF_IDX:
+      buf = R_Calloc(2, char);
+      buf[0] = (char)ref;
+      pd->pdat[fi].ref[idx] = buf;
+      break;
+    case VAR_IDX:
+      buf = R_Calloc(strlen(vout) + 1, char);
+      strcpy(buf, vout);
+      pd->pdat[fi].var[idx] = buf;
+      break;
+    case NREF_IDX:
+      pd->pdat[fi].nref[idx] = p->nr;
+      break;
+    case NVAR_IDX:
+      pd->pdat[fi].nvar[idx] = p->nv;
+      break;
+    case NA_IDX:
+      pd->pdat[fi].na[idx] = p->na;
+      break;
+    case NT_IDX:
+      pd->pdat[fi].nt[idx] = p->nt;
+      break;
+    case NC_IDX:
+      pd->pdat[fi].nc[idx] = p->nc;
+      break;
+    case NG_IDX:
+      pd->pdat[fi].ng[idx] = p->ng;
+      break;
+    case NN_IDX:
+      pd->pdat[fi].nn[idx] = p->nn;
+      break;
+
+    default:
+      Rf_error("[raer internal]: unhandled add_counts");
+    break;
+    }
+  }
 }
 
-static void print_counts(FILE **fps, pcounts *pc, int *only_variants, int n, int min_depth,
-                         char* ctig, int pos, int pref, int mref){
+
+static void store_counts(PLP_DATA pd, pcounts *pc, int *only_variants, int n, int min_depth,
+                         const char* ctig, const int gpos, int pref, int mref, int in_memory){
   int i;
   int pv = 0;
   int mv = 0;
@@ -435,38 +507,50 @@ static void print_counts(FILE **fps, pcounts *pc, int *only_variants, int n, int
   // write out if any samples are > min_depth and any samples have a variant
   // predicated on the true or false values in only_variants
   for(i = 0; i < n; ++i){
-    if((pc + i)->ptotal >= min_depth){
+    if((pc + i)->pc->total >= min_depth){
       write_p = 1;
     }
-    if((pc + i)->mtotal >= min_depth){
+    if((pc + i)->mc->total >= min_depth){
       write_m = 1;
     }
     if(write_only_v && only_variants[i]){
-      if(kh_size((pc + i)->pvar) > 0){
+      if(kh_size((pc + i)->pc->var) > 0){
         pv = 1;
       }
-      if(kh_size((pc + i)->mvar) > 0){
+      if(kh_size((pc + i)->mc->var) > 0){
         mv = 1;
       }
     }
   }
-
   if(write_only_v){
     write_p = pv && write_p;
     write_m = mv && write_m;
   }
 
-  for(i = 0; i < n; ++i){
-    if(write_p){
-      print_plus_counts(fps[i], (pc + i), ctig, pos, pref) ;
+  if(write_p){
+    for(i = 0; i < n; ++i){
+      if(in_memory){
+        add_counts(pd, i, (pc + i)->pc, ctig, gpos, pref, '+');
+      } else {
+        print_counts(pd->fps[i], (pc + i)->pc, ctig, gpos, pref, '+') ;
+      }
     }
-    if(write_m){
-      print_minus_counts(fps[i], (pc + i), ctig, pos, mref) ;
+    pd->icnt += 1;
+  }
+  if(write_m){
+    for(i = 0; i < n; ++i){
+      if(in_memory){
+        add_counts(pd, i, (pc + i)->mc, ctig, gpos, mref, '-');
+      } else {
+        print_counts(pd->fps[i], (pc + i)->mc, ctig, gpos, mref, '-') ;
+      }
     }
+    pd->icnt += 1;
   }
 }
 
-int write_fasta(bam1_t *b, mplp_conf_t *conf, char* ref, char read, int pos){
+
+int write_fasta(bam1_t *b, mplp_conf_t *conf, const char* ref, char read, int pos){
   if(!conf->reads_fp){
     return -1;
   }
@@ -480,13 +564,12 @@ int write_fasta(bam1_t *b, mplp_conf_t *conf, char* ref, char read, int pos){
           pos) ;
   fprintf(conf->reads_fp, "%s\n", seq);
   free(seq);
-
   return 0;
 }
 
 // add/check for readname (with 1 or 2 appended if paired) to hash table
 // if unique write to bam file
-int write_reads(bam1_t *b,  mplp_conf_t *conf, char* ref, int pos){
+int write_reads(bam1_t *b,  mplp_conf_t *conf, const char* ref, const int pos){
 
   char* key;
   char c;
@@ -546,7 +629,7 @@ int write_reads(bam1_t *b,  mplp_conf_t *conf, char* ref, int pos){
 // based on cigar and MD parsing code from htsbox (written by Heng Li)
 // https://github.com/lh3/htsbox/blob/ffc1e8ad4f61291c676a323ed833ade3ee681f7c/samview.c#L117
 
-int parse_mismatches(bam1_t* b, int pos, int n_types, int n_mis){
+int parse_mismatches(bam1_t* b,const int pos, int n_types, int n_mis){
   int ret = 0;
   if(n_types < 1 && n_mis < 1){
     return ret;
@@ -626,10 +709,11 @@ int parse_mismatches(bam1_t* b, int pos, int n_types, int n_mis){
 }
 
 
-int run_cpileup(const char** cbampaths,
+SEXP run_cpileup(const char** cbampaths,
                 int n,
                 char* cfapath,
                 char* cregion,
+                int in_mem,
                 char** coutfns,
                 char* cbedfn,
                 int min_reads,
@@ -660,8 +744,12 @@ int run_cpileup(const char** cbampaths,
   bam_hdr_t *h = NULL; /* header of first file in input list */
   char *ref;
 
-  FILE **pileup_fps;
-  pileup_fps = malloc(n * sizeof(FILE *));
+  SEXP result = PROTECT(pileup_result_init(n));
+  PLP_DATA pd = init_PLP_DATA(result,  n);
+
+  if(!in_mem){
+    pd->fps = R_Calloc(n, FILE*);
+  }
 
   mplp_pileup_t gplp;
 
@@ -728,7 +816,7 @@ int run_cpileup(const char** cbampaths,
   }
 
   efilter *ef;
-  ef = calloc(1, sizeof(efilter));
+  ef = R_Calloc(1, efilter);
   ef->trim_5p_dist = event_filters[0];
   ef->trim_3p_dist = event_filters[1];
   ef->splice_dist = event_filters[2];
@@ -816,26 +904,32 @@ int run_cpileup(const char** cbampaths,
   bam_mplp_set_maxcnt(iter, max_depth);
 
   if (!iter) {
-    Rf_error("issue with iterator");
-    return -1;
+    REprintf("issue with iterator");
+    ret = -1;
+    goto fail;
   }
 
-  pcounts *pc;
-  pc = calloc(n, sizeof(pcounts));
+  pcounts *plpc;
+  plpc = R_Calloc(n, pcounts);
   for (i = 0; i < n; ++i) {
-    // initialize output files
-    pileup_fps[i] = fopen(R_ExpandFileName(coutfns[i]), "w");
-    if ( pileup_fps[i] == NULL) {
-      Rf_error("Failed to open file outputfile %s\n", R_ExpandFileName(coutfns[i]));
-    }
-
-    // initialize variant string hash (AG, AT, TC) etc.
-    if (pc[i].mvar == NULL) {
-      pc[i].mvar = kh_init(varhash);
-    }
-    if (pc[i].pvar == NULL) {
-      pc[i].pvar = kh_init(varhash);
-    }
+     if(!in_mem){
+       // initialize output files
+       pd->fps[i] = fopen(R_ExpandFileName(coutfns[i]), "w");
+       if (pd->fps[i] == NULL) {
+         REprintf("Failed to open file outputfile %s\n", R_ExpandFileName(coutfns[i]));
+         ret = -1;
+         goto fail;
+       }
+     }
+     plpc[i].pc = R_Calloc(1, counts);
+     plpc[i].mc = R_Calloc(1, counts);
+     //initialize variant string hash (AG, AT, TC) etc.
+     if (plpc[i].pc->var == NULL) {
+       plpc[i].pc->var = kh_init(varhash);
+     }
+     if (plpc[i].mc->var == NULL) {
+       plpc[i].mc->var = kh_init(varhash);
+     }
   }
 
   char mvar[3];
@@ -857,10 +951,12 @@ int run_cpileup(const char** cbampaths,
       }
 
       if (cregion && (pos < beg0 || pos >= end0)) continue; // out of the region requested
+
       mplp_get_ref(data[0], tid, &ref, &ref_len);
 
       if (tid < 0) break;
-      if (conf->bed && tid >= 0 && !bed_overlap(conf->bed, data[0]->h->target_name[tid], pos, pos+1)) continue;
+
+      if (conf->bed && tid >= 0 && !bed_overlap(conf->bed, sam_hdr_tid2name(h, tid), pos, pos+1)) continue;
 
       // clear out hash table of read names each chromosome
       if(tid != last_tid && write_mismatched_reads){
@@ -876,7 +972,7 @@ int run_cpileup(const char** cbampaths,
       mref_b = comp_base[(unsigned char) pref_b];
 
       for(i = 0; i < n; ++i){
-        clear_pcounts(&pc[i]);
+        clear_pcounts(&plpc[i]);
       }
 
       // check if site is in a homopolymer
@@ -980,15 +1076,14 @@ int run_cpileup(const char** cbampaths,
             }
           }
           // if libtype == 0, do nothing, report as plus strand
-
   	      // count reads that align to minus strand
           if(invert){
             c = (char)comp_base[(unsigned char)c];
             mvar[0] = mref_b;
-            pc[i].mtotal += 1;
+            plpc[i].mc->total += 1;
 
             if(mref_b == c){
-              pc[i].mnr += 1;
+              plpc[i].mc->nr += 1;
             } else {
               // store variants in khash
               mvar[1] = c;
@@ -996,15 +1091,14 @@ int run_cpileup(const char** cbampaths,
               // drop read if >= mismatch different types and at least n_mm mismatches
               m = parse_mismatches(p->b, pos, ef->n_mm_type, ef->n_mm);
               if(m > 0){
-                // exclude read
                 continue;
               }
 
               char *var = strdup(mvar);
-              kh_put(varhash, pc[i].mvar, var, &hret);
+              kh_put(varhash, plpc[i].mc->var, var, &hret);
               if (hret == 0) free(var);
               if(i == 0 && write_mismatched_reads){
-                int wret = write_reads(p->b, conf, h->target_name[tid], pos);
+                int wret = write_reads(p->b, conf, sam_hdr_tid2name(h, tid), pos);
                 if(wret != 0){
                   REprintf( "writing mismatched reads failed\n");
                   ret = -1;
@@ -1012,49 +1106,48 @@ int run_cpileup(const char** cbampaths,
                 }
               }
 
-              pc[i].mnv += 1;
+              plpc[i].mc->nv += 1;
             }
 
             switch(c) {
               case 'A':
-                pc[i].mna += 1;
+                plpc[i].mc->na += 1;
                 break;
               case 'C':
-                pc[i].mnc += 1;
+                plpc[i].mc->nc += 1;
                 break;
               case 'G':
-                pc[i].mng += 1;
+                plpc[i].mc->ng += 1;
                 break;
               case 'T':
-                pc[i].mnt += 1;
+                plpc[i].mc->nt += 1;
                 break;
               default:
-                pc[i].mnn += 1;
+                plpc[i].mc->nn += 1;
                 break;
             }
 
           // count reads that align to plus strand
           } else {
             pvar[0] = pref_b;
-            pc[i].ptotal += 1;
+            plpc[i].pc->total += 1;
 
             if(pref_b == c){
-              pc[i].pnr += 1;
+              plpc[i].pc->nr += 1;
             } else {
               pvar[1] = c;
               int m;
               // drop read if >= mismatch different types and at least n_mm mismatches
               m = parse_mismatches(p->b, pos, ef->n_mm_type, ef->n_mm);
               if(m > 0){
-                // exclude read
                 continue;
               }
 
               char *var = strdup(pvar);
-              kh_put(varhash, pc[i].pvar, var, &hret);
+              kh_put(varhash, plpc[i].pc->var, var, &hret);
               if (hret == 0) free(var);
               if(i == 0 && write_mismatched_reads){
-                int wret = write_reads(p->b, conf, h->target_name[tid], pos);
+                int wret = write_reads(p->b, conf,  sam_hdr_tid2name(h, tid), pos);
                 if(wret != 0){
                   REprintf( "writing mismatched reads failed\n");
                   ret = -1;
@@ -1062,37 +1155,44 @@ int run_cpileup(const char** cbampaths,
                 }
               }
 
-              pc[i].pnv += 1;
+              plpc[i].pc->nv += 1;
             }
 
             switch(c) {
               case 'A':
-                pc[i].pna += 1;
+                plpc[i].pc->na += 1;
                 break;
               case 'C':
-                pc[i].pnc += 1;
+                plpc[i].pc->nc += 1;
                 break;
               case 'G':
-                pc[i].png += 1;
+                plpc[i].pc->ng += 1;
                 break;
               case 'T':
-                pc[i].pnt += 1;
+                plpc[i].pc->nt += 1;
                 break;
               default:
-                pc[i].pnn += 1;
+                plpc[i].pc->nn += 1;
                 break;
             }
           }
         }
       }
-      // print out lines if pass depth criteria
-      print_counts(pileup_fps, pc, only_keep_variants, n, min_reads, h->target_name[tid], pos, pref_b, mref_b);
+
+      //write/store records if pass depth criteria
+      store_counts(pd, plpc, only_keep_variants, n, min_reads, sam_hdr_tid2name(h, tid),
+                   pos, pref_b, mref_b,
+                   in_mem);
   }
 
 fail:
-  //clean up memory
-  bam_mplp_destroy(iter);
-  bam_hdr_destroy(h);
+   //clean up memory
+   if(in_mem){
+     finish_PLP_DATA(pd);
+   }
+
+   bam_mplp_destroy(iter);
+   bam_hdr_destroy(h);
 
   for (i = 0; i < gplp.n; ++i) free(gplp.plp[i]);
   free(gplp.plp); free(gplp.n_plp); free(gplp.m_plp);
@@ -1101,16 +1201,20 @@ fail:
     sam_close(data[i]->fp);
     if (data[i]->iter) hts_itr_destroy(data[i]->iter);
     free(data[i]);
-    clear_pcounts(&pc[i]);
-    kh_destroy(varhash, pc[i].mvar);
-    kh_destroy(varhash, pc[i].pvar);
-    fclose(pileup_fps[i]);
+    clear_pcounts(&plpc[i]);
+    kh_destroy(varhash, plpc[i].mc->var);
+    kh_destroy(varhash, plpc[i].pc->var);
+    R_Free(plpc[i].pc); R_Free(plpc[i].mc);
+    if(!in_mem) fclose(pd->fps[i]);
   }
+
   free(data); free(plp); free(n_plp);
-  free(pc); free(ef);
+  R_Free(plpc); R_Free(ef);
   free(mp_ref.ref[0]);
   free(mp_ref.ref[1]);
-  free(pileup_fps);
+  if(pd->fps) R_Free(pd->fps);
+  R_Free(pd->pdat);
+
   if (conf->fai) fai_destroy(conf->fai);
 
   // don't destroy index if passed from R
@@ -1129,5 +1233,18 @@ fail:
       kh_destroy(str, conf->brhash);
   }
 
-  return ret;
+  UNPROTECT(1);
+
+  if(ret < 0){
+    Rf_error("error detected during pileup");
+  }
+
+  if(in_mem){
+    return pd->result;
+  } else {
+    return Rf_ScalarInteger(ret);
+  }
 }
+
+
+

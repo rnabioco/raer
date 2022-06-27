@@ -31,13 +31,14 @@ List chromosomes in a tabix index
 \examples{
 bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
 fafn <- system.file("extdata", "human.fasta", package = "raer")
+plp_fn <- tempfile()
+plp <- get_pileup(bamfn, fafn, return_data = FALSE, outfile_prefix = plp_fn)
 
-tbx_fn <- get_pileup(bamfn, fafn, return_data = FALSE)
-head(read_tabix(tbx_fn))
-read_tabix(tbx_fn, region = "SPCS3:498-500")
-bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
-fafn <- system.file("extdata", "human.fasta", package = "raer")
+head(read_tabix(plp))
 
-tbx_fn <- get_pileup(bamfn, fafn, return_data = FALSE)
-get_tabix_chroms(tbx_fn)
+read_tabix(plp, region = "SPCS3:498-500")
+
+get_tabix_chroms(plp)
+
+unlink(c(plp, plp_fn, paste0(plp, ".tbi")))
 }

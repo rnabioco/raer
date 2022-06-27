@@ -50,6 +50,8 @@ Suggests:
     viridis,
     TxDb.Hsapiens.UCSC.hg38.knownGene,
     AnnotationHub
+Remotes:
+    Bioconductor/Rhtslib
 LinkingTo: 
     Rcpp,
     Rhtslib
