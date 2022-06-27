@@ -2,7 +2,7 @@
 #include <htslib/faidx.h>
 #include <htslib/khash.h>
 #include <htslib/hts_log.h>
-#include "samtools/bedidx.h"
+#include <bedidx.h>
 #include "bedfile.h"
 #include "utils.h"
 #include "plp_data.h"
