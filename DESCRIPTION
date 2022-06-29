@@ -51,7 +51,8 @@ Suggests:
     TxDb.Hsapiens.UCSC.hg38.knownGene,
     AnnotationHub
 Remotes:
-    Bioconductor/Rhtslib
+    Bioconductor/Rhtslib,
+    Bioconductor/Rsamtools
 LinkingTo: 
     Rcpp,
     Rhtslib
