@@ -26,6 +26,12 @@ a SummarizedExperiment with SNP positions from a SNP package"><!-- mathjax --><s
 <li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
 </li>
+<li class="nav-item dropdown">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
+  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/novel-sites.html">Identifying RNA editing sites using RNA and DNA sequencing data</a>
+  </div>
+</li>
       </ul><form class="form-inline my-2 my-lg-0" role="search">
         <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="../search.json" id="search-input" placeholder="Search for" autocomplete="off"></form>
 
@@ -54,52 +60,82 @@ a SummarizedExperiment with SNP positions from a SNP package</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">annot_snps</span><span class="op">(</span><span class="va">obj</span>, <span class="va">...</span><span class="op">)</span>
-
-<span class="co"># S3 method for GRanges</span>
-<span class="fu">annot_snps</span><span class="op">(</span><span class="va">obj</span>, <span class="va">dbsnp</span>, chrom <span class="op">=</span> <span class="cn">NULL</span>, col_to_aggr <span class="op">=</span> <span class="st">"RefSNP_id"</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>
-
-<span class="co"># S3 method for SummarizedExperiment</span>
-<span class="fu">annot_snps</span><span class="op">(</span><span class="va">obj</span>, <span class="va">dbsnp</span>, chrom <span class="op">=</span> <span class="cn">NULL</span>, col_to_aggr <span class="op">=</span> <span class="st">"RefSNP_id"</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">annot_snps</span><span class="op">(</span><span class="va">obj</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for GRanges</span></span>
+<span><span class="fu">annot_snps</span><span class="op">(</span></span>
+<span>  <span class="va">obj</span>,</span>
+<span>  <span class="va">dbsnp</span>,</span>
+<span>  chrom <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  col_to_aggr <span class="op">=</span> <span class="st">"RefSNP_id"</span>,</span>
+<span>  drop <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for SummarizedExperiment</span></span>
+<span><span class="fu">annot_snps</span><span class="op">(</span></span>
+<span>  <span class="va">obj</span>,</span>
+<span>  <span class="va">dbsnp</span>,</span>
+<span>  chrom <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  col_to_aggr <span class="op">=</span> <span class="st">"RefSNP_id"</span>,</span>
+<span>  drop <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>obj</dt>
 <dd><p>GRanges or SummarizedExperiment  object</p></dd>
+
+
+<dt>...</dt>
+<dd><p>For the generic, further arguments to pass to specific methods.
+Unused for now.</p></dd>
+
+
 <dt>dbsnp</dt>
 <dd><p>SNPlocs package, see available packages from
 <code><a href="https://rdrr.io/pkg/BSgenome/man/injectSNPs.html" class="external-link">BSgenome::available.SNPs()</a></code></p></dd>
+
+
 <dt>chrom</dt>
 <dd><p>only operate on a specified chromosome</p></dd>
+
+
 <dt>col_to_aggr</dt>
 <dd><p>column from SNPlocs package to add to
 input. If multiple SNPs overlap these values will be concatenated
 as comma separated values.</p></dd>
+
+
 <dt>drop</dt>
 <dd><p>If TRUE, remove sites overlap SNPs</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Either a GRanges or SummarizedExperiment object with
+    
+
+<p>Either a GRanges or SummarizedExperiment object with
 a new column "snp" added with information from "col_to_aggr"</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><a href="https://bioconductor.org/packages/release/data/annotation/html/SNPlocs.Hsapiens.dbSNP151.GRCh38.html" class="external-link">SNPlocs.Hsapiens.dbSNP151.GRCh38</a></p></div>
+    <div class="dont-index"><p><a href="https://bioconductor.org/packages/release/data/annotation/html/SNPlocs.Hsapiens.dbSNP155.GRCh38.html" class="external-link">SNPlocs.Hsapiens.dbSNP155.GRCh38</a></p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in"><span class="kw">if</span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va">SNPlocs.Hsapiens.dbSNP151.GRCh38</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span>
-<span class="r-in">  <span class="va">gr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"22"</span>, <span class="fl">10</span><span class="op">)</span>,</span>
-<span class="r-in">              <span class="fu">IRanges</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">10510077</span>,<span class="fl">10610077</span>, by <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span>, width<span class="op">=</span><span class="fl">250</span><span class="op">)</span>,</span>
-<span class="r-in">             strand<span class="op">=</span><span class="st">"+"</span><span class="op">)</span></span>
-<span class="r-in">  <span class="fu">annot_snps</span><span class="op">(</span><span class="va">gr</span>, <span class="va">SNPlocs.Hsapiens.dbSNP151.GRCh38</span><span class="op">)</span></span>
-<span class="r-in"> <span class="op">}</span></span>
-<span class="r-in"><span class="op">}</span></span>
-<span class="r-in"></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va">SNPlocs.Hsapiens.dbSNP155.GRCh38</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">gr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"22"</span>, <span class="fl">10</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    <span class="fu">IRanges</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">10510077</span>, <span class="fl">10610077</span>, by <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span>, width <span class="op">=</span> <span class="fl">250</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    strand <span class="op">=</span> <span class="st">"+"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu">annot_snps</span><span class="op">(</span><span class="va">gr</span>, <span class="va">SNPlocs.Hsapiens.dbSNP155.GRCh38</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
@@ -111,7 +147,7 @@ a new column "snp" added with information from "col_to_aggr"</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
     </footer></div>

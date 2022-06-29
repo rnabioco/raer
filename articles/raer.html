@@ -43,6 +43,12 @@
 <li class="nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
 </li>
+<li class="nav-item dropdown">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
+  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/novel-sites.html">Identifying RNA editing sites using RNA and DNA sequencing data</a>
+  </div>
+</li>
       </ul>
 <form class="form-inline my-2 my-lg-0" role="search">
         <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="../search.json" id="search-input" placeholder="Search for" autocomplete="off">
@@ -66,79 +72,243 @@
 
 
 <div class="row">
-  <main id="main"><div class="page-header">
+  <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Introducing the raer package</h1>
                         <h4 data-toc-skip class="author">Kent Riemondy</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">Revised: 2 May 2022</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="author">Kristen Wells-Wrasman</h4>
+            <address class="author_afil">
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2022-06-29</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/raer.Rmd" class="external-link"><code>vignettes/raer.Rmd</code></a></small>
       <div class="d-none name"><code>raer.Rmd</code></div>
     </address>
+</address>
 </div>
 
     
     
 <div class="section level2">
-<h2 id="de-tutorial">DE tutorial<a class="anchor" aria-label="anchor" href="#de-tutorial"></a>
+<h2 id="differential-editing-tutorial">Differential Editing tutorial<a class="anchor" aria-label="anchor" href="#differential-editing-tutorial"></a>
 </h2>
-<p>Steps to perform differential editing using <code>Raer</code></p>
+<p>This vignette will demonstrate how to identify RNA editing sites with condition-specific editing frequencies using the <code>raer</code> package.</p>
 <div class="section level3">
 <h3 id="set-up">Set up<a class="anchor" aria-label="anchor" href="#set-up"></a>
 </h3>
-<p>First load in required packages</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://github.com/rnabioco/raer" class="external-link">raer</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://here.r-lib.org/" class="external-link">here</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org" class="external-link">tidyverse</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://bioinf.wehi.edu.au/edgeR" class="external-link">edgeR</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mikelove/DESeq2" class="external-link">DESeq2</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">ComplexHeatmap</span><span class="op">)</span></code></pre></div>
-<p>Set directories and read in the data (eventually, we should make this downloadable)</p>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rnabioco.github.io/raer">raer</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mikelove/DESeq2" class="external-link">DESeq2</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jokergoo/ComplexHeatmap" class="external-link">ComplexHeatmap</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://sjmgarnier.github.io/viridis/" class="external-link">viridis</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://stringr.tidyverse.org" class="external-link">stringr</a></span><span class="op">)</span></span></code></pre></div>
+<p>In this vignette a public RNA-seq dataset will be analyzed, <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE99249" class="external-link">GSE99249</a>, which consists of ADAR1 mutants and control human cell lines, conditionally treated with Interferon-Beta. For simplicity we will examine the ADAR1 WT and KO samples both treated with IFN-B, with triplicate samples.</p>
+<p>Aligned BAM files and other necessary files have been preprocessed for this vignette. These files occupy ~250 Mb of space and by default they are stored in a temporary directory. Change the <code>data_dir</code> variable to a valid file path to keep the files for reuse.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">res_dir</span> <span class="op">&lt;-</span> <span class="fu">here</span><span class="op">(</span><span class="st">"../working_dir/results/GSE99249/"</span><span class="op">)</span>
-
-<span class="co"># Read in data</span>
-<span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">res_dir</span>, <span class="st">"merged_se_with_meta.rds"</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">fns</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_GSE99249.html">download_GSE99249</a></span><span class="op">(</span><span class="va">data_dir</span><span class="op">)</span></span></code></pre></div>
+<p>Next we’ll collect a vector containing the paths to each BAM file These BAM files are a subset of the full BAM files, containing only alignments from chromosome 18.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">bam_files</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bams</span> </span>
+<span><span class="va">bam_files</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span></span></code></pre></div>
+<pre><code><span><span class="co">##                   SRR5564260_dedup_sorted.bam </span></span>
+<span><span class="co">## "/tmp/RtmpT6Pvfs/SRR5564260_dedup_sorted.bam" </span></span>
+<span><span class="co">##                   SRR5564261_dedup_sorted.bam </span></span>
+<span><span class="co">## "/tmp/RtmpT6Pvfs/SRR5564261_dedup_sorted.bam"</span></span></code></pre>
+<p>Next we’ll need a FASTA file to quantify the editing sites. We’ll use a FASTA file only containing chromosome 18 for this demo. The fasta can be compressed.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">fasta</span> </span>
+<span><span class="va">fafn</span></span></code></pre></div>
+<pre><code><span><span class="co">##                   chr18.fasta.bgz </span></span>
+<span><span class="co">## "/tmp/RtmpT6Pvfs/chr18.fasta.bgz"</span></span></code></pre>
+<p>Lastly, we’ll use a BED file containing the coordinates of known human editing sites from the REDIPortal database. This file can also be optionally compressed.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">bedfn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bed</span></span>
+<span><span class="va">bedfn</span></span></code></pre></div>
+<pre><code><span><span class="co">##                   rediportal_hg38_chr18.bed.gz </span></span>
+<span><span class="co">## "/tmp/RtmpT6Pvfs/rediportal_hg38_chr18.bed.gz"</span></span></code></pre>
 </div>
 <div class="section level3">
-<h3 id="preprocess">Preprocess<a class="anchor" aria-label="anchor" href="#preprocess"></a>
+<h3 id="generate-editing-site-read-counts">Generate editing site read counts<a class="anchor" aria-label="anchor" href="#generate-editing-site-read-counts"></a>
 </h3>
-<p>We start by using the <code>add_editing_frequencies</code> function to identify the percent of edits for each position and sample. Several pre-built options are available: A to I (“AI”), U to C (“UC”), C to U (“CU”), and G to A (“GA”). You can specify A to I editing by setting <code>type = AI</code> (this is also the default).</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">se_filtered</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_editing_frequencies.html">add_editing_frequencies</a></span><span class="op">(</span><span class="va">se</span>, type <span class="op">=</span> <span class="st">"AI"</span>,
-                                       edit_frequency <span class="op">=</span> <span class="fl">0.01</span>,
-                                       min_count <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></code></pre></div>
-<p>If you are interested in some other kind of editing, you can use a custom event. To do this, set <code>type = "none"</code> and <code>edit_from = nucleotide_1</code> and <code>edit_to = nucleotide_2</code>. Here, the <code>edit_from</code> should be the nucleotide in the reference (for A to I this would be <code>A</code>) and <code>edit_to</code> should be the nucleotide after editing (for A to I this would be <code>G</code>). Both <code>edit_from</code> and <code>edit_to</code> must be a valid nucleotide (A, T, C, G).</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">se_filtered</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_editing_frequencies.html">add_editing_frequencies</a></span><span class="op">(</span><span class="va">se</span>, type <span class="op">=</span> <span class="st">"none"</span>,
-                                       edit_frequency <span class="op">=</span> <span class="fl">0.01</span>,
-                                       min_count <span class="op">=</span> <span class="fl">10</span>,
-                                       edit_from <span class="op">=</span> <span class="st">"C"</span>, edit_to <span class="op">=</span> <span class="st">"T"</span><span class="op">)</span></code></pre></div>
-<p>You can also make plots that show the number of edited sites and the frequency of editing per sample. You can make these plots using <code>make_plots = TRUE</code>. If <code>make_plots = TRUE</code> and no save dir is specified, the plots and the filtered object will be returned as a list</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">se_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_editing_frequencies.html">add_editing_frequencies</a></span><span class="op">(</span><span class="va">se</span>, type <span class="op">=</span> <span class="st">"AI"</span>,
-                                      edit_frequency <span class="op">=</span> <span class="fl">0.01</span>,
-                                      min_count <span class="op">=</span> <span class="fl">10</span>,
-                                      make_plots <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
-                                      
-<span class="va">se_filtered</span> <span class="op">&lt;-</span> <span class="va">se_results</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>
-<span class="va">site_plot</span> <span class="op">&lt;-</span> <span class="va">se_results</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span>
-<span class="va">frequency_plot</span> <span class="op">&lt;-</span> <span class="va">se_results</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span></code></pre></div>
-<p>If you would rather directly save these plots, you can provide a save directory. The plots will be saved as “number_of_sites.pdf” and “editing_index.pdf”. If the plots are saved, only the filtered object will be returned.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">se_filtered</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_editing_frequencies.html">add_editing_frequencies</a></span><span class="op">(</span><span class="va">se</span>, type <span class="op">=</span> <span class="st">"AI"</span>,
-                                       edit_frequency <span class="op">=</span> <span class="fl">0.01</span>,
-                                       min_count <span class="op">=</span> <span class="fl">10</span>,
-                                       make_plots <span class="op">=</span> <span class="cn">TRUE</span>,
-                                       save_dir <span class="op">=</span> <span class="st">"results"</span><span class="op">)</span></code></pre></div>
-<p>Once your object has been filtered, you can prepare it for DE. This means making an assay of counts that contains both your alt and ref allele.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">deobj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_for_de.html">prep_for_de</a></span><span class="op">(</span><span class="va">se_filtered</span>,
-                     min_prop <span class="op">=</span> <span class="fl">0.1</span>,
-                     max_prop <span class="op">=</span> <span class="fl">0.9</span>,
-                     min_samples <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></code></pre></div>
+<p>The <code><a href="../reference/get_pileup.html">get_pileup()</a></code> function will calculate base counts across multiple BAM files. The base counts will be returned as a list of <code>GRanges</code> objects for each bam file. The <code><a href="../reference/get_pileup.html">FilterParam()</a></code> function provides numerous filters to exclude reads and bases based on commonly used filters for detecting RNA-editing events. Specific regions can be queried using the <code>region</code> argument, or specific positions can be queried by providing <code>bedfile</code> a path to a BED-file.</p>
+<p>Internally, <code><a href="../reference/get_pileup.html">get_pileup()</a></code> will write the pileups to temporary files. However, these files can also be stored in a tabix-indexed format, for later retrieval, or for querying specific regions.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_pileup.html">FilterParam</a></span><span class="op">(</span>only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                  trim_5p <span class="op">=</span> <span class="fl">5</span>, </span>
+<span>                  trim_3p <span class="op">=</span> <span class="fl">5</span>, </span>
+<span>                  min_base_quality <span class="op">=</span> <span class="fl">30L</span>,</span>
+<span>                  min_mapq <span class="op">=</span> <span class="fl">255L</span>, </span>
+<span>                  library_type <span class="op">=</span> <span class="st">"fr-first-strand"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">plps</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_pileup.html">get_pileup</a></span><span class="op">(</span><span class="va">bam_files</span>, </span>
+<span>                   fafile <span class="op">=</span> <span class="va">fafn</span>, </span>
+<span>                   bedfile <span class="op">=</span> <span class="va">bedfn</span>,</span>
+<span>                   region <span class="op">=</span> <span class="st">"chr18"</span>, </span>
+<span>                   filterParam <span class="op">=</span> <span class="va">fp</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">plps</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
+<pre><code><span><span class="co">## GRanges object with 6330 ranges and 9 metadata columns:</span></span>
+<span><span class="co">##          seqnames    ranges strand |         Ref         Var      nRef</span></span>
+<span><span class="co">##             &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt; &lt;integer&gt;</span></span>
+<span><span class="co">##      [1]    chr18    168574      + |           A           -         0</span></span>
+<span><span class="co">##      [2]    chr18    168577      + |           A           -         0</span></span>
+<span><span class="co">##      [3]    chr18    168578      + |           A           -         0</span></span>
+<span><span class="co">##      [4]    chr18    171983      + |           A           -         0</span></span>
+<span><span class="co">##      [5]    chr18    171986      + |           A           -         0</span></span>
+<span><span class="co">##      ...      ...       ...    ... .         ...         ...       ...</span></span>
+<span><span class="co">##   [6326]    chr18  80159249      + |           A           -         2</span></span>
+<span><span class="co">##   [6327]    chr18  80159250      + |           A           -         3</span></span>
+<span><span class="co">##   [6328]    chr18  80159262      + |           A           -         2</span></span>
+<span><span class="co">##   [6329]    chr18  80172518      - |           A           -         0</span></span>
+<span><span class="co">##   [6330]    chr18  80174441      - |           A           -         0</span></span>
+<span><span class="co">##               nVar        nA        nT        nC        nG        nN</span></span>
+<span><span class="co">##          &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
+<span><span class="co">##      [1]         0         0         0         0         0         0</span></span>
+<span><span class="co">##      [2]         0         0         0         0         0         0</span></span>
+<span><span class="co">##      [3]         0         0         0         0         0         0</span></span>
+<span><span class="co">##      [4]         0         0         0         0         0         0</span></span>
+<span><span class="co">##      [5]         0         0         0         0         0         0</span></span>
+<span><span class="co">##      ...       ...       ...       ...       ...       ...       ...</span></span>
+<span><span class="co">##   [6326]         0         2         0         0         0         0</span></span>
+<span><span class="co">##   [6327]         0         3         0         0         0         0</span></span>
+<span><span class="co">##   [6328]         0         2         0         0         0         0</span></span>
+<span><span class="co">##   [6329]         0         0         0         0         0         0</span></span>
+<span><span class="co">##   [6330]         0         0         0         0         0         0</span></span>
+<span><span class="co">##   -------</span></span>
+<span><span class="co">##   seqinfo: 194 sequences from an unspecified genome</span></span></code></pre>
+<p>The base counts are returned in a stand specific fashion depending on the <code>library-type</code> parameter. The <code>Ref</code> and <code>Var</code> bases are in reference to the strand.</p>
+<p>Pileups from multiple BAM files can be stored in a <code>summarizedExperiment</code> object, which permits comparisons across each sample. The <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData()</a></code> and <code><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowRanges.html" class="external-link">rowRanges()</a></code> slots can be populated with information related to each editing site, and similarly the <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData()</a></code> slot can be used to store sample metadata. The summarizedExperiment objectcan also interface with other derivative classes, such as <code>singleCellExperiment()</code>.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">plps</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">bam_files</span><span class="op">)</span> </span>
+<span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_se.html">create_se</a></span><span class="op">(</span><span class="va">plps</span><span class="op">)</span></span></code></pre></div>
+<p>Each column from the pileup can be stored as an assay, which can be specified by the <code>assay_cols</code> parameter</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">se</span></span></code></pre></div>
+<pre><code><span><span class="co">## class: RangedSummarizedExperiment </span></span>
+<span><span class="co">## dim: 6330 6 </span></span>
+<span><span class="co">## metadata(0):</span></span>
+<span><span class="co">## assays(7): Var nRef ... nC nG</span></span>
+<span><span class="co">## rownames(6330): chr18_168574_1 chr18_168577_1 ...</span></span>
+<span><span class="co">##   chr18_80172518_2 chr18_80174441_2</span></span>
+<span><span class="co">## rowData names(1): Ref</span></span>
+<span><span class="co">## colnames(6): SRR5564260_dedup_sorted.bam</span></span>
+<span><span class="co">##   SRR5564261_dedup_sorted.bam ... SRR5564271_dedup_sorted.bam</span></span>
+<span><span class="co">##   SRR5564277_dedup_sorted.bam</span></span>
+<span><span class="co">## colData names(1): sample</span></span></code></pre>
+<p>Next we will add sample metadata to the <code>summarizedExperiment</code>, which will be used to conduct differential editing analysis.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span><span class="op">$</span><span class="va">genotype_treatment</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ADAR1KO Interferon beta"</span>,  </span>
+<span>                                        <span class="st">"Wildtype Interferon beta"</span><span class="op">)</span>, </span>
+<span>                                      each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span><span class="op">$</span><span class="va">genotype</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ADAR1KO"</span>, </span>
+<span>                              <span class="st">"Wildtype"</span><span class="op">)</span>,</span>
+<span>                            each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## DataFrame with 6 rows and 3 columns</span></span>
+<span><span class="co">##                                             sample     genotype_treatment</span></span>
+<span><span class="co">##                                        &lt;character&gt;            &lt;character&gt;</span></span>
+<span><span class="co">## SRR5564260_dedup_sorted.bam SRR5564260_dedup_sor.. ADAR1KO Interferon b..</span></span>
+<span><span class="co">## SRR5564261_dedup_sorted.bam SRR5564261_dedup_sor.. ADAR1KO Interferon b..</span></span>
+<span><span class="co">## SRR5564269_dedup_sorted.bam SRR5564269_dedup_sor.. ADAR1KO Interferon b..</span></span>
+<span><span class="co">## SRR5564270_dedup_sorted.bam SRR5564270_dedup_sor.. Wildtype Interferon ..</span></span>
+<span><span class="co">## SRR5564271_dedup_sorted.bam SRR5564271_dedup_sor.. Wildtype Interferon ..</span></span>
+<span><span class="co">## SRR5564277_dedup_sorted.bam SRR5564277_dedup_sor.. Wildtype Interferon ..</span></span>
+<span><span class="co">##                                genotype</span></span>
+<span><span class="co">##                             &lt;character&gt;</span></span>
+<span><span class="co">## SRR5564260_dedup_sorted.bam     ADAR1KO</span></span>
+<span><span class="co">## SRR5564261_dedup_sorted.bam     ADAR1KO</span></span>
+<span><span class="co">## SRR5564269_dedup_sorted.bam     ADAR1KO</span></span>
+<span><span class="co">## SRR5564270_dedup_sorted.bam    Wildtype</span></span>
+<span><span class="co">## SRR5564271_dedup_sorted.bam    Wildtype</span></span>
+<span><span class="co">## SRR5564277_dedup_sorted.bam    Wildtype</span></span></code></pre>
+</div>
+<div class="section level3">
+<h3 id="prepare-for-differential-editing">Prepare for differential editing<a class="anchor" aria-label="anchor" href="#prepare-for-differential-editing"></a>
+</h3>
+<p>We next use the <code>calc_edit_frequency</code> function to identify the percent of edits for each position and sample. With the <code>drop = TRUE</code> argument we will also exclude sites without an adenosine. The editing frequencies will not be used for differential editing analysis, which will be conducted using the raw counts, however these are useful for filtering and visualization.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">se_filtered</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">se</span>, </span>
+<span>                                   edit_from <span class="op">=</span> <span class="st">"A"</span>,</span>
+<span>                                   edit_to <span class="op">=</span> <span class="st">"G"</span>,</span>
+<span>                                   drop <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>We can next subset the <code>summarizedExperiment</code> object to low frequency editing events. For this analysis we will require than an editing site shows editing in at least 1 sample, and have at least 5 counts in each sample.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">has_editing</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se_filtered</span>, <span class="st">"edit_freq"</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">1</span></span>
+<span><span class="va">has_depth</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="op">(</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se_filtered</span>, <span class="st">"nRef"</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>                         <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se_filtered</span>, <span class="st">"nVar"</span><span class="op">)</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">5</span><span class="op">)</span><span class="op">)</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">se_filtered</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">se_filtered</span> <span class="op">&lt;-</span> <span class="va">se_filtered</span><span class="op">[</span><span class="va">has_editing</span> <span class="op">&amp;</span> <span class="va">has_depth</span>, <span class="op">]</span></span>
+<span><span class="va">se_filtered</span></span></code></pre></div>
+<pre><code><span><span class="co">## class: RangedSummarizedExperiment </span></span>
+<span><span class="co">## dim: 611 6 </span></span>
+<span><span class="co">## metadata(0):</span></span>
+<span><span class="co">## assays(8): Var nRef ... nG edit_freq</span></span>
+<span><span class="co">## rownames(611): chr18_204625_1 chr18_204626_1 ... chr18_80158602_2</span></span>
+<span><span class="co">##   chr18_80158603_2</span></span>
+<span><span class="co">## rowData names(1): Ref</span></span>
+<span><span class="co">## colnames(6): SRR5564260_dedup_sorted.bam</span></span>
+<span><span class="co">##   SRR5564261_dedup_sorted.bam ... SRR5564271_dedup_sorted.bam</span></span>
+<span><span class="co">##   SRR5564277_dedup_sorted.bam</span></span>
+<span><span class="co">## colData names(5): sample genotype_treatment genotype n_sites</span></span>
+<span><span class="co">##   edit_idx</span></span></code></pre>
+<p>Once the object has been filtered, you can prepare it for DE. This means making a new object that contains an assay with read counts if both the alt and ref alleles in a single matrix.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">deobj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_for_de.html">prep_for_de</a></span><span class="op">(</span><span class="va">se_filtered</span>,</span>
+<span>                     min_prop <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>                     max_prop <span class="op">=</span> <span class="fl">0.9</span>,</span>
+<span>                     min_samples <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">deobj</span>, <span class="st">"counts"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="op">]</span></span></code></pre></div>
+<pre><code><span><span class="co">##                  SRR5564260_dedup_sorted.bam_ref</span></span>
+<span><span class="co">## chr18_692390_2                                 6</span></span>
+<span><span class="co">## chr18_692402_2                                 5</span></span>
+<span><span class="co">## chr18_21631169_1                               8</span></span>
+<span><span class="co">##                  SRR5564261_dedup_sorted.bam_ref</span></span>
+<span><span class="co">## chr18_692390_2                                12</span></span>
+<span><span class="co">## chr18_692402_2                                10</span></span>
+<span><span class="co">## chr18_21631169_1                              10</span></span>
+<span><span class="co">##                  SRR5564269_dedup_sorted.bam_ref</span></span>
+<span><span class="co">## chr18_692390_2                                13</span></span>
+<span><span class="co">## chr18_692402_2                                13</span></span>
+<span><span class="co">## chr18_21631169_1                              15</span></span>
+<span><span class="co">##                  SRR5564270_dedup_sorted.bam_ref</span></span>
+<span><span class="co">## chr18_692390_2                                18</span></span>
+<span><span class="co">## chr18_692402_2                                14</span></span>
+<span><span class="co">## chr18_21631169_1                              10</span></span>
+<span><span class="co">##                  SRR5564271_dedup_sorted.bam_ref</span></span>
+<span><span class="co">## chr18_692390_2                                13</span></span>
+<span><span class="co">## chr18_692402_2                                10</span></span>
+<span><span class="co">## chr18_21631169_1                               3</span></span>
+<span><span class="co">##                  SRR5564277_dedup_sorted.bam_ref</span></span>
+<span><span class="co">## chr18_692390_2                                 8</span></span>
+<span><span class="co">## chr18_692402_2                                 3</span></span>
+<span><span class="co">## chr18_21631169_1                               4</span></span>
+<span><span class="co">##                  SRR5564260_dedup_sorted.bam_alt</span></span>
+<span><span class="co">## chr18_692390_2                                 0</span></span>
+<span><span class="co">## chr18_692402_2                                 0</span></span>
+<span><span class="co">## chr18_21631169_1                               0</span></span>
+<span><span class="co">##                  SRR5564261_dedup_sorted.bam_alt</span></span>
+<span><span class="co">## chr18_692390_2                                 0</span></span>
+<span><span class="co">## chr18_692402_2                                 0</span></span>
+<span><span class="co">## chr18_21631169_1                               0</span></span>
+<span><span class="co">##                  SRR5564269_dedup_sorted.bam_alt</span></span>
+<span><span class="co">## chr18_692390_2                                 0</span></span>
+<span><span class="co">## chr18_692402_2                                 0</span></span>
+<span><span class="co">## chr18_21631169_1                               0</span></span>
+<span><span class="co">##                  SRR5564270_dedup_sorted.bam_alt</span></span>
+<span><span class="co">## chr18_692390_2                                 5</span></span>
+<span><span class="co">## chr18_692402_2                                 7</span></span>
+<span><span class="co">## chr18_21631169_1                               4</span></span>
+<span><span class="co">##                  SRR5564271_dedup_sorted.bam_alt</span></span>
+<span><span class="co">## chr18_692390_2                                 2</span></span>
+<span><span class="co">## chr18_692402_2                                 4</span></span>
+<span><span class="co">## chr18_21631169_1                               3</span></span>
+<span><span class="co">##                  SRR5564277_dedup_sorted.bam_alt</span></span>
+<span><span class="co">## chr18_692390_2                                 2</span></span>
+<span><span class="co">## chr18_692402_2                                 5</span></span>
+<span><span class="co">## chr18_21631169_1                               4</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="run-differential-editing-deseq2">Run differential editing (DESeq2)<a class="anchor" aria-label="anchor" href="#run-differential-editing-deseq2"></a>
@@ -147,158 +317,128 @@
 <p>For differential editing, we use the design <code>design &lt;- ~0 + condition:sample + condition:count</code>.</p>
 <p>For the samples, you can leave as is or combine so the same sample name shows up in both the treatment and control. These results are not identical but they are close. In my hands, the same genes come out, but the p values and log fold change values are slightly different.</p>
 <p>It is probably best to update the levels of your object, but if you don’t, this will still work.</p>
-<p>To run using <code>DESEq2</code>, set <code>type = DESEq2</code> in the <code>de_results</code> function. This function requires you to specify what your control and treatment are from your condition column of your <code>deobj</code>.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">de_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/perform_de.html">perform_de</a></span><span class="op">(</span><span class="va">deobj</span>, type <span class="op">=</span> <span class="st">"DESeq2"</span>, sample_col <span class="op">=</span> <span class="st">"sample"</span>,
-                         condition_col <span class="op">=</span> <span class="st">"genotype"</span>,
-                         condition_control <span class="op">=</span> <span class="st">"Wildtype"</span>,
-                         condition_treatment <span class="op">=</span> <span class="st">"ADAR1KO"</span><span class="op">)</span></code></pre></div>
-<p>This returns a list of the dds object, the full results, the significant results, and the model matrix.</p>
-<p>If you’d rather use the sample information as described in the <code>DESEq2</code> vignette, you can make your sample names go across your treatment and control</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">sample_mapping</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/Vector-class.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"SRR5564260"</span> <span class="op">=</span> <span class="st">"s1"</span>,
-                   <span class="st">"SRR5564270"</span> <span class="op">=</span> <span class="st">"s1"</span>,
-                   <span class="st">"SRR5564261"</span> <span class="op">=</span> <span class="st">"s2"</span>,
-                   <span class="st">"SRR5564271"</span> <span class="op">=</span> <span class="st">"s2"</span>,
-                   <span class="st">"SRR5564268"</span> <span class="op">=</span> <span class="st">"s3"</span>,
-                   <span class="st">"SRR5564274"</span> <span class="op">=</span> <span class="st">"s3"</span>,
-                   <span class="st">"SRR5564269"</span> <span class="op">=</span> <span class="st">"s4"</span>,
-                   <span class="st">"SRR5564275"</span> <span class="op">=</span> <span class="st">"s4"</span>,
-                   <span class="st">"SRR5564272"</span> <span class="op">=</span> <span class="st">"s5"</span>,
-                   <span class="st">"SRR5564276"</span> <span class="op">=</span> <span class="st">"s5"</span>,
-                   <span class="st">"SRR5564273"</span> <span class="op">=</span> <span class="st">"s6"</span>,
-                   <span class="st">"SRR5564277"</span> <span class="op">=</span> <span class="st">"s6"</span><span class="op">)</span>
-
-<span class="va">deobj</span><span class="op">$</span><span class="va">sample_new</span> <span class="op">&lt;-</span> <span class="va">sample_mapping</span><span class="op">[</span><span class="va">deobj</span><span class="op">$</span><span class="va">sample</span><span class="op">]</span>
-
-<span class="va">deobj</span><span class="op">$</span><span class="va">sample_new</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">deobj</span><span class="op">$</span><span class="va">sample_new</span><span class="op">)</span>
-
-<span class="va">de_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/perform_de.html">perform_de</a></span><span class="op">(</span><span class="va">deobj</span>, type <span class="op">=</span> <span class="st">"DESeq2"</span>, sample_col <span class="op">=</span> <span class="st">"sample_new"</span>,
-                         condition_col <span class="op">=</span> <span class="st">"genotype"</span>,
-                         condition_control <span class="op">=</span> <span class="st">"Wildtype"</span>,
-                         condition_treatment <span class="op">=</span> <span class="st">"ADAR1KO"</span><span class="op">)</span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="run-differential-editing-edger">Run differential editing (edgeR)<a class="anchor" aria-label="anchor" href="#run-differential-editing-edger"></a>
-</h3>
-<p>At this stage, you can use the object to perform DE yourself or you can continue with our pre built functions</p>
-<p>For differential editing, we use the design <code>design &lt;- ~0 + condition:sample + condition:count</code>.</p>
-<p>For the samples, you can leave as is or combine so the same sample name shows up in both the treatment and control. These results are not identical but they are close. In my hands, the same genes come out, but the p values and log fold change values are slightly different.</p>
-<p>It is probably best to update the levels of your object, but if you don’t, this will still work.</p>
-<p>To run using <code>edgeR</code>, set <code>type = edgeR</code> in the <code>de_results</code> function. This function requires you to specify what your control and treatment are from your condition column of your <code>deobj</code>.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">de_edger_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/perform_de.html">perform_de</a></span><span class="op">(</span><span class="va">deobj</span>, type <span class="op">=</span> <span class="st">"edgeR"</span>,
-                               sample_col <span class="op">=</span> <span class="st">"sample"</span>,
-                               condition_col <span class="op">=</span> <span class="st">"genotype"</span>,
-                               condition_control <span class="op">=</span> <span class="st">"Wildtype"</span>,
-                               condition_treatment <span class="op">=</span> <span class="st">"ADAR1KO"</span><span class="op">)</span></code></pre></div>
-<p>This returns a list of the dds object, the full results, the significant results, and the model matrix.</p>
-<p>If you’d rather use the sample information as described in the <code>DESEq2</code> vignette, you can make your sample names go across your treatment and control</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">sample_mapping</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/Vector-class.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"SRR5564260"</span> <span class="op">=</span> <span class="st">"s1"</span>,
-                   <span class="st">"SRR5564270"</span> <span class="op">=</span> <span class="st">"s1"</span>,
-                   <span class="st">"SRR5564261"</span> <span class="op">=</span> <span class="st">"s2"</span>,
-                   <span class="st">"SRR5564271"</span> <span class="op">=</span> <span class="st">"s2"</span>,
-                   <span class="st">"SRR5564268"</span> <span class="op">=</span> <span class="st">"s3"</span>,
-                   <span class="st">"SRR5564274"</span> <span class="op">=</span> <span class="st">"s3"</span>,
-                   <span class="st">"SRR5564269"</span> <span class="op">=</span> <span class="st">"s4"</span>,
-                   <span class="st">"SRR5564275"</span> <span class="op">=</span> <span class="st">"s4"</span>,
-                   <span class="st">"SRR5564272"</span> <span class="op">=</span> <span class="st">"s5"</span>,
-                   <span class="st">"SRR5564276"</span> <span class="op">=</span> <span class="st">"s5"</span>,
-                   <span class="st">"SRR5564273"</span> <span class="op">=</span> <span class="st">"s6"</span>,
-                   <span class="st">"SRR5564277"</span> <span class="op">=</span> <span class="st">"s6"</span><span class="op">)</span>
-
-<span class="va">deobj</span><span class="op">$</span><span class="va">sample_new</span> <span class="op">&lt;-</span> <span class="va">sample_mapping</span><span class="op">[</span><span class="va">deobj</span><span class="op">$</span><span class="va">sample</span><span class="op">]</span>
-
-<span class="va">deobj</span><span class="op">$</span><span class="va">sample_new</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">deobj</span><span class="op">$</span><span class="va">sample_new</span><span class="op">)</span>
-
-<span class="va">de_edger_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/perform_de.html">perform_de</a></span><span class="op">(</span><span class="va">deobj</span>, type <span class="op">=</span> <span class="st">"edgeR"</span>,
-                               sample_col <span class="op">=</span> <span class="st">"sample_new"</span>,
-                               condition_col <span class="op">=</span> <span class="st">"genotype"</span>,
-                               condition_control <span class="op">=</span> <span class="st">"Wildtype"</span>,
-                               condition_treatment <span class="op">=</span> <span class="st">"ADAR1KO"</span><span class="op">)</span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="perform-your-own-comparisons-deseq2">Perform your own comparisons (DESeq2)<a class="anchor" aria-label="anchor" href="#perform-your-own-comparisons-deseq2"></a>
-</h3>
-<p>I have found it more straight forward to pull out comparisions of interest following <a href="https://github.com/tavareshugo/tutorial_DESeq2_contrasts/blob/main/DESeq2_contrasts.md" class="external-link">this tutorial</a>. To ask for other comparisons with this dataset, you first need to identify the specific matrix design of the comparison.</p>
-<p>The model matrix used for your experiment will be returned from the <code>perform_de</code> function. To get these results, first pull them out of the return list</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">mod_mat</span> <span class="op">&lt;-</span> <span class="va">de_results</span><span class="op">$</span><span class="va">model_matrix</span></code></pre></div>
-<p>We will also need to get the DESeq object from this list</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">dds</span> <span class="op">&lt;-</span> <span class="va">de_results</span><span class="op">$</span><span class="va">deseq_obj</span></code></pre></div>
-<p>We now can subset this matrix to the conditions we are interested in</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">alt_treatment</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">mod_mat</span><span class="op">[</span><span class="va">dds</span><span class="op">$</span><span class="va">condition</span> <span class="op">==</span> <span class="va">condition_treatment</span> <span class="op">&amp;</span>
-                                  <span class="va">dds</span><span class="op">$</span><span class="va">count</span> <span class="op">==</span> <span class="st">"alt"</span>,<span class="op">]</span><span class="op">)</span>
-<span class="va">ref_treatment</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">mod_mat</span><span class="op">[</span><span class="va">dds</span><span class="op">$</span><span class="va">condition</span> <span class="op">==</span> <span class="va">condition_treatment</span> <span class="op">&amp;</span>
-                                  <span class="va">dds</span><span class="op">$</span><span class="va">count</span> <span class="op">==</span> <span class="st">"ref"</span>,<span class="op">]</span><span class="op">)</span>
-
-<span class="va">alt_control</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">mod_mat</span><span class="op">[</span><span class="va">dds</span><span class="op">$</span><span class="va">condition</span> <span class="op">==</span> <span class="va">condition_control</span> <span class="op">&amp;</span>
-                                <span class="va">dds</span><span class="op">$</span><span class="va">count</span> <span class="op">==</span> <span class="st">"alt"</span>,<span class="op">]</span><span class="op">)</span>
-<span class="va">ref_control</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">mod_mat</span><span class="op">[</span><span class="va">dds</span><span class="op">$</span><span class="va">condition</span> <span class="op">==</span> <span class="va">condition_control</span> <span class="op">&amp;</span>
-                                <span class="va">dds</span><span class="op">$</span><span class="va">count</span> <span class="op">==</span> <span class="st">"ref"</span>,<span class="op">]</span><span class="op">)</span></code></pre></div>
-<p>We can now use these to pull out specific comparisions using the <code>results</code> function.</p>
-<p>We can look at the differences between treatment and control for just the alt allele:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">alt_treat_control</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/DESeq2/man/results.html" class="external-link">results</a></span><span class="op">(</span><span class="va">dds</span>, contrast <span class="op">=</span> <span class="va">alt_treatment</span> <span class="op">-</span> <span class="va">alt_control</span><span class="op">)</span></code></pre></div>
-<p>Or just the ref allele:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">ref_treat_control</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/DESeq2/man/results.html" class="external-link">results</a></span><span class="op">(</span><span class="va">dds</span>, contrast <span class="op">=</span> <span class="va">ref_treatment</span> <span class="op">-</span> <span class="va">ref_control</span><span class="op">)</span></code></pre></div>
-<p>Or just find the alt vs ref allele for treatment:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">alt_ref_treat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/DESeq2/man/results.html" class="external-link">results</a></span><span class="op">(</span><span class="va">dds</span>, contrast <span class="op">=</span> <span class="va">alt_treatment</span> <span class="op">-</span> <span class="va">ref_treatment</span><span class="op">)</span></code></pre></div>
-<p>To find the alt vs ref specific to the treatment (what we returned as the results from <code>perform_de</code>):</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R">  <span class="va">treatment_vs_control</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/DESeq2/man/results.html" class="external-link">results</a></span><span class="op">(</span><span class="va">dds</span>,
-                                  contrast <span class="op">=</span> <span class="op">(</span><span class="va">alt_treatment</span> <span class="op">-</span> <span class="va">ref_treatment</span><span class="op">)</span> <span class="op">-</span> 
-                                    <span class="op">(</span><span class="va">alt_control</span> <span class="op">-</span> <span class="va">ref_control</span><span class="op">)</span><span class="op">)</span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="perform-your-own-comparisons-edger">Perform your own comparisons (edgeR)<a class="anchor" aria-label="anchor" href="#perform-your-own-comparisons-edger"></a>
-</h3>
-<p>I have found it more straight forward to pull out comparisions of interest following <a href="https://github.com/tavareshugo/tutorial_DESeq2_contrasts/blob/main/DESeq2_contrasts.md" class="external-link">this tutorial</a>. To ask for other comparisons with this dataset, you first need to identify the specific matrix design of the comparison.</p>
-<p>The model matrix used for your experiment will be returned from the <code>perform_de</code> function. To get these results, first pull them out of the return list</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">mod_mat</span> <span class="op">&lt;-</span> <span class="va">de_results</span><span class="op">$</span><span class="va">model_matrix</span></code></pre></div>
-<p>We will also need to get the DESeq object from this list</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">deobj</span> <span class="op">&lt;-</span> <span class="va">de_results</span><span class="op">$</span><span class="va">deseq_obj</span></code></pre></div>
-<p>We now can subset this matrix to the conditions we are interested in</p>
+<p>To run using <code>DESeq2</code>, set <code>type = DESeq2</code> in the <code>de_results</code> function. This function requires you to specify what your control and treatment are from your condition column of your <code>deobj</code>. <code>edgeR</code> is also supported.</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">alt_treatment</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">mod_mat</span><span class="op">[</span><span class="va">deobj</span><span class="op">$</span><span class="va">condition</span> <span class="op">==</span> <span class="va">condition_treatment</span> <span class="op">&amp;</span>
-                                 <span class="va">deobj</span><span class="op">$</span><span class="va">count</span> <span class="op">==</span> <span class="st">"alt"</span>,<span class="op">]</span><span class="op">)</span>
-<span class="va">ref_treatment</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">mod_mat</span><span class="op">[</span><span class="va">deobj</span><span class="op">$</span><span class="va">condition</span> <span class="op">==</span> <span class="va">condition_treatment</span> <span class="op">&amp;</span>
-                                 <span class="va">deobj</span><span class="op">$</span><span class="va">count</span> <span class="op">==</span> <span class="st">"ref"</span>,<span class="op">]</span><span class="op">)</span>
-
-<span class="va">alt_control</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">mod_mat</span><span class="op">[</span><span class="va">deobj</span><span class="op">$</span><span class="va">condition</span> <span class="op">==</span> <span class="va">condition_control</span> <span class="op">&amp;</span>
-                               <span class="va">deobj</span><span class="op">$</span><span class="va">count</span> <span class="op">==</span> <span class="st">"alt"</span>,<span class="op">]</span><span class="op">)</span>
-<span class="va">ref_control</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">mod_mat</span><span class="op">[</span><span class="va">deobj</span><span class="op">$</span><span class="va">condition</span> <span class="op">==</span> <span class="va">condition_control</span> <span class="op">&amp;</span>
-                               <span class="va">deobj</span><span class="op">$</span><span class="va">count</span> <span class="op">==</span> <span class="st">"ref"</span>,<span class="op">]</span><span class="op">)</span></code></pre></div>
-<p>We can now use these to pull out specific comparisions using the <code>results</code> function.</p>
-<p>We can look at the differences between treatment and control for just the alt allele:</p>
+<code class="sourceCode R"><span><span class="va">de_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/perform_de.html">perform_de</a></span><span class="op">(</span><span class="va">deobj</span>, type <span class="op">=</span> <span class="st">"DESeq2"</span>, </span>
+<span>                         sample_col <span class="op">=</span> <span class="st">"sample"</span>,</span>
+<span>                         condition_col <span class="op">=</span> <span class="st">"genotype"</span>,</span>
+<span>                         condition_control <span class="op">=</span> <span class="st">"Wildtype"</span>,</span>
+<span>                         condition_treatment <span class="op">=</span> <span class="st">"ADAR1KO"</span><span class="op">)</span></span></code></pre></div>
+<p>This returns a list containing the dds object, the full results, the significant results, and the model matrix.</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">alt_treat_control</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/edgeR/man/glmfit.html" class="external-link">glmLRT</a></span><span class="op">(</span><span class="va">deobj</span>, contrast <span class="op">=</span> <span class="va">alt_treatment</span> <span class="op">-</span> <span class="va">alt_control</span><span class="op">)</span>
-
-<span class="va">alt_treat_control</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/edgeR/man/topTags.html" class="external-link">topTags</a></span><span class="op">(</span><span class="va">alt_treat_control</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">alt_treat_control</span><span class="op">)</span><span class="op">)</span></code></pre></div>
-<p>Or just the ref allele:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">ref_treat_control</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/edgeR/man/glmfit.html" class="external-link">glmLRT</a></span><span class="op">(</span><span class="va">deobj</span>, contrast <span class="op">=</span> <span class="va">ref_treatment</span> <span class="op">-</span> <span class="va">ref_control</span><span class="op">)</span>
-
-<span class="va">ref_treat_control</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/edgeR/man/topTags.html" class="external-link">topTags</a></span><span class="op">(</span><span class="va">ref_treat_control</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">ref_treat_control</span><span class="op">)</span><span class="op">)</span></code></pre></div>
-<p>Or just find the alt vs ref allele for treatment:</p>
+<code class="sourceCode R"><span><span class="va">de_results</span><span class="op">$</span><span class="va">sig_results</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span></span></code></pre></div>
+<pre><code><span><span class="co">##                   baseMean log2FoldChange     lfcSE      stat</span></span>
+<span><span class="co">## chr18_32070144_1  6.750000      -2.455124 0.9657692 -2.542143</span></span>
+<span><span class="co">## chr18_35247800_1  8.333333      -2.843321 1.0202664 -2.786841</span></span>
+<span><span class="co">## chr18_23296417_2 14.583333      -3.055300 0.7775433 -3.929427</span></span>
+<span><span class="co">## chr18_32120079_1  7.916667      -3.296187 1.3657932 -2.413387</span></span>
+<span><span class="co">## chr18_36022846_2  4.333333      -3.347566 1.2099414 -2.766718</span></span>
+<span><span class="co">##                        pvalue         padj</span></span>
+<span><span class="co">## chr18_32070144_1 1.101751e-02 0.0148902513</span></span>
+<span><span class="co">## chr18_35247800_1 5.322451e-03 0.0087342790</span></span>
+<span><span class="co">## chr18_23296417_2 8.514836e-05 0.0003405934</span></span>
+<span><span class="co">## chr18_32120079_1 1.580504e-02 0.0198337786</span></span>
+<span><span class="co">## chr18_36022846_2 5.662375e-03 0.0090597999</span></span></code></pre>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">alt_ref_treat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/edgeR/man/glmfit.html" class="external-link">glmLRT</a></span><span class="op">(</span><span class="va">deobj</span>, contrast <span class="op">=</span> <span class="va">alt_treatment</span> <span class="op">-</span> <span class="va">ref_treatment</span><span class="op">)</span>
-
-<span class="va">alt_ref_treat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/edgeR/man/topTags.html" class="external-link">topTags</a></span><span class="op">(</span><span class="va">alt_ref_treat</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">alt_ref_treat</span><span class="op">)</span><span class="op">)</span></code></pre></div>
-<p>To find the alt vs ref specific to the treatment (what we returned as the results from <code>perform_de</code>):</p>
+<code class="sourceCode R"><span><span class="va">top_sites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">de_results</span><span class="op">$</span><span class="va">sig_results</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">20</span><span class="op">]</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/ComplexHeatmap/man/Heatmap.html" class="external-link">Heatmap</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se_filtered</span>, <span class="st">"edit_freq"</span><span class="op">)</span><span class="op">[</span><span class="va">top_sites</span>, <span class="op">]</span>, </span>
+<span>        col <span class="op">=</span> <span class="fu"><a href="https://sjmgarnier.github.io/viridisLite/reference/viridis.html" class="external-link">viridis</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>, </span>
+<span>        column_labels <span class="op">=</span> <span class="va">se_filtered</span><span class="op">$</span><span class="va">genotype_treatment</span><span class="op">)</span></span></code></pre></div>
+<p><img src="raer_files/figure-html/unnamed-chunk-16-1.png" width="480"></p>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">treatment_vs_control</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/edgeR/man/glmfit.html" class="external-link">glmLRT</a></span><span class="op">(</span><span class="va">deobj</span>, contrast <span class="op">=</span> <span class="op">(</span><span class="va">alt_treatment</span> <span class="op">-</span> <span class="va">ref_treatment</span><span class="op">)</span> <span class="op">-</span> 
-                  <span class="op">(</span><span class="va">alt_control</span> <span class="op">-</span> <span class="va">ref_control</span><span class="op">)</span><span class="op">)</span>
-
-<span class="va">treatment_vs_control</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/edgeR/man/topTags.html" class="external-link">topTags</a></span><span class="op">(</span><span class="va">treatment_vs_control</span>,
-                              n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">treatment_vs_control</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">data_dir</span><span class="op">)</span></span></code></pre></div>
+<details style="margin-bottom:10px;"><summary>
+Session info
+</summary><div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## R version 4.2.0 (2022-04-22)</span></span>
+<span><span class="co">## Platform: x86_64-pc-linux-gnu (64-bit)</span></span>
+<span><span class="co">## Running under: Ubuntu 20.04.4 LTS</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Matrix products: default</span></span>
+<span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.9.0</span></span>
+<span><span class="co">## LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.9.0</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## locale:</span></span>
+<span><span class="co">##  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       </span></span>
+<span><span class="co">##  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   </span></span>
+<span><span class="co">##  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          </span></span>
+<span><span class="co">## [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   </span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## attached base packages:</span></span>
+<span><span class="co">## [1] grid      stats4    stats     graphics  grDevices utils     datasets </span></span>
+<span><span class="co">## [8] methods   base     </span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## other attached packages:</span></span>
+<span><span class="co">##  [1] stringr_1.4.0               viridis_0.6.2              </span></span>
+<span><span class="co">##  [3] viridisLite_0.4.0           ComplexHeatmap_2.12.0      </span></span>
+<span><span class="co">##  [5] DESeq2_1.36.0               SummarizedExperiment_1.26.1</span></span>
+<span><span class="co">##  [7] Biobase_2.56.0              GenomicRanges_1.48.0       </span></span>
+<span><span class="co">##  [9] GenomeInfoDb_1.32.2         IRanges_2.30.0             </span></span>
+<span><span class="co">## [11] S4Vectors_0.34.0            BiocGenerics_0.42.0        </span></span>
+<span><span class="co">## [13] MatrixGenerics_1.8.1        matrixStats_0.62.0         </span></span>
+<span><span class="co">## [15] raer_0.99.0                 BiocStyle_2.24.0           </span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## loaded via a namespace (and not attached):</span></span>
+<span><span class="co">##   [1] colorspace_2.0-3         rjson_0.2.21            </span></span>
+<span><span class="co">##   [3] ellipsis_0.3.2           rprojroot_2.0.3         </span></span>
+<span><span class="co">##   [5] circlize_0.4.15          XVector_0.36.0          </span></span>
+<span><span class="co">##   [7] GlobalOptions_0.1.2      fs_1.5.2                </span></span>
+<span><span class="co">##   [9] clue_0.3-61              bit64_4.0.5             </span></span>
+<span><span class="co">##  [11] AnnotationDbi_1.58.0     fansi_1.0.3             </span></span>
+<span><span class="co">##  [13] xml2_1.3.3               codetools_0.2-18        </span></span>
+<span><span class="co">##  [15] splines_4.2.0            R.methodsS3_1.8.2       </span></span>
+<span><span class="co">##  [17] doParallel_1.0.17        cachem_1.0.6            </span></span>
+<span><span class="co">##  [19] geneplotter_1.74.0       knitr_1.39              </span></span>
+<span><span class="co">##  [21] jsonlite_1.8.0           Rsamtools_2.13.3        </span></span>
+<span><span class="co">##  [23] annotate_1.74.0          cluster_2.1.3           </span></span>
+<span><span class="co">##  [25] dbplyr_2.2.1             png_0.1-7               </span></span>
+<span><span class="co">##  [27] R.oo_1.25.0              BiocManager_1.30.18     </span></span>
+<span><span class="co">##  [29] compiler_4.2.0           httr_1.4.3              </span></span>
+<span><span class="co">##  [31] assertthat_0.2.1         Matrix_1.4-1            </span></span>
+<span><span class="co">##  [33] fastmap_1.1.0            cli_3.3.0               </span></span>
+<span><span class="co">##  [35] htmltools_0.5.2          prettyunits_1.1.1       </span></span>
+<span><span class="co">##  [37] tools_4.2.0              gtable_0.3.0            </span></span>
+<span><span class="co">##  [39] glue_1.6.2               GenomeInfoDbData_1.2.8  </span></span>
+<span><span class="co">##  [41] dplyr_1.0.9              rappdirs_0.3.3          </span></span>
+<span><span class="co">##  [43] Rcpp_1.0.8.3             jquerylib_0.1.4         </span></span>
+<span><span class="co">##  [45] pkgdown_2.0.5            vctrs_0.4.1             </span></span>
+<span><span class="co">##  [47] Biostrings_2.64.0        rtracklayer_1.56.1      </span></span>
+<span><span class="co">##  [49] iterators_1.0.14         xfun_0.31               </span></span>
+<span><span class="co">##  [51] lifecycle_1.0.1          restfulr_0.0.15         </span></span>
+<span><span class="co">##  [53] XML_3.99-0.10            zlibbioc_1.42.0         </span></span>
+<span><span class="co">##  [55] scales_1.2.0             BSgenome_1.64.0         </span></span>
+<span><span class="co">##  [57] ragg_1.2.2               hms_1.1.1               </span></span>
+<span><span class="co">##  [59] parallel_4.2.0           RColorBrewer_1.1-3      </span></span>
+<span><span class="co">##  [61] yaml_2.3.5               curl_4.3.2              </span></span>
+<span><span class="co">##  [63] gridExtra_2.3            memoise_2.0.1           </span></span>
+<span><span class="co">##  [65] ggplot2_3.3.6            sass_0.4.1              </span></span>
+<span><span class="co">##  [67] biomaRt_2.52.0           stringi_1.7.6           </span></span>
+<span><span class="co">##  [69] RSQLite_2.2.14           highr_0.9               </span></span>
+<span><span class="co">##  [71] genefilter_1.78.0        BiocIO_1.6.0            </span></span>
+<span><span class="co">##  [73] desc_1.4.1               foreach_1.5.2           </span></span>
+<span><span class="co">##  [75] GenomicFeatures_1.48.3   filelock_1.0.2          </span></span>
+<span><span class="co">##  [77] BiocParallel_1.30.3      shape_1.4.6             </span></span>
+<span><span class="co">##  [79] rlang_1.0.3              pkgconfig_2.0.3         </span></span>
+<span><span class="co">##  [81] systemfonts_1.0.4        bitops_1.0-7            </span></span>
+<span><span class="co">##  [83] evaluate_0.15            lattice_0.20-45         </span></span>
+<span><span class="co">##  [85] purrr_0.3.4              GenomicAlignments_1.32.0</span></span>
+<span><span class="co">##  [87] bit_4.0.4                tidyselect_1.1.2        </span></span>
+<span><span class="co">##  [89] magrittr_2.0.3           bookdown_0.27           </span></span>
+<span><span class="co">##  [91] R6_2.5.1                 generics_0.1.2          </span></span>
+<span><span class="co">##  [93] DelayedArray_0.22.0      DBI_1.1.3               </span></span>
+<span><span class="co">##  [95] pillar_1.7.0             survival_3.3-1          </span></span>
+<span><span class="co">##  [97] KEGGREST_1.36.2          RCurl_1.98-1.7          </span></span>
+<span><span class="co">##  [99] tibble_3.1.7             crayon_1.5.1            </span></span>
+<span><span class="co">## [101] utf8_1.2.2               BiocFileCache_2.4.0     </span></span>
+<span><span class="co">## [103] rmarkdown_2.14           GetoptLong_1.0.5        </span></span>
+<span><span class="co">## [105] progress_1.2.2           locfit_1.5-9.5          </span></span>
+<span><span class="co">## [107] data.table_1.14.2        blob_1.2.3              </span></span>
+<span><span class="co">## [109] digest_0.6.29            xtable_1.8-4            </span></span>
+<span><span class="co">## [111] R.utils_2.12.0           textshaping_0.3.6       </span></span>
+<span><span class="co">## [113] munsell_0.5.0            bslib_0.3.1</span></span></code></pre>
+</details>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
@@ -314,7 +454,7 @@
 
 <div class="pkgdown-footer-right">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
     </footer>

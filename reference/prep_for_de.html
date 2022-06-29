@@ -32,6 +32,12 @@ will generate a counts assay with a matrix formated with 2 columns per sample"><
 <li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
 </li>
+<li class="nav-item dropdown">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
+  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/novel-sites.html">Identifying RNA editing sites using RNA and DNA sequencing data</a>
+  </div>
+</li>
       </ul><form class="form-inline my-2 my-lg-0" role="search">
         <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="../search.json" id="search-input" placeholder="Search for" autocomplete="off"></form>
 
@@ -51,7 +57,7 @@ will generate a counts assay with a matrix formated with 2 columns per sample"><
       <img src="" class="logo" alt=""><h1>Make summarized experiment object for DE
 Generates a SummarizedExperiment object for use with edgeR or DESeq2
 will generate a counts assay with a matrix formated with 2 columns per sample</h1>
-      <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/R/differential_expression.R" class="external-link"><code>R/differential_expression.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/R/differential_editing.R" class="external-link"><code>R/differential_editing.R</code></a></small>
       <div class="d-none name"><code>prep_for_de.Rd</code></div>
     </div>
 
@@ -63,48 +69,134 @@ will generate a counts assay with a matrix formated with 2 columns per sample</p
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">prep_for_de</span><span class="op">(</span>
-  <span class="va">se</span>,
-  type <span class="op">=</span> <span class="st">"AI"</span>,
-  edit_from <span class="op">=</span> <span class="cn">NULL</span>,
-  edit_to <span class="op">=</span> <span class="cn">NULL</span>,
-  min_prop <span class="op">=</span> <span class="fl">0.1</span>,
-  max_prop <span class="op">=</span> <span class="fl">0.9</span>,
-  min_samples <span class="op">=</span> <span class="fl">3</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">prep_for_de</span><span class="op">(</span></span>
+<span>  <span class="va">se</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"AI"</span>,</span>
+<span>  edit_from <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  edit_to <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_prop <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  max_prop <span class="op">=</span> <span class="fl">0.9</span>,</span>
+<span>  min_samples <span class="op">=</span> <span class="fl">3</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>se</dt>
 <dd><p>A SummarizedExperiment object</p></dd>
+
+
 <dt>type</dt>
 <dd><p>OPTIONAL the type of editing event to add. Currently, only
 A to I is supported ("AI") which is the default, but your own custom can
 be added by setting this to "none".</p></dd>
+
+
 <dt>edit_from</dt>
 <dd><p>OPTIONAL if not using a pre-built type, you can specify
 your own editing. This should be a nucleotide (A, C, G, or T) and should
 correspond to the nucleotide you expect in the reference. Ex. for A to I
 editing events, this would be "A". If type is not "AI", both edit from
 and edit_to must be set.</p></dd>
+
+
 <dt>edit_to</dt>
 <dd><p>OPTIONAL if not using a pre-built type, you can specify
 your own editing. This should be a nucleotide (A, C, G, or T) and should
 correspond to the nucleotide you expect after the editing event. Ex. for A to I
 editing events, this would be "G". If type is not "AI", both edit from
 and edit_to must be set.</p></dd>
+
+
 <dt>min_prop</dt>
 <dd><p>OPTIONAL the min proporation of reads edited at a site.
 At least min_samples need to pass this to keep the site. Default is 0.1.</p></dd>
+
+
 <dt>max_prop</dt>
 <dd><p>OPTIONAL the max proporation of reads edited at a site.
 At least min_samples need to pass this to keep the site. Default is 0.9.</p></dd>
+
+
 <dt>min_samples</dt>
 <dd><p>OPTIONAL the minimum number of samples passing the cutoffs
 to keep a site. Default is 3.</p></dd>
+
 </dl></div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/example.html" class="external-link">example</a></span><span class="op">(</span><span class="va">create_se</span>, echo <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dse</span> <span class="op">&lt;-</span> <span class="fu">prep_for_de</span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">dse</span>, <span class="st">"counts"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             KO1_ref KO2_ref KO3_ref WT1_ref WT2_ref WT3_ref KO1_alt</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_176_2       16      16      16       8       8       8       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_201_2       14      14      14      19      19      19       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_207_2       14      14      14      14      14      14       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_257_2       19      19      19      11      11      11       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_258_2       10      10      10       9       9       9       8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_266_2       17      17      17      12      12      12       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_279_2       17      17      17       6       6       6       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_290_2       14      14      14       3       3       3       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_360_2        6       6       6       3       3       3       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_364_2        3       3       3       2       2       2       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_367_2        0       0       0       0       0       0       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_388_2        0       0       0       0       0       0       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_502_2        5       5       5       4       4       4       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_241_1       2       2       2       3       3       3       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_330_1       0       0       0       1       1       1       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_338_1       0       0       0       2       2       2       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_347_1       4       4       4       5       5       5       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_348_1       0       0       0       0       0       0       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_260_2       60      60      60      21      21      21       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_263_2       58      58      58      27      27      27       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_291_2       54      54      54      30      30      30       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_292_2       53      53      53      26      26      26       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_309_2       56      56      56      29      29      29       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_328_2       51      51      51      31      31      31       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_354_2       47      47      47      28      28      28       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_355_2       51      51      51      28      28      28       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_361_2       43      43      43       4       4       4       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             KO2_alt KO3_alt WT1_alt WT2_alt WT3_alt</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_176_2        0       0      16      16      16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_201_2        0       0       3       3       3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_207_2        0       0       4       4       4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_257_2        0       0       4       4       4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_258_2        8       8       6       6       6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_266_2        0       0       5       5       5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_279_2        0       0       4       4       4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_290_2        1       1       7       7       7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_360_2        0       0       3       3       3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_364_2        0       0       4       4       4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_367_2        0       0       1       1       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_388_2        0       0       0       0       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_502_2        0       0       0       0       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_241_1       0       0       1       1       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_330_1       0       0       2       2       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_338_1       0       0       1       1       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_347_1       0       0       0       0       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_348_1       0       0       0       0       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_260_2        0       0      12      12      12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_263_2        0       0       6       6       6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_291_2        2       2       4       4       4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_292_2        0       0      10      10      10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_309_2        0       0       8       8       8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_328_2        0       0       4       4       4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_354_2        0       0       4       4       4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_355_2        0       0       6       6       6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_361_2        0       0      27      27      27</span>
+<span class="r-in"><span><span class="va">dse</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> class: SummarizedExperiment </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> dim: 27 12 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> assays(1): counts</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(27): SSR3_176_2 SSR3_201_2 ... DHFR_355_2 DHFR_361_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(0):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colnames(12): KO1_ref KO2_ref ... WT2_alt WT3_alt</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colData names(5): sample condition n_sites edit_idx count</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>
 
@@ -114,7 +206,7 @@ to keep a site. Default is 3.</p></dd>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
     </footer></div>

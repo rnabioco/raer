@@ -1,9 +1,10 @@
 pandoc: 2.14.2
-pkgdown: 2.0.3
+pkgdown: 2.0.5
 pkgdown_sha: ~
 articles:
+  novel-sites: novel-sites.html
   raer: raer.html
-last_built: 2022-05-04T15:00Z
+last_built: 2022-06-29T18:43Z
 urls:
   reference: https://rnabioco.github.io/raer/reference
   article: https://rnabioco.github.io/raer/articles

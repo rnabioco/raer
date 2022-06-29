@@ -34,6 +34,12 @@ possible return values."><!-- mathjax --><script src="https://cdnjs.cloudflare.c
 <li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
 </li>
+<li class="nav-item dropdown">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
+  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/novel-sites.html">Identifying RNA editing sites using RNA and DNA sequencing data</a>
+  </div>
+</li>
       </ul><form class="form-inline my-2 my-lg-0" role="search">
         <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="../search.json" id="search-input" placeholder="Search for" autocomplete="off"></form>
 
@@ -54,7 +60,7 @@ possible return values."><!-- mathjax --><script src="https://cdnjs.cloudflare.c
 Uses either edgeR or DESeq2 to perform differential editing analysis.
 This will work for simple designs that have 1 treatment and 1 control.
 For more complex designs, we suggest you perform your own.</h1>
-      <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/R/differential_expression.R" class="external-link"><code>R/differential_expression.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/R/differential_editing.R" class="external-link"><code>R/differential_editing.R</code></a></small>
       <div class="d-none name"><code>perform_de.Rd</code></div>
     </div>
 
@@ -66,38 +72,75 @@ possible return values.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">perform_de</span><span class="op">(</span>
-  <span class="va">deobj</span>,
-  type <span class="op">=</span> <span class="st">"edgeR"</span>,
-  sample_col <span class="op">=</span> <span class="st">"sample"</span>,
-  condition_col <span class="op">=</span> <span class="st">"condition"</span>,
-  condition_control <span class="op">=</span> <span class="cn">NULL</span>,
-  condition_treatment <span class="op">=</span> <span class="cn">NULL</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">perform_de</span><span class="op">(</span></span>
+<span>  <span class="va">deobj</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"edgeR"</span>,</span>
+<span>  sample_col <span class="op">=</span> <span class="st">"sample"</span>,</span>
+<span>  condition_col <span class="op">=</span> <span class="st">"condition"</span>,</span>
+<span>  condition_control <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  condition_treatment <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>deobj</dt>
 <dd><p>A SummarizedExperiment object prepared for de by <code>prep_for_de</code></p></dd>
+
+
 <dt>type</dt>
 <dd><p>OPTIONAL if edgeR or DESeq should be run. Default is edgeR</p></dd>
+
+
 <dt>sample_col</dt>
 <dd><p>OPTIONAL the name of the column from colData(deobj) that
 contains your sample information. Default is sample. If you do not have a
 column named "sample", you must provide the appropriate sample column</p></dd>
+
+
 <dt>condition_col</dt>
 <dd><p>OPTIONAL the name of the column from colData(deobj) that
 contains your treatment information. Default is condition, If you do not have a
 column named "condition", you must provide the appropriate condition column</p></dd>
+
+
 <dt>condition_control</dt>
 <dd><p>The name of the control condition. This must be a variable
 in your condition_col of colData(deobj). No default provided.</p></dd>
+
+
 <dt>condition_treatment</dt>
 <dd><p>The name of the treatment condition. This must be a variable
 in your condition_col of colData(deobj).</p></dd>
-</dl></div>
 
+</dl></div>
+    <div class="section level2">
+    <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
+    
+
+<p>A named list</p><ul><li><p>de_obj: The edgeR or deseq object used for differential editing analysis</p></li>
+<li><p>results_full: Unfiltered differenital editing results</p></li>
+<li><p>sig_results: Filtered differenial editing (FDR &lt; 0.05)</p></li>
+<li><p>model_matrix: The model matrix used for generating DE results</p></li>
+</ul></div>
+
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/example.html" class="external-link">example</a></span><span class="op">(</span><span class="va">create_se</span>, echo <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dse</span> <span class="op">&lt;-</span> <span class="fu"><a href="prep_for_de.html">prep_for_de</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">perform_de</span><span class="op">(</span><span class="va">dse</span>, condition_control <span class="op">=</span> <span class="st">"WT"</span>, condition_treatment <span class="op">=</span> <span class="st">"KO"</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Using classic mode.</span>
+<span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">sig_results</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 logFC   logCPM        LR       PValue         FDR</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_361_2 -11.147610 21.96719 13.393676 0.0002524741 0.006816801</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_176_2  -8.000087 21.19460 11.166011 0.0008330957 0.011246792</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_364_2  -5.600787 19.69710  9.086110 0.0025755817 0.016444635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_260_2  -8.108926 22.26785  8.548454 0.0034581581 0.016444635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_290_2  -4.839287 20.65403  8.454728 0.0036409569 0.016444635</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>
 
@@ -107,7 +150,7 @@ in your condition_col of colData(deobj).</p></dd>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
     </footer></div>

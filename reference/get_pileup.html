@@ -24,6 +24,12 @@
 <li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
 </li>
+<li class="nav-item dropdown">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
+  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/novel-sites.html">Identifying RNA editing sites using RNA and DNA sequencing data</a>
+  </div>
+</li>
       </ul><form class="form-inline my-2 my-lg-0" role="search">
         <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="../search.json" id="search-input" placeholder="Search for" autocomplete="off"></form>
 
@@ -51,101 +57,222 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">get_pileup</span><span class="op">(</span>
-  <span class="va">bamfiles</span>,
-  <span class="va">fafile</span>,
-  bedfile <span class="op">=</span> <span class="cn">NULL</span>,
-  region <span class="op">=</span> <span class="cn">NULL</span>,
-  chroms <span class="op">=</span> <span class="cn">NULL</span>,
-  min_reads <span class="op">=</span> <span class="fl">1L</span>,
-  min_base_qual <span class="op">=</span> <span class="fl">20L</span>,
-  min_mapq <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0L</span><span class="op">)</span>,
-  max_depth <span class="op">=</span> <span class="fl">10000</span>,
-  library_type <span class="op">=</span> <span class="st">"fr-first-strand"</span>,
-  outfile_prefix <span class="op">=</span> <span class="cn">NULL</span>,
-  bedidx <span class="op">=</span> <span class="cn">NULL</span>,
-  bam_flags <span class="op">=</span> <span class="cn">NULL</span>,
-  event_filters <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,
-  only_keep_variants <span class="op">=</span> <span class="cn">FALSE</span>,
-  reads <span class="op">=</span> <span class="cn">NULL</span>,
-  return_data <span class="op">=</span> <span class="cn">TRUE</span>,
-  BPPARAM <span class="op">=</span> <span class="fu">SerialParam</span><span class="op">(</span><span class="op">)</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_pileup</span><span class="op">(</span></span>
+<span>  <span class="va">bamfiles</span>,</span>
+<span>  <span class="va">fafile</span>,</span>
+<span>  bedfile <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  region <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  chroms <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  filterParam <span class="op">=</span> <span class="fu">FilterParam</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  outfile_prefix <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  bedidx <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  bam_flags <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  reads <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  return_data <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  BPPARAM <span class="op">=</span> <span class="fu">SerialParam</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  bad_reads <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">FilterParam</span><span class="op">(</span></span>
+<span>  max_depth <span class="op">=</span> <span class="fl">10000</span>,</span>
+<span>  min_base_quality <span class="op">=</span> <span class="fl">20L</span>,</span>
+<span>  min_mapq <span class="op">=</span> <span class="fl">0L</span>,</span>
+<span>  min_nucleotide_depth <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>  library_type <span class="op">=</span> <span class="st">"fr-first-strand"</span>,</span>
+<span>  only_keep_variants <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  trim_5p <span class="op">=</span> <span class="fl">0L</span>,</span>
+<span>  trim_3p <span class="op">=</span> <span class="fl">0L</span>,</span>
+<span>  indel_dist <span class="op">=</span> <span class="fl">0L</span>,</span>
+<span>  splice_dist <span class="op">=</span> <span class="fl">0L</span>,</span>
+<span>  homopolymer_len <span class="op">=</span> <span class="fl">0L</span>,</span>
+<span>  max_mismatch_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0L</span>, <span class="fl">0L</span><span class="op">)</span>,</span>
+<span>  min_read_bqual <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
+<span>  ignore_query_Ns <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>bamfiles</dt>
 <dd><p>paths to 1 or more bam files</p></dd>
+
+
 <dt>fafile</dt>
 <dd><p>path to fasta file</p></dd>
+
+
 <dt>bedfile</dt>
 <dd><p>path to bed file with sites or regions to query</p></dd>
+
+
 <dt>region</dt>
 <dd><p>samtools region query string (i.e. chr1:100-1000)</p></dd>
+
+
 <dt>chroms</dt>
 <dd><p>chromosomes to process, not to be used with region</p></dd>
-<dt>min_reads</dt>
-<dd><p>min read depth needed to report site</p></dd>
-<dt>min_base_qual</dt>
-<dd><p>min base quality score to consider read for pileup</p></dd>
-<dt>min_mapq</dt>
-<dd><p>minimum required MAPQ score</p></dd>
-<dt>max_depth</dt>
-<dd><p>maximum read depth considered at each site</p></dd>
-<dt>library_type</dt>
-<dd><p>read orientation, one of fr-first-strand,
-fr-second-strand, or unstranded. Can supply as a vector to specify for each
-input bam.</p></dd>
+
+
+<dt>filterParam</dt>
+<dd><p>object of class <code>FilterParam()</code> which specify various
+filters to apply to reads and sites during pileup.</p></dd>
+
+
 <dt>outfile_prefix</dt>
-<dd><p>output prefix for tabix indexed files</p></dd>
+<dd><p>Output prefix for tabix indexed files. If <code>NULL</code>, no files will be
+produced.</p></dd>
+
+
 <dt>bedidx</dt>
 <dd><p>A BedFile object, if supplied, pileup will use index
-generated by <code><a href="indexBed.html">indexBed()</a></code></p></dd>
+generated by <code><a href="index_bed.html">indexBed()</a></code></p></dd>
+
+
 <dt>bam_flags</dt>
 <dd><p>bam flags to filter or keep, use <code><a href="https://rdrr.io/pkg/Rsamtools/man/ScanBamParam-class.html" class="external-link">Rsamtools::scanBamFlag()</a></code>
-to set</p></dd>
-<dt>event_filters</dt>
-<dd><p>integer vector of length 4 with values indicating
-distance from pileup position to features to filter. Distance to trim from
-5' ends of reads, from 3' end of reads, distance from splicing events, distance from indels, and
-length of homopolymer stretch used to determine if a site is in a homopolymer.
-The number of read mismatch types (e.g. A-&gt;G or G-&gt;T) allowed in a single read,
-and the required # of any mismatches that activate the mismatch type filter.
-default is no filters applied (e.g. c(0,0,0,0,0,0,0)).</p></dd>
-<dt>only_keep_variants</dt>
-<dd><p>if TRUE, then only variant sites will be reported
-(FALSE by default)</p></dd>
+to generate</p></dd>
+
+
 <dt>reads</dt>
 <dd><p>if supplied a fasta file will be written with reads that pass filters
 and contain variants</p></dd>
+
+
 <dt>return_data</dt>
-<dd><p>return data as a Granges table?</p></dd>
+<dd><p>if <code>TRUE</code>, data is returned as a GRanges, if <code>FALSE</code> a character vector
+of tabix-index files, specified by <code>outfile_prefix</code>, will be returned.</p></dd>
+
+
 <dt>BPPARAM</dt>
 <dd><p>A BiocParallel class to control parallel execution. Parallel
 processing occurs per chromosome, so is disabled when run on a single region.</p></dd>
+
+
+<dt>bad_reads</dt>
+<dd><p>a textfile containing read names to exclude from pileup. Readnames
+should be formated as readid_1 or readid_2 or readid for paired end first read
+paired-end second read or single end data.</p></dd>
+
+
+<dt>verbose</dt>
+<dd><p>if TRUE, then report progress.</p></dd>
+
+
+<dt>max_depth</dt>
+<dd><p>maximum read depth considered at each site</p></dd>
+
+
+<dt>min_base_quality</dt>
+<dd><p>min base quality score to consider read for pileup</p></dd>
+
+
+<dt>min_mapq</dt>
+<dd><p>minimum required MAPQ score, can be a vector of values
+for each bam file</p></dd>
+
+
+<dt>min_nucleotide_depth</dt>
+<dd><p>min read depth needed to report site</p></dd>
+
+
+<dt>library_type</dt>
+<dd><p>read orientation, one of fr-first-strand,
+fr-second-strand, unstranded, and genomic-unstranded. Can supply as a vector to specify for each
+input bam. Unstranded library type will be reported based on read alignment.
+genomic-unstranded will report all variants w.r.t the + strand.</p></dd>
+
+
+<dt>only_keep_variants</dt>
+<dd><p>if TRUE, then only variant sites will be reported
+(FALSE by default), can be a vector for each input bamfile</p></dd>
+
+
+<dt>trim_5p</dt>
+<dd><p>Bases to trim from 5' ends of read alignments</p></dd>
+
+
+<dt>trim_3p</dt>
+<dd><p>Bases to trim from 3' ends of read alignments</p></dd>
+
+
+<dt>indel_dist</dt>
+<dd><p>Exclude read if site occurs within given
+distance from indel event in the read</p></dd>
+
+
+<dt>splice_dist</dt>
+<dd><p>Exclude read if site occurs within given
+distance from splicing event in the read</p></dd>
+
+
+<dt>homopolymer_len</dt>
+<dd><p>Exclude site if occurs within homopolymer of given
+length</p></dd>
+
+
+<dt>max_mismatch_type</dt>
+<dd><p>Exclude read if it has X different mismatch types
+(e.g A-to-G, G-to-C, C-to-G, is 3 mismatch types) or Y # of mismatches,
+must be supplied as a integer vector of length 2. e.g.
+c(X, Y).</p></dd>
+
+
+<dt>min_read_bqual</dt>
+<dd><p>Exclude read if more than X percent of the bases have
+base qualities less than Y. Numeric vector of length 2. e.g. c(0.25, 20)</p></dd>
+
+
+<dt>ignore_query_Ns</dt>
+<dd><p>ignored for now</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list containing a <code>GRanges</code> object for each input bam file, or a vector
+    
+
+<p>A list containing a <code>GRanges</code> object for each input bam file, or a vector
 of the output tabixed file names if <code>return_data</code> is FALSE.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Multiple bam files can be processed together, with files being
 written for each bam file. In this mode the output regions will be consistent across all files.
-The min_mapq and library_type parameters can be specified for each input files.</p>
+The min_mapq, only_keep_variants, and library_type parameters can be specified for each input files.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="va">bamfn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"SRR5564269_Aligned.sortedByCoord.out.md.bam"</span>, package <span class="op">=</span> <span class="st">"raer"</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">bam2fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"SRR5564277_Aligned.sortedByCoord.out.md.bam"</span>, package <span class="op">=</span> <span class="st">"raer"</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"human.fasta"</span>, package <span class="op">=</span> <span class="st">"raer"</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">plp</span> <span class="op">&lt;-</span> <span class="fu">get_pileup</span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">fafn</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">plps</span> <span class="op">&lt;-</span> <span class="fu">get_pileup</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">bam2fn</span><span class="op">)</span>, <span class="va">fafn</span><span class="op">)</span></span>
-<span class="r-in"></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">bamfn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"SRR5564269_Aligned.sortedByCoord.out.md.bam"</span>, package <span class="op">=</span> <span class="st">"raer"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">bam2fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"SRR5564277_Aligned.sortedByCoord.out.md.bam"</span>, package <span class="op">=</span> <span class="st">"raer"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"human.fasta"</span>, package <span class="op">=</span> <span class="st">"raer"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">plp</span> <span class="op">&lt;-</span> <span class="fu">get_pileup</span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">fafn</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">plps</span> <span class="op">&lt;-</span> <span class="fu">get_pileup</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">bam2fn</span><span class="op">)</span>, <span class="va">fafn</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu">FilterParam</span><span class="op">(</span>only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span>,  min_nucleotide_depth <span class="op">=</span> <span class="fl">55</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">get_pileup</span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">fafn</span>, filterParam <span class="op">=</span> <span class="va">fp</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 7 ranges and 9 metadata columns:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       seqnames    ranges strand |         Ref         Var      nRef</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt; &lt;integer&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1]     DHFR       207      - |           G          GT        55</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [2]     DHFR       208      - |           T          TG        55</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [3]     DHFR       223      - |           G          GT        56</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [4]     DHFR       225      - |           T          TA        55</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [5]     DHFR       291      - |           A          AG        54</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [6]     DHFR       300      - |           A          AG        56</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [7]     DHFR       332      - |           A          AG        55</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            nVar        nA        nT        nC        nG        nN</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1]         1         0         1         0        55         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [2]         1         0        55         0         1         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [3]         1         0         1         0        56         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [4]         1         1        55         0         0         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [5]         2        54         0         0         2         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [6]         1        56         0         0         1         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [7]         1        55         0         0         1         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   -------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   seqinfo: 3 sequences from an unspecified genome</span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
@@ -157,7 +284,7 @@ The min_mapq and library_type parameters can be specified for each input files.<
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
     </footer></div>
