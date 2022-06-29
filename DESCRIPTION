@@ -8,7 +8,7 @@ Authors@R: c(
     person("Kristen", "Wells", , "kristen.wells-wrasman@cuanschutz.edu", role = c("aut"),
            comment = c(ORCID = "0000-0002-7466-8164")),
     person("Ryan", "Sheridan", , "ryan.sheridan@cuanschutz.edu", role = c("aut")),
-    person("RNA Bioscience Initiative", role = "fnd")
+    person("RNA Bioscience Initiative", role = c("cph", "fnd"))
     )
 Description: Toolkit for identification, visualization, and statistical testing 
     of RNA editing signals from within R.
