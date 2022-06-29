@@ -11,7 +11,8 @@ Toolkit for identification, visualization, and statistical testing of RNA editin
 \seealso{
 Useful links:
 \itemize{
-  \item \url{http://github.com/rnabioco/raer}
+  \item \url{https://rnabioco.github.io/raer}
+  \item \url{https://github.com/rnabioco/raer}
   \item Report bugs at \url{https://github.com/rnabioco/raer/issues}
 }
 
@@ -27,7 +28,7 @@ Authors:
 
 Other contributors:
 \itemize{
-  \item RNA Bioscience Initiative [funder]
+  \item RNA Bioscience Initiative [copyright holder, funder]
 }
 
 }
