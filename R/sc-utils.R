@@ -18,44 +18,44 @@
 #' @importFrom GenomicAlignments readGAlignments
 #' @export
 build_tag_index <- function(bamfile, tag = "CB", n_records_to_check = 1e6,
-                            overwrite = TRUE){
+                            overwrite = TRUE) {
   bamfile <- path.expand(bamfile)
   stopifnot(file.exists(bamfile))
   stopifnot(is.character(tag) && length(tag) == 1 && nchar(tag) == 2)
 
   outfn <- paste0(bamfile, ".bri")
-  if(!overwrite && file.exists(outfn)) {
+  if (!overwrite && file.exists(outfn)) {
     return(outfn)
   }
 
   bfo <- Rsamtools::BamFile(bamfile)
   so <- Rsamtools::scanBamHeader(bfo)$text$`@HD`[2]
-  if(so == "SO:coordinate"){
+  if (so == "SO:coordinate") {
     stop("bam file must be sorted by tag, not coordinate sorted")
   }
 
-  if(n_records_to_check < 1){
+  if (n_records_to_check < 1) {
     message("disabling checks for tag in bam\n",
-            "set n_records_to_check > 0 to enable checks")
+      "set n_records_to_check > 0 to enable checks")
   } else {
     Rsamtools::yieldSize(bfo) <- n_records_to_check
     mapped <- scanBamFlag(isSecondaryAlignment = FALSE, isUnmappedQuery = FALSE)
     alns <- Rsamtools::scanBam(bfo,
-               param = Rsamtools::ScanBamParam(tag = tag,
-                                               flag = mapped))
+      param = Rsamtools::ScanBamParam(tag = tag,
+        flag = mapped))
     tag_vals <- alns[[1]]$tag[[tag]]
-    if(length(tag_vals) == 0){
+    if (length(tag_vals) == 0) {
       stop("unable to find tag ", tag,
-           " in first ", n_records_to_check,
-           " records of bam file")
+        " in first ", n_records_to_check,
+        " records of bam file")
     }
-    if(!is.character(tag_vals)){
+    if (!is.character(tag_vals)) {
       stop("invalid type ", typeof(tag_vals), " \n",
-           "Indexing only supports type character\n",
-           "e.g: tags with Z, e.g. CB:Z:ABCBACB")
+        "Indexing only supports type character\n",
+        "e.g: tags with Z, e.g. CB:Z:ABCBACB")
     }
   }
-  if(Rsamtools::isOpen(bfo)) close(bfo)
+  if (Rsamtools::isOpen(bfo)) close(bfo)
 
   c_build_index(bamfile, outfn, tag)
   return(outfn)
@@ -71,7 +71,7 @@ build_tag_index <- function(bamfile, tag = "CB", n_records_to_check = 1e6,
 #' show_tag_index(bam_fn)
 #'
 #' @export
-show_tag_index <- function(bamfile){
+show_tag_index <- function(bamfile) {
   bamfile <- path.expand(bamfile)
   idxfn <- paste0(bamfile, ".bri")
   stopifnot(file.exists(bamfile))
@@ -102,32 +102,32 @@ show_tag_index <- function(bamfile){
 #' readGAlignments(bam_out, param = ScanBamParam(tag = "CB"))
 #' @export
 get_tag_bam <- function(bamfile,
-                         barcodes,
-                         outbam = NULL,
-                         pos_sort_output = TRUE,
-                         ...){
+                        barcodes,
+                        outbam = NULL,
+                        pos_sort_output = TRUE,
+                        ...) {
   stopifnot(file.exists(bamfile))
   bamfile <- path.expand(bamfile)
   idx_file <- paste0(bamfile, ".bri")
-  if(!file.exists(idx_file)){
+  if (!file.exists(idx_file)) {
     stop("bam file must be sorted by tag, and indexed with build_index\n",
-         "samtools sort -t CB your.bam\n",
-         "then index in R:\n",
-         "raer::build_tag_index('your_sorted.bam', tag = 'CB')")
+      "samtools sort -t CB your.bam\n",
+      "then index in R:\n",
+      "raer::build_tag_index('your_sorted.bam', tag = 'CB')")
   }
   stopifnot(is.character(barcodes) && length(barcodes) > 0)
 
   tmpbam <- tempfile(fileext = ".bam")
-  if(is.null(outbam)){
+  if (is.null(outbam)) {
     outbam <- tempfile(fileext = ".bam")
   }
 
-  fetch_cb_reads(bamfile, tmpbam, barcodes);
+  fetch_cb_reads(bamfile, tmpbam, barcodes)
 
-  if(pos_sort_output){
+  if (pos_sort_output) {
     # tag sorted bams are secondarily sorted by position
     # so no need to re-sort if grabbing a single tag
-    if(length(barcodes) > 1){
+    if (length(barcodes) > 1) {
       # Rsamtools will add .bam to end of the output bam file
       outbam <- gsub(pattern = ".bam$", "", outbam)
       outbam <- Rsamtools::sortBam(tmpbam, outbam, ...)
@@ -146,18 +146,18 @@ get_tag_bam <- function(bamfile,
 
 # validate tags are in index,
 # returns list, of same length as cbs, containing any missing tags
-check_missing_barcodes <- function(cbs, bamfile){
+check_missing_barcodes <- function(cbs, bamfile) {
   tags <- show_tag_index(bamfile)
-  invalid_bcs = vector("list", length(cbs))
-  for(i in seq_along(cbs)){
-    invalid_bcs[[i]] = cbs[[i]][!cbs[[i]] %in% tags$tag]
+  invalid_bcs <- vector("list", length(cbs))
+  for (i in seq_along(cbs)) {
+    invalid_bcs[[i]] <- cbs[[i]][!cbs[[i]] %in% tags$tag]
   }
   sum(unlist(lapply(invalid_bcs, length)))
 }
 
 
 #' @importFrom GenomicAlignments coverage
-filter_by_coverage <- function(bamfile, gr, min_counts, ...){
+filter_by_coverage <- function(bamfile, gr, min_counts, ...) {
   cov <- GenomicAlignments::coverage(bamfile, ...)
   cov <- cov[names(cov) %in% GenomeInfoDb::seqlevels(gr)]
   cov <- getCoverageAtPositions(cov, gr)
@@ -165,17 +165,17 @@ filter_by_coverage <- function(bamfile, gr, min_counts, ...){
 }
 
 
-get_cell_pileup <- function(bamfn, fafn, cellbarcodes, ...){
+get_cell_pileup <- function(bamfn, fafn, cellbarcodes, ...) {
   cluster_bam <- get_tag_bam(bamfn,
-                             barcodes = cellbarcodes,
-                             outbam = NULL,
-                             maxMemory = 1024)
+    barcodes = cellbarcodes,
+    outbam = NULL,
+    maxMemory = 1024)
   on.exit(unlink(c(cluster_bam, paste0(cluster_bam, ".bri"))))
 
   out <- get_pileup(cluster_bam,
-                    fafile = fafn,
-                    bedfile = NULL,
-                    ...)
+    fafile = fafn,
+    bedfile = NULL,
+    ...)
 
   out
 }
@@ -204,7 +204,7 @@ get_cell_pileup <- function(bamfn, fafn, cellbarcodes, ...){
 #' suppressPackageStartupMessages(library(SummarizedExperiment))
 #' # get vector of cell barcodes in bam file (for use in this example)
 # usually these would come from the single cell analysis
-
+#'
 #' bamfn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
 #' idxfn <- build_tag_index(bamfn)
 #' cbs <- show_tag_index(bamfn)$tag
@@ -215,12 +215,12 @@ get_cell_pileup <- function(bamfn, fafn, cellbarcodes, ...){
 #' # bam file will be indexed by build_tag_index() if not already done.
 #' fp <- FilterParam(library_type = "fr-second-strand")
 #' se <- sc_editing(bamfile = bamfn,
-#'                  fafile = raer_example("mouse_tiny.fasta"),
-#'                  bedfile = raer_example("5k_neuron_sites.bed.gz"),
-#'                  min_reads = 0,
-#'                  cell_barcodes = cbs[1:15],
-#'                  filterParam = fp,
-#'                  verbose = FALSE)
+#'   fafile = raer_example("mouse_tiny.fasta"),
+#'   bedfile = raer_example("5k_neuron_sites.bed.gz"),
+#'   min_reads = 0,
+#'   cell_barcodes = cbs[1:15],
+#'   filterParam = fp,
+#'   verbose = FALSE)
 #'
 #'
 #' # pool cell barcodes across clusters
@@ -232,12 +232,12 @@ get_cell_pileup <- function(bamfn, fafn, cellbarcodes, ...){
 #' names(cb_lst) <- paste0("cluster", 1:5)
 #'
 #' se <- sc_editing(bamfile = bamfn,
-#'                  fafile = raer_example("mouse_tiny.fasta"),
-#'                  bedfile = raer_example("5k_neuron_sites.bed.gz"),
-#'                  min_reads = 0,
-#'                  cell_barcodes = cb_lst,
-#'                  filterParam = fp,
-#'                  verbose = FALSE)
+#'   fafile = raer_example("mouse_tiny.fasta"),
+#'   bedfile = raer_example("5k_neuron_sites.bed.gz"),
+#'   min_reads = 0,
+#'   cell_barcodes = cb_lst,
+#'   filterParam = fp,
+#'   verbose = FALSE)
 #' assays(se)$nA
 #' assays(se)$nG
 #'
@@ -254,56 +254,56 @@ sc_editing <- function(bamfile,
                        tag_index_args = list(tag = "CB"),
                        ...,
                        BPPARAM = SerialParam(),
-                       verbose = TRUE){
+                       verbose = TRUE) {
 
-  if(!all(assay_cols %in% PILEUP_COLS)) {
+  if (!all(assay_cols %in% PILEUP_COLS)) {
     allowed_vals <- paste(PILEUP_COLS[5:length(PILEUP_COLS)],
-                          collapse = ", ")
+      collapse = ", ")
     stop("assay_cols input not correct\n  ",
-            "must match ", allowed_vals)
+      "must match ", allowed_vals)
   }
 
   # fail early if incorrect args passed through ...
   plp_args <- names(list(...))
   invalid_args <- plp_args[!plp_args %in% formalArgs(get_pileup)]
-  if(length(invalid_args) > 0){
+  if (length(invalid_args) > 0) {
     stop(invalid_args, " is not a valid argument for get_pileup()")
   }
   idx_fn <- paste0(bamfile, ".bri")
-  if(!file.exists(idx_fn)){
-    if(verbose) message("building cellbarcode index for bam file")
+  if (!file.exists(idx_fn)) {
+    if (verbose) message("building cellbarcode index for bam file")
     do.call(build_tag_index, c(bamfile = bamfile, tag_index_args))
   }
 
-  if(!is.list(cell_barcodes)){
+  if (!is.list(cell_barcodes)) {
     ids <- cell_barcodes
     cell_barcodes <- split(cell_barcodes, seq_along(cell_barcodes))
     names(cell_barcodes) <- ids
   }
 
   n_invalid_bcs <- check_missing_barcodes(cell_barcodes, bamfile)
-  if(n_invalid_bcs > 0){
+  if (n_invalid_bcs > 0) {
     warning(n_invalid_bcs, " cell_barcodes are missing from the tag index.")
   }
 
-  if(min_reads > 0){
-    if(verbose) message("Examining coverage at supplied sites.")
+  if (min_reads > 0) {
+    if (verbose) message("Examining coverage at supplied sites.")
     bed <- rtracklayer::import(bedfile)
     n_sites <- length(bed)
     covflags <- scanBamFlag(isSecondaryAlignment = FALSE,
-                          isDuplicate = FALSE,
-                          isSupplementaryAlignment = FALSE,
-                          isNotPassingQualityControls = FALSE)
+      isDuplicate = FALSE,
+      isSupplementaryAlignment = FALSE,
+      isNotPassingQualityControls = FALSE)
     bed <- filter_by_coverage(bamfile, bed, min_reads,
-                              param = ScanBamParam(flag = covflags))
+      param = ScanBamParam(flag = covflags))
 
-    if(verbose){
+    if (verbose) {
       message("Input bed contained ", n_sites, " sites\n",
-             n_sites - length(bed), " sites do not have at least ",
-            min_reads, " reads \n",
-            "and will be ignored.")
+        n_sites - length(bed), " sites do not have at least ",
+        min_reads, " reads \n",
+        "and will be ignored.")
     }
-    if(length(bed) == 0) stop("no sites remaining to process")
+    if (length(bed) == 0) stop("no sites remaining to process")
     tmp_bed <- tempfile(fileext = ".bed")
     on.exit(unlink(tmp_bed), add = TRUE)
     export(bed, tmp_bed)
@@ -314,24 +314,24 @@ sc_editing <- function(bamfile,
   idx <- indexBed(bedfile)
   on.exit(close(idx), add = TRUE)
 
-  if(verbose) message("beginning pileup")
-  res <- bplapply(seq_along(cell_barcodes), function(i){
-    if(verbose){
+  if (verbose) message("beginning pileup")
+  res <- bplapply(seq_along(cell_barcodes), function(i) {
+    if (verbose) {
       message("working on: group ", i, " ", names(cell_barcodes)[i])
     }
     get_cell_pileup(bamfile, fafile, cell_barcodes[[i]],
-                    bedidx = idx, return_data = TRUE,
-                    verbose = verbose,
-                    ...)
+      bedidx = idx, return_data = TRUE,
+      verbose = verbose,
+      ...)
   }, BPPARAM = BPPARAM)
   bpstop(BPPARAM)
   names(res) <- names(cell_barcodes)
 
-  if(verbose) message("collecting pileups into summarizedExperiment")
+  if (verbose) message("collecting pileups into summarizedExperiment")
   se <- create_se(res,
-                  assay_cols = assay_cols,
-                  sparse = FALSE,
-                  fill_na = 0L,
-                  verbose = verbose)
+    assay_cols = assay_cols,
+    sparse = FALSE,
+    fill_na = 0L,
+    verbose = verbose)
   se
 }

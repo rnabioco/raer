@@ -7,6 +7,6 @@
 #' @field path filepath to bed file
 #' @field open logical indicating if the index is open
 .BedFile <- setRefClass("BedFile",
-               fields=list(.extptr="externalptr",
-                           path="character",
-                           open="logical"))
+  fields = list(.extptr = "externalptr",
+    path = "character",
+    open = "logical"))

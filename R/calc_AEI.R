@@ -55,30 +55,30 @@ calc_AEI <- function(bam_fn,
                      snp_db = NULL,
                      filterParam = FilterParam(),
                      BPPARAM = SerialParam(),
-                     verbose = FALSE){
+                     verbose = FALSE) {
 
   chroms <- names(Rsamtools::scanBamHeader(bam_fn)[[1]]$targets)
 
-  if(length(bam_fn) != 1){
+  if (length(bam_fn) != 1) {
     stop("calc_AEI only operates on 1 bam file at a time")
   }
 
-  if(is.null(alu_ranges)){
+  if (is.null(alu_ranges)) {
     warning("querying the whole genome will be very ",
-            "memory intensive and inaccurate.\n",
-            "Consider supplying a GRanges object with ALU\n",
-            "or related repeats for your species ")
+      "memory intensive and inaccurate.\n",
+      "Consider supplying a GRanges object with ALU\n",
+      "or related repeats for your species ")
   }
 
   genes_gr <- NULL
   tmp_files <- NULL
   alu_bed_fn <- NULL
-  if(filterParam@library_type %in% c("unstranded", "genomic-unstranded")){
-    if(is.null(txdb)){
+  if (filterParam@library_type %in% c("unstranded", "genomic-unstranded")) {
+    if (is.null(txdb)) {
       stop("txdb required for processing unstranded data")
     }
     filterParam@library_type == "genomic-unstranded"
-    if(is(txdb, "TxDb")){
+    if (is(txdb, "TxDb")) {
       genes_gr <- suppressWarnings(GenomicFeatures::genes(txdb))
     } else {
       genes_gr <- txdb
@@ -86,84 +86,84 @@ calc_AEI <- function(bam_fn,
 
   }
 
-  if(!is.null(alu_ranges)){
-    if(is(alu_ranges, "character")){
-      if(!file.exists(alu_ranges)){
+  if (!is.null(alu_ranges)) {
+    if (is(alu_ranges, "character")) {
+      if (!file.exists(alu_ranges)) {
         stop("supplied alu ranges bedfile does not exist:\n",
-             alu_ranges,
-             call. = FALSE)
+          alu_ranges,
+          call. = FALSE)
       }
       alu_bed_fn <- alu_ranges
 
-    } else if(is(alu_ranges, "GRanges")){
-     alu_bed_fn <- tempfile(fileext = ".bed")
-     tmp_files <- c(tmp_files, alu_bed_fn)
-     if(!is.null(txdb)){
-       if(is(txdb, "TxDb")){
-         genes_gr <- suppressWarnings(GenomicFeatures::genes(txdb))
-       } else {
-         genes_gr <- txdb
-       }
-       alu_ranges <- subsetByOverlaps(alu_ranges, genes_gr, ignore.strand = TRUE)
-       alu_ranges <- reduce(alu_ranges)
-     }
-     chroms <- intersect(chroms, as.character(unique(seqnames(alu_ranges))))
-     alu_ranges <- alu_ranges[seqnames(alu_ranges) %in% chroms]
-     rtracklayer::export(alu_ranges, alu_bed_fn)
-   } else {
-     stop("unrecognized format for alu_ranges")
-   }
+    } else if (is(alu_ranges, "GRanges")) {
+      alu_bed_fn <- tempfile(fileext = ".bed")
+      tmp_files <- c(tmp_files, alu_bed_fn)
+      if (!is.null(txdb)) {
+        if (is(txdb, "TxDb")) {
+          genes_gr <- suppressWarnings(GenomicFeatures::genes(txdb))
+        } else {
+          genes_gr <- txdb
+        }
+        alu_ranges <- subsetByOverlaps(alu_ranges, genes_gr, ignore.strand = TRUE)
+        alu_ranges <- reduce(alu_ranges)
+      }
+      chroms <- intersect(chroms, as.character(unique(seqnames(alu_ranges))))
+      alu_ranges <- alu_ranges[seqnames(alu_ranges) %in% chroms]
+      rtracklayer::export(alu_ranges, alu_bed_fn)
+    } else {
+      stop("unrecognized format for alu_ranges")
+    }
   }
 
   snps <- NULL
-  if(!is.null(snp_db)){
-    if(is(snp_db, "GRanges") || is(snp_db, "GPos")){
-      if(is(alu_ranges, "GRanges")){
+  if (!is.null(snp_db)) {
+    if (is(snp_db, "GRanges") || is(snp_db, "GPos")) {
+      if (is(alu_ranges, "GRanges")) {
         snps <- subsetByOverlaps(snp_db, alu_ranges)
         snps <- split(snps, seqnames(snps))[chroms]
       } else {
         chroms <- intersect(chroms, as.character(unique(seqnames(snp_db))))
         snps <- split(snp_db, seqnames(snp_db))[chroms]
       }
-    } else if (is(snp_db, "ODLT_SNPlocs")){
-      if(is(alu_ranges, "GRanges")){
+    } else if (is(snp_db, "ODLT_SNPlocs")) {
+      if (is(alu_ranges, "GRanges")) {
         snps <- snpsByOverlaps(snp_db, alu_ranges)
         snps <- split(snps, seqnames(snps))[chroms]
       } else {
         stop("removing snps using a SNPloc package requires ",
-             "alu_ranges to be supplied ")
+          "alu_ranges to be supplied ")
       }
     } else {
       stop("unknown snpdb object type")
     }
   }
-  if(is.null(snps)){
+  if (is.null(snps)) {
     aei <- bpmapply(.calc_AEI_per_chrom,
-                    chroms,
-                    MoreArgs = list(bam_fn = bam_fn,
-                                    fasta_fn = fasta_fn,
-                                    alu_bed_fn = alu_bed_fn,
-                                    filterParam = filterParam,
-                                    snp_gr = NULL,
-                                    genes_gr = genes_gr,
-                                    verbose = verbose),
-                    BPPARAM = BPPARAM,
-                    SIMPLIFY = FALSE)
+      chroms,
+      MoreArgs = list(bam_fn = bam_fn,
+        fasta_fn = fasta_fn,
+        alu_bed_fn = alu_bed_fn,
+        filterParam = filterParam,
+        snp_gr = NULL,
+        genes_gr = genes_gr,
+        verbose = verbose),
+      BPPARAM = BPPARAM,
+      SIMPLIFY = FALSE)
   } else {
-    if(length(chroms) != length(snps)){
+    if (length(chroms) != length(snps)) {
       stop("issue subsetting SNPdb and chromosomes")
     }
     aei <- bpmapply(.calc_AEI_per_chrom,
-                    chroms,
-                    snps,
-                    MoreArgs = list(bam_fn = bam_fn,
-                                    fasta_fn = fasta_fn,
-                                    alu_bed_fn = alu_bed_fn,
-                                    filterParam = filterParam,
-                                    genes_gr = genes_gr,
-                                    verbose = verbose),
-                    BPPARAM = BPPARAM,
-                    SIMPLIFY = FALSE)
+      chroms,
+      snps,
+      MoreArgs = list(bam_fn = bam_fn,
+        fasta_fn = fasta_fn,
+        alu_bed_fn = alu_bed_fn,
+        filterParam = filterParam,
+        genes_gr = genes_gr,
+        verbose = verbose),
+      BPPARAM = BPPARAM,
+      SIMPLIFY = FALSE)
   }
   bpstop(BPPARAM)
 
@@ -175,13 +175,14 @@ calc_AEI <- function(bam_fn,
     xx$allele <- rownames(xx)
     xx$chrom <- id
     rownames(xx) <- NULL
-    xx})
+    xx
+  })
 
   aei_res <- do.call(rbind, aei_res)
   aei_res <- split(aei_res, aei_res$allele)
   aei_res <- lapply(aei_res, function(x) 100 * (sum(x$alt) / (sum(x$ref) + sum(x$alt))))
 
-  if(length(tmp_files) > 0) unlink(tmp_files)
+  if (length(tmp_files) > 0) unlink(tmp_files)
   aei_res
 }
 
@@ -195,7 +196,7 @@ calc_AEI <- function(bam_fn,
                                 snp_gr,
                                 genes_gr,
                                 verbose) {
-  if(verbose){
+  if (verbose) {
     start <- Sys.time()
     message("\tworking on: ", chrom, " time: ", Sys.time())
   }
@@ -206,38 +207,38 @@ calc_AEI <- function(bam_fn,
   filterParam@only_keep_variants <- FALSE
 
   plp <- get_pileup(bam_fn,
-                    fafile = fasta_fn,
-                    bedfile = alu_bed_fn,
-                    chroms = chrom,
-                    filterParam = filterParam)
-  if(verbose){
+    fafile = fasta_fn,
+    bedfile = alu_bed_fn,
+    chroms = chrom,
+    filterParam = filterParam)
+  if (verbose) {
     message("\tcompleted in : ", Sys.time() - start)
   }
 
-  if(!is.null(snp_gr) && !is.null(plp)){
+  if (!is.null(snp_gr) && !is.null(plp)) {
     plp <- subsetByOverlaps(plp, snp_gr,
-                            invert = TRUE,
-                            ignore.strand = TRUE)
+      invert = TRUE,
+      ignore.strand = TRUE)
   }
 
-  if(filterParam@library_type == "genomic-unstranded"){
+  if (filterParam@library_type == "genomic-unstranded") {
     plp <- correct_strand(plp, genes_gr)
   }
 
   bases <- c("A", "T", "C", "G")
   var_list <- list()
-  for(i in seq_along(bases)){
+  for (i in seq_along(bases)) {
     rb <- bases[i]
     other_b <- setdiff(bases, rb)
     j <- plp[plp$Ref == rb]
-    for(k in seq_along(other_b)){
+    for (k in seq_along(other_b)) {
       ab <- other_b[k]
       id <- paste0(rb, "_", ab)
       n_alt <- sum(mcols(j)[[paste0("n", ab)]])
       n_ref <- sum(mcols(j)[[paste0("n", rb)]])
       var_list[[id]]  <- c(alt = n_alt,
-                           ref = n_ref,
-                           prop = 0)
+        ref = n_ref,
+        prop = 0)
     }
   }
   var_list
@@ -267,15 +268,15 @@ calc_AEI <- function(bam_fn,
 #' plp <- get_pileup(bamfn, fafn, filterParam = fp)
 #'
 #' genes <- GRanges(c("DHFR:200-400:+",
-#'                    "SPCS3:100-200:-",
-#'                    "SSR3:3-10:-",
-#'                    "SSR3:6-12:+"))
+#'   "SPCS3:100-200:-",
+#'   "SSR3:3-10:-",
+#'   "SSR3:6-12:+"))
 #' correct_strand(plp, genes)
 #' @importFrom stringr str_count
 #' @export
-correct_strand <- function(gr, genes_gr){
+correct_strand <- function(gr, genes_gr) {
 
-  if(length(gr) == 0){
+  if (length(gr) == 0) {
     return(gr)
   }
 
@@ -294,8 +295,8 @@ correct_strand <- function(gr, genes_gr){
   gr$Ref[flip_rows] <- BASE_MAP[gr$Ref[flip_rows]]
 
   gr$Var[flip_rows] <- unlist(lapply(str_split(gr$Var[flip_rows], ","),
-                                     function(x) paste0(unname(ALLELE_MAP[x]),
-                                                        collapse = ",")))
+    function(x) paste0(unname(ALLELE_MAP[x]),
+      collapse = ",")))
 
   # complement the nucleotide counts by reordering the columns
   cols_to_swap <- c("nA", "nT", "nC", "nG")
@@ -311,18 +312,18 @@ correct_strand <- function(gr, genes_gr){
 
 
 ALLELE_MAP <- c(TA = "CT",
-                CA = "GT",
-                GA = "AT",
-                AT = "TC",
-                CT = "GC",
-                GT = "AC",
-                AC = "TG",
-                TC = "CG",
-                GC = "AG",
-                AG = "TA",
-                TG = "CA",
-                CG = "GA",
-                `-` = "-")
+  CA = "GT",
+  GA = "AT",
+  AT = "TC",
+  CT = "GC",
+  GT = "AC",
+  AC = "TG",
+  TC = "CG",
+  GC = "AG",
+  AG = "TA",
+  TG = "CA",
+  CG = "GA",
+  `-` = "-")
 
 BASE_MAP <- c(
   "A" = "T",

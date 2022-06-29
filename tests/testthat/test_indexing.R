@@ -44,33 +44,33 @@ test_that("tag index works", {
 })
 
 test_that("CB tag retrival works", {
-    tag_val <- "CB"
-    alns <- scanBam(cbbam_fn, param = ScanBamParam(tag = tag_val))
-    cbs <- unique(alns[[1]]$tag$CB)
+  tag_val <- "CB"
+  alns <- scanBam(cbbam_fn, param = ScanBamParam(tag = tag_val))
+  cbs <- unique(alns[[1]]$tag$CB)
 
-    n_cbs <- sample(seq_along(cbs), 1, replace = FALSE)
-    query_cbs <- cbs[seq_len(n_cbs)]
-    # idx doesn't exist
-    unlink(paste0(cbbam_fn, ".bri"))
-    expect_error(get_tag_bam(cbbam_fn, barcodes = cbs))
+  n_cbs <- sample(seq_along(cbs), 1, replace = FALSE)
+  query_cbs <- cbs[seq_len(n_cbs)]
+  # idx doesn't exist
+  unlink(paste0(cbbam_fn, ".bri"))
+  expect_error(get_tag_bam(cbbam_fn, barcodes = cbs))
 
-    idx_fn <- build_tag_index(cbbam_fn, tag = tag_val)
-    bam_out <- get_tag_bam(cbbam_fn, barcodes = query_cbs)
-    alns <- scanBam(bam_out, param = ScanBamParam(tag = tag_val))
+  idx_fn <- build_tag_index(cbbam_fn, tag = tag_val)
+  bam_out <- get_tag_bam(cbbam_fn, barcodes = query_cbs)
+  alns <- scanBam(bam_out, param = ScanBamParam(tag = tag_val))
 
-    bam_cbs <- alns[[1]]$tag[[tag_val]]
-    expect_equal(length(setdiff(query_cbs, bam_cbs)), 0L,
-                 info = paste0("failed with using ", n_cbs, " cbs"))
-    expect_true(length(unique(bam_cbs)) == length(query_cbs))
+  bam_cbs <- alns[[1]]$tag[[tag_val]]
+  expect_equal(length(setdiff(query_cbs, bam_cbs)), 0L,
+    info = paste0("failed with using ", n_cbs, " cbs"))
+  expect_true(length(unique(bam_cbs)) == length(query_cbs))
 
-    # output is coordinate sorted
-    expect_equal(scanBamHeader(bam_out)[[1]]$text$`@HD`[2] ,
-                "SO:coordinate")
-    # coordinate sorted bam throws error when indexing
-    expect_error(build_tag_index(bam_out))
+  # output is coordinate sorted
+  expect_equal(scanBamHeader(bam_out)[[1]]$text$`@HD`[2],
+    "SO:coordinate")
+  # coordinate sorted bam throws error when indexing
+  expect_error(build_tag_index(bam_out))
 
-    unlink(c(bam_out, paste0(bam_out, ".bai")))
-    unlink(paste0(cbbam_fn, ".bri"))
+  unlink(c(bam_out, paste0(bam_out, ".bai")))
+  unlink(paste0(cbbam_fn, ".bri"))
 })
 
 test_that("other tag (UB) retrival works", {
@@ -90,7 +90,7 @@ test_that("other tag (UB) retrival works", {
 
   bam_cbs <- alns[[1]]$tag[[tag_val]]
   expect_equal(length(setdiff(query_cbs, bam_cbs)), 0L,
-               info = paste0("failed with using ", n_cbs, " cbs"))
+    info = paste0("failed with using ", n_cbs, " cbs"))
   expect_true(length(unique(bam_cbs)) == length(query_cbs))
 
   unlink(c(bam_out, paste0(bam_out, ".bai")))
@@ -133,13 +133,3 @@ test_that("tag values can be obtained from index", {
 
   unlink(idx_fn)
 })
-
-
-
-
-
-
-
-
-
-

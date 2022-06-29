@@ -30,13 +30,13 @@ is_null_extptr <- function(pointer) {
 read_tabix <- function(filename,
                        region = ".",
                        numeric_cols = c(2, 6:12),
-                       col_names = PILEUP_COLS){
+                       col_names = PILEUP_COLS) {
   filename <- path.expand(filename)
   # returned as a list to avoid stringsAsFactors
   df <- cread_tabix(filename, region)
   numeric_cols <- intersect(c("start", "end", "pos"),  colnames(df))
-  if(!is.null(numeric_cols)){
-    for(i in numeric_cols){
+  if (!is.null(numeric_cols)) {
+    for (i in numeric_cols) {
       df[[i]] <- as.numeric(df[[i]])
     }
   }
@@ -50,7 +50,7 @@ read_tabix <- function(filename,
 #'
 #' @rdname read_tabix
 #' @export
-get_tabix_chroms <- function(filename){
+get_tabix_chroms <- function(filename) {
   list_tabix_chroms(path.expand(filename))
 }
 
@@ -59,7 +59,7 @@ get_tabix_chroms <- function(filename){
 #' @param path path to file
 #'
 #' @examples
-#' raer_example('human.fasta')
+#' raer_example("human.fasta")
 #'
 #' @export
 raer_example <- function(path) {
@@ -72,7 +72,7 @@ raer_example <- function(path) {
 #' @param cov coverage produced by [GenomicAlignments::coverage()]
 #' @param pos GRanges containing editing sites
 #' @importFrom GenomeInfoDb `seqlevels<-` seqlevels
-getCoverageAtPositions <- function(cov, pos){
+getCoverageAtPositions <- function(cov, pos) {
   if (length(setdiff(seqlevels(pos), names(cov))) > 0L)
     stop("Some seqlevels are missing from coverage")
   if (any(width(pos) > 1L))
@@ -82,13 +82,12 @@ getCoverageAtPositions <- function(cov, pos){
   ans <- integer(length(pos))
   ans[ord] <- unlist(mapply(function(v, p) {
     runValue(v)[findRun(p, v)]
-  }, cov, split(start(pos), seqnames(pos)), SIMPLIFY=FALSE), use.names=FALSE)
+  }, cov, split(start(pos), seqnames(pos)), SIMPLIFY = FALSE), use.names = FALSE)
   ans
 }
 
 # transpose a list
 # https://stackoverflow.com/questions/30164803/fastest-way-to-transpose-a-list-in-r-rcpp
-t_lst <- function(x){
+t_lst <- function(x) {
   split(unlist(x), sequence(lengths(x)))
 }
-

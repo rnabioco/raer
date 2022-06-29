@@ -50,6 +50,7 @@ Calculate editing frequencies
 \examples{
 suppressPackageStartupMessages(library(SummarizedExperiment))
 # get vector of cell barcodes in bam file (for use in this example)
+
 bamfn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
 idxfn <- build_tag_index(bamfn)
 cbs <- show_tag_index(bamfn)$tag
@@ -60,12 +61,12 @@ cbs[1:5]
 # bam file will be indexed by build_tag_index() if not already done.
 fp <- FilterParam(library_type = "fr-second-strand")
 se <- sc_editing(bamfile = bamfn,
-                 fafile = raer_example("mouse_tiny.fasta"),
-                 bedfile = raer_example("5k_neuron_sites.bed.gz"),
-                 min_reads = 0,
-                 cell_barcodes = cbs[1:15],
-                 filterParam = fp,
-                 verbose = FALSE)
+  fafile = raer_example("mouse_tiny.fasta"),
+  bedfile = raer_example("5k_neuron_sites.bed.gz"),
+  min_reads = 0,
+  cell_barcodes = cbs[1:15],
+  filterParam = fp,
+  verbose = FALSE)
 
 
 # pool cell barcodes across clusters
@@ -77,12 +78,12 @@ cb_lst <- split(cbs, cut(seq_along(cbs), breaks = 5))
 names(cb_lst) <- paste0("cluster", 1:5)
 
 se <- sc_editing(bamfile = bamfn,
-                 fafile = raer_example("mouse_tiny.fasta"),
-                 bedfile = raer_example("5k_neuron_sites.bed.gz"),
-                 min_reads = 0,
-                 cell_barcodes = cb_lst,
-                 filterParam = fp,
-                 verbose = FALSE)
+  fafile = raer_example("mouse_tiny.fasta"),
+  bedfile = raer_example("5k_neuron_sites.bed.gz"),
+  min_reads = 0,
+  cell_barcodes = cb_lst,
+  filterParam = fp,
+  verbose = FALSE)
 assays(se)$nA
 assays(se)$nG
 

@@ -13,16 +13,16 @@
 #'
 #' @importFrom stringr str_count
 #' @export
-remove_multiallelic <- function(se){
+remove_multiallelic <- function(se) {
   is_not_multiallelic <- apply(assay(se, "Var"), 1, function(x) {
     x <- unique(x[x != "-"])
-    if(length(x) == 0 | length(x) >= 2){
+    if (length(x) == 0 | length(x) >= 2) {
       return(NA)
     }
     stringr::str_count(x, ",") == 0
   })
   se <- se[which(is_not_multiallelic), ]
-  rowData(se)$Var <- apply(assay(se, "Var"), 1, function(x) unique(x[x!="-"]))
+  rowData(se)$Var <- apply(assay(se, "Var"), 1, function(x) unique(x[x != "-"]))
   se
 }
 
@@ -37,8 +37,8 @@ remove_multiallelic <- function(se){
 #'
 #' @importFrom GenomicFeatures intronsByTranscript
 #' @export
-get_splice_sites <- function(txdb, slop = 4){
-  if(!is(txdb, "TxDb")){
+get_splice_sites <- function(txdb, slop = 4) {
+  if (!is(txdb, "TxDb")) {
     stop("txdb must be a TxDb object")
   }
 
@@ -46,13 +46,13 @@ get_splice_sites <- function(txdb, slop = 4){
   usub <- unlist(gr)
 
   int_start <- GRanges(seqnames(usub),
-                       IRanges(start(usub) - slop,
-                               start(usub) + slop - 1),
-                       strand=strand(usub))
+    IRanges(start(usub) - slop,
+      start(usub) + slop - 1),
+    strand = strand(usub))
   int_end <- GRanges(seqnames(usub),
-                     IRanges(end(usub) - slop - 1,
-                             end(usub) + slop),
-                     strand=strand(usub))
+    IRanges(end(usub) - slop - 1,
+      end(usub) + slop),
+    strand = strand(usub))
   int_pos <- c(int_start, int_end)
   sort(int_pos)
 }
@@ -71,10 +71,10 @@ get_splice_sites <- function(txdb, slop = 4){
 #' @export
 remove_splice_variants <- function(se, txdb,
                                    splice_site_dist = 4,
-                                   ignore.strand = FALSE){
+                                   ignore.strand = FALSE) {
   ss <- get_splice_sites(txdb, splice_site_dist)
   x <- rowRanges(se)
-  fo <- findOverlaps(x, ss, type="any", ignore.strand = ignore.strand)
+  fo <- findOverlaps(x, ss, type = "any", ignore.strand = ignore.strand)
   x <- x[setdiff(1:length(x), unique(queryHits(fo)))]
   se[names(x), ]
 }
@@ -95,28 +95,29 @@ remove_splice_variants <- function(se, txdb,
 #' @export
 remove_clustered_variants <- function(se, txdb,
                                       regions = c("transcript", "genome"),
-                                      variant_dist = 100){
+                                      variant_dist = 100) {
 
-  if(!is(txdb, "TxDb")){
+  if (!is(txdb, "TxDb")) {
     stop("txdb must be a TxDb object")
   }
 
-  if(length(setdiff(regions, c("transcript", "genome"))) >0){
+  if (length(setdiff(regions, c("transcript", "genome"))) > 0) {
     stop("only transcript and/or genome are valid arguments for region")
   }
 
   x <- rowRanges(se)
-  if("genome" %in% regions){
+  if ("genome" %in% regions) {
     fo <- findOverlaps(x, x + variant_dist)
     vars <- split(x[subjectHits(fo)]$Var, queryHits(fo))
     to_keep <- names(vars)[unlist(lapply(vars,
-                                         function(x) {
-                                           length(unique(x)) == 1}))]
+      function(x) {
+        length(unique(x)) == 1
+      }))]
 
     x <- x[as.integer(to_keep)]
   }
 
-  if("transcript" %in% regions){
+  if ("transcript" %in% regions) {
     tx_sites <- mapToTranscripts(x, txdb)
     tx_sites$Var <- x[tx_sites$xHits]$Var
     tx_sites <- sort(tx_sites)
@@ -125,8 +126,9 @@ remove_clustered_variants <- function(se, txdb,
     fo <- findOverlaps(tx_sites, slop)
     vars <- split(tx_sites[subjectHits(fo)]$Var, queryHits(fo))
     to_drop <- names(vars)[unlist(lapply(vars,
-                                         function(x) {
-                                           length(unique(x)) > 1}))]
+      function(x) {
+        length(unique(x)) > 1
+      }))]
     tx_sites <- tx_sites[as.integer(to_drop)]
     x <- x[setdiff(1:length(x), unique(tx_sites$xHits))]
   }

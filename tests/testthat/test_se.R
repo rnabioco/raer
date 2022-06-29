@@ -19,7 +19,7 @@ test_that("creating a RangedSummarizedExperiment works", {
   expect_equal(length(assays(se_obj)), 7)
 
   # Two samples
-  expect_error(create_se(plp, sample_names =c("sample_1", "sample_2")))
+  expect_error(create_se(plp, sample_names = c("sample_1", "sample_2")))
   se_obj_3 <- create_se(list(plp, plp2))
   expect_equal(length(assays(se_obj_3)), 7)
   expect_equal(ncol(assays(se_obj_3)[[1]]), 2)
@@ -30,7 +30,7 @@ test_that("creating a RangedSummarizedExperiment works", {
 
   # Three samples
   se_obj5 <- create_se(list(plp, plp2, plp3),
-                       sample_names = c("sample_1", "sample_2", "sample_3"))
+    sample_names = c("sample_1", "sample_2", "sample_3"))
   expect_equal(length(assays(se_obj5)), 7)
   expect_equal(ncol(assays(se_obj5)[[1]]), 3)
 
@@ -49,12 +49,13 @@ test_that("creating a sparse RangedSummarizedExperiment works", {
   expect_false(is(assay(sres, "Var"), "sparseMatrix"))
   dres <- create_se(plp, sparse = FALSE)
 
-  assays(sres) <- lapply(assays(sres), function(x){
-    if(is(x, "sparseMatrix")){
+  assays(sres) <- lapply(assays(sres), function(x) {
+    if (is(x, "sparseMatrix")) {
       x <- as.matrix(x)
-      mode(x) <- 'integer'
+      mode(x) <- "integer"
     }
-    x})
+    x
+  })
 
   expect_true(identical(assays(dres), assays(sres)))
 
@@ -62,16 +63,17 @@ test_that("creating a sparse RangedSummarizedExperiment works", {
   # sparse coerces all missing values to 0
   sres <- create_se(plps, assay_cols = c("nA", "nG"), sparse = TRUE)
   dres <- create_se(plps, assay_cols = c("nA", "nG"),
-                    sparse = FALSE,
-                    fill_na = 0L)
+    sparse = FALSE,
+    fill_na = 0L)
 
   expect_true(all(names(assays(sres)) == c("nA", "nG")))
 
-  assays(sres) <- lapply(assays(sres), function(x){
-    if(is(x, "sparseMatrix")){
+  assays(sres) <- lapply(assays(sres), function(x) {
+    if (is(x, "sparseMatrix")) {
       x <- as.matrix(x)
-      mode(x) <- 'integer'
+      mode(x) <- "integer"
     }
-    x})
+    x
+  })
   expect_true(identical(assays(dres), assays(sres)))
 })

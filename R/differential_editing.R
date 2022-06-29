@@ -37,33 +37,33 @@ calc_edit_frequency <- function(se_object,
                                 drop = FALSE,
                                 replace_na = TRUE,
                                 edit_frequency = 0,
-                                min_count = 1){
+                                min_count = 1) {
 
   # Set edit to and from for pre defined types
-  if (is.null(edit_from) | is.null(edit_to)){
+  if (is.null(edit_from) | is.null(edit_to)) {
     edit_from <- "Ref"
     edit_to <- "Var"
   } else if (!(edit_from %in% c("A", "C", "G", "T")) |
-             !(edit_to %in% c("A", "C", "G", "T"))) {
+    !(edit_to %in% c("A", "C", "G", "T"))) {
     stop("`edit_to` and `edit_from` must be nucleotides!")
   }
 
   from_col <- paste0("n", edit_from)
   to_col <- paste0("n", edit_to)
 
-  if(drop && from_col != "nRef"){
+  if (drop && from_col != "nRef") {
     se_object <- se_object[mcols(rowRanges(se_object))$Ref == edit_from, ]
   }
 
   assay(se_object, "edit_freq") <- assay(se_object, to_col) /
     (assay(se_object, from_col) + assay(se_object, to_col))
 
-  if(replace_na){
+  if (replace_na) {
     assay(se_object, "edit_freq")[is.na(assay(se_object, "edit_freq"))] <- 0
   }
 
   se_object <- count_edits(se_object, edit_frequency, min_count,
-                           edit_from, edit_to)
+    edit_from, edit_to)
 
   se_object
 }
@@ -94,18 +94,18 @@ calc_edit_frequency <- function(se_object,
 #' @import SummarizedExperiment
 #' @importFrom Matrix colSums
 count_edits <- function(se_filtered, edit_frequency = 0.01, min_count = 10,
-                         edit_from = NULL, edit_to = NULL){
+                        edit_from = NULL, edit_to = NULL) {
 
   n_pass_filter <- Matrix::colSums((assay(se_filtered, "edit_freq") > edit_frequency) &
-                             ((assay(se_filtered, paste0("n", edit_from)) +
-                                 assay(se_filtered, paste0("n", edit_to))) >=
-                                min_count))
+    ((assay(se_filtered, paste0("n", edit_from)) +
+      assay(se_filtered, paste0("n", edit_to))) >=
+      min_count))
 
   colData(se_filtered)$n_sites <- n_pass_filter
 
   edit_idx <- Matrix::colSums(assay(se_filtered, paste0("n", edit_to))) /
     (Matrix::colSums(assay(se_filtered, paste0("n", edit_from))) +
-       Matrix::colSums(assay(se_filtered, paste0("n", edit_to))))
+      Matrix::colSums(assay(se_filtered, paste0("n", edit_to))))
 
   colData(se_filtered)$edit_idx <- edit_idx
 
@@ -131,15 +131,15 @@ count_edits <- function(se_filtered, edit_frequency = 0.01, min_count = 10,
 #' @import ggplot2
 make_editing_plots <- function(se_object, colors = NULL,
                                meta_col = "genotype_treatment",
-                               replicate = "rep"){
-  if (is.null(colors)){
-    if (!requireNamespace("RColorBrewer", quietly = TRUE)){
-    stop(paste0("Package \"RColorBrewer\" needed for plotting if you don't provide colors.",
-      " Please install it or provide colors with `colors = c()`."),
+                               replicate = "rep") {
+  if (is.null(colors)) {
+    if (!requireNamespace("RColorBrewer", quietly = TRUE)) {
+      stop(paste0("Package \"RColorBrewer\" needed for plotting if you don't provide colors.",
+        " Please install it or provide colors with `colors = c()`."),
       call. = FALSE)
     }
     nColors <- length(unique(colData(se_object)[[replicate]]))
-    if(nColors > 9){
+    if (nColors > 9) {
       cols <- grDevices::colorRampPalette(
         RColorBrewer::brewer.pal(9, "Set1"))(nColors)
     } else {
@@ -151,19 +151,19 @@ make_editing_plots <- function(se_object, colors = NULL,
 
   p1 <- ggplot2::ggplot(plot_dat, ggplot2::aes_string("sample_info", "n_sites")) +
     ggplot2::geom_col(ggplot2::aes(fill = rep),
-                      position = ggplot2::position_dodge()) +
+      position = ggplot2::position_dodge()) +
     ggplot2::scale_fill_manual(values = cols) +
     ggplot2::labs(x = NULL,
-         y = "# of sites detected") +
+      y = "# of sites detected") +
     ggplot2::theme(axis.text.x = element_text(angle = 90, hjust = 1,
-                                              vjust = 0.5))
+      vjust = 0.5))
 
   p2 <- ggplot2::ggplot(plot_dat, ggplot2::aes_string("sample_info", "edit_idx")) +
     ggplot2::geom_col(ggplot2::aes(fill = rep),
-                      position = ggplot2::position_dodge()) +
+      position = ggplot2::position_dodge()) +
     ggplot2::scale_fill_manual(values = cols) +
     ggplot2::labs(x = NULL,
-         y = "Editing Index") +
+      y = "Editing Index") +
     ggplot2::theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
   return(list(p1, p2))
@@ -209,13 +209,13 @@ prep_for_de <- function(se,
                         edit_from = NULL, edit_to = NULL,
                         min_prop = 0.1,
                         max_prop = 0.9,
-                        min_samples = 3){
+                        min_samples = 3) {
 
   # Set edit to and from for pre defined types
-  if(type == "AI"){
+  if (type == "AI") {
     edit_from <- "A"
     edit_to <- "G"
-  } else if (is.null(edit_from) | is.null(edit_to)){
+  } else if (is.null(edit_from) | is.null(edit_to)) {
     stop("If not using a pre built type 'AI', `edit_from` and `edit_to` must be set")
   } else if (!(edit_from %in% c("A", "C", "G", "T")) | !(edit_to %in% c("A", "C", "G", "T"))) {
     stop("`edit_to` and `edit_from` must be nucleotides!")
@@ -244,7 +244,7 @@ prep_for_de <- function(se,
 
   # create a new SummarizedExperiment
   res <- SummarizedExperiment(assays = list(counts = res),
-                              colData = mdata)
+    colData = mdata)
   return(res)
 }
 
@@ -290,23 +290,23 @@ prep_for_de <- function(se,
 perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
                        condition_col = "condition",
                        condition_control = NULL,
-                       condition_treatment = NULL){
+                       condition_treatment = NULL) {
 
   # Make sure all variables are present
-  if (!sample_col %in% colnames(colData(deobj))){
+  if (!sample_col %in% colnames(colData(deobj))) {
     stop(paste0("somple_col must be a column in the colDat of your deobj. '",
-                sample_col, "' not found in colnames(colData(deobj))!"))
+      sample_col, "' not found in colnames(colData(deobj))!"))
   }
-  if (!condition_col %in% colnames(colData(deobj))){
+  if (!condition_col %in% colnames(colData(deobj))) {
     stop(paste0("condition_col must be a column in the colData of your deobj. '",
-                condition_col, "' not found in colnames(colData(deobj))!"))
+      condition_col, "' not found in colnames(colData(deobj))!"))
   }
 
   # Rename columns based on the input
-  if (sample_col != "sample"){
+  if (sample_col != "sample") {
     colData(deobj)$sample <- NULL
   }
-  if (condition_col != "condition"){
+  if (condition_col != "condition") {
     colData(deobj)$condition <- NULL
   }
 
@@ -318,45 +318,45 @@ perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
   colData(deobj) <- cbind(colData(deobj), new_columns)
 
   # Check that condition_control and condition_treatment are correct
-  if (is.null(condition_control)){
+  if (is.null(condition_control)) {
     options <- unique(colData(deobj)$condition)
     stop(paste0("condition_control must be set. This should be the level of",
-                " your meta data that corresponds to your control. Possible",
-                " options from your experiment are: ",
-                stringr::str_c(options, collapse = ", ")))
+      " your meta data that corresponds to your control. Possible",
+      " options from your experiment are: ",
+      stringr::str_c(options, collapse = ", ")))
   }
-  if (is.null(condition_treatment)){
+  if (is.null(condition_treatment)) {
     options <- unique(colData(deobj)$condition)
     stop(paste0("condition_treatment must be set. This should be the level of",
-                " your meta data that corresponds to your control. Possible",
-                " options from your experiment are: ",
-                str_c(options, collapse = ", ")))
+      " your meta data that corresponds to your control. Possible",
+      " options from your experiment are: ",
+      str_c(options, collapse = ", ")))
   }
 
   # Check that the treatment and control are in the object
-  if (!condition_control %in% colData(deobj)$condition){
+  if (!condition_control %in% colData(deobj)$condition) {
     options <- unique(colData(deobj)$condition)
     stop(paste0("condition_control must be a column in your deobj colData. '",
-                condition_control, "' not found in the levels of the condition",
-                " column of colData(deobj)! Possible",
-                " options from your experiment are: ",
-                str_c(options, collapse = ", ")))
+      condition_control, "' not found in the levels of the condition",
+      " column of colData(deobj)! Possible",
+      " options from your experiment are: ",
+      str_c(options, collapse = ", ")))
   }
-  if (!condition_treatment %in% colData(deobj)$condition){
+  if (!condition_treatment %in% colData(deobj)$condition) {
     options <- unique(colData(deobj)$condition)
     stop(paste0("condition_treatment must be a column in your deobj colData. '",
-                condition_treatment, "' not found in the levels of the condition",
-                " column of colData(deobj)! Possible",
-                " options from your experiment are: ",
-                str_c(options, collapse = ", ")))
+      condition_treatment, "' not found in the levels of the condition",
+      " column of colData(deobj)! Possible",
+      " options from your experiment are: ",
+      str_c(options, collapse = ", ")))
   }
-  if (type == "edgeR"){
+  if (type == "edgeR") {
     results <- run_edger(deobj, condition_control, condition_treatment)
-  } else if (type == "DESeq2"){
+  } else if (type == "DESeq2") {
     results <- run_deseq2(deobj, condition_control, condition_treatment)
   } else {
     stop(paste0("Unrecognized type: '", type, "'. type must be either edgeR",
-                " or DESeq2."))
+      " or DESeq2."))
   }
   return(results)
 }
@@ -383,33 +383,33 @@ perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
 #'
 #' @importFrom stats model.matrix
 run_deseq2 <- function(deobj, condition_control = NULL,
-                       condition_treatment = NULL){
-  if (!requireNamespace("DESeq2", quietly = TRUE)){
+                       condition_treatment = NULL) {
+  if (!requireNamespace("DESeq2", quietly = TRUE)) {
     stop(paste0("Package \"DESeq2\" needed to run differential analysis. Please install it."),
       call. = FALSE)
   }
 
-  design <- ~0 + condition:sample + condition:count
+  design <- ~ 0 + condition:sample + condition:count
 
   # See if the design is full rank, if not, remove sample info
   test_mat <- try(DESeq2::DESeqDataSetFromMatrix(countData = assay(deobj,
-                                                                   "counts"),
-                                         colData = colData(deobj),
-                                         design = design), silent = TRUE)
+    "counts"),
+  colData = colData(deobj),
+  design = design), silent = TRUE)
 
-  if (is(test_mat,"try-error")){
+  if (is(test_mat, "try-error")) {
     sample <- deobj$sample
     condition <- deobj$condition
     count <- deobj$count
 
-    design <- model.matrix(~0 + sample + condition:count)
-    design <- design[,!grepl("countref", colnames(design))]
+    design <- model.matrix(~ 0 + sample + condition:count)
+    design <- design[, !grepl("countref", colnames(design))]
     mod_mat <- design
   }
 
   dds <- DESeq2::DESeqDataSetFromMatrix(countData = assay(deobj, "counts"),
-                                colData = colData(deobj),
-                                design = design)
+    colData = colData(deobj),
+    design = design)
 
   # We don't want size factors because we are looking at ratios within a sample
   DESeq2::sizeFactors(dds) <- rep(1, nrow(colData(deobj)))
@@ -417,36 +417,36 @@ run_deseq2 <- function(deobj, condition_control = NULL,
   # TODO - figure out what modeling is best, also try local
   dds <- DESeq2::DESeq(dds, fitType = "parametric")
 
-  if (!is(test_mat, "try-error")){
+  if (!is(test_mat, "try-error")) {
     mod_mat <- model.matrix(design(dds), colData(dds))
   }
 
   # Pull out the model matrix for all comparisons of interest
   alt_treatment <- colMeans(mod_mat[dds$condition == condition_treatment &
-                                      dds$count == "alt",])
+    dds$count == "alt", ])
   ref_treatment <- colMeans(mod_mat[dds$condition == condition_treatment &
-                                      dds$count == "ref",])
+    dds$count == "ref", ])
 
   alt_control <- colMeans(mod_mat[dds$condition == condition_control &
-                                    dds$count == "alt",])
+    dds$count == "alt", ])
   ref_control <- colMeans(mod_mat[dds$condition == condition_control &
-                                    dds$count == "ref",])
+    dds$count == "ref", ])
 
   # TODO add other possible return values and return as a list.
   # This finds editing specific to the condition
   treatment_vs_control <- DESeq2::results(dds,
-                                          contrast = (alt_treatment -
-                                                        ref_treatment) -
-                                    (alt_control - ref_control))
+    contrast = (alt_treatment -
+      ref_treatment) -
+      (alt_control - ref_control))
 
   deseq_res <- as.data.frame(treatment_vs_control)
   deseq_res <- deseq_res[deseq_res$padj < 0.05, ]
   deseq_res <- deseq_res[order(deseq_res$log2FoldChange, decreasing = TRUE), ]
 
   return(list(de_obj = dds,
-              results_full = treatment_vs_control,
-              sig_results = deseq_res,
-              model_matrix = mod_mat))
+    results_full = treatment_vs_control,
+    sig_results = deseq_res,
+    model_matrix = mod_mat))
 }
 
 #' Perform differential editing with edgeR
@@ -469,23 +469,23 @@ run_deseq2 <- function(deobj, condition_control = NULL,
 #' @param condition_treatment The name of the treatment condition. This must be a variable
 #' in your condition_col of colData(deobj).
 run_edger <- function(deobj, condition_control = NULL,
-                       condition_treatment = NULL){
+                      condition_treatment = NULL) {
 
-  if (!requireNamespace("edgeR", quietly = TRUE)){
+  if (!requireNamespace("edgeR", quietly = TRUE)) {
     stop(paste0("Package \"edgeR\" needed to run differential analysis. Please install it."),
-         call. = FALSE)
+      call. = FALSE)
   }
 
   sample <- deobj$sample
   condition <- deobj$condition
   count <- deobj$count
 
-  design <- model.matrix(~0 + condition:sample + condition:count)
+  design <- model.matrix(~ 0 + condition:sample + condition:count)
 
   # Check if full rank, if not, fix
-  if (!limma::is.fullrank(design)){
-    design <- model.matrix(~0 + sample + condition:count)
-    design <- design[,!grepl("countref", colnames(design))]
+  if (!limma::is.fullrank(design)) {
+    design <- model.matrix(~ 0 + sample + condition:count)
+    design <- design[, !grepl("countref", colnames(design))]
   }
 
   dge <- edgeR::DGEList(assay(deobj, "counts"), lib.size = rep(1, ncol(deobj)))
@@ -494,30 +494,30 @@ run_edger <- function(deobj, condition_control = NULL,
 
   # Pull out the model matrix for all comparisons of interest
   alt_treatment <- colMeans(design[deobj$condition == condition_treatment &
-                                     deobj$count == "alt",])
+    deobj$count == "alt", ])
   ref_treatment <- colMeans(design[deobj$condition == condition_treatment &
-                                     deobj$count == "ref",])
+    deobj$count == "ref", ])
 
   alt_control <- colMeans(design[deobj$condition == condition_control &
-                                   deobj$count == "alt",])
+    deobj$count == "alt", ])
   ref_control <- colMeans(design[deobj$condition == condition_control &
-                                   deobj$count == "ref",])
+    deobj$count == "ref", ])
 
   # TODO add other possible return values and return as a list.
   # This finds editing specific to the condition
   treatment_vs_control <- edgeR::glmLRT(fit, contrast = (alt_treatment - ref_treatment) -
-                      (alt_control - ref_control))
+    (alt_control - ref_control))
 
   treatment_vs_control <- edgeR::topTags(treatment_vs_control,
-                                  n = nrow(treatment_vs_control))
+    n = nrow(treatment_vs_control))
 
   edger_res <- as.data.frame(treatment_vs_control)
   edger_res <- edger_res[edger_res$FDR < 0.05, ]
   edger_res <- edger_res[order(edger_res$PValue), ]
 
   return(list(de_obj = fit,
-              results_full = treatment_vs_control,
-              sig_results = edger_res,
-              model_matrix = design))
+    results_full = treatment_vs_control,
+    sig_results = edger_res,
+    model_matrix = design))
 
 }

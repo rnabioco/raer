@@ -13,6 +13,6 @@ raer_example(path)
 Provide working directory for raer example files.
 }
 \examples{
-raer_example('human.fasta')
+raer_example("human.fasta")
 
 }

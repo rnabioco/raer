@@ -33,8 +33,8 @@ fp <- FilterParam(library_type = "genomic-unstranded")
 plp <- get_pileup(bamfn, fafn, filterParam = fp)
 
 genes <- GRanges(c("DHFR:200-400:+",
-                   "SPCS3:100-200:-",
-                   "SSR3:3-10:-",
-                   "SSR3:6-12:+"))
+  "SPCS3:100-200:-",
+  "SSR3:3-10:-",
+  "SSR3:6-12:+"))
 correct_strand(plp, genes)
 }

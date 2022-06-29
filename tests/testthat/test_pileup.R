@@ -25,15 +25,15 @@ test_that("pileup works", {
 test_that("filtering for variants in pileup works", {
   vars <- res[res$Var != "-"]
   res_all_vars <- get_pileup(bamfn, fafn, bedfn,
-                             filterParam = FilterParam(only_keep_variants = TRUE))
+    filterParam = FilterParam(only_keep_variants = TRUE))
   expect_equal(length(vars), 2)
   expect_equal(vars, res_all_vars)
 })
 
 test_that("n-bam pileup works", {
   res <- get_pileup(c(bamfn, bamfn), fafn, bedfn,
-                    filterParam = FilterParam(library_type = c("fr-first-strand",
-                                                               "fr-first-strand")))
+    filterParam = FilterParam(library_type = c("fr-first-strand",
+      "fr-first-strand")))
   expect_true(identical(res[[1]], res[[2]]))
   expect_equal(length(res[[1]]$Ref), 182)
   expect_equal(ncol(as.data.frame(res[[1]])), 14)
@@ -43,34 +43,34 @@ test_that("n-bam pileup works", {
   expect_false(identical(res[[1]], res[[2]]))
 
   res <- get_pileup(c(bamfn, bamfn), fafn, bedfn,
-                    filterParam = FilterParam(library_type = c("fr-first-strand",
-                                                              "genomic-unstranded")))
+    filterParam = FilterParam(library_type = c("fr-first-strand",
+      "genomic-unstranded")))
   expect_equal(length(res[[1]]$Ref), 214)
   expect_equal(length(res[[1]]$Ref), length(res[[2]]$Ref))
 
   res <- get_pileup(c(bamfn, bam2fn), fafn, bedfn,
-                    filterParam = FilterParam(library_type = "fr-first-strand",
-                                              only_keep_variants = TRUE),
-                    )
+    filterParam = FilterParam(library_type = "fr-first-strand",
+      only_keep_variants = TRUE),
+  )
   # same sites reported in both files
   expect_true(all(start(res[[1]]) == start(res[[2]])))
   # sites are variant in at least 1 file
   expect_true(all(res[[1]]$Var != "-" | res[[2]]$Var != "-"))
 
   res <- get_pileup(rep(bamfn, 4), fafn, bedfn,
-                    filterParam = FilterParam(library_type = "fr-first-strand"))
+    filterParam = FilterParam(library_type = "fr-first-strand"))
   expect_true(length(res) == 4)
 
   # all sites in first bam are variant
   res <- get_pileup(c(bamfn, bam2fn), fafn, bedfn,
-                    filterParam = FilterParam(library_type = "fr-first-strand",
-                                              only_keep_variants = c(TRUE, FALSE)))
+    filterParam = FilterParam(library_type = "fr-first-strand",
+      only_keep_variants = c(TRUE, FALSE)))
   expect_true(all(res[[1]]$Var != "-"))
 
   # all sites in first bam are variant
   res <- get_pileup(c(bamfn, bam2fn), fafn, bedfn,
-                    filterParam = FilterParam(library_type = "fr-first-strand",
-                                              only_keep_variants = c(FALSE, TRUE)))
+    filterParam = FilterParam(library_type = "fr-first-strand",
+      only_keep_variants = c(FALSE, TRUE)))
   expect_true(all(res[[2]]$Var != "-"))
 
 })
@@ -102,29 +102,29 @@ test_that("missing files are caught", {
 
 test_that("library types are respected", {
   res <- get_pileup(bamfn, fafn,
-                    filterParam = FilterParam(library_type =  "fr-first-strand"))
+    filterParam = FilterParam(library_type =  "fr-first-strand"))
   expect_true(table(strand(res))["+"] == 619)
   expect_true(table(strand(res))["-"] == 1047)
   expect_true(all(strand(res[seqnames(res) == "DHFR"]) == "-"))
   expect_true(all(strand(res[seqnames(res) == "SPCS3"]) == "+"))
 
   res <- get_pileup(bamfn, fafn,
-                    filterParam = FilterParam(library_type =  "fr-second-strand"))
+    filterParam = FilterParam(library_type =  "fr-second-strand"))
   expect_true(table(strand(res))["+"] == 1047)
   expect_true(table(strand(res))["-"] == 619)
   expect_true(all(strand(res[seqnames(res) == "DHFR"]) == "+"))
   expect_true(all(strand(res[seqnames(res) == "SPCS3"]) == "-"))
 
   res <- get_pileup(bamfn, fafn,
-                    filterParam = FilterParam(library_type =  "genomic-unstranded"))
+    filterParam = FilterParam(library_type =  "genomic-unstranded"))
   expect_true(all(strand(res) == "+"))
 
   res <- get_pileup(bamfn, fafn,
-                    filterParam = FilterParam(library_type =  "unstranded"))
+    filterParam = FilterParam(library_type =  "unstranded"))
   expect_true(all(strand(res) %in% c("+", "-")))
 
   expect_error(get_pileup(bamfn, fafn, bedfn,
-                          filterParam = FilterParam(library_type = "unknown-string")))
+    filterParam = FilterParam(library_type = "unknown-string")))
 })
 
 test_that("pileup chrom start end args", {
@@ -146,7 +146,7 @@ test_that("pileup depth lims", {
   rownames(expected_df) <- NULL
 
   res <- get_pileup(bamfn, fafn,
-                    filterParam = FilterParam(min_nucleotide_depth = 30))
+    filterParam = FilterParam(min_nucleotide_depth = 30))
   res <- as.data.frame(res, row.names = NULL)
   res$seqnames <- as.character(res$seqnames)
 
@@ -186,9 +186,9 @@ bout <- tempfile(fileext = ".bam")
 
 test_that("pileup check mapq filter", {
   bout <- filterBam(bamfn,
-                    param = ScanBamParam(mapqFilter = 255),
-                    destination = bout,
-                    indexDestination = TRUE)
+    param = ScanBamParam(mapqFilter = 255),
+    destination = bout,
+    indexDestination = TRUE)
   a <- get_pileup(bamfn, fafn,  filterParam = FilterParam(min_mapq = 255))
   b <- get_pileup(bout, fafn)
   expect_true(identical(a, b))
@@ -196,17 +196,17 @@ test_that("pileup check mapq filter", {
 
 test_that("pileup check flag filtering", {
   bout <- filterBam(bamfn,
-                    param = ScanBamParam(flag = scanBamFlag(isMinusStrand = F)),
-                    destination = bout,
-                    indexDestination = TRUE)
+    param = ScanBamParam(flag = scanBamFlag(isMinusStrand = F)),
+    destination = bout,
+    indexDestination = TRUE)
   a <- get_pileup(bamfn, fafn, bedfn, bam_flags = scanBamFlag(isMinusStrand = F))
   b <- get_pileup(bout, fafn, bedfn)
   expect_true(identical(a, b))
 
   bout <- filterBam(bamfn,
-                    param = ScanBamParam(flag = scanBamFlag(isMinusStrand = T)),
-                    destination = bout,
-                    indexDestination = TRUE)
+    param = ScanBamParam(flag = scanBamFlag(isMinusStrand = T)),
+    destination = bout,
+    indexDestination = TRUE)
   a <- get_pileup(bamfn, fafn, bedfn, bam_flags = scanBamFlag(isMinusStrand = T))
   b <- get_pileup(bout, fafn, bedfn)
   expect_true(identical(a, b))
@@ -250,7 +250,7 @@ test_that("pileup check homopolymer filter", {
 
 })
 
-test_that("filtering for splicing events works",{
+test_that("filtering for splicing events works", {
   # get sites near splicing events
   splices <- GRanges(coverage(junctions(GenomicAlignments::readGAlignmentPairs(bamfn))))
   splices <- splices[splices$score > 0]
@@ -264,14 +264,14 @@ test_that("filtering for splicing events works",{
   plp_b <- get_pileup(bamfn, fafn, filterParam = FilterParam(splice_dist = 5))
   plp_b <- plp_b[plp_b$Var != "-"]
   bsites_near_splices <- plp_b[queryHits(findOverlaps(plp_b,
-                                                      splices,
-                                                      maxgap = 4))]
+    splices,
+    maxgap = 4))]
   expect_equal(length(sites_near_splices$Ref), 3)
   expect_equal(length(bsites_near_splices$Ref), 1)
 })
 
 
-test_that("filtering for indel events works",{
+test_that("filtering for indel events works", {
   # get sites near splicing events
   reads <- GenomicAlignments::readGAlignments(bamfn, use.names = T)
   cig_ops <- cigarRangesAlongReferenceSpace(cigar(reads), ops = "D", pos = start(reads))
@@ -289,10 +289,10 @@ test_that("filtering for indel events works",{
   sites_near_indels <- plp[queryHits(findOverlaps(plp, cig_pos))]
 
   plp_b <- get_pileup(bamfn, fafn, filterParam = FilterParam(min_base_quality = 1,
-                                                             indel_dist = 5))
+    indel_dist = 5))
   plp_b <- plp_b[plp_b$Var != "-"]
   bsites <- plp_b[queryHits(findOverlaps(plp_b,
-                                         cig_pos))]
+    cig_pos))]
 
   expect_equal(length(sites_near_indels$Ref), 3)
   # lose SSR3 387 site after filtering
@@ -324,8 +324,8 @@ writeLines(ids, fout)
 test_that("excluding reads with mismatches works", {
   plp <- get_pileup(bamfn, fafn, region = "DHFR:513-513")
   plp2 <- get_pileup(bamfn, fafn,
-                     region = "DHFR:513-513",
-                     bad_reads = fout)
+    region = "DHFR:513-513",
+    bad_reads = fout)
   expect_true(length(plp) == 1)
   expect_true(length(plp2) == 1)
   expect_true(plp2$nVar == 0)
@@ -338,46 +338,46 @@ test_that("excluding reads with mismatches works", {
 
 test_that("filtering for read-level mismatches works", {
   plp <- get_pileup(bamfn, fafn,
-                    filterParam = FilterParam(min_base_quality = 10,
-                                              only_keep_variants = TRUE),
-                    region = "SSR3:244-247")
+    filterParam = FilterParam(min_base_quality = 10,
+      only_keep_variants = TRUE),
+    region = "SSR3:244-247")
   expect_equal(length(plp), 2)
 
   plp <- get_pileup(bamfn, fafn,
-                  region = "SSR3:244-247",
-                  filterParam = FilterParam(min_base_quality = 10,
-                                            only_keep_variants = TRUE,
-                                            max_mismatch_type = c(1, 1)))
+    region = "SSR3:244-247",
+    filterParam = FilterParam(min_base_quality = 10,
+      only_keep_variants = TRUE,
+      max_mismatch_type = c(1, 1)))
   expect_equal(length(plp), 0)
   expect_s4_class(plp, "GRanges")
 
   plp <- get_pileup(bamfn, fafn,
-                     region = "SSR3:244-247",
-                    filterParam = FilterParam(min_base_quality = 10,
-                                              only_keep_variants = TRUE,
-                                              max_mismatch_type = c(0, 10)))
+    region = "SSR3:244-247",
+    filterParam = FilterParam(min_base_quality = 10,
+      only_keep_variants = TRUE,
+      max_mismatch_type = c(0, 10)))
   expect_equal(length(plp), 2)
 
   plp <- get_pileup(bamfn, fafn,
-                     region = "SSR3:244-247",
-                    filterParam = FilterParam(min_base_quality = 10,
-                                              only_keep_variants = TRUE,
-                                              max_mismatch_type = c(0, 1)))
+    region = "SSR3:244-247",
+    filterParam = FilterParam(min_base_quality = 10,
+      only_keep_variants = TRUE,
+      max_mismatch_type = c(0, 1)))
   expect_equal(length(plp), 0)
   expect_s4_class(plp, "GRanges")
 
   plp <- get_pileup(bamfn, fafn,
-                    region = "SSR3:244-247",
-                    filterParam = FilterParam(min_base_quality = 10,
-                                              only_keep_variants = TRUE,
-                                              max_mismatch_type = c(8, 0)))
+    region = "SSR3:244-247",
+    filterParam = FilterParam(min_base_quality = 10,
+      only_keep_variants = TRUE,
+      max_mismatch_type = c(8, 0)))
   expect_equal(length(plp), 2)
 
   plp <- get_pileup(bamfn, fafn,
-                    region = "SSR3:244-247",
-                    filterParam = FilterParam(min_base_quality = 10,
-                                              only_keep_variants = TRUE,
-                                              max_mismatch_type = c(1, 0)))
+    region = "SSR3:244-247",
+    filterParam = FilterParam(min_base_quality = 10,
+      only_keep_variants = TRUE,
+      max_mismatch_type = c(1, 0)))
   expect_equal(length(plp), 0)
   expect_s4_class(plp, "GRanges")
 
@@ -389,7 +389,7 @@ test_that("parallel processing works", {
   plp_serial <- get_pileup(bamfn, fafn, BPPARAM = SerialParam())
   expect_equal(plp_serial$Ref, plp$Ref)
 
-  if (.Platform$OS.type !="windows") {
+  if (.Platform$OS.type != "windows") {
     plp_mc <- get_pileup(bamfn, fafn, BPPARAM = MulticoreParam(workers = 2))
     expect_equal(plp_mc$Ref, plp$Ref)
   }
@@ -411,9 +411,9 @@ test_that("limiting chromosomes works", {
   plp <- plp[seqnames(plp) == chroms_to_query[1]]
   expect_true(identical(plp_2$nRef, plp$nRef))
 
-  if (.Platform$OS.type !="windows") {
+  if (.Platform$OS.type != "windows") {
     plp_mc <- get_pileup(bamfn, fafn, chroms = chroms_to_query[1:2],
-                         BPPARAM = MulticoreParam(workers = 2))
+      BPPARAM = MulticoreParam(workers = 2))
     expect_true(all(unique(seqnames(plp_mc)) == chroms_to_query[1:2]))
   }
 })
@@ -430,7 +430,7 @@ idx <- indexBam(sort_cbbam)
 
 cbfa <- system.file("extdata", "mouse_tiny.fasta", package = "raer")
 
-test_that("unsorted bam file fails",{
+test_that("unsorted bam file fails", {
   expect_error(get_pileup(cbbam, cbfa))
 })
 
@@ -441,24 +441,24 @@ test_that("single end libary types are respected", {
 
 })
 
-test_that("poor quality reads get excluded with min_read_bqual",{
+test_that("poor quality reads get excluded with min_read_bqual", {
   res_no_filter <- get_pileup(bamfn, fafn,
-                              filterParam = FilterParam(min_base_quality = 0L,
-                                                        library_type = c("genomic-unstranded")))
+    filterParam = FilterParam(min_base_quality = 0L,
+      library_type = c("genomic-unstranded")))
 
   bqual_cutoff <- c(0.25, 20.0)
   bam_recs <- readGAlignments(bamfn,
-                              param = ScanBamParam(what = c("qname", "qual")))
+    param = ScanBamParam(what = c("qname", "qual")))
   strand(bam_recs) <- "+"
   bad_reads <- lapply(as(mcols(bam_recs)$qual, "IntegerList"),
-         function(x) (sum(x < bqual_cutoff[2]) / length(x)) >= bqual_cutoff[1])
+    function(x) (sum(x < bqual_cutoff[2]) / length(x)) >= bqual_cutoff[1])
   bad_reads <- bam_recs[unlist(bad_reads)]
   bad_reads <- subsetByOverlaps(bad_reads, res_no_filter)
 
   res <- get_pileup(bamfn, fafn,
-                    filterParam = FilterParam(min_read_bqual = bqual_cutoff,
-                                              min_base_quality = 0L,
-                                              library_type = c("genomic-unstranded")))
+    filterParam = FilterParam(min_read_bqual = bqual_cutoff,
+      min_base_quality = 0L,
+      library_type = c("genomic-unstranded")))
 
   res_no_filter <- subsetByOverlaps(res_no_filter, bad_reads)
   res <- subsetByOverlaps(res, bad_reads)
@@ -466,7 +466,7 @@ test_that("poor quality reads get excluded with min_read_bqual",{
   n_diff <- (res_no_filter$nRef + res_no_filter$nVar) - (res$nRef + res$nVar)
 
   # we don't count deletions as coverage
-  cov <- coverage(bad_reads, drop.D.ranges=TRUE)
+  cov <- coverage(bad_reads, drop.D.ranges = TRUE)
   cov <- cov[cov != 0]
   cov <- as.integer(unlist(cov))
 

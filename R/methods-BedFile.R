@@ -14,23 +14,24 @@
 #' indexBed(bed_fn)
 #' @export
 setMethod(indexBed, "character",
-          function(file)
-          {
-            stopifnot(file.exists(file))
-            file <- normalizePath(path.expand(file))
+  function(file) {
+    stopifnot(file.exists(file))
+    file <- normalizePath(path.expand(file))
 
-            obj <- .BedFile$new(path = file,
-                                open = FALSE)
+    obj <- .BedFile$new(path = file,
+      open = FALSE)
 
-            tryCatch({
-              obj$.extptr <- .Call(".bedfile_open", file)
-              obj$open <- TRUE
-            }, error=function(err) {
-              stop(conditionMessage(err), "\n  file: ", file)
-            })
+    tryCatch(
+      {
+        obj$.extptr <- .Call(".bedfile_open", file)
+        obj$open <- TRUE
+      },
+      error = function(err) {
+        stop(conditionMessage(err), "\n  file: ", file)
+      })
 
-            return(obj)
-})
+    return(obj)
+  })
 
 #' Close a BedFile index connection
 #'
@@ -41,21 +42,21 @@ setMethod(indexBed, "character",
 #' close(bed)
 #' @export
 close.BedFile <-
-  function(con, ...)
-  {
+  function(con, ...) {
     stopifnot(!is.null(con$.extptr))
 
-    if(!con$open){
+    if (!con$open) {
       return(con$open)
     }
 
-    tryCatch({
-      con$.extptr <- .Call(".bedfile_close", con$.extptr)
-      con$open <- FALSE
-    }, error=function(err) {
-      stop(conditionMessage(err), "\n  file: ", con)
-    })
+    tryCatch(
+      {
+        con$.extptr <- .Call(".bedfile_close", con$.extptr)
+        con$open <- FALSE
+      },
+      error = function(err) {
+        stop(conditionMessage(err), "\n  file: ", con)
+      })
 
     invisible(con)
   }
-

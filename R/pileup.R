@@ -38,7 +38,7 @@
 #'
 #' plp <- get_pileup(bamfn, fafn)
 #' plps <- get_pileup(c(bamfn, bam2fn), fafn)
-#' fp <-FilterParam(only_keep_variants = TRUE,  min_nucleotide_depth = 55)
+#' fp <- FilterParam(only_keep_variants = TRUE,  min_nucleotide_depth = 55)
 #' get_pileup(bamfn, fafn, filterParam = fp)
 #'
 #' @importFrom Rsamtools bgzip indexTabix TabixFile scanTabix
@@ -49,41 +49,41 @@
 #' @rdname get_pileup
 #' @export
 get_pileup <- function(bamfiles,
-                   fafile,
-                   bedfile = NULL,
-                   region = NULL,
-                   chroms = NULL,
-                   filterParam = FilterParam(),
-                   outfile_prefix = NULL,
-                   bedidx = NULL,
-                   bam_flags = NULL,
-                   reads = NULL,
-                   return_data = TRUE,
-                   BPPARAM = SerialParam(),
-                   bad_reads = NULL,
-                   verbose = FALSE){
+                       fafile,
+                       bedfile = NULL,
+                       region = NULL,
+                       chroms = NULL,
+                       filterParam = FilterParam(),
+                       outfile_prefix = NULL,
+                       bedidx = NULL,
+                       bam_flags = NULL,
+                       reads = NULL,
+                       return_data = TRUE,
+                       BPPARAM = SerialParam(),
+                       bad_reads = NULL,
+                       verbose = FALSE) {
 
   bamfiles <- path.expand(bamfiles)
   fafile <- path.expand(fafile)
   n_files <- length(bamfiles)
 
-  if(!is.null(bedfile)){
+  if (!is.null(bedfile)) {
     bedfile <- path.expand(bedfile)
-    if(!file.exists(bedfile)){
+    if (!file.exists(bedfile)) {
       stop("bedfile not found: ", bedfile, call. = FALSE)
     }
   }
 
-  if(!all(file.exists(bamfiles))){
+  if (!all(file.exists(bamfiles))) {
     stop("bamfile(s) not found: ", bamfiles[!file.exists(bamfiles)], call. = FALSE)
   }
 
-  if(!file.exists(fafile)){
+  if (!file.exists(fafile)) {
     stop("fasta file not found: ", fafile, call. = FALSE)
   }
 
-  if(is.null(outfile_prefix)){
-    if(!return_data){
+  if (is.null(outfile_prefix)) {
+    if (!return_data) {
       stop("an outfile_prefix must be supplied if data is written to files")
     }
     in_memory <- TRUE
@@ -91,11 +91,11 @@ get_pileup <- function(bamfiles,
   } else {
     in_memory <- FALSE
     outfiles <- paste0(outfile_prefix, "_", seq_len(n_files), ".plp")
-    if(!dir.exists(dirname(outfile_prefix))){
+    if (!dir.exists(dirname(outfile_prefix))) {
       dir.create(dirname(outfile_prefix), recursive = TRUE)
     }
     outfiles <- path.expand(outfiles)
-    if(length(outfiles) != n_files){
+    if (length(outfiles) != n_files) {
       stop("# of outfiles does not match # of bam input files: ", outfiles)
     }
     # remove files if exist, to avoid appending to existing files
@@ -105,15 +105,15 @@ get_pileup <- function(bamfiles,
   contigs <- GenomeInfoDb::seqinfo(Rsamtools::BamFile(bamfiles[1]))
   contig_info <- GenomeInfoDb::seqlengths(contigs)
   chroms_to_process <- names(contig_info)
-  if(is.null(region)) {
-    if(!is.null(chroms)){
-      if(length(chroms) == 1){
+  if (is.null(region)) {
+    if (!is.null(chroms)) {
+      if (length(chroms) == 1) {
         region <- chroms
         chroms_to_process <- chroms
       } else {
-      # not sure how to catch NULL in rcpp so using "." to indicate no region instead
-      region = "."
-      chroms_to_process <- chroms
+        # not sure how to catch NULL in rcpp so using "." to indicate no region instead
+        region <- "."
+        chroms_to_process <- chroms
       }
     } else {
       region <- "."
@@ -124,29 +124,29 @@ get_pileup <- function(bamfiles,
 
   missing_chroms <- chroms_to_process[!chroms_to_process %in% names(contig_info)]
 
-  if(length(missing_chroms) > 0){
+  if (length(missing_chroms) > 0) {
     warning("the following chromosomes are not present in the bamfile(s):\n",
-            paste(missing_chroms, collapse = "\n"),
-            call. = FALSE)
+      paste(missing_chroms, collapse = "\n"),
+      call. = FALSE)
     chroms_to_process <- setdiff(chroms_to_process, missing_chroms)
   }
 
   chroms_to_process <-
-       chroms_to_process[order(match(chroms_to_process, names(contig_info)))]
+    chroms_to_process[order(match(chroms_to_process, names(contig_info)))]
 
-  if(length(chroms_to_process) == 0){
+  if (length(chroms_to_process) == 0) {
     stop("No chromosomes requested are found in bam file",
-         call. = FALSE)
+      call. = FALSE)
   }
 
   idx_ptr <- NULL
-  if(!is.null(bedidx)){
-    if(!is(bedidx, "BedFile") & !(bedidx$open)){
+  if (!is.null(bedidx)) {
+    if (!is(bedidx, "BedFile") & !(bedidx$open)) {
       warning("bedidx not valid, setting to NULL")
       idx_ptr <- NULL
     }
 
-    if(is_null_extptr(bedidx$.extptr)){
+    if (is_null_extptr(bedidx$.extptr)) {
       warning("bedidx pointer not valid, setting to NULL")
       idx_ptr <- NULL
     } else {
@@ -155,27 +155,27 @@ get_pileup <- function(bamfiles,
     bedfile <- "."
   }
 
-  if(is.null(bam_flags)){
+  if (is.null(bam_flags)) {
     bam_flags <- Rsamtools::scanBamFlag(isSecondaryAlignment = FALSE,
-                                        isNotPassingQualityCont = FALSE,
-                                        isDuplicate = FALSE,
-                                        isSupplementaryAlignment = FALSE)
+      isNotPassingQualityCont = FALSE,
+      isDuplicate = FALSE,
+      isSupplementaryAlignment = FALSE)
   } else {
-    if(length(bam_flags) != 2 || !all(names(bam_flags) == c("keep0", "keep1"))){
+    if (length(bam_flags) != 2 || !all(names(bam_flags) == c("keep0", "keep1"))) {
       stop("bam_flags must be generated using Rsamtools::scanBamFlag()")
     }
   }
 
-  if(!is.null(reads)){
-    if(!is.character(reads) | length(reads) != 1){
+  if (!is.null(reads)) {
+    if (!is.character(reads) | length(reads) != 1) {
       stop("reads must be a character vector of length 1")
     }
   } else {
     reads <- "."
   }
 
-  if(!is.null(bad_reads)){
-    if(!is.character(bad_reads) | length(bad_reads) != 1){
+  if (!is.null(bad_reads)) {
+    if (!is.character(bad_reads) | length(bad_reads) != 1) {
       stop("bad_reads must be a character vector of length 1")
     }
   } else {
@@ -191,30 +191,30 @@ get_pileup <- function(bamfiles,
   # 2 = fr-second-strand    strand based on R1/sense, R2/antisense
   # 3 = unstranded          strand based on alignment
   lib_values <- c("genomic-unstranded",
-                  "fr-first-strand",
-                  "fr-second-strand",
-                  "unstranded")
+    "fr-first-strand",
+    "fr-second-strand",
+    "unstranded")
   lib_code <- match(fp$library_type, lib_values)
-  if(any(is.na(lib_code))){
+  if (any(is.na(lib_code))) {
     stop("library_type must be one of :", paste(lib_values, collapse = " "))
-  } else{
+  } else {
     lib_code <- lib_code - 1
   }
 
-  if(length(lib_code) != n_files){
+  if (length(lib_code) != n_files) {
     lib_code <- rep(lib_code, n_files)
   }
   event_filters <- unlist(fp[c("trim_5p",
-                               "trim_3p",
-                               "splice_dist",
-                               "indel_dist",
-                               "homopolymer_len",
-                               "max_mismatch_type",
-                               "min_read_qual")])
+    "trim_3p",
+    "splice_dist",
+    "indel_dist",
+    "homopolymer_len",
+    "max_mismatch_type",
+    "min_read_qual")])
   run_in_parallel <- FALSE
   temp_bed_file <- FALSE
-  if(is(BPPARAM, "SerialParam") || length(chroms_to_process) == 1){
-    if(length(chroms_to_process) > 1 && is.null(bedfile)){
+  if (is(BPPARAM, "SerialParam") || length(chroms_to_process) == 1) {
+    if (length(chroms_to_process) > 1 && is.null(bedfile)) {
       temp_bed_file <- TRUE
       bedfile <- tempfile(fileext = ".bed")
       to_process <- contig_info[chroms_to_process]
@@ -223,33 +223,33 @@ get_pileup <- function(bamfiles,
     }
 
     res <- run_pileup(bampaths = bamfiles,
-                      fapath = fafile,
-                      region = region,
-                      bedfn = ifelse(is.null(bedfile), ".", bedfile),
-                      min_reads = fp$min_nucleotide_depth,
-                      event_filters = event_filters,
-                      min_mapQ = fp$min_mapq,
-                      max_depth = fp$max_depth,
-                      min_baseQ = fp$min_base_quality,
-                      read_bqual_filter = fp$min_read_bqual,
-                      libtype =  as.integer(lib_code),
-                      in_memory = in_memory,
-                      outfns = outfiles,
-                      bam_flags = bam_flags,
-                      fp$only_keep_variants,
-                      reads,
-                      bad_reads,
-                      idx_ptr)
+      fapath = fafile,
+      region = region,
+      bedfn = ifelse(is.null(bedfile), ".", bedfile),
+      min_reads = fp$min_nucleotide_depth,
+      event_filters = event_filters,
+      min_mapQ = fp$min_mapq,
+      max_depth = fp$max_depth,
+      min_baseQ = fp$min_base_quality,
+      read_bqual_filter = fp$min_read_bqual,
+      libtype =  as.integer(lib_code),
+      in_memory = in_memory,
+      outfns = outfiles,
+      bam_flags = bam_flags,
+      fp$only_keep_variants,
+      reads,
+      bad_reads,
+      idx_ptr)
 
-    if(!in_memory){
-      if(res != 0){
+    if (!in_memory) {
+      if (res != 0) {
         stop("Error occured during pileup", call. = FALSE)
       }
     } else {
       res <- lists_to_grs(res, contigs)
     }
 
-    if(temp_bed_file) unlink(bedfile)
+    if (temp_bed_file) unlink(bedfile)
 
   } else {
 
@@ -258,30 +258,30 @@ get_pileup <- function(bamfiles,
       start_time <- Sys.time()
       tmp_outfiles <- unlist(lapply(seq_along(outfiles), function(x) tempfile()))
       fn_df <- data.frame(contig = ctig,
-                          bam_fn = bamfiles,
-                          tmpfn = tmp_outfiles)
+        bam_fn = bamfiles,
+        tmpfn = tmp_outfiles)
 
       res <- run_pileup(bampaths = bamfiles,
-                        fapath = fafile,
-                        region = ctig,
-                        bedfn = ifelse(is.null(bedfile), ".", bedfile),
-                        min_reads = fp$min_nucleotide_depth,
-                        event_filters = event_filters,
-                        min_mapQ = fp$min_mapq,
-                        max_depth = fp$max_depth,
-                        min_baseQ = fp$min_base_quality,
-                        read_bqual_filter = fp$min_read_bqual,
-                        libtype =  as.integer(lib_code),
-                        in_memory = in_memory,
-                        outfns = tmp_outfiles,
-                        bam_flags = bam_flags,
-                        fp$only_keep_variants,
-                        reads,
-                        bad_reads,
-                        idx_ptr)
+        fapath = fafile,
+        region = ctig,
+        bedfn = ifelse(is.null(bedfile), ".", bedfile),
+        min_reads = fp$min_nucleotide_depth,
+        event_filters = event_filters,
+        min_mapQ = fp$min_mapq,
+        max_depth = fp$max_depth,
+        min_baseQ = fp$min_base_quality,
+        read_bqual_filter = fp$min_read_bqual,
+        libtype =  as.integer(lib_code),
+        in_memory = in_memory,
+        outfns = tmp_outfiles,
+        bam_flags = bam_flags,
+        fp$only_keep_variants,
+        reads,
+        bad_reads,
+        idx_ptr)
 
-      if(!in_memory){
-        if(res != 0){
+      if (!in_memory) {
+        if (res != 0) {
           stop("Error occured during pileup", call. = FALSE)
         }
         res <- fn_df
@@ -289,26 +289,26 @@ get_pileup <- function(bamfiles,
         res <- lists_to_grs(res, contigs)
       }
 
-      if(verbose){
+      if (verbose) {
         time_elapsed <- Sys.time() - start_time
         message("Completed pileup on ", ctig, " in ", time_elapsed)
       }
       res
     },
-    BPPARAM=BPPARAM)
+    BPPARAM = BPPARAM)
 
     bpstop(BPPARAM)
 
-    if(!in_memory){
+    if (!in_memory) {
       tmp_fns <- do.call(rbind, res)
       tmp_fns <- split(tmp_fns, tmp_fns$bam_fn)
       stopifnot(length(tmp_fns) == length(outfiles))
 
-      for(i in seq_along(tmp_fns)){
+      for (i in seq_along(tmp_fns)) {
         fns <- tmp_fns[[i]]$tmpfn
         final_file <- outfiles[i]
         fw <- file.append(final_file, fns)
-        if(!all(fw)){
+        if (!all(fw)) {
           stop("error occured writing pileup files")
         }
         unlink(fns)
@@ -318,35 +318,35 @@ get_pileup <- function(bamfiles,
       # and an inner list of GRanges per pileup.
       # transpose to obtain an outer list per pileup
       res <- t_lst(res)
-      res <- lapply(res, function(x){
+      res <- lapply(res, function(x) {
         unlist(as(x, "GRangesList"))
       })
     }
 
   }
 
-  if(!in_memory){
-    if(any(file.info(outfiles)$size == 0)){
+  if (!in_memory) {
+    if (any(file.info(outfiles)$size == 0)) {
       return(empty_plp_record())
     }
 
     # run_pileup writes to a (temp)file, next the file will be tabix indexed
-    tbxfiles <- lapply(outfiles, function(x){
+    tbxfiles <- lapply(outfiles, function(x) {
       tbxfile <- Rsamtools::bgzip(x, overwrite = TRUE)
       idx <- Rsamtools::indexTabix(tbxfile, seq = 1, start = 2, end = 2, zeroBased = FALSE)
       tbxfile
     })
 
-    if(!return_data){
+    if (!return_data) {
       unlink(outfiles)
       return(unlist(tbxfiles))
     }
 
     res <- lapply(tbxfiles, function(x) {
-        xx <- read_pileup(x, region = NULL)
-        GenomeInfoDb::seqlevels(xx) <- GenomeInfoDb::seqlevels(contigs)
-        GenomeInfoDb::seqinfo(xx) <- contigs
-        xx
+      xx <- read_pileup(x, region = NULL)
+      GenomeInfoDb::seqlevels(xx) <- GenomeInfoDb::seqlevels(contigs)
+      GenomeInfoDb::seqinfo(xx) <- contigs
+      xx
     })
 
     # if(using_temp_files){
@@ -356,7 +356,7 @@ get_pileup <- function(bamfiles,
     unlink(outfiles)
   }
 
-  if(n_files == 1){
+  if (n_files == 1) {
     res <- res[[1]]
   }
 
@@ -379,132 +379,132 @@ MAX_INT <- 536870912
 #' unlink(c(plp, plp_fn, paste0(plp, ".tbi")))
 #' @importFrom data.table fread
 #' @export
-read_pileup <- function(tbx_fn, region = NULL){
+read_pileup <- function(tbx_fn, region = NULL) {
 
   tbx <- Rsamtools::TabixFile(tbx_fn)
 
   # using Rsamtools read in tabix file
   # note that file is read in as a list of character vectors
   # consider using our own read_tabix function if this is a bottleneck
-  if(!is.null(region)){
+  if (!is.null(region)) {
     ivl_vals <- get_region(region)
     # note that samtools will return a larger INT than IRANGES can handle
     # if no ranges are supplied in the region
     ivl_end <- min(MAX_INT, ivl_vals$end)
     params <- GenomicRanges::GRanges(ivl_vals$chrom,
-                                    IRanges::IRanges(start = ivl_vals$start + 1,
-                                                     end = ivl_end))
+      IRanges::IRanges(start = ivl_vals$start + 1,
+        end = ivl_end))
     tbx_vals <- Rsamtools::scanTabix(tbx, param = params)[[1]]
   } else {
     tbx_vals <- Rsamtools::scanTabix(tbx)[[1]]
   }
 
   # quick method to convert vector of character strings into data.frame
-  if(length(tbx_vals) == 1){
+  if (length(tbx_vals) == 1) {
     # handle length 1 character vectors, which will not work with fread
-    from = data.frame(t(strsplit(tbx_vals, "\t")[[1]]))
+    from <- data.frame(t(strsplit(tbx_vals, "\t")[[1]]))
     colnames(from) <- paste0("V", 1:ncol(from))
     from[c(2, 6:12)] <- as.numeric(from[c(2, 6:12)])
   } else {
     from <- data.table::fread(text = tbx_vals,
-                              stringsAsFactors = FALSE,
-                              data.table = FALSE,
-                              showProgress = FALSE,
-                              sep="\t")
+      stringsAsFactors = FALSE,
+      data.table = FALSE,
+      showProgress = FALSE,
+      sep = "\t")
   }
 
   count_cols <- c("nRef", "nVar", "nA", "nT", "nC", "nG", "nN")
 
-  colnames(from)[4:ncol(from)] = c("Ref", "Var", count_cols)
+  colnames(from)[4:ncol(from)] <- c("Ref", "Var", count_cols)
 
-  GenomicRanges::GRanges(seqnames=from$V1,
-                         ranges=IRanges::IRanges(start=from$V2,
-                                                 end=from$V2),
-                         strand=from$V3,
-                         from[,4:ncol(from)])
+  GenomicRanges::GRanges(seqnames = from$V1,
+    ranges = IRanges::IRanges(start = from$V2,
+      end = from$V2),
+    strand = from$V3,
+    from[, 4:ncol(from)])
 }
 
 
 
 # generate empty pileup record
 # idea from @user2462304 https://stackoverflow.com/a/48180979/6276041
-empty_plp_record <-  function(){
+empty_plp_record <-  function() {
   col_types <- list(Ref = character(),
-                                 Var = character(),
-                                 nRef = integer(),
-                                 nVar = integer(),
-                                 nA = integer(),
-                                 nT = integer(),
-                                 nC = integer(),
-                                 nG = integer(),
-                                 nN = integer())
-  df <- do.call(data.frame,col_types)
-  gr <- GRanges(c(seqnames=NULL,ranges=NULL,strand=NULL))
+    Var = character(),
+    nRef = integer(),
+    nVar = integer(),
+    nA = integer(),
+    nT = integer(),
+    nC = integer(),
+    nG = integer(),
+    nN = integer())
+  df <- do.call(data.frame, col_types)
+  gr <- GRanges(c(seqnames = NULL, ranges = NULL, strand = NULL))
   mcols(gr) <- df
   gr
 }
 
 
-.adjust_arg_length <- function(obj, name, len){
-  if(length(slot(obj, name)) != len){
-    if(length(slot(obj, name)) == 1){
+.adjust_arg_length <- function(obj, name, len) {
+  if (length(slot(obj, name)) != len) {
+    if (length(slot(obj, name)) == 1) {
       slot(obj, name) <- rep(slot(obj, name), len)
     } else {
       stop("%s requires either 1 value, or individual values,",
-           "for all input bamfiles", slot)
+        "for all input bamfiles", slot)
     }
   }
   slot(obj, name)
 }
 ## Check validity and adjust
 .adjustParams <- function(filterParam, nFiles) {
-  if(!inherits(filterParam, "FilterParam")) {
+  if (!inherits(filterParam, "FilterParam")) {
     stop("'filterParam' must inherit from 'FilterParam', got '%s'",
-         class(filterParam))
+      class(filterParam))
   }
   filterParam@min_mapq <- .adjust_arg_length(filterParam,
-                                             "min_mapq",
-                                             nFiles)
+    "min_mapq",
+    nFiles)
   filterParam@only_keep_variants <- .adjust_arg_length(filterParam,
-                                                       "only_keep_variants",
-                                                       nFiles)
+    "only_keep_variants",
+    nFiles)
   filterParam@library_type <- .adjust_arg_length(filterParam,
-                                                 "library_type",
-                                                 nFiles)
+    "library_type",
+    nFiles)
   filterParam
 }
 
 
 #' @importFrom methods slot slot<- slotNames
 .FilterParam <- setClass("FilterParam",
-                         representation(
-                           max_depth = "integer",
-                           min_base_quality = "integer",
-                           min_mapq = "integer",
-                           min_nucleotide_depth= "integer",
-                           library_type = "character",
-                           only_keep_variants = "logical",
-                           ignore_query_Ns = "logical",
-                           trim_5p = "integer",
-                           trim_3p ="integer",
-                           indel_dist = "integer",
-                           splice_dist = "integer",
-                           homopolymer_len = "integer",
-                           max_mismatch_type = "integer", # length 2
-                           min_read_bqual = "numeric" # length 2
-                           ))
+  representation(
+    max_depth = "integer",
+    min_base_quality = "integer",
+    min_mapq = "integer",
+    min_nucleotide_depth = "integer",
+    library_type = "character",
+    only_keep_variants = "logical",
+    ignore_query_Ns = "logical",
+    trim_5p = "integer",
+    trim_3p = "integer",
+    indel_dist = "integer",
+    splice_dist = "integer",
+    homopolymer_len = "integer",
+    max_mismatch_type = "integer", # length 2
+    min_read_bqual = "numeric" # length 2
+))
 
 setMethod(show, "FilterParam", function(object) {
   cat("class: ", class(object), "\n")
-  values <- sapply(slotNames(object), slot, object=object)
-  info <- paste(slotNames(object), values, sep=": ", collapse="; ")
-  cat(strwrap(info, exdent=2), sep="\n")
+  values <- sapply(slotNames(object), slot, object = object)
+  info <- paste(slotNames(object), values, sep = ": ", collapse = "; ")
+  cat(strwrap(info, exdent = 2), sep = "\n")
 })
 
 .as.list_FilterParam <- function(x, ...) {
   slotnames <- slotNames(x)
   names(slotnames) <- slotnames
-  lapply(slotnames, slot, object=x)
+  lapply(slotnames, slot, object = x)
 }
 
 
@@ -546,8 +546,7 @@ FilterParam <-
            trim_5p = 0L, trim_3p = 0L, indel_dist = 0L,
            splice_dist = 0L, homopolymer_len = 0L,
            max_mismatch_type = c(0L, 0L), min_read_bqual = c(0.0, 0.0),
-           ignore_query_Ns = FALSE)
-  {
+           ignore_query_Ns = FALSE) {
 
     stopifnot(isSingleNumber(max_depth))
     stopifnot(isSingleNumber(min_base_quality))
@@ -581,49 +580,44 @@ FilterParam <-
     stopifnot(is.logical(only_keep_variants))
 
     # to implement
-    if(ignore_query_Ns){
+    if (ignore_query_Ns) {
       warning("ignore_query_Ns not yet implemented")
       ignore_query_Ns <- FALSE
     }
 
     ## creation
     .FilterParam(max_depth = max_depth, min_base_quality = min_base_quality,
-                 min_mapq = min_mapq, min_nucleotide_depth = min_nucleotide_depth,
-                 library_type = library_type, only_keep_variants = only_keep_variants,
-                 ignore_query_Ns = ignore_query_Ns,
-                 trim_5p = trim_5p, trim_3p = trim_3p, indel_dist = indel_dist,
-                 splice_dist = splice_dist, homopolymer_len = homopolymer_len,
-                 max_mismatch_type = max_mismatch_type, min_read_bqual = min_read_bqual)
+      min_mapq = min_mapq, min_nucleotide_depth = min_nucleotide_depth,
+      library_type = library_type, only_keep_variants = only_keep_variants,
+      ignore_query_Ns = ignore_query_Ns,
+      trim_5p = trim_5p, trim_3p = trim_3p, indel_dist = indel_dist,
+      splice_dist = splice_dist, homopolymer_len = homopolymer_len,
+      max_mismatch_type = max_mismatch_type, min_read_bqual = min_read_bqual)
 
   }
 
 PILEUP_COLS <-  c("seqnames",
-                  "pos",
-                  "strand",
-                  "Ref",
-                  "Var",
-                  "nRef",
-                  "nVar",
-                  "nA",
-                  "nT",
-                  "nC",
-                  "nG",
-                  "nN")
+  "pos",
+  "strand",
+  "Ref",
+  "Var",
+  "nRef",
+  "nVar",
+  "nA",
+  "nT",
+  "nC",
+  "nG",
+  "nN")
 
 # convert list of lists to list of grs
-lists_to_grs <- function(x, seqinfo = NULL){
+lists_to_grs <- function(x, seqinfo = NULL) {
   mc_cols <- setdiff(PILEUP_COLS, c("seqnames", "pos", "strand"))
-  lapply(x, function(mc){
+  lapply(x, function(mc) {
     GRanges(seqnames = mc$seqname,
-            ranges = IRanges(start = mc$pos,
-                             width = 1L),
-            strand = mc$strand,
-            mc[mc_cols],
-            seqinfo = seqinfo)
+      ranges = IRanges(start = mc$pos,
+        width = 1L),
+      strand = mc$strand,
+      mc[mc_cols],
+      seqinfo = seqinfo)
   })
 }
-
-
-
-
-
