@@ -5,9 +5,12 @@ Version: 0.99.0
 Authors@R: c(
     person("Kent", "Riemondy", , "kent.riemondy@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-0750-1273")),
-    person("Kristen", "Wells", , "kristen.wells-wrasman@cuanschutz.edu", role = c("aut"),
+    person("Kristen", "Wells", , "kristen.wells-wrasman@cuanschutz.edu", role = "aut",
            comment = c(ORCID = "0000-0002-7466-8164")),
-    person("Ryan", "Sheridan", , "ryan.sheridan@cuanschutz.edu", role = c("aut")),
+    person("Ryan", "Sheridan", , "ryan.sheridan@cuanschutz.edu", role = "ctb",
+           comment = c(ORCID = "0000-0003-4012-3147")),
+    person("Jay", "Hesselberth", , "jay.hesselberth@gmail.com", role = "ctb",
+           comment = c(ORCID = "0000-0002-6299-179X")),
     person("RNA Bioscience Initiative", role = c("cph", "fnd"))
     )
 Description: Toolkit for identification, visualization, and statistical testing 

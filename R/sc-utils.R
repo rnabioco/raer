@@ -144,17 +144,13 @@ get_tag_bam <- function(bamfile,
 }
 
 
-# validate tags are in index,
-# returns list, of same length as cbs, containing any missing tags
+# validate tags are in index
 check_missing_barcodes <- function(cbs, bamfile) {
   tags <- show_tag_index(bamfile)
-  invalid_bcs <- vector("list", length(cbs))
-  for (i in seq_along(cbs)) {
-    invalid_bcs[[i]] <- cbs[[i]][!cbs[[i]] %in% tags$tag]
-  }
-  sum(unlist(lapply(invalid_bcs, length)))
-}
+  cbs <- unlist(cbs, use.names = FALSE)
+  sum(!cbs %in% tags$tag)
 
+}
 
 #' @importFrom GenomicAlignments coverage
 filter_by_coverage <- function(bamfile, gr, min_counts, ...) {
@@ -168,13 +164,11 @@ filter_by_coverage <- function(bamfile, gr, min_counts, ...) {
 get_cell_pileup <- function(bamfn, fafn, cellbarcodes, ...) {
   cluster_bam <- get_tag_bam(bamfn,
     barcodes = cellbarcodes,
-    outbam = NULL,
-    maxMemory = 1024)
-  on.exit(unlink(c(cluster_bam, paste0(cluster_bam, ".bri"))))
+    outbam = NULL)
+  on.exit(unlink(c(cluster_bam, paste0(cluster_bam, ".bai"))))
 
   out <- get_pileup(cluster_bam,
     fafile = fafn,
-    bedfile = NULL,
     ...)
 
   out
@@ -219,8 +213,8 @@ get_cell_pileup <- function(bamfn, fafn, cellbarcodes, ...) {
 #'   bedfile = raer_example("5k_neuron_sites.bed.gz"),
 #'   min_reads = 0,
 #'   cell_barcodes = cbs[1:15],
-#'   filterParam = fp,
-#'   verbose = FALSE)
+#'   verbose = FALSE,
+#'   filterParam = fp)
 #'
 #'
 #' # pool cell barcodes across clusters
@@ -236,8 +230,8 @@ get_cell_pileup <- function(bamfn, fafn, cellbarcodes, ...) {
 #'   bedfile = raer_example("5k_neuron_sites.bed.gz"),
 #'   min_reads = 0,
 #'   cell_barcodes = cb_lst,
-#'   filterParam = fp,
-#'   verbose = FALSE)
+#'   verbose = FALSE,
+#'   filterParam = fp)
 #' assays(se)$nA
 #' assays(se)$nG
 #'
@@ -252,9 +246,9 @@ sc_editing <- function(bamfile,
                        min_reads = 25L,
                        assay_cols = c("nA", "nG"),
                        tag_index_args = list(tag = "CB"),
-                       ...,
                        BPPARAM = SerialParam(),
-                       verbose = TRUE) {
+                       verbose = TRUE,
+                       ...) {
 
   if (!all(assay_cols %in% PILEUP_COLS)) {
     allowed_vals <- paste(PILEUP_COLS[5:length(PILEUP_COLS)],
@@ -320,8 +314,9 @@ sc_editing <- function(bamfile,
       message("working on: group ", i, " ", names(cell_barcodes)[i])
     }
     get_cell_pileup(bamfile, fafile, cell_barcodes[[i]],
-      bedidx = idx, return_data = TRUE,
+      bedfile = NULL, bedidx = idx, return_data = TRUE,
       verbose = verbose,
+      BPPARAM = SerialParam(),
       ...)
   }, BPPARAM = BPPARAM)
   bpstop(BPPARAM)
@@ -330,7 +325,7 @@ sc_editing <- function(bamfile,
   if (verbose) message("collecting pileups into summarizedExperiment")
   se <- create_se(res,
     assay_cols = assay_cols,
-    sparse = FALSE,
+    sparse = TRUE,
     fill_na = 0L,
     verbose = verbose)
   se

@@ -12,9 +12,9 @@ sc_editing(
   min_reads = 25L,
   assay_cols = c("nA", "nG"),
   tag_index_args = list(tag = "CB"),
-  ...,
   BPPARAM = SerialParam(),
-  verbose = TRUE
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
@@ -37,12 +37,12 @@ storing multiple assays can require large amounts of memory.}
 
 \item{tag_index_args}{arguments pass to \code{\link[=build_tag_index]{build_tag_index()}}}
 
-\item{...}{additional arguments passed to \verb{[get_pileup()]}.}
-
 \item{BPPARAM}{BiocParallel instance. Parallel computation occurs across
 each entry in the cell_barcodes list}
 
 \item{verbose}{Display messages}
+
+\item{...}{additional arguments passed to \verb{[get_pileup()]}.}
 }
 \description{
 Calculate editing frequencies
@@ -65,8 +65,8 @@ se <- sc_editing(bamfile = bamfn,
   bedfile = raer_example("5k_neuron_sites.bed.gz"),
   min_reads = 0,
   cell_barcodes = cbs[1:15],
-  filterParam = fp,
-  verbose = FALSE)
+  verbose = FALSE,
+  filterParam = fp)
 
 
 # pool cell barcodes across clusters
@@ -82,8 +82,8 @@ se <- sc_editing(bamfile = bamfn,
   bedfile = raer_example("5k_neuron_sites.bed.gz"),
   min_reads = 0,
   cell_barcodes = cb_lst,
-  filterParam = fp,
-  verbose = FALSE)
+  verbose = FALSE,
+  filterParam = fp)
 assays(se)$nA
 assays(se)$nG
 
