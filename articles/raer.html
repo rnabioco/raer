@@ -78,7 +78,7 @@
             <address class="author_afil">
       University of Colorado School of Medicine<br><h4 data-toc-skip class="author">Kristen Wells-Wrasman</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2022-06-29</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2022-06-30</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/raer.Rmd" class="external-link"><code>vignettes/raer.Rmd</code></a></small>
       <div class="d-none name"><code>raer.Rmd</code></div>
@@ -112,21 +112,21 @@
 <code class="sourceCode R"><span><span class="va">bam_files</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bams</span> </span>
 <span><span class="va">bam_files</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   SRR5564260_dedup_sorted.bam </span></span>
-<span><span class="co">## "/tmp/RtmpzeYBex/SRR5564260_dedup_sorted.bam" </span></span>
+<span><span class="co">## "/tmp/RtmpyYVV40/SRR5564260_dedup_sorted.bam" </span></span>
 <span><span class="co">##                   SRR5564261_dedup_sorted.bam </span></span>
-<span><span class="co">## "/tmp/RtmpzeYBex/SRR5564261_dedup_sorted.bam"</span></span></code></pre>
+<span><span class="co">## "/tmp/RtmpyYVV40/SRR5564261_dedup_sorted.bam"</span></span></code></pre>
 <p>Next we’ll need a FASTA file to quantify the editing sites. We’ll use a FASTA file only containing chromosome 18 for this demo. The fasta can be compressed.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">fasta</span> </span>
 <span><span class="va">fafn</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   chr18.fasta.bgz </span></span>
-<span><span class="co">## "/tmp/RtmpzeYBex/chr18.fasta.bgz"</span></span></code></pre>
+<span><span class="co">## "/tmp/RtmpyYVV40/chr18.fasta.bgz"</span></span></code></pre>
 <p>Lastly, we’ll use a BED file containing the coordinates of known human editing sites from the REDIPortal database. This file can also be optionally compressed.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bedfn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bed</span></span>
 <span><span class="va">bedfn</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   rediportal_hg38_chr18.bed.gz </span></span>
-<span><span class="co">## "/tmp/RtmpzeYBex/rediportal_hg38_chr18.bed.gz"</span></span></code></pre>
+<span><span class="co">## "/tmp/RtmpyYVV40/rediportal_hg38_chr18.bed.gz"</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="generate-editing-site-read-counts">Generate editing site read counts<a class="anchor" aria-label="anchor" href="#generate-editing-site-read-counts"></a>

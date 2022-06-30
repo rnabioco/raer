@@ -155,17 +155,12 @@ Authors: Michael Lawrence, Jeremiah Degenhardt, Robert Gentleman</dd>
           
           <code><a href="perform_de.html">perform_de()</a></code> 
         </dt>
-        <dd>Perform differential editing
-Uses either edgeR or DESeq2 to perform differential editing analysis.
-This will work for simple designs that have 1 treatment and 1 control.
-For more complex designs, we suggest you perform your own.</dd>
+        <dd>Perform differential editing</dd>
       </dl><dl><dt>
           
           <code><a href="prep_for_de.html">prep_for_de()</a></code> 
         </dt>
-        <dd>Make summarized experiment object for DE
-Generates a SummarizedExperiment object for use with edgeR or DESeq2
-will generate a counts assay with a matrix formated with 2 columns per sample</dd>
+        <dd>Make summarized experiment object for DE</dd>
       </dl><dl><dt>
           
           <code><a href="raer.html">raer</a></code> 
@@ -205,26 +200,12 @@ will generate a counts assay with a matrix formated with 2 columns per sample</d
           
           <code><a href="run_deseq2.html">run_deseq2()</a></code> 
         </dt>
-        <dd>Perform differential editing with DESeq2
-Uses DESeq2 to perform differential editing analysis.
-This will work for simple designs that have 1 treatment and 1 control.
-For more complex designs, we suggest you perform your own.
-It will test if your sample column makes the model matrix not full
-rank. If that happens, the model matrix will be modified to be full rank.
-This is not intended to be called directly by the user, instead, this should
-be called by <code>perform_de</code></dd>
+        <dd>Perform differential editing with DESeq2</dd>
       </dl><dl><dt>
           
           <code><a href="run_edger.html">run_edger()</a></code> 
         </dt>
-        <dd>Perform differential editing with edgeR
-Uses edgeR to perform differential editing analysis.
-This will work for simple designs that have 1 treatment and 1 control.
-For more complex designs, we suggest you perform your own.
-It will test if your sample column makes the model matrix not full
-rank. If that happens, the model matrix will be modified to be full rank.
-This is not intended to be called directly by the user, instead, this should
-be called by <code>perform_de</code></dd>
+        <dd>Perform differential editing with edgeR</dd>
       </dl><dl><dt>
           
           <code><a href="sc_editing.html">sc_editing()</a></code> 
