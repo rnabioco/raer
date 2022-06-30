@@ -24,23 +24,24 @@ sc_editing(
 
 \item{bedfile}{BED file containing editing sites}
 
-\item{cell_barcodes}{List of character vectors containing cell barcodes
-to query. See examples for specification.}
+\item{cell_barcodes}{List of character vectors containing cell barcodes to
+query. See examples for specification.}
 
 \item{min_reads}{Minimum read counts required to consider a site for editing.
-This is calculated across all reads in the bamfile prior to running \verb{[get_pileup()]}
-per cell to remove low-frequency events. Read alignments are required to be
-non-duplicate, primary, QC passing, and non-supplemental.}
+This is calculated across all reads in the bamfile prior to running
+\verb{[get_pileup()]} per cell to remove low-frequency events. Read alignments
+are required to be non-duplicate, primary, QC passing, and
+non-supplemental.}
 
-\item{assay_cols}{assays to store in returned se. Set to "A" and "G". Note that
-storing multiple assays can require large amounts of memory.}
+\item{assay_cols}{assays to store in returned se. Set to "A" and "G". Note
+that storing multiple assays can require large amounts of memory.}
 
 \item{tag_index_args}{arguments pass to \code{\link[=build_tag_index]{build_tag_index()}}}
 
 \item{...}{additional arguments passed to \verb{[get_pileup()]}.}
 
-\item{BPPARAM}{BiocParallel instance. Parallel computation occurs across
-each entry in the cell_barcodes list}
+\item{BPPARAM}{BiocParallel instance. Parallel computation occurs across each
+entry in the cell_barcodes list}
 
 \item{verbose}{Display messages}
 }
@@ -49,7 +50,9 @@ Calculate editing frequencies
 }
 \examples{
 suppressPackageStartupMessages(library(SummarizedExperiment))
+
 # get vector of cell barcodes in bam file (for use in this example)
+# usually these would come from the single cell analysis
 
 bamfn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
 idxfn <- build_tag_index(bamfn)
@@ -67,7 +70,6 @@ se <- sc_editing(bamfile = bamfn,
   cell_barcodes = cbs[1:15],
   filterParam = fp,
   verbose = FALSE)
-
 
 # pool cell barcodes across clusters
 # pass a named list, with each list entry corresponding to a vector
