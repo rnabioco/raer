@@ -86,20 +86,21 @@
 
 
 <dt>cell_barcodes</dt>
-<dd><p>List of character vectors containing cell barcodes
-to query. See examples for specification.</p></dd>
+<dd><p>List of character vectors containing cell barcodes to
+query. See examples for specification.</p></dd>
 
 
 <dt>min_reads</dt>
 <dd><p>Minimum read counts required to consider a site for editing.
-This is calculated across all reads in the bamfile prior to running <code>[get_pileup()]</code>
-per cell to remove low-frequency events. Read alignments are required to be
-non-duplicate, primary, QC passing, and non-supplemental.</p></dd>
+This is calculated across all reads in the bamfile prior to running
+<code>[get_pileup()]</code> per cell to remove low-frequency events. Read alignments
+are required to be non-duplicate, primary, QC passing, and
+non-supplemental.</p></dd>
 
 
 <dt>assay_cols</dt>
-<dd><p>assays to store in returned se. Set to "A" and "G". Note that
-storing multiple assays can require large amounts of memory.</p></dd>
+<dd><p>assays to store in returned se. Set to "A" and "G". Note
+that storing multiple assays can require large amounts of memory.</p></dd>
 
 
 <dt>tag_index_args</dt>
@@ -111,8 +112,8 @@ storing multiple assays can require large amounts of memory.</p></dd>
 
 
 <dt>BPPARAM</dt>
-<dd><p>BiocParallel instance. Parallel computation occurs across
-each entry in the cell_barcodes list</p></dd>
+<dd><p>BiocParallel instance. Parallel computation occurs across each
+entry in the cell_barcodes list</p></dd>
 
 
 <dt>verbose</dt>
@@ -123,7 +124,9 @@ each entry in the cell_barcodes list</p></dd>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># get vector of cell barcodes in bam file (for use in this example)</span></span></span>
+<span class="r-in"><span><span class="co"># usually these would come from the single cell analysis</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">bamfn</span> <span class="op">&lt;-</span> <span class="fu"><a href="raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"5k_neuron_mouse_xf25_1pct_cbsort.bam"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">idxfn</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_tag_index.html">build_tag_index</a></span><span class="op">(</span><span class="va">bamfn</span><span class="op">)</span></span></span>
@@ -143,7 +146,6 @@ each entry in the cell_barcodes list</p></dd>
 <span class="r-in"><span>  cell_barcodes <span class="op">=</span> <span class="va">cbs</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">15</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span>  filterParam <span class="op">=</span> <span class="va">fp</span>,</span></span>
 <span class="r-in"><span>  verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># pool cell barcodes across clusters</span></span></span>
 <span class="r-in"><span><span class="co"># pass a named list, with each list entry corresponding to a vector</span></span></span>

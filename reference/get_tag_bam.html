@@ -71,8 +71,8 @@
 
 
 <dt>outbam</dt>
-<dd><p>optional output bam file name, if not supplied a temporary
-file will be used</p></dd>
+<dd><p>optional output bam file name, if not supplied a temporary file
+will be used</p></dd>
 
 
 <dt>pos_sort_output</dt>
@@ -95,9 +95,11 @@ positionally sorted and positionally indexed using Rsamtools.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/GenomicAlignments" class="external-link">GenomicAlignments</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">bam_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"5k_neuron_mouse_xf25_1pct_cbsort.bam"</span>, package <span class="op">=</span> <span class="st">"raer"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">bam_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"5k_neuron_mouse_xf25_1pct_cbsort.bam"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="build_tag_index.html">build_tag_index</a></span><span class="op">(</span><span class="va">bam_fn</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/home/runner/work/_temp/Library/raer/extdata/5k_neuron_mouse_xf25_1pct_cbsort.bam.bri"</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">cbs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AGGATAATCTCAGAAC-1"</span>, <span class="st">"TTCGATTTCCCGAGGT-1"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bam_out</span> <span class="op">&lt;-</span> <span class="fu">get_tag_bam</span><span class="op">(</span><span class="va">bam_fn</span>, barcodes <span class="op">=</span> <span class="va">cbs</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/GenomicAlignments/man/readGAlignments.html" class="external-link">readGAlignments</a></span><span class="op">(</span><span class="va">bam_out</span>, param <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/ScanBamParam-class.html" class="external-link">ScanBamParam</a></span><span class="op">(</span>tag <span class="op">=</span> <span class="st">"CB"</span><span class="op">)</span><span class="op">)</span></span></span>
@@ -122,6 +124,7 @@ positionally sorted and positionally indexed using Rsamtools.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [7]         0 | AGGATAATCTCAGAAC-1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   -------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   seqinfo: 4 sequences from an unspecified genome</span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
