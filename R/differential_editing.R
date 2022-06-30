@@ -1,27 +1,29 @@
 #' Adds editing frequencies
 #'
-#' Adds editing frequencies to an existing SummarizedExperimentobject (created by
-#' `create_se`). The SummarizedExperiment with a new assay for editing frequences for each site
-#'  (edit_freq) and new colData columns with the number of edited sites (n_sites) and the
-#' fraction of edits (edit_idx) is returned.
+#' @description  Adds editing frequencies to an existing
+#'   SummarizedExperimentobject (created by `create_se`). The
+#'   SummarizedExperiment with a new assay for editing frequences for each site
+#'   (edit_freq) and new colData columns with the number of edited sites
+#'   (n_sites) and the fraction of edits (edit_idx) is returned.
 #'
 #' @param se_object A SummarizedExperiment object created by `create_se`
-#' @param edit_from This should be a nucleotide (A, C, G, or T)
-#' corresponding to the nucleotide you expect in the reference. Ex. for A to I
-#' editing events, this would be "A". If NULL, then editing frequencies will be
-#' calculated using the `nVar` and `nRef` values.
+#' @param edit_from This should be a nucleotide (A, C, G, or T) corresponding to
+#'   the nucleotide you expect in the reference. Ex. for A to I editing events,
+#'   this would be "A". If NULL, then editing frequencies will be calculated
+#'   using the `nVar` and `nRef` values.
 #' @param edit_to This should be a nucleotide (A, C, G, or T) and should
-#' correspond to the nucleotide you expect after the editing event. Ex. for A to I
-#' editing events, this would be "G". If NULL, then editing frequencies will be
-#' calculated using the `nVar` and `nRef` values.
+#'   correspond to the nucleotide you expect after the editing event. Ex. for A
+#'   to I editing events, this would be "G". If NULL, then editing frequencies
+#'   will be calculated using the `nVar` and `nRef` values.
 #' @param drop If TRUE, the summarizedExperiment returned will only retain sites
-#' matching the specified `edit_from` and `edit_to` bases.
-#' @param replace_na If TRUE, NA and NaN editing frequencies will be coerced to 0.
+#'   matching the specified `edit_from` and `edit_to` bases.
+#' @param replace_na If TRUE, NA and NaN editing frequencies will be coerced to
+#'   0.
 #' @param edit_frequency  The edit frequency cutoff used when calculating the
-#' number of sites. Set to 0 to require any non-zero editing frequency. The number of sites is
-#' stored as n_sites in the colData.
-#' @param min_count The minimum number of reads required when enumerating number of
-#' editing sites detected.
+#'   number of sites. Set to 0 to require any non-zero editing frequency. The
+#'   number of sites is stored as n_sites in the colData.
+#' @param min_count The minimum number of reads required when enumerating number
+#'   of editing sites detected.
 #'
 #' @examples
 #' example(create_se, echo = FALSE)
@@ -70,26 +72,27 @@ calc_edit_frequency <- function(se_object,
 
 #' Counts edits
 #'
-#' Counts edits per sample and add new colData columns with the number of edited sites
-#' (n_sites) and the  fraction of edits (edit_idx). This function should be called by
-#' `calc_edit_frequency` and is not meant to be used directly.
+#' @description Counts edits per sample and add new colData columns with the
+#'   number of edited sites (n_sites) and the  fraction of edits (edit_idx).
+#'   This function should be called by `calc_edit_frequency` and is not meant to
+#'   be used directly.
 #'
 #' @param se_filtered A SummarizedExperiment object created by `create_se` and
-#' processed by `calc_edit_frequency`
-#' @param edit_from OPTIONAL if not using a pre-built type, you can specify
-#' your own editing. This should be a nucleotide (A, C, G, or T) and should
-#' correspond to the nucleotide you expect in the reference. Ex. for A to I
-#' editing events, this would be "A". If type is not "AI", both edit from
-#' and edit_to must be set.
-#' @param edit_to OPTIONAL if not using a pre-built type, you can specify
-#' your own editing. This should be a nucleotide (A, C, G, or T) and should
-#' correspond to the nucleotide you expect after the editing event. Ex. for A to I
-#' editing events, this would be "G". If type is not "AI", both edit from
-#' and edit_to must be set.
-#' @param edit_frequency OPTIONAL the edit frequency used to determine the number of sites.
-#' Default is 0.01.
-#' @param min_count OPTIONAL the number of reads used to determine the number of edited sites.
-#' Default is 10.
+#'   processed by `calc_edit_frequency`
+#' @param edit_from OPTIONAL if not using a pre-built type, you can specify your
+#'   own editing. This should be a nucleotide (A, C, G, or T) and should
+#'   correspond to the nucleotide you expect in the reference. Ex. for A to I
+#'   editing events, this would be "A". If type is not "AI", both edit from and
+#'   edit_to must be set.
+#' @param edit_to OPTIONAL if not using a pre-built type, you can specify your
+#'   own editing. This should be a nucleotide (A, C, G, or T) and should
+#'   correspond to the nucleotide you expect after the editing event. Ex. for A
+#'   to I editing events, this would be "G". If type is not "AI", both edit from
+#'   and edit_to must be set.
+#' @param edit_frequency OPTIONAL the edit frequency used to determine the
+#'   number of sites. Default is 0.01.
+#' @param min_count OPTIONAL the number of reads used to determine the number of
+#'   edited sites. Default is 10.
 #'
 #' @import SummarizedExperiment
 #' @importFrom Matrix colSums
@@ -115,18 +118,18 @@ count_edits <- function(se_filtered, edit_frequency = 0.01, min_count = 10,
 
 #' Makes summary plots of editing
 #'
-#' Generates plots of the number of sites edited per sample and the percent
-#' of editing events per sample. This function is written to be called directly
-#' by `calc_edit_frequency`
+#' @description Generates plots of the number of sites edited per sample and the
+#'   percent of editing events per sample. This function is written to be called
+#'   directly by `calc_edit_frequency`
 #'
 #' @param se_object A SummarizedExperiment object created by `create_se`
 #' @param colors OPTIONAL The colors of the replicates. If no colors are
-#' provided, Set1 from `RColorBrewer will be used
+#'   provided, Set1 from `RColorBrewer will be used
 #' @param meta_col The column in colData to be used to separate out samples
-#' based on the condition. For example, "genotype", "treatment", or
-#' "genotype_treatment." Default is "genotype_treatment."
+#'   based on the condition. For example, "genotype", "treatment", or
+#'   "genotype_treatment." Default is "genotype_treatment."
 #' @param replicate The column in colData contining information about the
-#' replicates. Default is "rep".
+#'   replicates. Default is "rep".
 #'
 #' @import ggplot2
 make_editing_plots <- function(se_object, colors = NULL,
@@ -171,30 +174,31 @@ make_editing_plots <- function(se_object, colors = NULL,
 }
 
 #' Make summarized experiment object for DE
-
-#' Generates a SummarizedExperiment object for use with edgeR or DESeq2
-#' will generate a counts assay with a matrix formated with 2 columns per sample
+#'
+#' @description Generates a SummarizedExperiment object for use with edgeR or
+#'   DESeq2 will generate a counts assay with a matrix formated with 2 columns
+#'   per sample
 #'
 #' @param se A SummarizedExperiment object
-#' @param type OPTIONAL the type of editing event to add. Currently, only
-#' A to I is supported ("AI") which is the default, but your own custom can
-#' be added by setting this to "none".
-#' @param edit_from OPTIONAL if not using a pre-built type, you can specify
-#' your own editing. This should be a nucleotide (A, C, G, or T) and should
-#' correspond to the nucleotide you expect in the reference. Ex. for A to I
-#' editing events, this would be "A". If type is not "AI", both edit from
-#' and edit_to must be set.
-#' @param edit_to OPTIONAL if not using a pre-built type, you can specify
-#' your own editing. This should be a nucleotide (A, C, G, or T) and should
-#' correspond to the nucleotide you expect after the editing event. Ex. for A to I
-#' editing events, this would be "G". If type is not "AI", both edit from
-#' and edit_to must be set.
-#' @param min_prop OPTIONAL the min proporation of reads edited at a site.
-#' At least min_samples need to pass this to keep the site. Default is 0.1.
-#' @param max_prop OPTIONAL the max proporation of reads edited at a site.
-#' At least min_samples need to pass this to keep the site. Default is 0.9.
+#' @param type OPTIONAL the type of editing event to add. Currently, only A to I
+#'   is supported ("AI") which is the default, but your own custom can be added
+#'   by setting this to "none".
+#' @param edit_from OPTIONAL if not using a pre-built type, you can specify your
+#'   own editing. This should be a nucleotide (A, C, G, or T) and should
+#'   correspond to the nucleotide you expect in the reference. Ex. for A to I
+#'   editing events, this would be "A". If type is not "AI", both edit from and
+#'   edit_to must be set.
+#' @param edit_to OPTIONAL if not using a pre-built type, you can specify your
+#'   own editing. This should be a nucleotide (A, C, G, or T) and should
+#'   correspond to the nucleotide you expect after the editing event. Ex. for A
+#'   to I editing events, this would be "G". If type is not "AI", both edit from
+#'   and edit_to must be set.
+#' @param min_prop OPTIONAL the min proporation of reads edited at a site. At
+#'   least min_samples need to pass this to keep the site. Default is 0.1.
+#' @param max_prop OPTIONAL the max proporation of reads edited at a site. At
+#'   least min_samples need to pass this to keep the site. Default is 0.9.
 #' @param min_samples OPTIONAL the minimum number of samples passing the cutoffs
-#' to keep a site. Default is 3.
+#'   to keep a site. Default is 3.
 #'
 #' @import SummarizedExperiment
 #' @examples
@@ -249,27 +253,28 @@ prep_for_de <- function(se,
 }
 
 #' Perform differential editing
-
-#' Uses either edgeR or DESeq2 to perform differential editing analysis.
-#' This will work for simple designs that have 1 treatment and 1 control.
-#' For more complex designs, we suggest you perform your own.
 #'
-#' At the moment, this function will only find editing events specific
-#' to the treatment, but it will be pretty straight forward to add other
-#' possible return values.
+#' @description Uses either edgeR or DESeq2 to perform differential editing
+#'   analysis. This will work for simple designs that have 1 treatment and 1
+#'   control. For more complex designs, we suggest you perform your own.
+#'
+#'   At the moment, this function will only find editing events specific to the
+#'   treatment, but it will be pretty straight forward to add other possible
+#'   return values.
 #'
 #' @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
 #' @param type OPTIONAL if edgeR or DESeq should be run. Default is edgeR
 #' @param sample_col OPTIONAL the name of the column from colData(deobj) that
-#' contains your sample information. Default is sample. If you do not have a
-#' column named "sample", you must provide the appropriate sample column
+#'   contains your sample information. Default is sample. If you do not have a
+#'   column named "sample", you must provide the appropriate sample column
 #' @param condition_col OPTIONAL the name of the column from colData(deobj) that
-#' contains your treatment information. Default is condition, If you do not have a
-#' column named "condition", you must provide the appropriate condition column
-#' @param condition_control The name of the control condition. This must be a variable
-#' in your condition_col of colData(deobj). No default provided.
-#' @param condition_treatment The name of the treatment condition. This must be a variable
-#' in your condition_col of colData(deobj).
+#'   contains your treatment information. Default is condition, If you do not
+#'   have a column named "condition", you must provide the appropriate condition
+#'   column
+#' @param condition_control The name of the control condition. This must be a
+#'   variable in your condition_col of colData(deobj). No default provided.
+#' @param condition_treatment The name of the treatment condition. This must be
+#'   a variable in your condition_col of colData(deobj).
 #'
 #' @examples
 #' example(create_se, echo = FALSE)
@@ -278,15 +283,13 @@ prep_for_de <- function(se,
 #' res <- perform_de(dse, condition_control = "WT", condition_treatment = "KO")
 #' res$sig_results[1:5, ]
 #'
-#' @returns A named list
-#' - de_obj: The edgeR or deseq object used for differential editing analysis
-#' - results_full: Unfiltered differenital editing results
-#' - sig_results: Filtered differenial editing (FDR < 0.05)
-#' - model_matrix: The model matrix used for generating DE results
+#' @returns A named list - de_obj: The edgeR or deseq object used for
+#'   differential editing analysis - results_full: Unfiltered differenital
+#'   editing results - sig_results: Filtered differenial editing (FDR < 0.05) -
+#'   model_matrix: The model matrix used for generating DE results
 #'
 #' @import stringr
 #' @export
-
 perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
                        condition_col = "condition",
                        condition_control = NULL,
@@ -362,24 +365,23 @@ perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
 }
 
 #' Perform differential editing with DESeq2
-
-#' Uses DESeq2 to perform differential editing analysis.
-#' This will work for simple designs that have 1 treatment and 1 control.
-#' For more complex designs, we suggest you perform your own.
-#' It will test if your sample column makes the model matrix not full
-#' rank. If that happens, the model matrix will be modified to be full rank.
-#' This is not intended to be called directly by the user, instead, this should
-#' be called by `perform_de`
 #'
-#' At the moment, this function will only find editing events specific
-#' to the treatment, but it will be pretty straight forward to add other
-#' possible return values.
+#' @description Uses DESeq2 to perform differential editing analysis. This will
+#'   work for simple designs that have 1 treatment and 1 control. For more
+#'   complex designs, we suggest you perform your own. It will test if your
+#'   sample column makes the model matrix not full rank. If that happens, the
+#'   model matrix will be modified to be full rank. This is not intended to be
+#'   called directly by the user, instead, this should be called by `perform_de`
+#'
+#'   At the moment, this function will only find editing events specific to the
+#'   treatment, but it will be pretty straight forward to add other possible
+#'   return values.
 #'
 #' @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
-#' @param condition_control The name of the control condition. This must be a variable
-#' in your condition_col of colData(deobj). No default provided.
-#' @param condition_treatment The name of the treatment condition. This must be a variable
-#' in your condition_col of colData(deobj).
+#' @param condition_control The name of the control condition. This must be a
+#'   variable in your condition_col of colData(deobj). No default provided.
+#' @param condition_treatment The name of the treatment condition. This must be
+#'   a variable in your condition_col of colData(deobj).
 #'
 #' @importFrom stats model.matrix
 run_deseq2 <- function(deobj, condition_control = NULL,
@@ -450,24 +452,23 @@ run_deseq2 <- function(deobj, condition_control = NULL,
 }
 
 #' Perform differential editing with edgeR
-
-#' Uses edgeR to perform differential editing analysis.
-#' This will work for simple designs that have 1 treatment and 1 control.
-#' For more complex designs, we suggest you perform your own.
-#' It will test if your sample column makes the model matrix not full
-#' rank. If that happens, the model matrix will be modified to be full rank.
-#' This is not intended to be called directly by the user, instead, this should
-#' be called by `perform_de`
 #'
-#' At the moment, this function will only find editing events specific
-#' to the treatment, but it will be pretty straight forward to add other
-#' possible return values.
+#' @description Uses edgeR to perform differential editing analysis. This will work for
+#' simple designs that have 1 treatment and 1 control. For more complex designs,
+#' we suggest you perform your own. It will test if your sample column makes the
+#' model matrix not full rank. If that happens, the model matrix will be
+#' modified to be full rank. This is not intended to be called directly by the
+#' user, instead, this should be called by `perform_de`
+#'
+#' At the moment, this function will only find editing events specific to the
+#' treatment, but it will be pretty straight forward to add other possible
+#' return values.
 #'
 #' @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
-#' @param condition_control The name of the control condition. This must be a variable
-#' in your condition_col of colData(deobj). No default provided.
-#' @param condition_treatment The name of the treatment condition. This must be a variable
-#' in your condition_col of colData(deobj).
+#' @param condition_control The name of the control condition. This must be a
+#'   variable in your condition_col of colData(deobj). No default provided.
+#' @param condition_treatment The name of the treatment condition. This must be
+#'   a variable in your condition_col of colData(deobj).
 run_edger <- function(deobj, condition_control = NULL,
                       condition_treatment = NULL) {
 

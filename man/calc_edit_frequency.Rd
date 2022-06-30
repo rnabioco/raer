@@ -17,33 +17,35 @@ calc_edit_frequency(
 \arguments{
 \item{se_object}{A SummarizedExperiment object created by \code{create_se}}
 
-\item{edit_from}{This should be a nucleotide (A, C, G, or T)
-corresponding to the nucleotide you expect in the reference. Ex. for A to I
-editing events, this would be "A". If NULL, then editing frequencies will be
-calculated using the \code{nVar} and \code{nRef} values.}
+\item{edit_from}{This should be a nucleotide (A, C, G, or T) corresponding to
+the nucleotide you expect in the reference. Ex. for A to I editing events,
+this would be "A". If NULL, then editing frequencies will be calculated
+using the \code{nVar} and \code{nRef} values.}
 
 \item{edit_to}{This should be a nucleotide (A, C, G, or T) and should
-correspond to the nucleotide you expect after the editing event. Ex. for A to I
-editing events, this would be "G". If NULL, then editing frequencies will be
-calculated using the \code{nVar} and \code{nRef} values.}
+correspond to the nucleotide you expect after the editing event. Ex. for A
+to I editing events, this would be "G". If NULL, then editing frequencies
+will be calculated using the \code{nVar} and \code{nRef} values.}
 
 \item{drop}{If TRUE, the summarizedExperiment returned will only retain sites
 matching the specified \code{edit_from} and \code{edit_to} bases.}
 
-\item{replace_na}{If TRUE, NA and NaN editing frequencies will be coerced to 0.}
+\item{replace_na}{If TRUE, NA and NaN editing frequencies will be coerced to
+0.}
 
 \item{edit_frequency}{The edit frequency cutoff used when calculating the
-number of sites. Set to 0 to require any non-zero editing frequency. The number of sites is
-stored as n_sites in the colData.}
+number of sites. Set to 0 to require any non-zero editing frequency. The
+number of sites is stored as n_sites in the colData.}
 
-\item{min_count}{The minimum number of reads required when enumerating number of
-editing sites detected.}
+\item{min_count}{The minimum number of reads required when enumerating number
+of editing sites detected.}
 }
 \description{
-Adds editing frequencies to an existing SummarizedExperimentobject (created by
-\code{create_se}). The SummarizedExperiment with a new assay for editing frequences for each site
-(edit_freq) and new colData columns with the number of edited sites (n_sites) and the
-fraction of edits (edit_idx) is returned.
+Adds editing frequencies to an existing
+SummarizedExperimentobject (created by \code{create_se}). The
+SummarizedExperiment with a new assay for editing frequences for each site
+(edit_freq) and new colData columns with the number of edited sites
+(n_sites) and the fraction of edits (edit_idx) is returned.
 }
 \examples{
 example(create_se, echo = FALSE)

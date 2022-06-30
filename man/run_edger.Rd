@@ -2,28 +2,28 @@
 % Please edit documentation in R/differential_editing.R
 \name{run_edger}
 \alias{run_edger}
-\title{Perform differential editing with edgeR
-Uses edgeR to perform differential editing analysis.
-This will work for simple designs that have 1 treatment and 1 control.
-For more complex designs, we suggest you perform your own.
-It will test if your sample column makes the model matrix not full
-rank. If that happens, the model matrix will be modified to be full rank.
-This is not intended to be called directly by the user, instead, this should
-be called by \code{perform_de}}
+\title{Perform differential editing with edgeR}
 \usage{
 run_edger(deobj, condition_control = NULL, condition_treatment = NULL)
 }
 \arguments{
 \item{deobj}{A SummarizedExperiment object prepared for de by \code{prep_for_de}}
 
-\item{condition_control}{The name of the control condition. This must be a variable
-in your condition_col of colData(deobj). No default provided.}
+\item{condition_control}{The name of the control condition. This must be a
+variable in your condition_col of colData(deobj). No default provided.}
 
-\item{condition_treatment}{The name of the treatment condition. This must be a variable
-in your condition_col of colData(deobj).}
+\item{condition_treatment}{The name of the treatment condition. This must be
+a variable in your condition_col of colData(deobj).}
 }
 \description{
-At the moment, this function will only find editing events specific
-to the treatment, but it will be pretty straight forward to add other
-possible return values.
+Uses edgeR to perform differential editing analysis. This will work for
+simple designs that have 1 treatment and 1 control. For more complex designs,
+we suggest you perform your own. It will test if your sample column makes the
+model matrix not full rank. If that happens, the model matrix will be
+modified to be full rank. This is not intended to be called directly by the
+user, instead, this should be called by \code{perform_de}
+
+At the moment, this function will only find editing events specific to the
+treatment, but it will be pretty straight forward to add other possible
+return values.
 }

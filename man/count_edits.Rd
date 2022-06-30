@@ -16,26 +16,27 @@ count_edits(
 \item{se_filtered}{A SummarizedExperiment object created by \code{create_se} and
 processed by \code{calc_edit_frequency}}
 
-\item{edit_frequency}{OPTIONAL the edit frequency used to determine the number of sites.
-Default is 0.01.}
+\item{edit_frequency}{OPTIONAL the edit frequency used to determine the
+number of sites. Default is 0.01.}
 
-\item{min_count}{OPTIONAL the number of reads used to determine the number of edited sites.
-Default is 10.}
+\item{min_count}{OPTIONAL the number of reads used to determine the number of
+edited sites. Default is 10.}
 
-\item{edit_from}{OPTIONAL if not using a pre-built type, you can specify
-your own editing. This should be a nucleotide (A, C, G, or T) and should
+\item{edit_from}{OPTIONAL if not using a pre-built type, you can specify your
+own editing. This should be a nucleotide (A, C, G, or T) and should
 correspond to the nucleotide you expect in the reference. Ex. for A to I
-editing events, this would be "A". If type is not "AI", both edit from
-and edit_to must be set.}
+editing events, this would be "A". If type is not "AI", both edit from and
+edit_to must be set.}
 
-\item{edit_to}{OPTIONAL if not using a pre-built type, you can specify
-your own editing. This should be a nucleotide (A, C, G, or T) and should
-correspond to the nucleotide you expect after the editing event. Ex. for A to I
-editing events, this would be "G". If type is not "AI", both edit from
+\item{edit_to}{OPTIONAL if not using a pre-built type, you can specify your
+own editing. This should be a nucleotide (A, C, G, or T) and should
+correspond to the nucleotide you expect after the editing event. Ex. for A
+to I editing events, this would be "G". If type is not "AI", both edit from
 and edit_to must be set.}
 }
 \description{
-Counts edits per sample and add new colData columns with the number of edited sites
-(n_sites) and the  fraction of edits (edit_idx). This function should be called by
-\code{calc_edit_frequency} and is not meant to be used directly.
+Counts edits per sample and add new colData columns with the
+number of edited sites (n_sites) and the  fraction of edits (edit_idx).
+This function should be called by \code{calc_edit_frequency} and is not meant to
+be used directly.
 }
