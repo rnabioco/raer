@@ -11,8 +11,8 @@ get_tag_bam(bamfile, barcodes, outbam = NULL, pos_sort_output = TRUE, ...)
 
 \item{barcodes}{character vector of tag values to extract}
 
-\item{outbam}{optional output bam file name, if not supplied a temporary
-file will be used}
+\item{outbam}{optional output bam file name, if not supplied a temporary file
+will be used}
 
 \item{pos_sort_output}{if TRUE, sort output bamfile by position and generate
 a samtools style index}
@@ -28,9 +28,12 @@ Subset a bam file to contain only certain tags (e.g. cell barcodes)
 }
 \examples{
 library(GenomicAlignments)
-bam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_cbsort.bam", package = "raer")
+
+bam_fn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
 build_tag_index(bam_fn)
+
 cbs <- c("AGGATAATCTCAGAAC-1", "TTCGATTTCCCGAGGT-1")
 bam_out <- get_tag_bam(bam_fn, barcodes = cbs)
 readGAlignments(bam_out, param = ScanBamParam(tag = "CB"))
+
 }
