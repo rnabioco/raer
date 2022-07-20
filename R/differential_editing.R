@@ -5,7 +5,7 @@
 #'  (edit_freq) and new colData columns with the number of edited sites (n_sites) and the
 #' fraction of edits (edit_idx) is returned.
 #'
-#' @param se_object A SummarizedExperiment object created by `create_se`
+#' @param se A SummarizedExperiment object created by `create_se`
 #' @param edit_from This should be a nucleotide (A, C, G, or T)
 #' corresponding to the nucleotide you expect in the reference. Ex. for A to I
 #' editing events, this would be "A". If NULL, then editing frequencies will be
@@ -31,7 +31,7 @@
 #' @import SummarizedExperiment
 #' @importFrom Matrix colSums
 #' @export
-calc_edit_frequency <- function(se_object,
+calc_edit_frequency <- function(se,
                                 edit_from = NULL,
                                 edit_to = NULL,
                                 drop = FALSE,
@@ -52,20 +52,41 @@ calc_edit_frequency <- function(se_object,
   to_col <- paste0("n", edit_to)
 
   if (drop && from_col != "nRef") {
-    se_object <- se_object[mcols(rowRanges(se_object))$Ref == edit_from, ]
+    se <- se[mcols(rowRanges(se))$Ref == edit_from, ]
   }
 
-  assay(se_object, "edit_freq") <- assay(se_object, to_col) /
-    (assay(se_object, from_col) + assay(se_object, to_col))
-
-  if (replace_na) {
-    assay(se_object, "edit_freq")[is.na(assay(se_object, "edit_freq"))] <- 0
+  if("depth" %in% names(assays(se))){
+    warning("depth has been overwritten with sum of ",
+            to_col, from_col,
+            "assays")
   }
 
-  se_object <- count_edits(se_object, edit_frequency, min_count,
-    edit_from, edit_to)
+  assay(se, "depth") <- assay(se, to_col) + assay(se, from_col)
 
-  se_object
+  if(is(assay(se, to_col), "sparseMatrix") ||
+     is(assay(se, from_col), "sparseMatrix")){
+    if(replace_na) {
+      stop("NA values cannot be stored in sparseMatrices")
+    }
+    # compute editing frequencies, only at non-zero depth positions
+    # zero depth positions are not stored in matrix
+    # if coerced to simple matrix these will have editing
+    # frequencies of 0
+    idx <- Matrix::which(assay(se, "depth") > 0, arr.ind = TRUE)
+    res <- Matrix::sparseMatrix(idx[,1],
+                                idx[,2],
+                                x = assay(se, to_col)[i] /
+                                  assay(se, "depth")[i])
+    dimnames(res) <- dimnames(assay(se, from_col))
+  } else {
+    res <- assay(se, to_col) / assay(se, "depth")
+    if (replace_na) {
+      res[is.na(res)] <- 0
+    }
+  }
+  assay(se, "edit_freq") <- res
+  se <- count_edits(se, edit_frequency, min_count, edit_from, edit_to)
+  se
 }
 
 #' Counts edits
@@ -74,7 +95,7 @@ calc_edit_frequency <- function(se_object,
 #' (n_sites) and the  fraction of edits (edit_idx). This function should be called by
 #' `calc_edit_frequency` and is not meant to be used directly.
 #'
-#' @param se_filtered A SummarizedExperiment object created by `create_se` and
+#' @param se A SummarizedExperiment object created by `create_se` and
 #' processed by `calc_edit_frequency`
 #' @param edit_from OPTIONAL if not using a pre-built type, you can specify
 #' your own editing. This should be a nucleotide (A, C, G, or T) and should
@@ -93,23 +114,23 @@ calc_edit_frequency <- function(se_object,
 #'
 #' @import SummarizedExperiment
 #' @importFrom Matrix colSums
-count_edits <- function(se_filtered, edit_frequency = 0.01, min_count = 10,
+count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
                         edit_from = NULL, edit_to = NULL) {
 
-  n_pass_filter <- Matrix::colSums((assay(se_filtered, "edit_freq") > edit_frequency) &
-    ((assay(se_filtered, paste0("n", edit_from)) +
-      assay(se_filtered, paste0("n", edit_to))) >=
+  n_pass_filter <- Matrix::colSums((assay(se, "edit_freq") > edit_frequency) &
+    ((assay(se, paste0("n", edit_from)) +
+      assay(se, paste0("n", edit_to))) >=
       min_count))
 
-  colData(se_filtered)$n_sites <- n_pass_filter
+  colData(se)$n_sites <- n_pass_filter
 
-  edit_idx <- Matrix::colSums(assay(se_filtered, paste0("n", edit_to))) /
-    (Matrix::colSums(assay(se_filtered, paste0("n", edit_from))) +
-      Matrix::colSums(assay(se_filtered, paste0("n", edit_to))))
+  edit_idx <- Matrix::colSums(assay(se, paste0("n", edit_to))) /
+    (Matrix::colSums(assay(se, paste0("n", edit_from))) +
+      Matrix::colSums(assay(se, paste0("n", edit_to))))
 
-  colData(se_filtered)$edit_idx <- edit_idx
+  colData(se)$edit_idx <- edit_idx
 
-  return(se_filtered)
+  se
 }
 
 
@@ -119,7 +140,7 @@ count_edits <- function(se_filtered, edit_frequency = 0.01, min_count = 10,
 #' of editing events per sample. This function is written to be called directly
 #' by `calc_edit_frequency`
 #'
-#' @param se_object A SummarizedExperiment object created by `create_se`
+#' @param se A SummarizedExperiment object created by `create_se`
 #' @param colors OPTIONAL The colors of the replicates. If no colors are
 #' provided, Set1 from `RColorBrewer will be used
 #' @param meta_col The column in colData to be used to separate out samples
@@ -129,7 +150,7 @@ count_edits <- function(se_filtered, edit_frequency = 0.01, min_count = 10,
 #' replicates. Default is "rep".
 #'
 #' @import ggplot2
-make_editing_plots <- function(se_object, colors = NULL,
+make_editing_plots <- function(se, colors = NULL,
                                meta_col = "genotype_treatment",
                                replicate = "rep") {
   if (is.null(colors)) {
@@ -138,7 +159,7 @@ make_editing_plots <- function(se_object, colors = NULL,
         " Please install it or provide colors with `colors = c()`."),
       call. = FALSE)
     }
-    nColors <- length(unique(colData(se_object)[[replicate]]))
+    nColors <- length(unique(colData(se)[[replicate]]))
     if (nColors > 9) {
       cols <- grDevices::colorRampPalette(
         RColorBrewer::brewer.pal(9, "Set1"))(nColors)
@@ -146,7 +167,7 @@ make_editing_plots <- function(se_object, colors = NULL,
       cols <- RColorBrewer::brewer.pal(9, "Set1")
     }
   }
-  plot_dat  <- as.data.frame(colData(se_object))
+  plot_dat  <- as.data.frame(colData(se))
   names(plot_dat)[names(plot_dat) == meta_col] <- "sample_info"
 
   p1 <- ggplot2::ggplot(plot_dat, ggplot2::aes_string("sample_info", "n_sites")) +

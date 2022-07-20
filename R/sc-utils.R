@@ -154,10 +154,17 @@ check_missing_barcodes <- function(cbs, bamfile) {
 
 #' @importFrom GenomicAlignments coverage
 filter_by_coverage <- function(bamfile, gr, min_counts, ...) {
-  cov <- GenomicAlignments::coverage(bamfile, ...)
-  cov <- cov[names(cov) %in% GenomeInfoDb::seqlevels(gr)]
-  cov <- getCoverageAtPositions(cov, gr)
-  gr[cov >= min_counts]
+  cvg <- GenomicAlignments::coverage(bamfile, ...)
+  shared_seqs <- intersect(names(cvg), GenomeInfoDb::seqlevels(gr))
+  if(length(shared_seqs) == 0){
+    stop("no shared seqnames found, check input bamfile and bedfile chromosome names")
+  }
+  cvg <- cvg[shared_seqs]
+  gr <- gr[seqnames(gr) %in% shared_seqs, ]
+  seqlevels(cvg) <- shared_seqs
+  seqlevels(gr) <- shared_seqs
+  cvg <- getCoverageAtPositions(cvg, gr)
+  gr[cvg >= min_counts]
 }
 
 
@@ -188,11 +195,13 @@ get_cell_pileup <- function(bamfn, fafn, cellbarcodes, ...) {
 #' non-duplicate, primary, QC passing, and non-supplemental.
 #' @param assay_cols assays to store in returned se. Set to "A" and "G". Note that
 #' storing multiple assays can require large amounts of memory.
-#' @param ... additional arguments passed to `[get_pileup()]`.
 #' @param tag_index_args arguments pass to [`build_tag_index()`]
+#' @param sparse if TRUE, store matrices in sparseMatrix format in SummarizedExperiment.
 #' @param BPPARAM BiocParallel instance. Parallel computation occurs across
 #' each entry in the cell_barcodes list
 #' @param verbose Display messages
+#' @param ... additional arguments passed to `[get_pileup()]`.
+
 #'
 #' @examples
 #' suppressPackageStartupMessages(library(SummarizedExperiment))
@@ -246,6 +255,7 @@ sc_editing <- function(bamfile,
                        min_reads = 25L,
                        assay_cols = c("nA", "nG"),
                        tag_index_args = list(tag = "CB"),
+                       sparse = TRUE,
                        BPPARAM = SerialParam(),
                        verbose = TRUE,
                        ...) {
@@ -283,6 +293,7 @@ sc_editing <- function(bamfile,
   if (min_reads > 0) {
     if (verbose) message("Examining coverage at supplied sites.")
     bed <- rtracklayer::import(bedfile)
+    bed <- GenomicRanges::sort(bed)
     n_sites <- length(bed)
     covflags <- scanBamFlag(isSecondaryAlignment = FALSE,
       isDuplicate = FALSE,
@@ -316,7 +327,7 @@ sc_editing <- function(bamfile,
     get_cell_pileup(bamfile, fafile, cell_barcodes[[i]],
       bedfile = NULL, bedidx = idx, return_data = TRUE,
       verbose = verbose,
-      BPPARAM = SerialParam(),
+      BPPARAM = BiocParallel::SerialParam(),
       ...)
   }, BPPARAM = BPPARAM)
   bpstop(BPPARAM)
@@ -325,7 +336,7 @@ sc_editing <- function(bamfile,
   if (verbose) message("collecting pileups into summarizedExperiment")
   se <- create_se(res,
     assay_cols = assay_cols,
-    sparse = TRUE,
+    sparse = sparse,
     fill_na = 0L,
     verbose = verbose)
   se

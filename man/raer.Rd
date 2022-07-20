@@ -22,12 +22,13 @@ Useful links:
 
 Authors:
 \itemize{
-  \item Kristen Wells \email{kristen.wells-wrasman@cuanschutz.edu} (\href{https://orcid.org/0000-0002-7466-8164}{ORCID})
-  \item Ryan Sheridan \email{ryan.sheridan@cuanschutz.edu}
+  \item Kristen Wells-Wrasman \email{kristen.wells-wrasman@cuanschutz.edu} (\href{https://orcid.org/0000-0002-7466-8164}{ORCID})
 }
 
 Other contributors:
 \itemize{
+  \item Ryan Sheridan \email{ryan.sheridan@cuanschutz.edu} (\href{https://orcid.org/0000-0003-4012-3147}{ORCID}) [contributor]
+  \item Jay Hesselberth \email{jay.hesselberth@gmail.com} (\href{https://orcid.org/0000-0002-6299-179X}{ORCID}) [contributor]
   \item RNA Bioscience Initiative [copyright holder, funder]
 }
 

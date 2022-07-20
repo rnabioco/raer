@@ -100,7 +100,7 @@ create_se <- function(plps,
 
   plp_assays <- fill_matrices(plps, non_sparse_assays, all_ranges, verbose)
   sp_plp_assays <- fill_sparse_matrices(plps, sparse_assays, all_ranges,
-    verbose)
+                                        use_hashmap = TRUE, verbose)
   plp_assays <- c(plp_assays, sp_plp_assays)
 
   se <- SummarizedExperiment(assays = plp_assays,

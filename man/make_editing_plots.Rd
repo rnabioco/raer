@@ -5,14 +5,14 @@
 \title{Makes summary plots of editing}
 \usage{
 make_editing_plots(
-  se_object,
+  se,
   colors = NULL,
   meta_col = "genotype_treatment",
   replicate = "rep"
 )
 }
 \arguments{
-\item{se_object}{A SummarizedExperiment object created by \code{create_se}}
+\item{se}{A SummarizedExperiment object created by \code{create_se}}
 
 \item{colors}{OPTIONAL The colors of the replicates. If no colors are
 provided, Set1 from `RColorBrewer will be used}

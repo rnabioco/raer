@@ -5,7 +5,7 @@
 \title{Adds editing frequencies}
 \usage{
 calc_edit_frequency(
-  se_object,
+  se,
   edit_from = NULL,
   edit_to = NULL,
   drop = FALSE,
@@ -15,7 +15,7 @@ calc_edit_frequency(
 )
 }
 \arguments{
-\item{se_object}{A SummarizedExperiment object created by \code{create_se}}
+\item{se}{A SummarizedExperiment object created by \code{create_se}}
 
 \item{edit_from}{This should be a nucleotide (A, C, G, or T)
 corresponding to the nucleotide you expect in the reference. Ex. for A to I

@@ -12,6 +12,7 @@ sc_editing(
   min_reads = 25L,
   assay_cols = c("nA", "nG"),
   tag_index_args = list(tag = "CB"),
+  sparse = TRUE,
   BPPARAM = SerialParam(),
   verbose = TRUE,
   ...
@@ -36,6 +37,8 @@ non-duplicate, primary, QC passing, and non-supplemental.}
 storing multiple assays can require large amounts of memory.}
 
 \item{tag_index_args}{arguments pass to \code{\link[=build_tag_index]{build_tag_index()}}}
+
+\item{sparse}{if TRUE, store matrices in sparseMatrix format in SummarizedExperiment.}
 
 \item{BPPARAM}{BiocParallel instance. Parallel computation occurs across
 each entry in the cell_barcodes list}
