@@ -24,6 +24,11 @@
 #' of tabix-index files, specified by `outfile_prefix`, will be returned.
 #' @param outfile_prefix Output prefix for tabix indexed files. If `NULL`, no files will be
 #' produced.
+#' @param use_index if TRUE regions supplied in the `bedfile` will be queried using the
+#' bam file index. By default (FALSE) all alignments are queried via streaming and regions
+#' in the bedfile are used to select the sites to keep. Using the index can be much faster
+#' when querying a small number of sites in large bamfiles. With many sites in the bedfile
+#' , or with small bamfiles, this option may be slower than streaming.
 #' @param BPPARAM A [BiocParallel] class to control parallel execution. Parallel
 #' processing occurs per chromosome, so is disabled when run on a single region.
 #' @param verbose if TRUE, then report progress.
@@ -60,6 +65,7 @@ get_pileup <- function(bamfiles,
                        reads = NULL,
                        return_data = TRUE,
                        BPPARAM = SerialParam(),
+                       use_index = FALSE,
                        bad_reads = NULL,
                        verbose = FALSE) {
 
@@ -234,6 +240,7 @@ get_pileup <- function(bamfiles,
       read_bqual_filter = fp$min_read_bqual,
       libtype =  as.integer(lib_code),
       in_memory = in_memory,
+      multi_region = use_index,
       outfns = outfiles,
       bam_flags = bam_flags,
       fp$only_keep_variants,
@@ -273,6 +280,7 @@ get_pileup <- function(bamfiles,
         read_bqual_filter = fp$min_read_bqual,
         libtype =  as.integer(lib_code),
         in_memory = in_memory,
+        multi_region = use_index,
         outfns = tmp_outfiles,
         bam_flags = bam_flags,
         fp$only_keep_variants,

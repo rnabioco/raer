@@ -23,6 +23,7 @@ SEXP run_pileup(std::vector<std::string> bampaths,
                std::vector<int> only_keep_variants,
                std::vector<double> read_bqual_filter,
                SEXP in_memory,
+               SEXP multi_region,
                int max_depth = 10000,
                int min_baseQ = 20,
                std::string reads = ".",
@@ -119,12 +120,21 @@ SEXP run_pileup(std::vector<std::string> bampaths,
     in_mem = Rf_asLogical(in_memory);
   }
 
+  int multi_region_iter = 0;
+  if(!Rf_isLogical(multi_region)){
+    stop("multiregion must by TRUE or FALSE");
+  } else {
+    multi_region_iter = Rf_asLogical(multi_region);
+  }
+
+
   SEXP out;
   out = run_cpileup(&cbampaths[0],
                     cbampaths.size(),
                     cfapath,
                     cregion,
                     in_mem,
+                    multi_region_iter,
                     &coutfns[0],
                     cbedfn,
                     min_reads,
