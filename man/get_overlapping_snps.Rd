@@ -24,10 +24,10 @@ to disk as a bed-file (optionally compressed).
 }
 \examples{
 
-if (require(SNPlocs.Hsapiens.dbSNP155.GRCh38)) {
+if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
   gr <- GRanges(rep("22", 10),
     IRanges(seq(10510077, 10610077, by = 1000)[1:10], width = 250),
     strand = "+")
-  get_overlapping_snps(gr, SNPlocs.Hsapiens.dbSNP155.GRCh38)
+  get_overlapping_snps(gr, SNPlocs.Hsapiens.dbSNP144.GRCh38)
 }
 }
