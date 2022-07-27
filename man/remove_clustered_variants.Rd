@@ -29,6 +29,7 @@ in genomic coordinate space or transcriptome coordinate space.
 }
 \examples{
 if(require(TxDb.Hsapiens.UCSC.hg38.knownGene)){
+  library(SummarizedExperiment)
   nrows <- 5; ncols <- 6
   counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
   rowRanges <- GRanges(rep("chr1", 5),

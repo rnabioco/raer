@@ -180,7 +180,7 @@ check_missing_barcodes <- function(cbs, bamfile) {
 #' @examples
 #' library(rtracklayer)
 #' bam_fn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
-#' sites <- GRanges(rep("SSR3", 100),
+#' sites <- GRanges(rep("SSR3", 101),
 #'                  IRanges(100:200, width = 1))
 #' filter_by_coverage(bam_fn, sites, min_counts = 24)
 #' @importFrom GenomicAlignments coverage

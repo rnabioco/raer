@@ -52,6 +52,7 @@ This function will annotate a GRanges or rowRanges of
 a SummarizedExperiment with SNP positions from a SNP package
 }
 \examples{
+\dontrun{
 if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
   gr <- GRanges(rep("22", 10),
                 IRanges(seq(10510077,
@@ -61,7 +62,7 @@ if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
                 strand = "+")
   annot_snps(gr, SNPlocs.Hsapiens.dbSNP144.GRCh38)
 }
-
+}
 }
 \seealso{
 \href{https://bioconductor.org/packages/release/data/annotation/html/SNPlocs.Hsapiens.dbSNP144.GRCh38.html}{SNPlocs.Hsapiens.dbSNP144.GRCh38}

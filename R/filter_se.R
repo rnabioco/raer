@@ -35,12 +35,13 @@ remove_multiallelic <- function(se) {
 #' @param txdb A TxDb object
 #' @param slop The number of bases upstream and downstream of splice site to extract
 #' @examples
+#' \dontrun{
 #' if(require(TxDb.Hsapiens.UCSC.hg38.knownGene)){
 #'   txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 #'   res <- get_splice_sites(txdb)
 #'   res[1:5]
 #' }
-#' @rdname filter_sites
+#' }
 #' @importFrom GenomicFeatures intronsByTranscript
 #' @export
 get_splice_sites <- function(txdb, slop = 4) {
@@ -75,7 +76,9 @@ get_splice_sites <- function(txdb, slop = 4) {
 #' splice sites
 #'
 #' @examples
+#' \dontrun{
 #' if(require(TxDb.Hsapiens.UCSC.hg38.knownGene)){
+#'   library(SummarizedExperiment)
 #'   nrows <- 5; ncols <- 6
 #'   counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
 #'   rowRanges <- GRanges(rep("chr1", 5),
@@ -88,6 +91,7 @@ get_splice_sites <- function(txdb, slop = 4) {
 #'
 #'   se <- remove_splice_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
 #'   se
+#' }
 #' }
 #' @importFrom GenomicFeatures intronsByTranscript
 #' @export
@@ -116,6 +120,7 @@ remove_splice_variants <- function(se, txdb,
 #'
 #' @examples
 #' if(require(TxDb.Hsapiens.UCSC.hg38.knownGene)){
+#'   library(SummarizedExperiment)
 #'   nrows <- 5; ncols <- 6
 #'   counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
 #'   rowRanges <- GRanges(rep("chr1", 5),

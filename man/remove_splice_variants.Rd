@@ -21,7 +21,9 @@ This function will remove editing sites found in regions proximal
 to annotated splice junctions.
 }
 \examples{
+\dontrun{
 if(require(TxDb.Hsapiens.UCSC.hg38.knownGene)){
+  library(SummarizedExperiment)
   nrows <- 5; ncols <- 6
   counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
   rowRanges <- GRanges(rep("chr1", 5),
@@ -34,5 +36,6 @@ if(require(TxDb.Hsapiens.UCSC.hg38.knownGene)){
 
   se <- remove_splice_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
   se
+}
 }
 }
