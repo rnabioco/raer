@@ -90,7 +90,7 @@ jobs:
         with:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
-           update-rtools: true
+          update-rtools: true
           rtools-version: 42
 
       ## pandoc is already included in the Bioconductor docker images
