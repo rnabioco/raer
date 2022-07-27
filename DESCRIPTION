@@ -21,6 +21,7 @@ Imports:
     utils,
     methods,
     Rcpp,
+    zlibbioc,
     data.table,
     R.utils,
     GenomicRanges,
@@ -30,6 +31,7 @@ Imports:
     Biostrings,
     SummarizedExperiment,
     S4Vectors,
+    BiocGenerics,
     GenomeInfoDb,
     GenomicAlignments,
     GenomicFeatures,
@@ -37,7 +39,6 @@ Imports:
     rtracklayer,
     ggplot2,
     stringr,
-    zlibbioc,
     fastmap,
     Matrix
 Suggests:
@@ -52,13 +53,17 @@ Suggests:
     ComplexHeatmap,
     viridis,
     TxDb.Hsapiens.UCSC.hg38.knownGene,
+    SNPlocs.Hsapiens.dbSNP155.GRCh38,
+    scater,
+    SingleCellExperiment,
     AnnotationHub
 Remotes:
     Bioconductor/Rhtslib,
     Bioconductor/Rsamtools
 LinkingTo: 
     Rcpp,
-    Rhtslib
+    Rhtslib,
+    zlibbioc
 SystemRequirements: 
     C++11, 
     GNU make, 

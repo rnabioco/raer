@@ -42,7 +42,8 @@ editing sites detected.}
 \description{
 Adds editing frequencies to an existing SummarizedExperimentobject (created by
 \code{create_se}). The SummarizedExperiment with a new assay for editing frequences for each site
-(edit_freq) and new colData columns with the number of edited sites (n_sites) and the
+(\code{edit_freq}), depth of coverage computed using the indicated edited nucleotides (\code{depth})
+and new colData columns with the number of edited sites (n_sites) and the
 fraction of edits (edit_idx) is returned.
 }
 \examples{

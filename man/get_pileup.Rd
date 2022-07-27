@@ -18,6 +18,7 @@ get_pileup(
   reads = NULL,
   return_data = TRUE,
   BPPARAM = SerialParam(),
+  use_index = FALSE,
   bad_reads = NULL,
   verbose = FALSE
 )
@@ -70,6 +71,12 @@ of tabix-index files, specified by \code{outfile_prefix}, will be returned.}
 
 \item{BPPARAM}{A \link{BiocParallel} class to control parallel execution. Parallel
 processing occurs per chromosome, so is disabled when run on a single region.}
+
+\item{use_index}{if TRUE regions supplied in the \code{bedfile} will be queried using the
+bam file index. By default (FALSE) all alignments are queried via streaming and regions
+in the bedfile are used to select the sites to keep. Using the index can be much faster
+when querying a small number of sites in large bamfiles. With many sites in the bedfile
+, or with small bamfiles, this option may be slower than streaming.}
 
 \item{bad_reads}{a textfile containing read names to exclude from pileup. Readnames
 should be formated as readid_1 or readid_2 or readid for paired end first read

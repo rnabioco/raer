@@ -86,3 +86,48 @@ download_NA12878 <- function(path) {
   }
   fids
 }
+
+
+
+#' Download 10x PMBC bam file and related data
+#'
+#' @description This function will download < 1 GB of data.
+#' @param path path to directory to download data
+#'
+#' @returns A named list with paths to bam file, fasta file,
+#' bed file of editing_sites, and an .rds file with a
+#' SingleCellExperiment
+#'
+#' @export
+download_human_pbmc <- function(path) {
+  dir.create(path, recursive = TRUE, showWarnings = FALSE)
+
+  baseURL <- "https://raer-test-data.s3.us-west-2.amazonaws.com/10x_human_pbmc/"
+
+  bam_fn <- c("10k_PBMC_3p_nextgem_Chromium_X_intron_cbsorted_genome_rediportal_xf25_chr16.bam")
+  pbmc_files <- list(
+    bams= bam_fn,
+    fasta = "hg38_chr16.fasta.bgz",
+    edit_sites = "rediportal_sites.bed.gz",
+    sce = "sce.rds"
+  )
+
+  options(timeout = max(5000, getOption("timeout")))
+
+  fids <- list()
+  for (i in seq_along(pbmc_files)) {
+    fns <- pbmc_files[[i]]
+    ftype <- names(pbmc_files)[i]
+    out_fns <- unlist(lapply(fns, function(x) {
+      fn <- file.path(path, x)
+      if (!file.exists(fn)) {
+        # wbnecessary to avoid windows mangling line endings...
+        download.file(paste0(baseURL, x), fn, mode = "wb")
+      }
+      fn
+    }))
+    names(out_fns) <- fns
+    fids[[ftype]] <- out_fns
+  }
+  fids
+}

@@ -91,3 +91,16 @@ getCoverageAtPositions <- function(cov, pos) {
 t_lst <- function(x) {
   split(unlist(x), sequence(lengths(x)))
 }
+
+# split a vector into bins of n,
+# the last chunk can  be variable in size
+split_vec <- function(x, n) split(x, ceiling(seq_along(x) / n))
+
+
+# flatten top list, keeping names from inner list
+unlist_w_names <- function(x){
+  nms <- unlist(lapply(x, names))
+  res <- unlist(x, use.names = FALSE)
+  names(res) <- nms
+  res
+}

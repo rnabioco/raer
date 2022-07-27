@@ -2,7 +2,8 @@
 #'
 #' Adds editing frequencies to an existing SummarizedExperimentobject (created by
 #' `create_se`). The SummarizedExperiment with a new assay for editing frequences for each site
-#'  (edit_freq) and new colData columns with the number of edited sites (n_sites) and the
+#' (`edit_freq`), depth of coverage computed using the indicated edited nucleotides (`depth`)
+#' and new colData columns with the number of edited sites (n_sites) and the
 #' fraction of edits (edit_idx) is returned.
 #'
 #' @param se A SummarizedExperiment object created by `create_se`
@@ -62,6 +63,12 @@ calc_edit_frequency <- function(se,
   }
 
   assay(se, "depth") <- assay(se, to_col) + assay(se, from_col)
+  no_depth <- Matrix::rowSums(assay(se, "depth")) == 0
+  if(any(no_depth)){
+    warning(sum(no_depth), " sites had no coverage for calculating editing\n",
+            "    these sites have been removed")
+    se <- se[!no_depth, ]
+  }
 
   if(is(assay(se, to_col), "sparseMatrix") ||
      is(assay(se, from_col), "sparseMatrix")){
@@ -75,8 +82,8 @@ calc_edit_frequency <- function(se,
     idx <- Matrix::which(assay(se, "depth") > 0, arr.ind = TRUE)
     res <- Matrix::sparseMatrix(idx[,1],
                                 idx[,2],
-                                x = assay(se, to_col)[i] /
-                                  assay(se, "depth")[i])
+                                x = assay(se, to_col)[idx] /
+                                  assay(se, "depth")[idx])
     dimnames(res) <- dimnames(assay(se, from_col))
   } else {
     res <- assay(se, to_col) / assay(se, "depth")
