@@ -144,64 +144,6 @@ count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
   se
 }
 
-
-#' Makes summary plots of editing
-#'
-#' @description Generates plots of the number of sites edited per sample and the
-#'   percent of editing events per sample. This function is written to be called
-#'   directly by `calc_edit_frequency`
-#'
-#' @param se A SummarizedExperiment object created by `create_se`
-#' @param colors OPTIONAL The colors of the replicates. If no colors are
-#'   provided, Set1 from `RColorBrewer will be used
-#' @param meta_col The column in colData to be used to separate out samples
-#'   based on the condition. For example, "genotype", "treatment", or
-#'   "genotype_treatment." Default is "genotype_treatment."
-#' @param replicate The column in colData contining information about the
-#'   replicates. Default is "rep".
-#'
-#' @import ggplot2
-make_editing_plots <- function(se, colors = NULL,
-                               meta_col = "genotype_treatment",
-                               replicate = "rep") {
-  if (is.null(colors)) {
-    if (!requireNamespace("RColorBrewer", quietly = TRUE)) {
-      stop(paste0("Package \"RColorBrewer\" needed for plotting if you don't provide colors.",
-        " Please install it or provide colors with `colors = c()`."),
-      call. = FALSE)
-    }
-    nColors <- length(unique(colData(se)[[replicate]]))
-    if (nColors > 9) {
-      cols <- grDevices::colorRampPalette(
-        RColorBrewer::brewer.pal(9, "Set1"))(nColors)
-    } else {
-      cols <- RColorBrewer::brewer.pal(9, "Set1")
-    }
-  }
-  plot_dat  <- as.data.frame(colData(se))
-  names(plot_dat)[names(plot_dat) == meta_col] <- "sample_info"
-
-  p1 <- ggplot2::ggplot(plot_dat, ggplot2::aes_string("sample_info", "n_sites")) +
-    ggplot2::geom_col(ggplot2::aes(fill = rep),
-      position = ggplot2::position_dodge()) +
-    ggplot2::scale_fill_manual(values = cols) +
-    ggplot2::labs(x = NULL,
-      y = "# of sites detected") +
-    ggplot2::theme(axis.text.x = element_text(angle = 90, hjust = 1,
-      vjust = 0.5))
-
-  p2 <- ggplot2::ggplot(plot_dat, ggplot2::aes_string("sample_info", "edit_idx")) +
-    ggplot2::geom_col(ggplot2::aes(fill = rep),
-      position = ggplot2::position_dodge()) +
-    ggplot2::scale_fill_manual(values = cols) +
-    ggplot2::labs(x = NULL,
-      y = "Editing Index") +
-    ggplot2::theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-
-  return(list(p1, p2))
-
-}
-
 #' Make summarized experiment object for DE
 #'
 #' @description Generates a SummarizedExperiment object for use with edgeR or
@@ -318,6 +260,7 @@ prep_for_de <- function(se,
 #'   model_matrix: The model matrix used for generating DE results
 #'
 #' @import stringr
+#' @importFrom stats model.matrix
 #' @export
 perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
                        condition_col = "condition",
@@ -393,26 +336,26 @@ perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
   return(results)
 }
 
-#' Perform differential editing with DESeq2
-#'
-#' @description Uses DESeq2 to perform differential editing analysis. This will
-#'   work for simple designs that have 1 treatment and 1 control. For more
-#'   complex designs, we suggest you perform your own. It will test if your
-#'   sample column makes the model matrix not full rank. If that happens, the
-#'   model matrix will be modified to be full rank. This is not intended to be
-#'   called directly by the user, instead, this should be called by `perform_de`
-#'
-#'   At the moment, this function will only find editing events specific to the
-#'   treatment, but it will be pretty straight forward to add other possible
-#'   return values.
-#'
-#' @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
-#' @param condition_control The name of the control condition. This must be a
-#'   variable in your condition_col of colData(deobj). No default provided.
-#' @param condition_treatment The name of the treatment condition. This must be
-#'   a variable in your condition_col of colData(deobj).
-#'
-#' @importFrom stats model.matrix
+# Perform differential editing with DESeq2
+#
+# @description Uses DESeq2 to perform differential editing analysis. This will
+#   work for simple designs that have 1 treatment and 1 control. For more
+#   complex designs, we suggest you perform your own. It will test if your
+#   sample column makes the model matrix not full rank. If that happens, the
+#   model matrix will be modified to be full rank. This is not intended to be
+#   called directly by the user, instead, this should be called by `perform_de`
+#
+#   At the moment, this function will only find editing events specific to the
+#   treatment, but it will be pretty straight forward to add other possible
+#   return values.
+#
+# @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
+# @param condition_control The name of the control condition. This must be a
+#   variable in your condition_col of colData(deobj). No default provided.
+# @param condition_treatment The name of the treatment condition. This must be
+#   a variable in your condition_col of colData(deobj).
+#
+#
 run_deseq2 <- function(deobj, condition_control = NULL,
                        condition_treatment = NULL) {
   if (!requireNamespace("DESeq2", quietly = TRUE)) {
@@ -480,24 +423,24 @@ run_deseq2 <- function(deobj, condition_control = NULL,
     model_matrix = mod_mat))
 }
 
-#' Perform differential editing with edgeR
-#'
-#' @description Uses edgeR to perform differential editing analysis. This will work for
-#' simple designs that have 1 treatment and 1 control. For more complex designs,
-#' we suggest you perform your own. It will test if your sample column makes the
-#' model matrix not full rank. If that happens, the model matrix will be
-#' modified to be full rank. This is not intended to be called directly by the
-#' user, instead, this should be called by `perform_de`
-#'
-#' At the moment, this function will only find editing events specific to the
-#' treatment, but it will be pretty straight forward to add other possible
-#' return values.
-#'
-#' @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
-#' @param condition_control The name of the control condition. This must be a
-#'   variable in your condition_col of colData(deobj). No default provided.
-#' @param condition_treatment The name of the treatment condition. This must be
-#'   a variable in your condition_col of colData(deobj).
+# Perform differential editing with edgeR
+#
+# @description Uses edgeR to perform differential editing analysis. This will work for
+# simple designs that have 1 treatment and 1 control. For more complex designs,
+# we suggest you perform your own. It will test if your sample column makes the
+# model matrix not full rank. If that happens, the model matrix will be
+# modified to be full rank. This is not intended to be called directly by the
+# user, instead, this should be called by `perform_de`
+#
+# At the moment, this function will only find editing events specific to the
+# treatment, but it will be pretty straight forward to add other possible
+# return values.
+#
+# @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
+# @param condition_control The name of the control condition. This must be a
+#   variable in your condition_col of colData(deobj). No default provided.
+# @param condition_treatment The name of the treatment condition. This must be
+#   a variable in your condition_col of colData(deobj).
 run_edger <- function(deobj, condition_control = NULL,
                       condition_treatment = NULL) {
 

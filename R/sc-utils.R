@@ -9,10 +9,10 @@
 #' @return name of index generated, which is the bam file + ".bri"
 #'
 #' @examples
-#' bam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_cbsort.bam", package = "raer")
+#' bam_fn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
 #' build_tag_index(bam_fn)
 #'
-#' bam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_ubsort.bam", package = "raer")
+#' bam_fn <- raer_example("5k_neuron_mouse_xf25_1pct_ubsort.bam")
 #' build_tag_index(bam_fn, tag = "UB")
 #'
 #' @importFrom Rsamtools scanBamHeader scanBam isOpen BamFile yieldSize<-
@@ -69,7 +69,7 @@ build_tag_index <- function(bamfile, tag = "CB", n_records_to_check = 1e6,
 #' @return Character vector of tags
 #'
 #' @examples
-#' bam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_cbsort.bam", package = "raer")
+#' bam_fn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
 #' build_tag_index(bam_fn)
 #' show_tag_index(bam_fn)
 #'
@@ -177,6 +177,12 @@ check_missing_barcodes <- function(cbs, bamfile) {
 #' @param verbose If TRUE, print messages
 #' @param ... Additional arguments to supply to [GenomicAlignments::coverage()]
 #'
+#' @examples
+#' library(rtracklayer)
+#' bam_fn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+#' sites <- GRanges(rep("SSR3", 100),
+#'                  IRanges(100:200, width = 1))
+#' filter_by_coverage(bam_fn, sites, min_counts = 24)
 #' @importFrom GenomicAlignments coverage
 #' @export
 filter_by_coverage <- function(bamfile, gr, min_counts,

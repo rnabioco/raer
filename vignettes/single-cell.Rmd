@@ -131,7 +131,7 @@ altExp(sce, "edits") <- small_se
 With the editing sites added to the SingleCellExperiment we can use plotting and other methods previously developed for single cell analysis. Here we'll visualize editing sites with the highest edited read counts.
 
 ```{r}
-to_plot <- rownames(altExp(sce))[order(rowSums(assay(altExp(sce), "nG")) , decreasing = T)]
+to_plot <- rownames(altExp(sce))[order(rowSums(assay(altExp(sce), "nG")) , decreasing = TRUE)]
 
 lapply(to_plot[1:10], function(x){
   plotUMAP(sce, colour_by = x, by_exprs_values = "nG")

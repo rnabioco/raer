@@ -31,3 +31,10 @@ ignoring any cell-barcodes. Generally it is faster to compute coverage
 across all positions, then filter to those in the GRanges object, rather
 than only querying the supplied sites.
 }
+\examples{
+library(rtracklayer)
+bam_fn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+sites <- GRanges(rep("SSR3", 100),
+                 IRanges(100:200, width = 1))
+filter_by_coverage(bam_fn, sites, min_counts = 24)
+}

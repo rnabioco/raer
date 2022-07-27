@@ -34,7 +34,13 @@ remove_multiallelic <- function(se) {
 #'
 #' @param txdb A TxDb object
 #' @param slop The number of bases upstream and downstream of splice site to extract
-#'
+#' @examples
+#' if(require(TxDb.Hsapiens.UCSC.hg38.knownGene)){
+#'   txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+#'   res <- get_splice_sites(txdb)
+#'   res[1:5]
+#' }
+#' @rdname filter_sites
 #' @importFrom GenomicFeatures intronsByTranscript
 #' @export
 get_splice_sites <- function(txdb, slop = 4) {
@@ -67,6 +73,22 @@ get_splice_sites <- function(txdb, slop = 4) {
 #' @param splice_site_dist distance to splice site
 #' @param ignore.strand if TRUE do not consider strand when comparing editing sites to
 #' splice sites
+#'
+#' @examples
+#' if(require(TxDb.Hsapiens.UCSC.hg38.knownGene)){
+#'   nrows <- 5; ncols <- 6
+#'   counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
+#'   rowRanges <- GRanges(rep("chr1", 5),
+#'                     IRanges(c(12055, 12174, 12194, 12719, 12889), width=1),
+#'                     strand=rep("+", 5))
+#'   colData <- DataFrame(Treatment=rep(c("adar_wt", "adar_ko"), 3),
+#'                        row.names=LETTERS[1:6])
+#'   rse <- SummarizedExperiment(assays=SimpleList(counts=counts),
+#'                            rowRanges=rowRanges, colData=colData)
+#'
+#'   se <- remove_splice_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
+#'   se
+#' }
 #' @importFrom GenomicFeatures intronsByTranscript
 #' @export
 remove_splice_variants <- function(se, txdb,
@@ -75,8 +97,8 @@ remove_splice_variants <- function(se, txdb,
   ss <- get_splice_sites(txdb, splice_site_dist)
   x <- rowRanges(se)
   fo <- findOverlaps(x, ss, type = "any", ignore.strand = ignore.strand)
-  x <- x[setdiff(1:length(x), unique(queryHits(fo)))]
-  se[names(x), ]
+  to_keep <- setdiff(1:length(x), unique(queryHits(fo)))
+  se[to_keep, ]
 }
 
 #' Remove clustered sequence variants
@@ -91,6 +113,23 @@ remove_splice_variants <- function(se, txdb,
 #' @param regions One of "transcript" and/or "genome", coordinate space to use
 #' to examine distances between variants.
 #' @param variant_dist distance in nucleotides for determining clustered variants
+#'
+#' @examples
+#' if(require(TxDb.Hsapiens.UCSC.hg38.knownGene)){
+#'   nrows <- 5; ncols <- 6
+#'   counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
+#'   rowRanges <- GRanges(rep("chr1", 5),
+#'                     IRanges(c(12055, 12174, 12194, 12719, 12889), width=1),
+#'                     strand=rep("+", 5))
+#'   mcols(rowRanges)$Var <- c("AG", "AT", "AC", "TC", "GC")
+#'   colData <- DataFrame(Treatment=rep(c("adar_wt", "adar_ko"), 3),
+#'                        row.names=LETTERS[1:6])
+#'   rse <- SummarizedExperiment(assays=SimpleList(counts=counts),
+#'                            rowRanges=rowRanges, colData=colData)
+#'
+#'   se <- remove_clustered_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
+#'   se
+#' }
 #' @importFrom GenomicFeatures mapToTranscripts
 #' @export
 remove_clustered_variants <- function(se, txdb,

@@ -21,8 +21,8 @@
 #' will be used to exclude polymorphic positions prior to calculating the AEI. If
 #' `calc_AEI()` will be used many times, one could save some time by first identifying
 #' SNPs that overlap the supplied alu_ranges, and passing these as a GRanges to snp_db
-#' rather than supplying all known SNPs. Combined with using a bedfile for alu_ranges can
-#' also will save time.
+#' rather than supplying all known SNPs (see [get_overlapping_snps()]).
+#'  Combined with using a bedfile for alu_ranges can also will save time.
 #' @param filterParam object of class [FilterParam()] which specify various
 #' filters to apply to reads and sites during pileup.
 #' @param BPPARAM A [BiocParallelParam] object for specifying parallel options for
@@ -257,11 +257,11 @@ calc_AEI <- function(bam_fn,
 #'
 #' @examples
 #'
-#' if (require(SNPlocs.Hsapiens.dbSNP155.GRCh38)) {
+#' if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
 #'   gr <- GRanges(rep("22", 10),
 #'     IRanges(seq(10510077, 10610077, by = 1000)[1:10], width = 250),
 #'     strand = "+")
-#'   get_overlapping_snps(gr, SNPlocs.Hsapiens.dbSNP155.GRCh38)
+#'   get_overlapping_snps(gr, SNPlocs.Hsapiens.dbSNP144.GRCh38)
 #' }
 #' @importFrom rtracklayer export
 #' @importFrom BSgenome snpsByOverlaps
