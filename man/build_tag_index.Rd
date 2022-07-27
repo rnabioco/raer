@@ -14,10 +14,11 @@ build_tag_index(
 \arguments{
 \item{bamfile}{tag sorted bamfile}
 
-\item{tag}{name of tag in bamfile used for sorting. The tag must be of type "Z".}
+\item{tag}{name of tag in bamfile used for sorting. The tag must be of type
+"Z".}
 
-\item{n_records_to_check}{The number of bam records to query to validate that the
-tag is present and of the correct type. Set to 0 to disable checks.}
+\item{n_records_to_check}{The number of bam records to query to validate that
+the tag is present and of the correct type. Set to 0 to disable checks.}
 
 \item{overwrite}{if TRUE, regenerate index if it already exists}
 }

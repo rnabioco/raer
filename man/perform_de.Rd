@@ -2,10 +2,7 @@
 % Please edit documentation in R/differential_editing.R
 \name{perform_de}
 \alias{perform_de}
-\title{Perform differential editing
-Uses either edgeR or DESeq2 to perform differential editing analysis.
-This will work for simple designs that have 1 treatment and 1 control.
-For more complex designs, we suggest you perform your own.}
+\title{Perform differential editing}
 \usage{
 perform_de(
   deobj,
@@ -26,28 +23,30 @@ contains your sample information. Default is sample. If you do not have a
 column named "sample", you must provide the appropriate sample column}
 
 \item{condition_col}{OPTIONAL the name of the column from colData(deobj) that
-contains your treatment information. Default is condition, If you do not have a
-column named "condition", you must provide the appropriate condition column}
+contains your treatment information. Default is condition, If you do not
+have a column named "condition", you must provide the appropriate condition
+column}
 
-\item{condition_control}{The name of the control condition. This must be a variable
-in your condition_col of colData(deobj). No default provided.}
+\item{condition_control}{The name of the control condition. This must be a
+variable in your condition_col of colData(deobj). No default provided.}
 
-\item{condition_treatment}{The name of the treatment condition. This must be a variable
-in your condition_col of colData(deobj).}
+\item{condition_treatment}{The name of the treatment condition. This must be
+a variable in your condition_col of colData(deobj).}
 }
 \value{
-A named list
-\itemize{
-\item de_obj: The edgeR or deseq object used for differential editing analysis
-\item results_full: Unfiltered differenital editing results
-\item sig_results: Filtered differenial editing (FDR < 0.05)
-\item model_matrix: The model matrix used for generating DE results
-}
+A named list - de_obj: The edgeR or deseq object used for
+differential editing analysis - results_full: Unfiltered differenital
+editing results - sig_results: Filtered differenial editing (FDR < 0.05) -
+model_matrix: The model matrix used for generating DE results
 }
 \description{
-At the moment, this function will only find editing events specific
-to the treatment, but it will be pretty straight forward to add other
-possible return values.
+Uses either edgeR or DESeq2 to perform differential editing
+analysis. This will work for simple designs that have 1 treatment and 1
+control. For more complex designs, we suggest you perform your own.
+
+At the moment, this function will only find editing events specific to the
+treatment, but it will be pretty straight forward to add other possible
+return values.
 }
 \examples{
 example(create_se, echo = FALSE)

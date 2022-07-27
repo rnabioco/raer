@@ -63,7 +63,9 @@ Calculate editing frequencies per cell or per cluster
 }
 \examples{
 suppressPackageStartupMessages(library(SummarizedExperiment))
+
 # get vector of cell barcodes in bam file (for use in this example)
+# usually these would come from the single cell analysis
 
 bamfn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
 idxfn <- build_tag_index(bamfn)
@@ -80,7 +82,6 @@ se <- sc_editing(bamfile = bamfn,
   cell_barcodes = cbs[1:15],
   verbose = FALSE,
   filterParam = fp)
-
 
 # pool cell barcodes across clusters
 # pass a named list, with each list entry corresponding to a vector

@@ -86,4 +86,5 @@ biocViews:
     Annotation
 Config/Needs/website:
     pkgdown,
+    r-lib/downlit,
     rnabioco/rbitemplate

@@ -1,9 +1,10 @@
-
 #' Build index for tag sorted bam file
+#'
 #' @param bamfile tag sorted bamfile
-#' @param tag name of tag in bamfile used for sorting. The tag must be of type "Z".
-#' @param n_records_to_check The number of bam records to query to validate that the
-#' tag is present and of the correct type. Set to 0 to disable checks.
+#' @param tag name of tag in bamfile used for sorting. The tag must be of type
+#'   "Z".
+#' @param n_records_to_check The number of bam records to query to validate that
+#'   the tag is present and of the correct type. Set to 0 to disable checks.
 #' @param overwrite if TRUE, regenerate index if it already exists
 #' @return name of index generated, which is the bam file + ".bri"
 #'
@@ -14,7 +15,8 @@
 #' bam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_ubsort.bam", package = "raer")
 #' build_tag_index(bam_fn, tag = "UB")
 #'
-#' @importFrom Rsamtools scanBamHeader scanBam isOpen BamFile yieldSize<- ScanBamParam
+#' @importFrom Rsamtools scanBamHeader scanBam isOpen BamFile yieldSize<-
+#'   ScanBamParam
 #' @importFrom GenomicAlignments readGAlignments
 #' @export
 build_tag_index <- function(bamfile, tag = "CB", n_records_to_check = 1e6,
@@ -62,6 +64,7 @@ build_tag_index <- function(bamfile, tag = "CB", n_records_to_check = 1e6,
 }
 
 #' Show tags stored in tag index
+#'
 #' @param bamfile tag sorted bamfile, indexed with [build_tag_index()]
 #' @return Character vector of tags
 #'
@@ -84,22 +87,25 @@ show_tag_index <- function(bamfile) {
 #'
 #' @param bamfile input tag indexed bam file
 #' @param barcodes character vector of tag values to extract
-#' @param outbam optional output bam file name, if not supplied a temporary
-#' file will be used
+#' @param outbam optional output bam file name, if not supplied a temporary file
+#'   will be used
 #' @param pos_sort_output if TRUE, sort output bamfile by position and generate
-#' a samtools style index
+#'   a samtools style index
 #' @param ... Additional arguments passed to [Rsamtools::sortBam()]
 #'
 #' @returns Returns name of output bam file. the output bam file will be
-#' positionally sorted and positionally indexed using Rsamtools.
+#'   positionally sorted and positionally indexed using Rsamtools.
 #'
 #' @examples
 #' library(GenomicAlignments)
-#' bam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_cbsort.bam", package = "raer")
+#'
+#' bam_fn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
 #' build_tag_index(bam_fn)
+#'
 #' cbs <- c("AGGATAATCTCAGAAC-1", "TTCGATTTCCCGAGGT-1")
 #' bam_out <- get_tag_bam(bam_fn, barcodes = cbs)
 #' readGAlignments(bam_out, param = ScanBamParam(tag = "CB"))
+#'
 #' @export
 get_tag_bam <- function(bamfile,
                         barcodes,
@@ -238,34 +244,34 @@ get_cell_pileup <- function(bamfn, fafn, cellbarcodes, per_cell, ...) {
 #' @param fafile FASTA file name
 #' @param bedfile BED file containing editing sites
 #' @param cell_barcodes A list of character vectors containing cell barcodes
-#' to query or a single character vector of single cells to process. If a list
-#' is supplied it is assumed that alignments from cell barcodes in each list element
-#' should be pooled. If a single character vector, it is assumed that each cell barcode
-#' should be processed independently. See examples for specification.
+#'   to query or a single character vector of single cells to process. If a list
+#'   is supplied it is assumed that alignments from cell barcodes in each list element
+#'   should be pooled. If a single character vector, it is assumed that each cell barcode
+#'   should be processed independently. See examples for specification.
 #' @param min_reads Minimum read counts required to consider a site for editing.
-#' This is calculated across all reads in the bamfile prior to running `[get_pileup()]`
-#' per cell to remove low-frequency events. If set to 0 (default) this step will
-#' not be run. See `filter_by_coverage()` for more details.
+#'   This is calculated across all reads in the bamfile prior to running `[get_pileup()]`
+#'   per cell to remove low-frequency events. If set to 0 (default) this step will
+#'   not be run. See `filter_by_coverage()` for more details.
 #' @param assay_cols assays to store in returned se. Set to "A" and "G". Note that
-#' storing multiple assays can require large amounts of memory.
+#'   storing multiple assays can require large amounts of memory.
 #' @param tag_index_args arguments pass to [`build_tag_index()`]
 #' @param sparse if TRUE, store matrices in sparseMatrix format in SummarizedExperiment.
 #' @param BPPARAM BiocParallel instance. Parallel computation occurs across
-#' each entry in the cell_barcodes list, or across batches of single cells specified
-#' by batch_size.
+#'   each entry in the cell_barcodes list, or across batches of single cells specified
+#'   by batch_size.
 #' @param batch_size When processing single cells, the batch_size controls
-#' how many individual cell bams to process in each invocation of `get_pileup()`.
-#' Batching the cells reduces run time by avoiding  loading sequences from the
-#' fasta file for each cell. Setting values above 50 is unlikely to further improve
-#' runtime.
+#'   how many individual cell bams to process in each invocation of `get_pileup()`.
+#'   Batching the cells reduces run time by avoiding  loading sequences from the
+#'   fasta file for each cell. Setting values above 50 is unlikely to further improve
+#'   runtime.
 #' @param verbose Display messages
 #' @param ... additional arguments passed to `[get_pileup()]`.
-
 #'
 #' @examples
 #' suppressPackageStartupMessages(library(SummarizedExperiment))
+#'
 #' # get vector of cell barcodes in bam file (for use in this example)
-# usually these would come from the single cell analysis
+#' # usually these would come from the single cell analysis
 #'
 #' bamfn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
 #' idxfn <- build_tag_index(bamfn)
@@ -282,7 +288,6 @@ get_cell_pileup <- function(bamfn, fafn, cellbarcodes, per_cell, ...) {
 #'   cell_barcodes = cbs[1:15],
 #'   verbose = FALSE,
 #'   filterParam = fp)
-#'
 #'
 #' # pool cell barcodes across clusters
 #' # pass a named list, with each list entry corresponding to a vector
@@ -304,6 +309,7 @@ get_cell_pileup <- function(bamfn, fafn, cellbarcodes, per_cell, ...) {
 #' @importFrom rtracklayer import
 #' @importFrom Rsamtools ScanBamParam scanBamFlag
 #' @importFrom methods formalArgs
+
 #' @export
 sc_editing <- function(bamfile,
                        fafile,

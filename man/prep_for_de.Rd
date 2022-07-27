@@ -2,9 +2,7 @@
 % Please edit documentation in R/differential_editing.R
 \name{prep_for_de}
 \alias{prep_for_de}
-\title{Make summarized experiment object for DE
-Generates a SummarizedExperiment object for use with edgeR or DESeq2
-will generate a counts assay with a matrix formated with 2 columns per sample}
+\title{Make summarized experiment object for DE}
 \usage{
 prep_for_de(
   se,
@@ -19,35 +17,35 @@ prep_for_de(
 \arguments{
 \item{se}{A SummarizedExperiment object}
 
-\item{type}{OPTIONAL the type of editing event to add. Currently, only
-A to I is supported ("AI") which is the default, but your own custom can
-be added by setting this to "none".}
+\item{type}{OPTIONAL the type of editing event to add. Currently, only A to I
+is supported ("AI") which is the default, but your own custom can be added
+by setting this to "none".}
 
-\item{edit_from}{OPTIONAL if not using a pre-built type, you can specify
-your own editing. This should be a nucleotide (A, C, G, or T) and should
+\item{edit_from}{OPTIONAL if not using a pre-built type, you can specify your
+own editing. This should be a nucleotide (A, C, G, or T) and should
 correspond to the nucleotide you expect in the reference. Ex. for A to I
-editing events, this would be "A". If type is not "AI", both edit from
+editing events, this would be "A". If type is not "AI", both edit from and
+edit_to must be set.}
+
+\item{edit_to}{OPTIONAL if not using a pre-built type, you can specify your
+own editing. This should be a nucleotide (A, C, G, or T) and should
+correspond to the nucleotide you expect after the editing event. Ex. for A
+to I editing events, this would be "G". If type is not "AI", both edit from
 and edit_to must be set.}
 
-\item{edit_to}{OPTIONAL if not using a pre-built type, you can specify
-your own editing. This should be a nucleotide (A, C, G, or T) and should
-correspond to the nucleotide you expect after the editing event. Ex. for A to I
-editing events, this would be "G". If type is not "AI", both edit from
-and edit_to must be set.}
+\item{min_prop}{OPTIONAL the min proporation of reads edited at a site. At
+least min_samples need to pass this to keep the site. Default is 0.1.}
 
-\item{min_prop}{OPTIONAL the min proporation of reads edited at a site.
-At least min_samples need to pass this to keep the site. Default is 0.1.}
-
-\item{max_prop}{OPTIONAL the max proporation of reads edited at a site.
-At least min_samples need to pass this to keep the site. Default is 0.9.}
+\item{max_prop}{OPTIONAL the max proporation of reads edited at a site. At
+least min_samples need to pass this to keep the site. Default is 0.9.}
 
 \item{min_samples}{OPTIONAL the minimum number of samples passing the cutoffs
 to keep a site. Default is 3.}
 }
 \description{
-Make summarized experiment object for DE
-Generates a SummarizedExperiment object for use with edgeR or DESeq2
-will generate a counts assay with a matrix formated with 2 columns per sample
+Generates a SummarizedExperiment object for use with edgeR or
+DESeq2 will generate a counts assay with a matrix formated with 2 columns
+per sample
 }
 \examples{
 example(create_se, echo = FALSE)
