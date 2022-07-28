@@ -5,7 +5,7 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/rnabioco/raer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/rnabioco/raer/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check-bioc](https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml/badge.svg)](https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml)
 <!-- badges: end -->
 
 raer is an R package that facilitates rapid interactive analysis of RNA
@@ -54,7 +54,7 @@ res[1:5, ]
 #>   [4]         0        15         0         0         0
 #>   [5]         0        16         0         0         0
 #>   -------
-#>   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+#>   seqinfo: 3 sequences from an unspecified genome
 ```
 
 The `FilterParam()` class holds multiple options for customizing the
@@ -92,7 +92,7 @@ res
 #>   [30]        37         1         0         0         0
 #>   [31]         0        35         1         0         0
 #>   -------
-#>   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+#>   seqinfo: 3 sequences from an unspecified genome
 ```
 
 Multiple bam files can be processed, which enables rapid comparisons of
@@ -136,7 +136,7 @@ plps
 #>   [73]        33         0         0         0         0
 #>   [74]         0        21         0         0         0
 #>   -------
-#>   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+#>   seqinfo: 3 sequences from an unspecified genome
 #> 
 #> [[2]]
 #> GRanges object with 74 ranges and 9 metadata columns:
@@ -167,7 +167,7 @@ plps
 #>   [73]        37         1         0         0         0
 #>   [74]         0        35         1         0         0
 #>   -------
-#>   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+#>   seqinfo: 3 sequences from an unspecified genome
 ```
 
 To facilitate comparisons across groups, the pileups can be stored in a
@@ -180,7 +180,7 @@ create_se(plps)
 #> metadata(0):
 #> assays(7): Var nRef ... nC nG
 #> rownames(74): SSR3_102_2 SSR3_125_2 ... DHFR_430_2 DHFR_513_2
-#> rowData names(2): site_id Ref
+#> rowData names(1): Ref
 #> colnames(2): sample_1 sample_2
 #> colData names(1): sample
 ```
