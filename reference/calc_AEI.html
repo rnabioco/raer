@@ -38,6 +38,7 @@ return a summary AEI metric."><!-- mathjax --><script src="https://cdnjs.cloudfl
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="../articles/novel-sites.html">Identifying RNA editing sites using RNA and DNA sequencing data</a>
+    <a class="dropdown-item" href="../articles/single-cell.html">Identifying RNA editing sites in droplet single cell datasets</a>
   </div>
 </li>
       </ul><form class="form-inline my-2 my-lg-0" role="search">
@@ -109,8 +110,8 @@ those found overlapping genes. Alternatively a GRanges object with gene coordina
 will be used to exclude polymorphic positions prior to calculating the AEI. If
 <code>calc_AEI()</code> will be used many times, one could save some time by first identifying
 SNPs that overlap the supplied alu_ranges, and passing these as a GRanges to snp_db
-rather than supplying all known SNPs. Combined with using a bedfile for alu_ranges can
-also will save time.</p></dd>
+rather than supplying all known SNPs (see <code><a href="get_overlapping_snps.html">get_overlapping_snps()</a></code>).
+Combined with using a bedfile for alu_ranges can also will save time.</p></dd>
 
 
 <dt>filterParam</dt>
@@ -151,22 +152,22 @@ alleles (T_C), which are most likely derived from noise or polymorphisms.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $A_G</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.879456</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.298586</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $A_T</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1319261</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1292293</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $C_A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.2426203</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.2142033</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $C_G</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.01650982</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $C_T</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.2224469</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.2635046</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $G_A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.3120411</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.3170769</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $G_C</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
@@ -178,10 +179,10 @@ alleles (T_C), which are most likely derived from noise or polymorphisms.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $T_C</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.0116198</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $T_G</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.0116198</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
@@ -195,7 +196,7 @@ alleles (T_C), which are most likely derived from noise or polymorphisms.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
     </footer></div>

@@ -47,6 +47,7 @@
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="../articles/novel-sites.html">Identifying RNA editing sites using RNA and DNA sequencing data</a>
+    <a class="dropdown-item" href="../articles/single-cell.html">Identifying RNA editing sites in droplet single cell datasets</a>
   </div>
 </li>
       </ul>
@@ -74,11 +75,14 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Introducing the raer package</h1>
-                        <h4 data-toc-skip class="author">Kent Riemondy</h4>
+                        <h4 data-toc-skip class="author">Kent
+Riemondy</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="author">Kristen Wells-Wrasman</h4>
+      University of Colorado School of
+Medicine<br><h4 data-toc-skip class="author">Kristen
+Wells-Wrasman</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2022-06-30</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2022-07-28</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/raer.Rmd" class="external-link"><code>vignettes/raer.Rmd</code></a></small>
       <div class="d-none name"><code>raer.Rmd</code></div>
@@ -91,7 +95,9 @@
 <div class="section level2">
 <h2 id="differential-editing-tutorial">Differential Editing tutorial<a class="anchor" aria-label="anchor" href="#differential-editing-tutorial"></a>
 </h2>
-<p>This vignette will demonstrate how to identify RNA editing sites with condition-specific editing frequencies using the <code>raer</code> package.</p>
+<p>This vignette will demonstrate how to identify RNA editing sites with
+condition-specific editing frequencies using the <code>raer</code>
+package.</p>
 <div class="section level3">
 <h3 id="set-up">Set up<a class="anchor" aria-label="anchor" href="#set-up"></a>
 </h3>
@@ -102,37 +108,61 @@
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jokergoo/ComplexHeatmap" class="external-link">ComplexHeatmap</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://sjmgarnier.github.io/viridis/" class="external-link">viridis</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://stringr.tidyverse.org" class="external-link">stringr</a></span><span class="op">)</span></span></code></pre></div>
-<p>In this vignette a public RNA-seq dataset will be analyzed, <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE99249" class="external-link">GSE99249</a>, which consists of ADAR1 mutants and control human cell lines, conditionally treated with Interferon-Beta. For simplicity we will examine the ADAR1 WT and KO samples both treated with IFN-B, with triplicate samples.</p>
-<p>Aligned BAM files and other necessary files have been preprocessed for this vignette. These files occupy ~250 Mb of space and by default they are stored in a temporary directory. Change the <code>data_dir</code> variable to a valid file path to keep the files for reuse.</p>
+<p>In this vignette a public RNA-seq dataset will be analyzed, <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE99249" class="external-link">GSE99249</a>,
+which consists of ADAR1 mutants and control human cell lines,
+conditionally treated with Interferon-Beta. For simplicity we will
+examine the ADAR1 WT and KO samples both treated with IFN-B, with
+triplicate samples.</p>
+<p>Aligned BAM files and other necessary files have been preprocessed
+for this vignette. These files occupy ~250 Mb of space and by default
+they are stored in a temporary directory. Change the
+<code>data_dir</code> variable to a valid file path to keep the files
+for reuse.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">fns</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_GSE99249.html">download_GSE99249</a></span><span class="op">(</span><span class="va">data_dir</span><span class="op">)</span></span></code></pre></div>
-<p>Next we’ll collect a vector containing the paths to each BAM file These BAM files are a subset of the full BAM files, containing only alignments from chromosome 18.</p>
+<span><span class="va">fns</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_data.html">download_GSE99249</a></span><span class="op">(</span><span class="va">data_dir</span><span class="op">)</span></span></code></pre></div>
+<p>Next we’ll collect a vector containing the paths to each BAM file
+These BAM files are a subset of the full BAM files, containing only
+alignments from chromosome 18.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bam_files</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bams</span> </span>
 <span><span class="va">bam_files</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   SRR5564260_dedup_sorted.bam </span></span>
-<span><span class="co">## "/tmp/Rtmp054WOm/SRR5564260_dedup_sorted.bam" </span></span>
+<span><span class="co">## "/tmp/RtmpQvzOLy/SRR5564260_dedup_sorted.bam" </span></span>
 <span><span class="co">##                   SRR5564261_dedup_sorted.bam </span></span>
-<span><span class="co">## "/tmp/Rtmp054WOm/SRR5564261_dedup_sorted.bam"</span></span></code></pre>
-<p>Next we’ll need a FASTA file to quantify the editing sites. We’ll use a FASTA file only containing chromosome 18 for this demo. The fasta can be compressed.</p>
+<span><span class="co">## "/tmp/RtmpQvzOLy/SRR5564261_dedup_sorted.bam"</span></span></code></pre>
+<p>Next we’ll need a FASTA file to quantify the editing sites. We’ll use
+a FASTA file only containing chromosome 18 for this demo. The fasta can
+be compressed.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">fasta</span> </span>
 <span><span class="va">fafn</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   chr18.fasta.bgz </span></span>
-<span><span class="co">## "/tmp/Rtmp054WOm/chr18.fasta.bgz"</span></span></code></pre>
-<p>Lastly, we’ll use a BED file containing the coordinates of known human editing sites from the REDIPortal database. This file can also be optionally compressed.</p>
+<span><span class="co">## "/tmp/RtmpQvzOLy/chr18.fasta.bgz"</span></span></code></pre>
+<p>Lastly, we’ll use a BED file containing the coordinates of known
+human editing sites from the REDIPortal database. This file can also be
+optionally compressed.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bedfn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bed</span></span>
 <span><span class="va">bedfn</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   rediportal_hg38_chr18.bed.gz </span></span>
-<span><span class="co">## "/tmp/Rtmp054WOm/rediportal_hg38_chr18.bed.gz"</span></span></code></pre>
+<span><span class="co">## "/tmp/RtmpQvzOLy/rediportal_hg38_chr18.bed.gz"</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="generate-editing-site-read-counts">Generate editing site read counts<a class="anchor" aria-label="anchor" href="#generate-editing-site-read-counts"></a>
 </h3>
-<p>The <code><a href="../reference/get_pileup.html">get_pileup()</a></code> function will calculate base counts across multiple BAM files. The base counts will be returned as a list of <code>GRanges</code> objects for each bam file. The <code><a href="../reference/get_pileup.html">FilterParam()</a></code> function provides numerous filters to exclude reads and bases based on commonly used filters for detecting RNA-editing events. Specific regions can be queried using the <code>region</code> argument, or specific positions can be queried by providing <code>bedfile</code> a path to a BED-file.</p>
-<p>Internally, <code><a href="../reference/get_pileup.html">get_pileup()</a></code> will write the pileups to temporary files. However, these files can also be stored in a tabix-indexed format, for later retrieval, or for querying specific regions.</p>
+<p>The <code><a href="../reference/get_pileup.html">get_pileup()</a></code> function will calculate base counts
+across multiple BAM files. The base counts will be returned as a list of
+<code>GRanges</code> objects for each bam file. The
+<code><a href="../reference/get_pileup.html">FilterParam()</a></code> function provides numerous filters to exclude
+reads and bases based on commonly used filters for detecting RNA-editing
+events. Specific regions can be queried using the <code>region</code>
+argument, or specific positions can be queried by providing
+<code>bedfile</code> a path to a BED-file.</p>
+<p>Internally, <code><a href="../reference/get_pileup.html">get_pileup()</a></code> will write the pileups to
+temporary files. However, these files can also be stored in a
+tabix-indexed format, for later retrieval, or for querying specific
+regions.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_pileup.html">FilterParam</a></span><span class="op">(</span>only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                  trim_5p <span class="op">=</span> <span class="fl">5</span>, </span>
@@ -177,12 +207,22 @@
 <span><span class="co">##   [6330]         0         0         0         0         0         0</span></span>
 <span><span class="co">##   -------</span></span>
 <span><span class="co">##   seqinfo: 194 sequences from an unspecified genome</span></span></code></pre>
-<p>The base counts are returned in a stand specific fashion depending on the <code>library-type</code> parameter. The <code>Ref</code> and <code>Var</code> bases are in reference to the strand.</p>
-<p>Pileups from multiple BAM files can be stored in a <code>summarizedExperiment</code> object, which permits comparisons across each sample. The <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData()</a></code> and <code><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowRanges.html" class="external-link">rowRanges()</a></code> slots can be populated with information related to each editing site, and similarly the <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData()</a></code> slot can be used to store sample metadata. The summarizedExperiment objectcan also interface with other derivative classes, such as <code>singleCellExperiment()</code>.</p>
+<p>The base counts are returned in a stand specific fashion depending on
+the <code>library-type</code> parameter. The <code>Ref</code> and
+<code>Var</code> bases are in reference to the strand.</p>
+<p>Pileups from multiple BAM files can be stored in a
+<code>summarizedExperiment</code> object, which permits comparisons
+across each sample. The <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData()</a></code> and
+<code><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowRanges.html" class="external-link">rowRanges()</a></code> slots can be populated with information related
+to each editing site, and similarly the <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData()</a></code> slot can
+be used to store sample metadata. The summarizedExperiment objectcan
+also interface with other derivative classes, such as
+<code>singleCellExperiment()</code>.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">plps</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">bam_files</span><span class="op">)</span> </span>
 <span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_se.html">create_se</a></span><span class="op">(</span><span class="va">plps</span><span class="op">)</span></span></code></pre></div>
-<p>Each column from the pileup can be stored as an assay, which can be specified by the <code>assay_cols</code> parameter</p>
+<p>Each column from the pileup can be stored as an assay, which can be
+specified by the <code>assay_cols</code> parameter</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">se</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: RangedSummarizedExperiment </span></span>
@@ -196,7 +236,9 @@
 <span><span class="co">##   SRR5564261_dedup_sorted.bam ... SRR5564271_dedup_sorted.bam</span></span>
 <span><span class="co">##   SRR5564277_dedup_sorted.bam</span></span>
 <span><span class="co">## colData names(1): sample</span></span></code></pre>
-<p>Next we will add sample metadata to the <code>summarizedExperiment</code>, which will be used to conduct differential editing analysis.</p>
+<p>Next we will add sample metadata to the
+<code>summarizedExperiment</code>, which will be used to conduct
+differential editing analysis.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span><span class="op">$</span><span class="va">genotype_treatment</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ADAR1KO Interferon beta"</span>,  </span>
 <span>                                        <span class="st">"Wildtype Interferon beta"</span><span class="op">)</span>, </span>
@@ -227,13 +269,21 @@
 <div class="section level3">
 <h3 id="prepare-for-differential-editing">Prepare for differential editing<a class="anchor" aria-label="anchor" href="#prepare-for-differential-editing"></a>
 </h3>
-<p>We next use the <code>calc_edit_frequency</code> function to identify the percent of edits for each position and sample. With the <code>drop = TRUE</code> argument we will also exclude sites without an adenosine. The editing frequencies will not be used for differential editing analysis, which will be conducted using the raw counts, however these are useful for filtering and visualization.</p>
+<p>We next use the <code>calc_edit_frequency</code> function to identify
+the percent of edits for each position and sample. With the
+<code>drop = TRUE</code> argument we will also exclude sites without an
+adenosine. The editing frequencies will not be used for differential
+editing analysis, which will be conducted using the raw counts, however
+these are useful for filtering and visualization.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">se_filtered</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">se</span>, </span>
 <span>                                   edit_from <span class="op">=</span> <span class="st">"A"</span>,</span>
 <span>                                   edit_to <span class="op">=</span> <span class="st">"G"</span>,</span>
 <span>                                   drop <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p>We can next subset the <code>summarizedExperiment</code> object to low frequency editing events. For this analysis we will require than an editing site shows editing in at least 1 sample, and have at least 5 counts in each sample.</p>
+<p>We can next subset the <code>summarizedExperiment</code> object to
+low frequency editing events. For this analysis we will require than an
+editing site shows editing in at least 1 sample, and have at least 5
+counts in each sample.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">has_editing</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se_filtered</span>, <span class="st">"edit_freq"</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">1</span></span>
 <span><span class="va">has_depth</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="op">(</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se_filtered</span>, <span class="st">"nRef"</span><span class="op">)</span> <span class="op">+</span> </span>
@@ -244,7 +294,7 @@
 <pre><code><span><span class="co">## class: RangedSummarizedExperiment </span></span>
 <span><span class="co">## dim: 611 6 </span></span>
 <span><span class="co">## metadata(0):</span></span>
-<span><span class="co">## assays(8): Var nRef ... nG edit_freq</span></span>
+<span><span class="co">## assays(9): Var nRef ... depth edit_freq</span></span>
 <span><span class="co">## rownames(611): chr18_204625_1 chr18_204626_1 ... chr18_80158602_2</span></span>
 <span><span class="co">##   chr18_80158603_2</span></span>
 <span><span class="co">## rowData names(1): Ref</span></span>
@@ -253,7 +303,9 @@
 <span><span class="co">##   SRR5564277_dedup_sorted.bam</span></span>
 <span><span class="co">## colData names(5): sample genotype_treatment genotype n_sites</span></span>
 <span><span class="co">##   edit_idx</span></span></code></pre>
-<p>Once the object has been filtered, you can prepare it for DE. This means making a new object that contains an assay with read counts if both the alt and ref alleles in a single matrix.</p>
+<p>Once the object has been filtered, you can prepare it for DE. This
+means making a new object that contains an assay with read counts if
+both the alt and ref alleles in a single matrix.</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">deobj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_for_de.html">prep_for_de</a></span><span class="op">(</span><span class="va">se_filtered</span>,</span>
 <span>                     min_prop <span class="op">=</span> <span class="fl">0.1</span>,</span>
@@ -313,18 +365,28 @@
 <div class="section level3">
 <h3 id="run-differential-editing-deseq2">Run differential editing (DESeq2)<a class="anchor" aria-label="anchor" href="#run-differential-editing-deseq2"></a>
 </h3>
-<p>At this stage, you can use the object to perform DE yourself or you can continue with our pre built functions</p>
-<p>For differential editing, we use the design <code>design &lt;- ~0 + condition:sample + condition:count</code>.</p>
-<p>For the samples, you can leave as is or combine so the same sample name shows up in both the treatment and control. These results are not identical but they are close. In my hands, the same genes come out, but the p values and log fold change values are slightly different.</p>
-<p>It is probably best to update the levels of your object, but if you don’t, this will still work.</p>
-<p>To run using <code>DESeq2</code>, set <code>type = DESeq2</code> in the <code>de_results</code> function. This function requires you to specify what your control and treatment are from your condition column of your <code>deobj</code>. <code>edgeR</code> is also supported.</p>
+<p>At this stage, you can use the object to perform DE yourself or you
+can continue with our pre built functions</p>
+<p>For differential editing, we use the design
+<code>design &lt;- ~0 + condition:sample + condition:count</code>.</p>
+<p>For the samples, you can leave as is or combine so the same sample
+name shows up in both the treatment and control. These results are not
+identical but they are close. In my hands, the same genes come out, but
+the p values and log fold change values are slightly different.</p>
+<p>It is probably best to update the levels of your object, but if you
+don’t, this will still work.</p>
+<p>To run using <code>DESeq2</code>, set <code>type = DESeq2</code> in
+the <code>de_results</code> function. This function requires you to
+specify what your control and treatment are from your condition column
+of your <code>deobj</code>. <code>edgeR</code> is also supported.</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">de_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/perform_de.html">perform_de</a></span><span class="op">(</span><span class="va">deobj</span>, type <span class="op">=</span> <span class="st">"DESeq2"</span>, </span>
 <span>                         sample_col <span class="op">=</span> <span class="st">"sample"</span>,</span>
 <span>                         condition_col <span class="op">=</span> <span class="st">"genotype"</span>,</span>
 <span>                         condition_control <span class="op">=</span> <span class="st">"Wildtype"</span>,</span>
 <span>                         condition_treatment <span class="op">=</span> <span class="st">"ADAR1KO"</span><span class="op">)</span></span></code></pre></div>
-<p>This returns a list containing the dds object, the full results, the significant results, and the model matrix.</p>
+<p>This returns a list containing the dds object, the full results, the
+significant results, and the model matrix.</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">de_results</span><span class="op">$</span><span class="va">sig_results</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   baseMean log2FoldChange     lfcSE      stat</span></span>
@@ -357,14 +419,16 @@ Session info
 <span><span class="co">## Running under: Ubuntu 20.04.4 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
-<span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.9.0</span></span>
-<span><span class="co">## LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.9.0</span></span>
+<span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3</span></span>
+<span><span class="co">## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/liblapack.so.3</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## locale:</span></span>
-<span><span class="co">##  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       </span></span>
-<span><span class="co">##  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   </span></span>
-<span><span class="co">##  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          </span></span>
-<span><span class="co">## [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   </span></span>
+<span><span class="co">##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              </span></span>
+<span><span class="co">##  [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    </span></span>
+<span><span class="co">##  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   </span></span>
+<span><span class="co">##  [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 </span></span>
+<span><span class="co">##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            </span></span>
+<span><span class="co">## [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## attached base packages:</span></span>
 <span><span class="co">## [1] grid      stats4    stats     graphics  grDevices utils     datasets </span></span>
@@ -372,27 +436,27 @@ Session info
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
 <span><span class="co">##  [1] stringr_1.4.0               viridis_0.6.2              </span></span>
-<span><span class="co">##  [3] viridisLite_0.4.0           ComplexHeatmap_2.12.0      </span></span>
-<span><span class="co">##  [5] DESeq2_1.36.0               SummarizedExperiment_1.26.1</span></span>
-<span><span class="co">##  [7] Biobase_2.56.0              GenomicRanges_1.48.0       </span></span>
-<span><span class="co">##  [9] GenomeInfoDb_1.32.2         IRanges_2.30.0             </span></span>
-<span><span class="co">## [11] S4Vectors_0.34.0            BiocGenerics_0.42.0        </span></span>
-<span><span class="co">## [13] MatrixGenerics_1.8.1        matrixStats_0.62.0         </span></span>
-<span><span class="co">## [15] raer_0.99.0                 BiocStyle_2.24.0           </span></span>
+<span><span class="co">##  [3] viridisLite_0.4.0           ComplexHeatmap_2.13.0      </span></span>
+<span><span class="co">##  [5] DESeq2_1.37.4               SummarizedExperiment_1.27.1</span></span>
+<span><span class="co">##  [7] Biobase_2.57.1              GenomicRanges_1.49.0       </span></span>
+<span><span class="co">##  [9] GenomeInfoDb_1.33.3         IRanges_2.31.0             </span></span>
+<span><span class="co">## [11] S4Vectors_0.35.1            BiocGenerics_0.43.1        </span></span>
+<span><span class="co">## [13] MatrixGenerics_1.9.1        matrixStats_0.62.0         </span></span>
+<span><span class="co">## [15] raer_0.99.0                 BiocStyle_2.25.0           </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##   [1] colorspace_2.0-3         rjson_0.2.21            </span></span>
 <span><span class="co">##   [3] ellipsis_0.3.2           rprojroot_2.0.3         </span></span>
-<span><span class="co">##   [5] circlize_0.4.15          XVector_0.36.0          </span></span>
+<span><span class="co">##   [5] circlize_0.4.15          XVector_0.37.0          </span></span>
 <span><span class="co">##   [7] GlobalOptions_0.1.2      fs_1.5.2                </span></span>
 <span><span class="co">##   [9] clue_0.3-61              bit64_4.0.5             </span></span>
-<span><span class="co">##  [11] AnnotationDbi_1.58.0     fansi_1.0.3             </span></span>
+<span><span class="co">##  [11] AnnotationDbi_1.59.1     fansi_1.0.3             </span></span>
 <span><span class="co">##  [13] xml2_1.3.3               codetools_0.2-18        </span></span>
 <span><span class="co">##  [15] splines_4.2.0            R.methodsS3_1.8.2       </span></span>
 <span><span class="co">##  [17] doParallel_1.0.17        cachem_1.0.6            </span></span>
-<span><span class="co">##  [19] geneplotter_1.74.0       knitr_1.39              </span></span>
+<span><span class="co">##  [19] geneplotter_1.75.0       knitr_1.39              </span></span>
 <span><span class="co">##  [21] jsonlite_1.8.0           Rsamtools_2.13.3        </span></span>
-<span><span class="co">##  [23] annotate_1.74.0          cluster_2.1.3           </span></span>
+<span><span class="co">##  [23] annotate_1.75.0          cluster_2.1.3           </span></span>
 <span><span class="co">##  [25] dbplyr_2.2.1             png_0.1-7               </span></span>
 <span><span class="co">##  [27] R.oo_1.25.0              BiocManager_1.30.18     </span></span>
 <span><span class="co">##  [29] compiler_4.2.0           httr_1.4.3              </span></span>
@@ -403,35 +467,35 @@ Session info
 <span><span class="co">##  [39] glue_1.6.2               GenomeInfoDbData_1.2.8  </span></span>
 <span><span class="co">##  [41] dplyr_1.0.9              rappdirs_0.3.3          </span></span>
 <span><span class="co">##  [43] Rcpp_1.0.8.3             jquerylib_0.1.4         </span></span>
-<span><span class="co">##  [45] pkgdown_2.0.5            vctrs_0.4.1             </span></span>
-<span><span class="co">##  [47] Biostrings_2.64.0        rtracklayer_1.56.1      </span></span>
+<span><span class="co">##  [45] pkgdown_2.0.4            vctrs_0.4.1             </span></span>
+<span><span class="co">##  [47] Biostrings_2.65.1        rtracklayer_1.57.0      </span></span>
 <span><span class="co">##  [49] iterators_1.0.14         xfun_0.31               </span></span>
 <span><span class="co">##  [51] lifecycle_1.0.1          restfulr_0.0.15         </span></span>
-<span><span class="co">##  [53] XML_3.99-0.10            zlibbioc_1.42.0         </span></span>
-<span><span class="co">##  [55] scales_1.2.0             BSgenome_1.64.0         </span></span>
+<span><span class="co">##  [53] XML_3.99-0.10            zlibbioc_1.43.0         </span></span>
+<span><span class="co">##  [55] scales_1.2.0             BSgenome_1.65.2         </span></span>
 <span><span class="co">##  [57] ragg_1.2.2               hms_1.1.1               </span></span>
 <span><span class="co">##  [59] parallel_4.2.0           RColorBrewer_1.1-3      </span></span>
 <span><span class="co">##  [61] yaml_2.3.5               curl_4.3.2              </span></span>
 <span><span class="co">##  [63] gridExtra_2.3            memoise_2.0.1           </span></span>
 <span><span class="co">##  [65] ggplot2_3.3.6            sass_0.4.1              </span></span>
-<span><span class="co">##  [67] biomaRt_2.52.0           stringi_1.7.6           </span></span>
+<span><span class="co">##  [67] biomaRt_2.53.2           stringi_1.7.6           </span></span>
 <span><span class="co">##  [69] RSQLite_2.2.14           highr_0.9               </span></span>
-<span><span class="co">##  [71] genefilter_1.78.0        BiocIO_1.6.0            </span></span>
+<span><span class="co">##  [71] genefilter_1.79.0        BiocIO_1.7.1            </span></span>
 <span><span class="co">##  [73] desc_1.4.1               foreach_1.5.2           </span></span>
-<span><span class="co">##  [75] GenomicFeatures_1.48.3   filelock_1.0.2          </span></span>
-<span><span class="co">##  [77] BiocParallel_1.30.3      shape_1.4.6             </span></span>
+<span><span class="co">##  [75] GenomicFeatures_1.49.5   filelock_1.0.2          </span></span>
+<span><span class="co">##  [77] BiocParallel_1.31.10     shape_1.4.6             </span></span>
 <span><span class="co">##  [79] rlang_1.0.3              pkgconfig_2.0.3         </span></span>
 <span><span class="co">##  [81] systemfonts_1.0.4        bitops_1.0-7            </span></span>
 <span><span class="co">##  [83] evaluate_0.15            lattice_0.20-45         </span></span>
-<span><span class="co">##  [85] purrr_0.3.4              GenomicAlignments_1.32.0</span></span>
+<span><span class="co">##  [85] purrr_0.3.4              GenomicAlignments_1.33.1</span></span>
 <span><span class="co">##  [87] bit_4.0.4                tidyselect_1.1.2        </span></span>
 <span><span class="co">##  [89] magrittr_2.0.3           bookdown_0.27           </span></span>
 <span><span class="co">##  [91] R6_2.5.1                 generics_0.1.2          </span></span>
-<span><span class="co">##  [93] DelayedArray_0.22.0      DBI_1.1.3               </span></span>
+<span><span class="co">##  [93] DelayedArray_0.23.0      DBI_1.1.3               </span></span>
 <span><span class="co">##  [95] pillar_1.7.0             survival_3.3-1          </span></span>
-<span><span class="co">##  [97] KEGGREST_1.36.2          RCurl_1.98-1.7          </span></span>
+<span><span class="co">##  [97] KEGGREST_1.37.3          RCurl_1.98-1.7          </span></span>
 <span><span class="co">##  [99] tibble_3.1.7             crayon_1.5.1            </span></span>
-<span><span class="co">## [101] utf8_1.2.2               BiocFileCache_2.4.0     </span></span>
+<span><span class="co">## [101] utf8_1.2.2               BiocFileCache_2.5.0     </span></span>
 <span><span class="co">## [103] rmarkdown_2.14           GetoptLong_1.0.5        </span></span>
 <span><span class="co">## [105] progress_1.2.2           locfit_1.5-9.5          </span></span>
 <span><span class="co">## [107] data.table_1.14.2        blob_1.2.3              </span></span>
@@ -454,7 +518,7 @@ Session info
 
 <div class="pkgdown-footer-right">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
     </footer>

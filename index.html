@@ -5,8 +5,10 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="description" content="Toolkit for identification, visualization, and statistical testing 
-    of RNA editing signals from within R.">
+<meta name="description" content="Toolkit for identification and statistical testing 
+    of RNA editing signals from within R. Provides support for identifying
+    sites from bulk-RNA-seq, single cell RNA-seq datasets, and general methods 
+    for extraction of allelic read counts from alignment files. ">
 <title>RNA editing tools in R • raer</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.1.0/bootstrap.min.css" rel="stylesheet">
@@ -15,8 +17,10 @@
 <!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- bootstrap-toc --><script src="https://cdn.rawgit.com/afeld/bootstrap-toc/v1.0.1/dist/bootstrap-toc.min.js"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="RNA editing tools in R">
-<meta property="og:description" content="Toolkit for identification, visualization, and statistical testing 
-    of RNA editing signals from within R.">
+<meta property="og:description" content="Toolkit for identification and statistical testing 
+    of RNA editing signals from within R. Provides support for identifying
+    sites from bulk-RNA-seq, single cell RNA-seq datasets, and general methods 
+    for extraction of allelic read counts from alignment files. ">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -49,6 +53,7 @@
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="articles/novel-sites.html">Identifying RNA editing sites using RNA and DNA sequencing data</a>
+    <a class="dropdown-item" href="articles/single-cell.html">Identifying RNA editing sites in droplet single cell datasets</a>
   </div>
 </li>
       </ul>
@@ -74,6 +79,7 @@
 <div class="page-header"><h1 id="raer">raer<a class="anchor" aria-label="anchor" href="#raer"></a>
 </h1></div>
 <!-- badges: start -->
+
 <p>raer is an R package that facilitates rapid interactive analysis of RNA editing in R in the bioconductor ecosystem.</p>
 <p><strong>raer is under active development and functionality may change</strong></p>
 <div class="section level2">
@@ -82,7 +88,7 @@
 <p>You can install the development version of raer from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"rnabioco/raer"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"rnabioco/raer"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
@@ -113,7 +119,7 @@
 <span><span class="co">#&gt;   [4]         0        15         0         0         0</span></span>
 <span><span class="co">#&gt;   [5]         0        16         0         0         0</span></span>
 <span><span class="co">#&gt;   -------</span></span>
-<span><span class="co">#&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths</span></span></code></pre></div>
+<span><span class="co">#&gt;   seqinfo: 3 sequences from an unspecified genome</span></span></code></pre></div>
 <p>The <code><a href="reference/get_pileup.html">FilterParam()</a></code> class holds multiple options for customizing the output of <code><a href="reference/get_pileup.html">get_pileup()</a></code>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_pileup.html">FilterParam</a></span><span class="op">(</span>only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
@@ -147,7 +153,7 @@
 <span><span class="co">#&gt;   [30]        37         1         0         0         0</span></span>
 <span><span class="co">#&gt;   [31]         0        35         1         0         0</span></span>
 <span><span class="co">#&gt;   -------</span></span>
-<span><span class="co">#&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths</span></span></code></pre></div>
+<span><span class="co">#&gt;   seqinfo: 3 sequences from an unspecified genome</span></span></code></pre></div>
 <p>Multiple bam files can be processed, which enables rapid comparisons of RNA-Seq vs. WGS or WXS data, or RNA-Seq vs RNA-seq (ADAR WT VS ADAR KO).</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_pileup.html">FilterParam</a></span><span class="op">(</span>only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -187,7 +193,7 @@
 <span><span class="co">#&gt;   [73]        33         0         0         0         0</span></span>
 <span><span class="co">#&gt;   [74]         0        21         0         0         0</span></span>
 <span><span class="co">#&gt;   -------</span></span>
-<span><span class="co">#&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths</span></span>
+<span><span class="co">#&gt;   seqinfo: 3 sequences from an unspecified genome</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; [[2]]</span></span>
 <span><span class="co">#&gt; GRanges object with 74 ranges and 9 metadata columns:</span></span>
@@ -218,7 +224,7 @@
 <span><span class="co">#&gt;   [73]        37         1         0         0         0</span></span>
 <span><span class="co">#&gt;   [74]         0        35         1         0         0</span></span>
 <span><span class="co">#&gt;   -------</span></span>
-<span><span class="co">#&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths</span></span></code></pre></div>
+<span><span class="co">#&gt;   seqinfo: 3 sequences from an unspecified genome</span></span></code></pre></div>
 <p>To facilitate comparisons across groups, the pileups can be stored in a <code>RangedSummarizedExperiment</code>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/create_se.html">create_se</a></span><span class="op">(</span><span class="va">plps</span><span class="op">)</span></span>
@@ -227,7 +233,7 @@
 <span><span class="co">#&gt; metadata(0):</span></span>
 <span><span class="co">#&gt; assays(7): Var nRef ... nC nG</span></span>
 <span><span class="co">#&gt; rownames(74): SSR3_102_2 SSR3_125_2 ... DHFR_430_2 DHFR_513_2</span></span>
-<span><span class="co">#&gt; rowData names(2): site_id Ref</span></span>
+<span><span class="co">#&gt; rowData names(1): Ref</span></span>
 <span><span class="co">#&gt; colnames(2): sample_1 sample_2</span></span>
 <span><span class="co">#&gt; colData names(1): sample</span></span></code></pre></div>
 </div>
@@ -276,19 +282,17 @@
 <ul class="list-unstyled">
 <li>
 <a href="http://github.com/kriemo" class="external-link">Kent Riemondy</a> <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0003-0750-1273" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
-<li>
-<a href="https://github.com/kwells4" class="external-link">Kristen Wells</a> <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-7466-8164" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
-<li>
-<a href="https://github.com/sheridar" class="external-link">Ryan Sheridan</a> <br><small class="roles"> Author </small>  </li>
+<li>Kristen Wells-Wrasman <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-7466-8164" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
 <li>
 <a href="https://medschool.cuanschutz.edu/rbi" class="external-link"><img src="https://rnabioco.github.io/rbitemplate/rbi-pkgdown-logo.svg" alt="RBI" width="150"></a> <br><small class="roles"> Copyright holder, funder </small>  </li>
+<li><a href="authors.html">More about authors...</a></li>
 </ul>
 </div>
 
 <div class="dev-status">
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
-<li><a href="https://github.com/rnabioco/raer/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/rnabioco/raer/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml" class="external-link"><img src="https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml/badge.svg" alt="R-CMD-check-bioc"></a></li>
 </ul>
 </div>
 
@@ -303,7 +307,7 @@
 
 <div class="pkgdown-footer-right">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
     </footer>

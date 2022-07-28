@@ -28,6 +28,7 @@
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="../articles/novel-sites.html">Identifying RNA editing sites using RNA and DNA sequencing data</a>
+    <a class="dropdown-item" href="../articles/single-cell.html">Identifying RNA editing sites in droplet single cell datasets</a>
   </div>
 </li>
       </ul><form class="form-inline my-2 my-lg-0" role="search">
@@ -112,20 +113,25 @@
         <dd>Create RangedSummarizedExperiment</dd>
       </dl><dl><dt>
           
-          <code><a href="download_GSE99249.html">download_GSE99249()</a></code> 
+          <code><a href="download_data.html">download_GSE99249()</a></code> <code><a href="download_data.html">download_NA12878()</a></code> <code><a href="download_data.html">download_human_pbmc()</a></code> 
         </dt>
         <dd>Download GSE99249 BAM files and related data</dd>
       </dl><dl><dt>
           
-          <code><a href="download_NA12878.html">download_NA12878()</a></code> 
+          <code><a href="filter_by_coverage.html">filter_by_coverage()</a></code> 
         </dt>
-        <dd>Download NA12878 BAM files and related data</dd>
+        <dd>Identify sites with read coverage</dd>
       </dl><dl><dt>
           
           <code><a href="getCoverageAtPositions.html">getCoverageAtPositions()</a></code> 
         </dt>
         <dd>Copy of VariantTools::extractCoverageForPositions
 Authors: Michael Lawrence, Jeremiah Degenhardt, Robert Gentleman</dd>
+      </dl><dl><dt>
+          
+          <code><a href="get_overlapping_snps.html">get_overlapping_snps()</a></code> 
+        </dt>
+        <dd>Retrieve SNPs overlapping intervals</dd>
       </dl><dl><dt>
           
           <code><a href="get_pileup.html">get_pileup()</a></code> <code><a href="get_pileup.html">FilterParam()</a></code> 
@@ -146,11 +152,6 @@ Authors: Michael Lawrence, Jeremiah Degenhardt, Robert Gentleman</dd>
           <code><a href="index_bed.html">indexBed()</a></code> 
         </dt>
         <dd>Generate a samtools style index for a BedFile</dd>
-      </dl><dl><dt>
-          
-          <code><a href="make_editing_plots.html">make_editing_plots()</a></code> 
-        </dt>
-        <dd>Makes summary plots of editing</dd>
       </dl><dl><dt>
           
           <code><a href="perform_de.html">perform_de()</a></code> 
@@ -198,19 +199,9 @@ Authors: Michael Lawrence, Jeremiah Degenhardt, Robert Gentleman</dd>
         <dd>Remove sites near splice sites</dd>
       </dl><dl><dt>
           
-          <code><a href="run_deseq2.html">run_deseq2()</a></code> 
-        </dt>
-        <dd>Perform differential editing with DESeq2</dd>
-      </dl><dl><dt>
-          
-          <code><a href="run_edger.html">run_edger()</a></code> 
-        </dt>
-        <dd>Perform differential editing with edgeR</dd>
-      </dl><dl><dt>
-          
           <code><a href="sc_editing.html">sc_editing()</a></code> 
         </dt>
-        <dd>Calculate editing frequencies</dd>
+        <dd>Calculate editing frequencies per cell or per cluster</dd>
       </dl><dl><dt>
           
           <code><a href="show_tag_index.html">show_tag_index()</a></code> 
@@ -225,7 +216,7 @@ Authors: Michael Lawrence, Jeremiah Degenhardt, Robert Gentleman</dd>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
     </footer></div>
