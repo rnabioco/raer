@@ -256,12 +256,13 @@ calc_AEI <- function(bam_fn,
 #' object
 #'
 #' @examples
-#'
+#' \dontrun{
 #' if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
 #'   gr <- GRanges(rep("22", 10),
 #'     IRanges(seq(10510077, 10610077, by = 1000)[1:10], width = 250),
 #'     strand = "+")
 #'   get_overlapping_snps(gr, SNPlocs.Hsapiens.dbSNP144.GRCh38)
+#' }
 #' }
 #' @importFrom rtracklayer export
 #' @importFrom BSgenome snpsByOverlaps
