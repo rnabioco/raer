@@ -14,7 +14,7 @@
 static const int BAM_INIT_SIZE = 1048576;
 
 PLP_DATA init_PLP_DATA(SEXP result, int n) {
-  int i,j;
+  int i;
   PLP_DATA plpd = R_Calloc(1, _PLP_DATA);
   plpd->pdat = R_Calloc(n, _PLP_VECS);
   for(i = 0; i < n; ++i){

@@ -5,7 +5,7 @@
 \title{Adds editing frequencies}
 \usage{
 calc_edit_frequency(
-  se_object,
+  se,
   edit_from = NULL,
   edit_to = NULL,
   drop = FALSE,
@@ -15,12 +15,12 @@ calc_edit_frequency(
 )
 }
 \arguments{
-\item{se_object}{A SummarizedExperiment object created by \code{create_se}}
+\item{se}{A SummarizedExperiment object created by \code{create_se}}
 
-\item{edit_from}{This should be a nucleotide (A, C, G, or T) corresponding to
-the nucleotide you expect in the reference. Ex. for A to I editing events,
-this would be "A". If NULL, then editing frequencies will be calculated
-using the \code{nVar} and \code{nRef} values.}
+\item{edit_from}{This should be a nucleotide (A, C, G, or T)
+corresponding to the nucleotide you expect in the reference. Ex. for A to I
+editing events, this would be "A". If NULL, then editing frequencies will be
+calculated using the \code{nVar} and \code{nRef} values.}
 
 \item{edit_to}{This should be a nucleotide (A, C, G, or T) and should
 correspond to the nucleotide you expect after the editing event. Ex. for A
@@ -42,10 +42,9 @@ of editing sites detected.}
 }
 \description{
 Adds editing frequencies to an existing
-SummarizedExperimentobject (created by \code{create_se}). The
-SummarizedExperiment with a new assay for editing frequences for each site
-(edit_freq) and new colData columns with the number of edited sites
-(n_sites) and the fraction of edits (edit_idx) is returned.
+SummarizedExperiment object (created by create_se\verb{). The SummarizedExperiment with a new assay for editing frequencies for each site (}edit_freq\verb{), depth of coverage computed using the indicatededited nucleotides (}depth`) and new colData
+columns with the number of edited sites (n_sites) and the
+fraction of edits (edit_idx) is returned.
 }
 \examples{
 example(create_se, echo = FALSE)

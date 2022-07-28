@@ -17,4 +17,4 @@ OBJECTS = RcppExports.o bedfile.o bedidx.o cplp.o cpp_utils.o init.o plp.o plp_d
 all: $(SHLIB)
 
 clean:
-	rm -f samtools/*.o bri/*.o
+	rm -f bri/*.o

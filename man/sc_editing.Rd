@@ -2,19 +2,21 @@
 % Please edit documentation in R/sc-utils.R
 \name{sc_editing}
 \alias{sc_editing}
-\title{Calculate editing frequencies}
+\title{Calculate editing frequencies per cell or per cluster}
 \usage{
 sc_editing(
   bamfile,
   fafile,
   bedfile,
   cell_barcodes,
-  min_reads = 25L,
+  min_reads = 0L,
   assay_cols = c("nA", "nG"),
   tag_index_args = list(tag = "CB"),
-  ...,
+  sparse = TRUE,
   BPPARAM = SerialParam(),
-  verbose = TRUE
+  batch_size = 50,
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
@@ -24,29 +26,40 @@ sc_editing(
 
 \item{bedfile}{BED file containing editing sites}
 
-\item{cell_barcodes}{List of character vectors containing cell barcodes to
-query. See examples for specification.}
+\item{cell_barcodes}{A list of character vectors containing cell barcodes
+to query or a single character vector of single cells to process. If a list
+is supplied it is assumed that alignments from cell barcodes in each list element
+should be pooled. If a single character vector, it is assumed that each cell barcode
+should be processed independently. See examples for specification.}
 
 \item{min_reads}{Minimum read counts required to consider a site for editing.
-This is calculated across all reads in the bamfile prior to running
-\verb{[get_pileup()]} per cell to remove low-frequency events. Read alignments
-are required to be non-duplicate, primary, QC passing, and
-non-supplemental.}
+This is calculated across all reads in the bamfile prior to running \verb{[get_pileup()]}
+per cell to remove low-frequency events. If set to 0 (default) this step will
+not be run. See \code{filter_by_coverage()} for more details.}
 
-\item{assay_cols}{assays to store in returned se. Set to "A" and "G". Note
-that storing multiple assays can require large amounts of memory.}
+\item{assay_cols}{assays to store in returned se. Set to "A" and "G". Note that
+storing multiple assays can require large amounts of memory.}
 
 \item{tag_index_args}{arguments pass to \code{\link[=build_tag_index]{build_tag_index()}}}
 
-\item{...}{additional arguments passed to \verb{[get_pileup()]}.}
+\item{sparse}{if TRUE, store matrices in sparseMatrix format in SummarizedExperiment.}
 
-\item{BPPARAM}{BiocParallel instance. Parallel computation occurs across each
-entry in the cell_barcodes list}
+\item{BPPARAM}{BiocParallel instance. Parallel computation occurs across
+each entry in the cell_barcodes list, or across batches of single cells specified
+by batch_size.}
+
+\item{batch_size}{When processing single cells, the batch_size controls
+how many individual cell bams to process in each invocation of \code{get_pileup()}.
+Batching the cells reduces run time by avoiding  loading sequences from the
+fasta file for each cell. Setting values above 50 is unlikely to further improve
+runtime.}
 
 \item{verbose}{Display messages}
+
+\item{...}{additional arguments passed to \verb{[get_pileup()]}.}
 }
 \description{
-Calculate editing frequencies
+Calculate editing frequencies per cell or per cluster
 }
 \examples{
 suppressPackageStartupMessages(library(SummarizedExperiment))
@@ -66,10 +79,9 @@ fp <- FilterParam(library_type = "fr-second-strand")
 se <- sc_editing(bamfile = bamfn,
   fafile = raer_example("mouse_tiny.fasta"),
   bedfile = raer_example("5k_neuron_sites.bed.gz"),
-  min_reads = 0,
   cell_barcodes = cbs[1:15],
-  filterParam = fp,
-  verbose = FALSE)
+  verbose = FALSE,
+  filterParam = fp)
 
 # pool cell barcodes across clusters
 # pass a named list, with each list entry corresponding to a vector
@@ -82,10 +94,9 @@ names(cb_lst) <- paste0("cluster", 1:5)
 se <- sc_editing(bamfile = bamfn,
   fafile = raer_example("mouse_tiny.fasta"),
   bedfile = raer_example("5k_neuron_sites.bed.gz"),
-  min_reads = 0,
   cell_barcodes = cb_lst,
-  filterParam = fp,
-  verbose = FALSE)
+  verbose = FALSE,
+  filterParam = fp)
 assays(se)$nA
 assays(se)$nG
 

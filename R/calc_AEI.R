@@ -21,8 +21,8 @@
 #' will be used to exclude polymorphic positions prior to calculating the AEI. If
 #' `calc_AEI()` will be used many times, one could save some time by first identifying
 #' SNPs that overlap the supplied alu_ranges, and passing these as a GRanges to snp_db
-#' rather than supplying all known SNPs. Combined with using a bedfile for alu_ranges can
-#' also will save time.
+#' rather than supplying all known SNPs (see [get_overlapping_snps()]).
+#'  Combined with using a bedfile for alu_ranges can also will save time.
 #' @param filterParam object of class [FilterParam()] which specify various
 #' filters to apply to reads and sites during pileup.
 #' @param BPPARAM A [BiocParallelParam] object for specifying parallel options for
@@ -100,7 +100,7 @@ calc_AEI <- function(bam_fn,
       tmp_files <- c(tmp_files, alu_bed_fn)
       if (!is.null(txdb)) {
         if (is(txdb, "TxDb")) {
-          genes_gr <- suppressWarnings(GenomicFeatures::genes(txdb))
+          genes_gr <- suppressMessages(GenomicFeatures::genes(txdb))
         } else {
           genes_gr <- txdb
         }
@@ -186,8 +186,6 @@ calc_AEI <- function(bam_fn,
   aei_res
 }
 
-
-
 .calc_AEI_per_chrom <- function(bam_fn,
                                 fasta_fn,
                                 alu_bed_fn,
@@ -201,9 +199,6 @@ calc_AEI <- function(bam_fn,
     message("\tworking on: ", chrom, " time: ", Sys.time())
   }
   filterParam@min_nucleotide_depth <- 1L
-  filterParam@trim_5p <- 5L
-  filterParam@trim_3p <- 5L
-  filterParam@min_base_quality <- 30L
   filterParam@only_keep_variants <- FALSE
 
   plp <- get_pileup(bam_fn,
@@ -211,9 +206,6 @@ calc_AEI <- function(bam_fn,
     bedfile = alu_bed_fn,
     chroms = chrom,
     filterParam = filterParam)
-  if (verbose) {
-    message("\tcompleted in : ", Sys.time() - start)
-  }
 
   if (!is.null(snp_gr) && !is.null(plp)) {
     plp <- subsetByOverlaps(plp, snp_gr,
@@ -223,6 +215,10 @@ calc_AEI <- function(bam_fn,
 
   if (filterParam@library_type == "genomic-unstranded") {
     plp <- correct_strand(plp, genes_gr)
+  }
+
+  if (verbose) {
+    message("\tcompleted in : ", Sys.time() - start)
   }
 
   bases <- c("A", "T", "C", "G")
@@ -242,6 +238,59 @@ calc_AEI <- function(bam_fn,
     }
   }
   var_list
+}
+
+
+#' Retrieve SNPs overlapping intervals
+#'
+#' @description This function will find SNPs overlapping
+#' supplied intervals using a SNPlocs package. The SNPs
+#' can be returned in memory (as GPos objects) or written
+#' to disk as a bed-file (optionally compressed).
+#'
+#' @param gr Intervals to query
+#' @param snpDb A reference ot a SNPlocs database
+#' @param output_file A path to an output file. If supplied
+#' the file can be optionally compressed by including a ".gz"
+#' suffix. If not supplied, SNPS will be returned as a [GenomicRanges::GPos]
+#' object
+#'
+#' @examples
+#' \dontrun{
+#' if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
+#'   gr <- GRanges(rep("22", 10),
+#'     IRanges(seq(10510077, 10610077, by = 1000)[1:10], width = 250),
+#'     strand = "+")
+#'   get_overlapping_snps(gr, SNPlocs.Hsapiens.dbSNP144.GRCh38)
+#' }
+#' }
+#' @importFrom rtracklayer export
+#' @importFrom BSgenome snpsByOverlaps
+#' @export
+get_overlapping_snps <- function(gr,
+                                 snpDb,
+                                 output_file = NULL){
+  gr <- gr[seqnames(gr) %in% seqnames(snpDb)]
+
+  # iterate through each contig, drop mcols (snpID) to reduce memory
+  alu_snps <- vector("list", length = length(seqnames(snpDb)))
+  for(i in seq_along(seqnames(snpDb))){
+    x <- seqnames(snpDb)[i]
+    tmp_gr <- gr[seqnames(gr) == x]
+
+    xx <- BSgenome::snpsByOverlaps(snpDb, tmp_gr)
+    mcols(xx) <- NULL
+
+    if(!is.null(output_file)){
+      rtracklayer::export(xx, output_file, append = TRUE, ignore.strand = TRUE)
+    } else {
+      alu_snps[[i]] <- xx
+    }
+  }
+  if(!is.null(output_file)){
+    return(output_file)
+  }
+  unlist(as(alu_snps, "GRangesList"))
 }
 
 #' Apply strand correction using gene annotations

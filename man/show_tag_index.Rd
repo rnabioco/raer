@@ -16,7 +16,7 @@ Character vector of tags
 Show tags stored in tag index
 }
 \examples{
-bam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_cbsort.bam", package = "raer")
+bam_fn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
 build_tag_index(bam_fn)
 show_tag_index(bam_fn)
 

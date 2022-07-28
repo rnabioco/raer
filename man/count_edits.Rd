@@ -5,7 +5,7 @@
 \title{Counts edits}
 \usage{
 count_edits(
-  se_filtered,
+  se,
   edit_frequency = 0.01,
   min_count = 10,
   edit_from = NULL,
@@ -13,7 +13,7 @@ count_edits(
 )
 }
 \arguments{
-\item{se_filtered}{A SummarizedExperiment object created by \code{create_se} and
+\item{se}{A SummarizedExperiment object created by \code{create_se} and
 processed by \code{calc_edit_frequency}}
 
 \item{edit_frequency}{OPTIONAL the edit frequency used to determine the

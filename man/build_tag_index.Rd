@@ -29,10 +29,10 @@ name of index generated, which is the bam file + ".bri"
 Build index for tag sorted bam file
 }
 \examples{
-bam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_cbsort.bam", package = "raer")
+bam_fn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
 build_tag_index(bam_fn)
 
-bam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_ubsort.bam", package = "raer")
+bam_fn <- raer_example("5k_neuron_mouse_xf25_1pct_ubsort.bam")
 build_tag_index(bam_fn, tag = "UB")
 
 }

@@ -20,15 +20,17 @@
 #'
 #' @examples
 #' \dontrun{
-#' if (require(SNPlocs.Hsapiens.dbSNP155.GRCh38)) {
+#' if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
 #'   gr <- GRanges(rep("22", 10),
-#'     IRanges(seq(10510077, 10610077, by = 1000)[1:10], width = 250),
-#'     strand = "+")
-#'   annot_snps(gr, SNPlocs.Hsapiens.dbSNP155.GRCh38)
+#'                 IRanges(seq(10510077,
+#'                             10610077,
+#'                             by = 1000)[1:10],
+#'                         width = 250),
+#'                 strand = "+")
+#'   annot_snps(gr, SNPlocs.Hsapiens.dbSNP144.GRCh38)
 #' }
 #' }
-#'
-#' @seealso [SNPlocs.Hsapiens.dbSNP155.GRCh38](https://bioconductor.org/packages/release/data/annotation/html/SNPlocs.Hsapiens.dbSNP155.GRCh38.html)
+#' @seealso [SNPlocs.Hsapiens.dbSNP144.GRCh38](https://bioconductor.org/packages/release/data/annotation/html/SNPlocs.Hsapiens.dbSNP144.GRCh38.html)
 #' @export
 annot_snps <- function(obj, ...) {
   UseMethod("annot_snps", obj)

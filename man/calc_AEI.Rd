@@ -30,8 +30,8 @@ those found overlapping genes. Alternatively a GRanges object with gene coordina
 will be used to exclude polymorphic positions prior to calculating the AEI. If
 \code{calc_AEI()} will be used many times, one could save some time by first identifying
 SNPs that overlap the supplied alu_ranges, and passing these as a GRanges to snp_db
-rather than supplying all known SNPs. Combined with using a bedfile for alu_ranges can
-also will save time.}
+rather than supplying all known SNPs (see \code{\link[=get_overlapping_snps]{get_overlapping_snps()}}).
+Combined with using a bedfile for alu_ranges can also will save time.}
 
 \item{filterParam}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
 filters to apply to reads and sites during pileup.}

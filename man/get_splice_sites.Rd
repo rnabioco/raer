@@ -15,3 +15,12 @@ get_splice_sites(txdb, slop = 4)
 This function will return intervals containing splice sites and
 adjacent regions.
 }
+\examples{
+\dontrun{
+if(require(TxDb.Hsapiens.UCSC.hg38.knownGene)){
+  txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+  res <- get_splice_sites(txdb)
+  res[1:5]
+}
+}
+}

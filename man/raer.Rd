@@ -6,7 +6,7 @@
 \alias{raer-package}
 \title{raer: RNA editing tools in R}
 \description{
-Toolkit for identification, visualization, and statistical testing of RNA editing signals from within R.
+Toolkit for identification and statistical testing of RNA editing signals from within R. Provides support for identifying sites from bulk-RNA-seq, single cell RNA-seq datasets, and general methods for extraction of allelic read counts from alignment files.
 }
 \seealso{
 Useful links:
@@ -22,12 +22,13 @@ Useful links:
 
 Authors:
 \itemize{
-  \item Kristen Wells \email{kristen.wells-wrasman@cuanschutz.edu} (\href{https://orcid.org/0000-0002-7466-8164}{ORCID})
-  \item Ryan Sheridan \email{ryan.sheridan@cuanschutz.edu}
+  \item Kristen Wells-Wrasman \email{kristen.wells-wrasman@cuanschutz.edu} (\href{https://orcid.org/0000-0002-7466-8164}{ORCID})
 }
 
 Other contributors:
 \itemize{
+  \item Ryan Sheridan \email{ryan.sheridan@cuanschutz.edu} (\href{https://orcid.org/0000-0003-4012-3147}{ORCID}) [contributor]
+  \item Jay Hesselberth \email{jay.hesselberth@gmail.com} (\href{https://orcid.org/0000-0002-6299-179X}{ORCID}) [contributor]
   \item RNA Bioscience Initiative [copyright holder, funder]
 }
 

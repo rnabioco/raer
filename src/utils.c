@@ -58,7 +58,7 @@ int query_end(bam1_t *b){
   return end_offset;
 }
 
-int check_simple_repeat(char** ref, int* ref_len, int pos, int nmer){
+int check_simple_repeat(char** ref, hts_pos_t* ref_len, int pos, int nmer){
   int start, n_pos;
   n_pos = (nmer * 2) - 1;
 
