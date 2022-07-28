@@ -286,9 +286,9 @@ jobs:
       - name: Build and deploy pkgdown site
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && env.run_pkgdown == 'true' && runner.os == 'Linux'
         run: |
+          git config --global --add safe.directory /__w/raer/raer
           git config --global user.name "$GITHUB_ACTOR"
           git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          git config --global --add safe.directory /__w/rnabioco/raer
           Rscript -e "pkgdown::deploy_to_branch(new_process = FALSE)"
         shell: bash {0}
         ## Note that you need to run pkgdown::deploy_to_branch(new_process = FALSE)
