@@ -393,7 +393,7 @@ test_that("parallel processing works", {
     plp_mc <- get_pileup(bamfn, fafn, BPPARAM = MulticoreParam(workers = 2))
     expect_equal(plp_mc$Ref, plp$Ref)
   } else {
-    plp_mc <- get_pileup(bamfn, fafn, BPPARAM = SnowParam(workers = 2))
+    plp_sp <- get_pileup(bamfn, fafn, BPPARAM = SnowParam(workers = 2))
     expect_equal(plp_sp$Ref, plp$Ref)
   }
 
