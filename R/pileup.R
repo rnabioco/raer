@@ -211,12 +211,13 @@ get_pileup <- function(bamfiles,
     lib_code <- rep(lib_code, n_files)
   }
   event_filters <- unlist(fp[c("trim_5p",
-    "trim_3p",
-    "splice_dist",
-    "indel_dist",
-    "homopolymer_len",
-    "max_mismatch_type",
-    "min_read_qual")])
+                               "trim_3p",
+                               "splice_dist",
+                               "indel_dist",
+                               "homopolymer_len",
+                               "max_mismatch_type",
+                               "min_read_qual",
+                               "min_splice_overhang")])
   run_in_parallel <- FALSE
   temp_bed_file <- FALSE
   if (is(BPPARAM, "SerialParam") || length(chroms_to_process) == 1) {
@@ -495,7 +496,8 @@ empty_plp_record <-  function() {
     splice_dist = "integer",
     homopolymer_len = "integer",
     max_mismatch_type = "integer", # length 2
-    min_read_bqual = "numeric" # length 2
+    min_read_bqual = "numeric", # length 2
+    min_splice_overhang = "integer"
 ))
 
 setMethod(show, "FilterParam", function(object) {
@@ -537,6 +539,8 @@ setMethod(show, "FilterParam", function(object) {
 #' c(X, Y).
 #' @param min_read_bqual Exclude read if more than X percent of the bases have
 #' base qualities less than Y. Numeric vector of length 2. e.g. c(0.25, 20)
+#' @param min_splice_overhang Exclude read if site is located adjacent to splice
+#' site with an overhang of less than given length.
 #' @param ignore_query_Ns ignored for now
 
 #'
@@ -550,6 +554,7 @@ FilterParam <-
            trim_5p = 0L, trim_3p = 0L, indel_dist = 0L,
            splice_dist = 0L, homopolymer_len = 0L,
            max_mismatch_type = c(0L, 0L), min_read_bqual = c(0.0, 0.0),
+           min_splice_overhang = 0L,
            ignore_query_Ns = FALSE) {
 
     stopifnot(isSingleNumber(max_depth))
@@ -560,6 +565,7 @@ FilterParam <-
     stopifnot(isSingleNumber(indel_dist))
     stopifnot(isSingleNumber(splice_dist))
     stopifnot(isSingleNumber(homopolymer_len))
+    stopifnot(isSingleNumber(min_splice_overhang))
 
     max_depth <- as.integer(max_depth)
     min_base_quality <- as.integer(min_base_quality)
@@ -573,6 +579,7 @@ FilterParam <-
     homopolymer_len <- as.integer(homopolymer_len)
     max_mismatch_type <- as.integer(max_mismatch_type)
     min_read_bqual <- as.numeric(min_read_bqual)
+    min_splice_overhang <- as.integer(min_splice_overhang)
 
     stopifnot(length(max_mismatch_type) == 2 && !any(is.na(max_mismatch_type)))
     stopifnot(length(min_read_bqual) == 2 && !any(is.na(min_read_bqual)))
@@ -596,7 +603,8 @@ FilterParam <-
       ignore_query_Ns = ignore_query_Ns,
       trim_5p = trim_5p, trim_3p = trim_3p, indel_dist = indel_dist,
       splice_dist = splice_dist, homopolymer_len = homopolymer_len,
-      max_mismatch_type = max_mismatch_type, min_read_bqual = min_read_bqual)
+      max_mismatch_type = max_mismatch_type, min_read_bqual = min_read_bqual,
+      min_splice_overhang = min_splice_overhang)
 
   }
 

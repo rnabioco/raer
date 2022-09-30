@@ -14,5 +14,5 @@ int trim_pos(bam1_t* b, int pos, int dist_5p, int dist_3p);
 int query_start(bam1_t *b);
 int query_end(bam1_t *b);
 int read_base_quality(bam1_t* b, float pc, int mq);
-
+int check_splice_overhang(bam1_t* b, int pos, int dist);
 #endif
