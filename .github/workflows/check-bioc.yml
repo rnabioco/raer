@@ -55,7 +55,7 @@ jobs:
       matrix:
         config:
           - {os: ubuntu-latest, r: '4.2', bioc: '3.16', cont: "bioconductor/bioconductor_docker:devel", rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest" }
-          #- {os: 'windows-2022', r: '4.2', bioc: '3.16'}
+          - {os: 'windows-2022', r: '4.2', bioc: '3.16'}
           #- { os: macOS-latest, r: '4.1', bioc: '3.14'}
           #- { os: windows-latest, r: '4.1', bioc: '3.14'}
           ## Check https://github.com/r-lib/actions/tree/master/examples
@@ -281,7 +281,7 @@ jobs:
         if: github.ref == 'refs/heads/main' && env.run_pkgdown == 'true' && runner.os == 'Linux'
         run: R CMD INSTALL .
 
-      ## use older approach to buil pkgdown, adding in the safe.directory to
+      ## use older approach to build pkgdown, adding in the safe.directory to
       ## deal with https://github.com/lcolladotor/biocthis/issues/29
       - name: Build and deploy pkgdown site
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && env.run_pkgdown == 'true' && runner.os == 'Linux'

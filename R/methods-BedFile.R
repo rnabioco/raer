@@ -3,7 +3,7 @@
 #'
 #' @param file path to bed file
 #'
-#' @returns Return an object of class BedFile which contains a pointer
+#' @return Return an object of class BedFile which contains a pointer
 #' to the bed file index.
 #'
 #' @importFrom methods as is new
@@ -37,6 +37,9 @@ setMethod(indexBed, "character",
 #'
 #' @param con BedFile class
 #' @param ... present for consistency
+#'
+#' @rdname index_bed
+#' @examples
 #' bed_fn <- system.file("extdata", "regions.bed", package = "raer")
 #' bed <- indexBed(bed_fn)
 #' close(bed)

@@ -36,6 +36,10 @@ coerces missing values to 0.}
 
 \item{verbose}{print information on progress}
 }
+\value{
+\code{RangedSummarizedExperiment} object populated with assays for each of the listed
+\code{assay_cols}.
+}
 \description{
 This function will take either a single result from running get_pileup() or a list of
 results (ie for different samples) from running pileup_res and will return a summarized

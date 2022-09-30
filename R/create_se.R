@@ -22,6 +22,9 @@
 #'  coerces missing values to 0.
 #' @param verbose print information on progress
 #'
+#' @return
+#' `RangedSummarizedExperiment` object populated with assays for each of the listed
+#' `assay_cols`.
 #' @examples
 #' library(SummarizedExperiment)
 #' bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
@@ -149,6 +152,35 @@ fill_matrices <- function(plps, assays, gr, verbose = TRUE) {
   plp_assays
 }
 
+
+bind_se <- function(ses){
+  all_assays <- lapply(ses, function(x) names(assays(x)))
+  assay_names <- unique(unlist(all_assays))
+  stopifnot(all(unlist(lapply(all_assays,
+                              function(x) {
+                                length(setdiff(assay_names, x)) == 0
+                                }))))
+
+  assay_dat <- vector("list", length = length(assay_names))
+  for(i in seq_along(assay_names)){
+    an <- assay_names[i]
+    an_assays <- lapply(ses, function(x) assay(x, an))
+    assay_dat[[i]] <- cbind_sparse(an_assays)
+    names(assay_dat)[i] <- an
+  }
+
+  cdat <- do.call(rbind, lapply(ses, colData))
+
+  stopifnot(Reduce(identical, lapply(assay_dat, rownames)))
+  rn <- rownames(assay_dat[[1]])
+  rowrng <- unlist(GRangesList(lapply(ses, rowRanges)), use.names = FALSE)
+  rowrng <- rowrng[rn, , drop = FALSE]
+  SummarizedExperiment(assays = assay_dat,
+                       rowRanges = rowrng,
+                       colData = cdat)
+}
+
+
 # standardize and bind matrices from pileups
 # into sparseMatrices
 #' @import fastmap
@@ -215,6 +247,40 @@ fill_sparse_matrices <- function(plps, assays, gr, use_hashmap = TRUE, verbose =
   }
   plp_assays
 }
+
+
+# adapted from user6376297
+# https://stackoverflow.com/a/56547070/6276041
+# cbind sparse matrices with differing row entries
+cbind_sparse <- function(mats){
+  stopifnot(all(unlist(lapply(mats, function(x) is(x, "dgCMatrix")))))
+  rn <- unique(unlist(lapply(mats, rownames)))
+  cn <- unique(unlist(lapply(mats, colnames)))
+  nvals <- sum(unlist(lapply(mats, Matrix::nnzero)))
+  x <- integer(nvals)
+  i <- integer(nvals)
+  j <- integer(nvals)
+
+  init_x <- 1
+  for (idx in seq_along(mats)) {
+    cindnew <- match(colnames(mats[[idx]]),cn)
+    rindnew <- match(rownames(mats[[idx]]),rn)
+    ind <- summary(mats[[idx]])
+    nval <- nrow(ind)
+    end <- nval + init_x - 1
+    i[init_x:end] <- rindnew[ind$i]
+    j[init_x:end] <- cindnew[ind$j]
+    x[init_x:end] <- ind$x
+    init_x <- end + 1
+  }
+
+  sparseMatrix(i = i,
+               j = j,
+               x = x,
+               dims=c(length(rn), length(cn)),
+               dimnames=list(rn, cn))
+}
+
 
 #' @importFrom stringr str_c
 site_names <- function(gr) {

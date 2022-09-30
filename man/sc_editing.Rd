@@ -9,10 +9,8 @@ sc_editing(
   fafile,
   bedfile,
   cell_barcodes,
-  min_reads = 0L,
   assay_cols = c("nA", "nG"),
   tag_index_args = list(tag = "CB"),
-  sparse = TRUE,
   BPPARAM = SerialParam(),
   batch_size = 50,
   verbose = TRUE,
@@ -32,17 +30,10 @@ is supplied it is assumed that alignments from cell barcodes in each list elemen
 should be pooled. If a single character vector, it is assumed that each cell barcode
 should be processed independently. See examples for specification.}
 
-\item{min_reads}{Minimum read counts required to consider a site for editing.
-This is calculated across all reads in the bamfile prior to running \verb{[get_pileup()]}
-per cell to remove low-frequency events. If set to 0 (default) this step will
-not be run. See \code{filter_by_coverage()} for more details.}
-
 \item{assay_cols}{assays to store in returned se. Set to "A" and "G". Note that
 storing multiple assays can require large amounts of memory.}
 
 \item{tag_index_args}{arguments pass to \code{\link[=build_tag_index]{build_tag_index()}}}
-
-\item{sparse}{if TRUE, store matrices in sparseMatrix format in SummarizedExperiment.}
 
 \item{BPPARAM}{BiocParallel instance. Parallel computation occurs across
 each entry in the cell_barcodes list, or across batches of single cells specified

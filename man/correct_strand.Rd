@@ -13,6 +13,10 @@ correct_strand(gr, genes_gr)
 \item{genes_gr}{GRanges object containing reference features to
 annotate the strand of the editing sites.}
 }
+\value{
+GenomicRanges onbject containing pileup counts, with strand corrected based
+on supplied genomic intervals.
+}
 \description{
 Gene annotations are used to infer the
 likely strand of editing sites. This function will operate

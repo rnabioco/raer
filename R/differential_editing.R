@@ -27,6 +27,9 @@
 #' @param min_count The minimum number of reads required when enumerating number
 #'   of editing sites detected.
 #'
+#' @return
+#' SummarizedExperiment supplemented with `edit_freq` assay.
+#'
 #' @examples
 #' example(create_se, echo = FALSE)
 #' se <- calc_edit_frequency(se)

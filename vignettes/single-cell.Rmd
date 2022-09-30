@@ -112,10 +112,10 @@ se <- sc_editing(bamfile = bam_fn,
                                            library_type = "fr-second-strand",
                                            min_nucleotide_depth = 1L,
                                            trim_5p = 5L,
-                                           trim_3p = 5L),
-                 sparse = TRUE)
+                                           trim_3p = 5L))
 se
 ```
+
 Next we'll filter the pileups to find sites with at least 5 cells with an editing event, and add the editing information to the SingleCellExperiment as an `altExp()`. 
 
 ```{r}

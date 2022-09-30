@@ -11,16 +11,17 @@ get_splice_sites(txdb, slop = 4)
 
 \item{slop}{The number of bases upstream and downstream of splice site to extract}
 }
+\value{
+GenomicRanges object containing positions of splice sites, with flanking bases.
+}
 \description{
 This function will return intervals containing splice sites and
 adjacent regions.
 }
 \examples{
-\dontrun{
 if(require(TxDb.Hsapiens.UCSC.hg38.knownGene)){
   txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
   res <- get_splice_sites(txdb)
   res[1:5]
-}
 }
 }
