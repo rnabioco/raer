@@ -38,7 +38,7 @@ SEXP bedfile_open(SEXP filename)
   UNPROTECT(1);
 
   ffile->index = bed_read(fn);
-
+  
   if (ffile->index == NULL) {
     R_Free(ffile);
     Rf_error("'indexBed' indexing failed");

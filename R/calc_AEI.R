@@ -255,14 +255,14 @@ calc_AEI <- function(bam_fn,
 #' suffix. If not supplied, SNPS will be returned as a [GenomicRanges::GPos]
 #' object
 #'
+#' @return
+#' GPos object containing SNPs overlapping supplied genomic intervals
 #' @examples
-#' \dontrun{
 #' if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
 #'   gr <- GRanges(rep("22", 10),
 #'     IRanges(seq(10510077, 10610077, by = 1000)[1:10], width = 250),
 #'     strand = "+")
 #'   get_overlapping_snps(gr, SNPlocs.Hsapiens.dbSNP144.GRCh38)
-#' }
 #' }
 #' @importFrom rtracklayer export
 #' @importFrom BSgenome snpsByOverlaps
@@ -308,6 +308,10 @@ get_overlapping_snps <- function(gr,
 #' "genomic-unstranded" setting
 #' @param genes_gr GRanges object containing reference features to
 #' annotate the strand of the editing sites.
+#'
+#' @return
+#' GenomicRanges onbject containing pileup counts, with strand corrected based
+#' on supplied genomic intervals.
 #'
 #' @examples
 #' suppressPackageStartupMessages(library("GenomicRanges"))

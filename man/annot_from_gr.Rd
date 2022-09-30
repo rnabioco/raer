@@ -17,6 +17,10 @@ column names in the output obj}
 
 \item{...}{additional arguments to pass to \code{\link[GenomicRanges:findOverlaps-methods]{GenomicRanges::findOverlaps()}}}
 }
+\value{
+Either a SummarizedExperiment or GRanges object with additional
+annotations provided by the supplied GRanges object.
+}
 \description{
 Utility function to map annotations from GRanges
 to rowData of SummarizedExperiment or GRanges object . If multiple features

@@ -40,6 +40,9 @@ number of sites is stored as n_sites in the colData.}
 \item{min_count}{The minimum number of reads required when enumerating number
 of editing sites detected.}
 }
+\value{
+SummarizedExperiment supplemented with \code{edit_freq} assay.
+}
 \description{
 Adds editing frequencies to an existing
 SummarizedExperiment object (created by create_se\verb{). The SummarizedExperiment with a new assay for editing frequencies for each site (}edit_freq\verb{), depth of coverage computed using the indicatededited nucleotides (}depth`) and new colData

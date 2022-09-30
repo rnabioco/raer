@@ -52,7 +52,6 @@ This function will annotate a GRanges or rowRanges of
 a SummarizedExperiment with SNP positions from a SNP package
 }
 \examples{
-\dontrun{
 if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
   gr <- GRanges(rep("22", 10),
                 IRanges(seq(10510077,
@@ -61,7 +60,6 @@ if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
                         width = 250),
                 strand = "+")
   annot_snps(gr, SNPlocs.Hsapiens.dbSNP144.GRCh38)
-}
 }
 }
 \seealso{

@@ -322,7 +322,7 @@ get_pileup <- function(bamfiles,
         unlink(fns)
       }
     } else {
-      # res contains an outler list per chromosome
+      # res contains an outer list per chromosome
       # and an inner list of GRanges per pileup.
       # transpose to obtain an outer list per pileup
       res <- t_lst(res)
@@ -357,10 +357,6 @@ get_pileup <- function(bamfiles,
       xx
     })
 
-    # if(using_temp_files){
-    #   unlink(tbxfiles)
-    #   unlink(paste0(tbxfiles, ".tbi"))
-    # }
     unlink(outfiles)
   }
 
@@ -605,27 +601,27 @@ FilterParam <-
   }
 
 PILEUP_COLS <-  c("seqnames",
-  "pos",
-  "strand",
-  "Ref",
-  "Var",
-  "nRef",
-  "nVar",
-  "nA",
-  "nT",
-  "nC",
-  "nG",
-  "nN")
+                  "pos",
+                  "strand",
+                  "Ref",
+                  "Var",
+                  "nRef",
+                  "nVar",
+                  "nA",
+                  "nT",
+                  "nC",
+                  "nG",
+                  "nN")
 
 # convert list of lists to list of grs
 lists_to_grs <- function(x, seqinfo = NULL) {
   mc_cols <- setdiff(PILEUP_COLS, c("seqnames", "pos", "strand"))
   lapply(x, function(mc) {
     GRanges(seqnames = mc$seqname,
-      ranges = IRanges(start = mc$pos,
-        width = 1L),
-      strand = mc$strand,
-      mc[mc_cols],
-      seqinfo = seqinfo)
+            ranges = IRanges(start = mc$pos,
+                             width = 1L),
+            strand = mc$strand,
+            mc[mc_cols],
+            seqinfo = seqinfo)
   })
 }

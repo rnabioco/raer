@@ -81,6 +81,9 @@ annot_snps.SummarizedExperiment <- function(obj,
 #' column names in the output obj
 #' @param ... additional arguments to pass to [GenomicRanges::findOverlaps()]
 #'
+#' @return
+#' Either a SummarizedExperiment or GRanges object with additional
+#' annotations provided by the supplied GRanges object.
 #' @examples
 #' example(create_se, echo = FALSE)
 #' library(SummarizedExperiment)
@@ -105,12 +108,6 @@ annot_from_gr <- function(obj, gr, cols_to_map, ...) {
     gr_sites <- obj
     return_se <- FALSE
   }
-
-  # missing_chroms <- setdiff(seqlevels(gr), seqlevels(gr_sites))
-  # if(length(missing_chroms) != 0){
-  #   warning("The following chromosomes in gr are not present in obj\n",
-  #           missing_chroms)
-  # }
 
   overlaps <- findOverlaps(gr_sites, gr, ...)
 

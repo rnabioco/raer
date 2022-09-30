@@ -14,12 +14,10 @@
 #' @param ... For the generic, further arguments to pass to specific methods.
 #' Unused for now.
 #'
-#' @returns Either a GRanges or SummarizedExperiment object with
+#' @return Either a GRanges or SummarizedExperiment object with
 #' a new column "snp" added with information from "col_to_aggr"
 #'
-#'
 #' @examples
-#' \dontrun{
 #' if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
 #'   gr <- GRanges(rep("22", 10),
 #'                 IRanges(seq(10510077,
@@ -28,7 +26,6 @@
 #'                         width = 250),
 #'                 strand = "+")
 #'   annot_snps(gr, SNPlocs.Hsapiens.dbSNP144.GRCh38)
-#' }
 #' }
 #' @seealso [SNPlocs.Hsapiens.dbSNP144.GRCh38](https://bioconductor.org/packages/release/data/annotation/html/SNPlocs.Hsapiens.dbSNP144.GRCh38.html)
 #' @export

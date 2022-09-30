@@ -8,6 +8,7 @@
 #' @param overwrite if TRUE, regenerate index if it already exists
 #' @return name of index generated, which is the bam file + ".bri"
 #'
+#' @rdname tag_index
 #' @examples
 #' bam_fn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
 #' build_tag_index(bam_fn)
@@ -68,6 +69,7 @@ build_tag_index <- function(bamfile, tag = "CB", n_records_to_check = 1e6,
 #' @param bamfile tag sorted bamfile, indexed with [build_tag_index()]
 #' @return Character vector of tags
 #'
+#' @rdname tag_index
 #' @examples
 #' bam_fn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
 #' build_tag_index(bam_fn)
@@ -96,6 +98,7 @@ show_tag_index <- function(bamfile) {
 #' @returns Returns name of output bam file. the output bam file will be
 #'   positionally sorted and positionally indexed using Rsamtools.
 #'
+#' @rdname tag_index
 #' @examples
 #' library(GenomicAlignments)
 #'
@@ -225,13 +228,33 @@ filter_by_coverage <- function(bamfile, gr, min_counts,
 }
 
 
-get_cell_pileup <- function(bamfn, fafn, cellbarcodes, per_cell, ...) {
+get_cell_pileup <- function(bamfn,
+                            fafn,
+                            cellbarcodes,
+                            assay_cols,
+                            per_cell,
+                            verbose,
+                            idx = 1,
+                            id = NULL,
+                            ...) {
+  if (verbose) {
+    if(per_cell){
+      message("working on: batch ", idx,
+              " (cells ", 1 + ((idx-1) * length(cellbarcodes)),
+              "-",
+              idx * length(cellbarcodes),
+              ")")
+    } else {
+      message("working on: group ", idx)
+    }
+  }
+
   if(per_cell){
     bam <- lapply(cellbarcodes,
-                          function(x){
-                            get_tag_bam(bamfn,
-                                        barcodes = x,
-                                        outbam = NULL)})
+                  function(x){
+                    get_tag_bam(bamfn,
+                                barcodes = x,
+                                outbam = NULL)})
     bam <- unlist(bam)
   } else {
     bam <- get_tag_bam(bamfn,
@@ -239,10 +262,29 @@ get_cell_pileup <- function(bamfn, fafn, cellbarcodes, per_cell, ...) {
                        outbam = NULL)
   }
   on.exit(unlink(c(bam, paste0(bam, ".bai"))))
-  out <- get_pileup(bam, fafile = fafn, ...)
+  out <- get_pileup(bam,
+                    fafile = fafn,
+                    BPPARAM = BiocParallel::SerialParam(),
+                    ...)
+  if(per_cell) {
+    # figure out numeric assays
+    num_cols <- assay_cols[which(sapply(mcols(out[[1]])[assay_cols], is.numeric))]
+    # remove zero depth (helps with making the sparseMatrices)
+    out <- lapply(out, function(x) {
+      to_keep <- rowSums(as.matrix(mcols(x)[num_cols])) > 0
+      x[to_keep]
+    })
+    names(out) <- cellbarcodes
+    id <- NULL
+  }
+  out <- create_se(out,
+                  assay_cols = assay_cols,
+                  sparse = TRUE,
+                  fill_na = 0L,
+                  sample_names = id,
+                  verbose = verbose)
   out
 }
-
 
 #' Calculate editing frequencies per cell or per cluster
 #'
@@ -254,14 +296,9 @@ get_cell_pileup <- function(bamfn, fafn, cellbarcodes, per_cell, ...) {
 #'   is supplied it is assumed that alignments from cell barcodes in each list element
 #'   should be pooled. If a single character vector, it is assumed that each cell barcode
 #'   should be processed independently. See examples for specification.
-#' @param min_reads Minimum read counts required to consider a site for editing.
-#'   This is calculated across all reads in the bamfile prior to running `[get_pileup()]`
-#'   per cell to remove low-frequency events. If set to 0 (default) this step will
-#'   not be run. See `filter_by_coverage()` for more details.
 #' @param assay_cols assays to store in returned se. Set to "A" and "G". Note that
 #'   storing multiple assays can require large amounts of memory.
 #' @param tag_index_args arguments pass to [`build_tag_index()`]
-#' @param sparse if TRUE, store matrices in sparseMatrix format in SummarizedExperiment.
 #' @param BPPARAM BiocParallel instance. Parallel computation occurs across
 #'   each entry in the cell_barcodes list, or across batches of single cells specified
 #'   by batch_size.
@@ -321,10 +358,8 @@ sc_editing <- function(bamfile,
                        fafile,
                        bedfile,
                        cell_barcodes,
-                       min_reads = 0L,
                        assay_cols = c("nA", "nG"),
                        tag_index_args = list(tag = "CB"),
-                       sparse = TRUE,
                        BPPARAM = SerialParam(),
                        batch_size = 50,
                        verbose = TRUE,
@@ -332,9 +367,9 @@ sc_editing <- function(bamfile,
 
   if (!all(assay_cols %in% PILEUP_COLS)) {
     allowed_vals <- paste(PILEUP_COLS[5:length(PILEUP_COLS)],
-      collapse = ", ")
+                          collapse = ", ")
     stop("assay_cols input not correct\n  ",
-      "must match ", allowed_vals)
+         "must match ", allowed_vals)
   }
 
   # fail early if incorrect args passed through ...
@@ -343,6 +378,7 @@ sc_editing <- function(bamfile,
   if (length(invalid_args) > 0) {
     stop(invalid_args, " is not a valid argument for get_pileup()")
   }
+
   idx_fn <- paste0(bamfile, ".bri")
   if (!file.exists(idx_fn)) {
     if (verbose) message("building cellbarcode index for bam file")
@@ -354,7 +390,6 @@ sc_editing <- function(bamfile,
     stopifnot(batch_size > 0)
     ids <- cell_barcodes
     cell_barcodes <- split_vec(cell_barcodes, batch_size)
-    #names(cell_barcodes) <- ids
   } else {
     per_cell <- FALSE
   }
@@ -364,66 +399,24 @@ sc_editing <- function(bamfile,
     warning(n_invalid_bcs, " cell_barcodes are missing from the tag index.")
   }
 
-  if (min_reads > 0) {
-    if (verbose) message("Examining coverage at supplied sites.")
-    bed <- filter_by_coverage(bamfile, bedfile, min_reads, verbose = verbose)
-    if (length(bed) == 0) stop("no sites remaining to process")
-    tmp_bed <- tempfile(fileext = ".bed")
-    on.exit(unlink(tmp_bed), add = TRUE)
-    export(bed, tmp_bed)
-    bedfile <- tmp_bed
-  }
-
-  # build c-level hash of regions to keep once, rather at every iteration
-  # probably won't work on windows.
-  idx <- indexBed(bedfile)
-  on.exit(close(idx), add = TRUE)
-
   if (verbose) message("beginning pileup")
-  res <- bplapply(seq_along(cell_barcodes), function(i) {
-    if (verbose) {
-      if(per_cell){
-        message("working on: batch ", i,
-                " cells [", 1 + ((i-1) * batch_size),
-                       "-",
-                i * batch_size,
-                      "]")
-      } else {
-        message("working on: group ", i)
-      }
-    }
-    plps <- get_cell_pileup(bamfile, fafile, cell_barcodes[[i]],
+  res <- bpmapply(get_cell_pileup,
+                  cellbarcodes = cell_barcodes,
+                  idx = seq_along(cell_barcodes),
+                  id = names(cell_barcodes),
+                  MoreArgs = list(
+                    bamfn = bamfile,
+                    fafn = fafile,
+                    assay_cols = assay_cols,
                     per_cell = per_cell,
-      bedfile = NULL, bedidx = idx, return_data = TRUE,
-      verbose = verbose,
-      BPPARAM = BiocParallel::SerialParam(),
-      ...)
-    if(per_cell){
-      names(plps) <- cell_barcodes[[i]]
-    }
-    plps
-  }, BPPARAM = BPPARAM)
+                    bedfile = bedfile,
+                    bedidx = NULL,
+                    return_data = TRUE,
+                    verbose = verbose,
+                    ...),
+                  BPPARAM = BPPARAM,
+                  SIMPLIFY = FALSE)
   bpstop(BPPARAM)
-
-  if(per_cell) {
-    res <- unlist_w_names(res)
-    # figure out numeric assays
-    num_cols <- assay_cols[which(sapply(mcols(res[[1]])[assay_cols], is.numeric))]
-    # remove zero depth (helps with making the sparseMatrices)
-    res <- lapply(res, function(x) {
-      to_keep <- rowSums(as.matrix(mcols(x)[num_cols])) > 0
-      x[to_keep]
-    })
-   # res <- lapply(res, function(x), )
-  } else {
-    names(res) <- names(cell_barcodes)
-  }
-
-  if (verbose) message("collecting pileups into summarizedExperiment")
-  se <- create_se(res,
-    assay_cols = assay_cols,
-    sparse = sparse,
-    fill_na = 0L,
-    verbose = verbose)
-  se
+  if (verbose) message("pileup completing, binding summarizedExperiments")
+  bind_se(res)
 }

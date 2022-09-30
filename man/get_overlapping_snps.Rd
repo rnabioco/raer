@@ -16,6 +16,9 @@ the file can be optionally compressed by including a ".gz"
 suffix. If not supplied, SNPS will be returned as a \link[GenomicRanges:GPos-class]{GenomicRanges::GPos}
 object}
 }
+\value{
+GPos object containing SNPs overlapping supplied genomic intervals
+}
 \description{
 This function will find SNPs overlapping
 supplied intervals using a SNPlocs package. The SNPs
@@ -23,7 +26,6 @@ can be returned in memory (as GPos objects) or written
 to disk as a bed-file (optionally compressed).
 }
 \examples{
-
 if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
   gr <- GRanges(rep("22", 10),
     IRanges(seq(10510077, 10610077, by = 1000)[1:10], width = 250),

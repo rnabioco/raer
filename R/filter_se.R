@@ -11,6 +11,8 @@
 #' example(create_se, echo = FALSE)
 #' remove_multiallelic(se)
 #'
+#' @rdname filter_se
+#'
 #' @importFrom stringr str_count
 #' @export
 remove_multiallelic <- function(se) {
@@ -34,13 +36,13 @@ remove_multiallelic <- function(se) {
 #'
 #' @param txdb A TxDb object
 #' @param slop The number of bases upstream and downstream of splice site to extract
+#' @return
+#' GenomicRanges object containing positions of splice sites, with flanking bases.
 #' @examples
-#' \dontrun{
 #' if(require(TxDb.Hsapiens.UCSC.hg38.knownGene)){
 #'   txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 #'   res <- get_splice_sites(txdb)
 #'   res[1:5]
-#' }
 #' }
 #' @importFrom GenomicFeatures intronsByTranscript
 #' @export
@@ -75,8 +77,8 @@ get_splice_sites <- function(txdb, slop = 4) {
 #' @param ignore.strand if TRUE do not consider strand when comparing editing sites to
 #' splice sites
 #'
+#' @rdname filter_se
 #' @examples
-#' \dontrun{
 #' if(require(TxDb.Hsapiens.UCSC.hg38.knownGene)){
 #'   library(SummarizedExperiment)
 #'   nrows <- 5; ncols <- 6
@@ -91,7 +93,6 @@ get_splice_sites <- function(txdb, slop = 4) {
 #'
 #'   se <- remove_splice_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
 #'   se
-#' }
 #' }
 #' @importFrom GenomicFeatures intronsByTranscript
 #' @export
@@ -135,6 +136,10 @@ remove_splice_variants <- function(se, txdb,
 #'   se <- remove_clustered_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
 #'   se
 #' }
+#' @rdname filter_se
+#' @return
+#' SummarizedExperiment with sites removed from object dependent on filtering applied.
+#'
 #' @importFrom GenomicFeatures mapToTranscripts
 #' @export
 remove_clustered_variants <- function(se, txdb,
