@@ -8,9 +8,9 @@
 <meta name="description" content="raer">
 <title>Identifying RNA editing sites using RNA and DNA sequencing data • raer</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.1.0/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.1.0/bootstrap.bundle.min.js"></script><link href="../deps/_Source%20Sans%20Pro-0.4.1/font.css" rel="stylesheet">
-<link href="../deps/_Source%20Code%20Pro-0.4.1/font.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.1.3/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.1.3/bootstrap.bundle.min.js"></script><link href="../deps/Source_Sans_Pro-0.4.2/font.css" rel="stylesheet">
+<link href="../deps/Source_Code_Pro-0.4.2/font.css" rel="stylesheet">
 <!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- bootstrap-toc --><script src="https://cdn.rawgit.com/afeld/bootstrap-toc/v1.0.1/dist/bootstrap-toc.min.js"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Identifying RNA editing sites using RNA and DNA sequencing data">
@@ -78,7 +78,7 @@
                         <h4 data-toc-skip class="author">Kent
 Riemondy</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2022-07-28</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2022-09-30</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/novel-sites.Rmd" class="external-link"><code>vignettes/novel-sites.Rmd</code></a></small>
       <div class="d-none name"><code>novel-sites.Rmd</code></div>
@@ -112,27 +112,27 @@ variable to a valid file path to keep the files for reuse.</p>
 <span><span class="va">fns</span></span></code></pre></div>
 <pre><code><span><span class="co">## $bams</span></span>
 <span><span class="co">##                              ERR262996_dedup_chr4_sub.bam </span></span>
-<span><span class="co">##            "/tmp/RtmpY79hrs/ERR262996_dedup_chr4_sub.bam" </span></span>
+<span><span class="co">##            "/tmp/RtmpmwOtOv/ERR262996_dedup_chr4_sub.bam" </span></span>
 <span><span class="co">##                   SRR1258218_Aligned.sorted.dedup_sub.bam </span></span>
-<span><span class="co">## "/tmp/RtmpY79hrs/SRR1258218_Aligned.sorted.dedup_sub.bam" </span></span>
+<span><span class="co">## "/tmp/RtmpmwOtOv/SRR1258218_Aligned.sorted.dedup_sub.bam" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $bai</span></span>
 <span><span class="co">##                              ERR262996_dedup_chr4_sub.bam.bai </span></span>
-<span><span class="co">##            "/tmp/RtmpY79hrs/ERR262996_dedup_chr4_sub.bam.bai" </span></span>
+<span><span class="co">##            "/tmp/RtmpmwOtOv/ERR262996_dedup_chr4_sub.bam.bai" </span></span>
 <span><span class="co">##                   SRR1258218_Aligned.sorted.dedup_sub.bam.bai </span></span>
-<span><span class="co">## "/tmp/RtmpY79hrs/SRR1258218_Aligned.sorted.dedup_sub.bam.bai" </span></span>
+<span><span class="co">## "/tmp/RtmpmwOtOv/SRR1258218_Aligned.sorted.dedup_sub.bam.bai" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $fasta</span></span>
 <span><span class="co">##                   hg38_chr4.fa.bgz </span></span>
-<span><span class="co">## "/tmp/RtmpY79hrs/hg38_chr4.fa.bgz" </span></span>
+<span><span class="co">## "/tmp/RtmpmwOtOv/hg38_chr4.fa.bgz" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $snps</span></span>
 <span><span class="co">##                   chr4snps.bed.gz </span></span>
-<span><span class="co">## "/tmp/RtmpY79hrs/chr4snps.bed.gz" </span></span>
+<span><span class="co">## "/tmp/RtmpmwOtOv/chr4snps.bed.gz" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $rmsk</span></span>
 <span><span class="co">##                   rmsk_hg38.tsv.gz </span></span>
-<span><span class="co">## "/tmp/RtmpY79hrs/rmsk_hg38.tsv.gz"</span></span></code></pre>
+<span><span class="co">## "/tmp/RtmpmwOtOv/rmsk_hg38.tsv.gz"</span></span></code></pre>
 <p>Additionally we will use the following additional annotation
 resources:</p>
 <ul>
@@ -275,14 +275,14 @@ passing these DNA-seq based filters independent of strand.</p>
 <p>Next we filter to remove any multi-allelic sites. These sites are
 stored as comma-separated strings in the <code>Var</code> assay
 (e.g. <code>AG,AC</code>). Non-variant sites are stored as
-<code>-</code>. <code><a href="../reference/remove_multiallelic.html">remove_multiallelic()</a></code> will remove any sites
+<code>-</code>. <code><a href="../reference/filter_se.html">remove_multiallelic()</a></code> will remove any sites
 that have multiple variants in the samples present in the
 <code>summarizedExperiment</code> object. It will add a new column to
 the <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData()</a></code> to indicate the variant for each site, and
 will calculate an <code>allele_freq</code> assay with variant allele
 frequencies for each sample.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/remove_multiallelic.html">remove_multiallelic</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_se.html">remove_multiallelic</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span>
 <span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## DataFrame with 197 rows and 2 columns</span></span>
@@ -326,7 +326,7 @@ information to the <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/S
 variant types. For example if an A-&gt;G variant is located proximal to
 a C-&gt;T variant then the variants will be removed.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/remove_clustered_variants.html">remove_clustered_variants</a></span><span class="op">(</span><span class="va">se</span>, <span class="va">txdb</span>, variant_dist <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_se.html">remove_clustered_variants</a></span><span class="op">(</span><span class="va">se</span>, <span class="va">txdb</span>, variant_dist <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Warning in .Seqinfo.mergexy(x, y): Each of the 2 combined objects has sequence levels not in the other:</span></span>
 <span><span class="co">##   - in 'x': GL000008.2, GL000009.2, GL000194.1, GL000195.1, GL000205.2, GL000208.1, GL000213.1, GL000214.1, GL000216.2, GL000218.1, GL000219.1, GL000220.1, GL000221.1, GL000224.1, GL000225.1, GL000226.1, KI270302.1, KI270303.1, KI270304.1, KI270305.1, KI270310.1, KI270311.1, KI270312.1, KI270315.1, KI270316.1, KI270317.1, KI270320.1, KI270322.1, KI270329.1, KI270330.1, KI270333.1, KI270334.1, KI270335.1, KI270336.1, KI270337.1, KI270338.1, KI270340.1, KI270362.1, KI270363.1, KI270364.1, KI270366.1, KI270371.1, KI270372.1, KI270373.1, KI270374.1, KI270375.1, KI270376.1, KI270378.1, KI270379.1, KI270381.1, KI270382.1, KI270383.1, KI270384.1, KI270385.1, KI270386.1, KI270387.1, KI270388.1, KI270389.1, KI270390.1, KI270391.1, KI270392.1, KI270393.1, KI270394.1, KI270395.1, KI270396.1, KI270411.1, KI270412.1, KI270414.1, KI270417.1, KI270418.1, KI270419.1, KI270420.1, KI270422.1, KI270423.1, KI270424.1, KI270425.1, KI270429.1, KI270435.1, KI270438.1, KI270442.1, KI270448.1, KI270465.1, KI270466.1, KI270467.1, KI270468.1, KI270507.1, KI270508.1, KI270509.1, KI270510.1, KI270511.1, KI270512.1, KI270515.1, KI270516.1, KI270517.1, KI270518.1, KI270519.1, KI270521.1, KI270522.1, KI270528.1, KI270529.1, KI270530.1, KI270538.1, KI270539.1, KI270544.1, KI270548.1, KI270579.1, KI270580.1, KI270581.1, KI270582.1, KI270583.1, KI270584.1, KI270587.1, KI270588.1, KI270589.1, KI270590.1, KI270591.1, KI270593.1, KI270706.1, KI270707.1, KI270708.1, KI270709.1, KI270710.1, KI270711.1, KI270712.1, KI270713.1, KI270714.1, KI270715.1, KI270716.1, KI270717.1, KI270718.1, KI270719.1, KI270720.1, KI270721.1, KI270722.1, KI270723.1, KI270724.1, KI270725.1, KI270726.1, KI270727.1, KI270728.1, KI270729.1, KI270730.1, KI270731.1, KI270732.1, KI270733.1, KI270734.1, KI270735.1, KI270736.1, KI270737.1, KI270738.1, KI270739.1, KI270740.1, KI270741.1, KI270742.1, KI270743.1, KI270744.1, KI270745.1, KI270746.1, KI270747.1, KI270748.1, KI270749.1, KI270750.1, KI270751.1, KI270752.1, KI270753.1, KI270754.1, KI270755.1, KI270756.1, KI270757.1</span></span>
 <span><span class="co">##   - in 'y': chr1_GL383518v1_alt, chr1_GL383519v1_alt, chr1_GL383520v2_alt, chr1_KI270706v1_random, chr1_KI270707v1_random, chr1_KI270708v1_random, chr1_KI270709v1_random, chr1_KI270710v1_random, chr1_KI270711v1_random, chr1_KI270712v1_random, chr1_KI270713v1_random, chr1_KI270714v1_random, chr1_KI270759v1_alt, chr1_KI270760v1_alt, chr1_KI270761v1_alt, chr1_KI270762v1_alt, chr1_KI270763v1_alt, chr1_KI270764v1_alt, chr1_KI270765v1_alt, chr1_KI270766v1_alt, chr1_KI270892v1_alt, chr1_KN196472v1_fix, chr1_KN196473v1_fix, chr1_KN196474v1_fix, chr1_KN538360v1_fix, chr1_KN538361v1_fix, chr1_KQ031383v1_fix, chr1_KQ458382v1_alt, chr1_KQ458383v1_alt, chr1_KQ458384v1_alt, chr1_KQ983255v1_alt, chr1_KV880763v1_alt, chr1_KZ208904v1_alt, chr1_KZ208905v1_alt, chr1_KZ208906v1_fix, chr1_KZ559100v1_fix, chr2_GL383521v1_alt, chr2_GL383522v1_alt, chr2_GL582966v2_alt, chr2_KI270715v1_random, chr2_KI270716v1_random, chr2_KI270767v1_alt, chr2_KI270768v1_alt, chr2_KI270769v1_alt, chr2_KI270770v1_alt, chr2_KI270771v1_alt, chr2_KI270772v1_alt, chr2_KI270773v1_alt, chr2_KI270774v1_alt, chr2_KI270775v1_alt, chr2_KI270776v1_alt, chr2_KI270893v1_alt, chr2_KI270894v1_alt, chr2_KN538362v1_fix, chr2_KN538363v1_fix, chr2_KQ031384v1_fix, chr2_KQ983256v1_alt, chr2_KZ208907v1_alt, chr2_KZ208908v1_alt, chr2_ML143341v1_fix, chr2_ML143342v1_fix, chr3_GL000221v1_random, chr3_GL383526v1_alt, chr3_JH636055v2_alt, chr3_KI270777v1_alt, chr3_KI270778v1_alt, chr3_KI270779v1_alt, chr3_KI270780v1_alt, chr3_KI270781v1_alt, chr3_KI270782v1_alt, chr3_KI270783v1_alt, chr3_KI270784v1_alt, chr3_KI270895v1_alt, chr3_KI270924v1_alt, chr3_KI270934v1_alt, chr3_KI270935v1_alt, chr3_KI270936v1_alt, chr3_KI270937v1_alt, chr3_KN196475v1_fix, chr3_KN196476v1_fix, chr3_KN538364v1_fix, chr3_KQ031385v1_fix, chr3_KQ031386v1_fix, chr3_KV766192v1_fix, chr3_KZ208909v1_alt, chr3_KZ559101v1_alt, chr3_KZ559102v1_alt, chr3_KZ559103v1_alt, chr3_KZ559104v1_fix, chr3_KZ559105v1_alt, chr3_ML143343v1_alt, chr4_GL000008v2_random, chr4_GL000257v2_alt, chr4_GL383527v1_alt, chr4_GL383528v1_alt, chr4_KI270785v1_alt, chr4_KI270786v1_alt, chr4_KI270787v1_alt, chr4_KI270788v1_alt, chr4_KI270789v1_alt, chr4_KI270790v1_alt, chr4_KI270896v1_alt, chr4_KI270925v1_alt, chr4_KQ090013v1_alt, chr4_KQ090014v1_alt, chr4_KQ090015v1_alt, chr4_KQ983257v1_fix, chr4_KQ983258v1_alt, chr4_KV766193v1_alt, chr4_ML143344v1_fix, chr4_ML143345v1_fix, chr4_ML143346v1_fix, chr4_ML143347v1_fix, chr4_ML143348v1_fix, chr4_ML143349v1_fix, chr5_GL000208v1_random, chr5_GL339449v2_alt, chr5_GL383530v1_alt, chr5_GL383531v1_alt, chr5_GL383532v1_alt, chr5_GL949742v1_alt, chr5_KI270791v1_alt, chr5_KI270792v1_alt, chr5_KI270793v1_alt, chr5_KI270794v1_alt, chr5_KI270795v1_alt, chr5_KI270796v1_alt, chr5_KI270897v1_alt, chr5_KI270898v1_alt, chr5_KN196477v1_alt, chr5_KV575243v1_alt, chr5_KV575244v1_fix, chr5_KZ208910v1_alt, chr5_ML143350v1_fix, chr6_GL000250v2_alt, chr6_GL000251v2_alt, chr6_GL000252v2_alt, chr6_GL000253v2_alt, chr6_GL000254v2_alt, chr6_GL000255v2_alt, chr6_GL000256v2_alt, chr6_GL383533v1_alt, chr6_KB021644v2_alt, chr6_KI270758v1_alt, chr6_KI270797v1_alt, chr6_KI270798v1_alt, chr6_KI270799v1_alt, chr6_KI270800v1_alt, chr6_KI270801v1_alt, chr6_KI270802v1_alt, chr6_KN196478v1_fix, chr6_KQ031387v1_fix, chr6_KQ090016v1_fix, chr6_KQ090017v1_alt, chr6_KV766194v1_fix, chr6_KZ208911v1_fix, chr6_ML143351v1_fix, chr7_GL383534v2_alt, chr7_KI270803v1_alt, chr7_KI270804v1_alt, chr7_KI270805v1_alt, chr7_KI270806v1_alt, chr7_KI270807v1_alt, chr7_KI270808v1_alt, chr7_KI270809v1_alt, chr7_KI270899v1_alt, chr7_KQ031388v1_fix, chr7_KV880764v1_fix, chr7_KV880765v1_fix, chr7_KZ208912v1_fix, chr7_KZ208913v1_alt, chr7_KZ559106v1_alt, chr7_ML143352v1_fix, chr8_KI270810v1_alt, chr8_KI270811v1_alt, chr8_KI270812v1_alt, chr8_KI270813v1_alt, chr8_KI270814v1_alt, chr8_KI270815v1_alt, chr8_KI270816v1_alt, chr8_KI270817v1_alt, chr8_KI270818v1_alt, chr8_KI270819v1_alt, chr8_KI270820v1_alt, chr8_KI270821v1_alt, chr8_KI270822v1_alt, chr8_KI270900v1_alt, chr8_KI270901v1_alt, chr8_KI270926v1_alt, chr8_KV880766v1_fix, chr8_KV880767v1_fix, chr8_KZ208914v1_fix, chr8_KZ208915v1_fix, chr8_KZ559107v1_alt, chr9_GL383539v1_alt, chr9_GL383540v1_alt, chr9_GL383541v1_alt, chr9_GL383542v1_alt, chr9_KI270717v1_random, chr9_KI270718v1_random, chr9_KI270719v1_random, chr9_KI270720v1_random, chr9_KI270823v1_alt, chr9_KN196479v1_fix, chr9_KQ090018v1_alt, chr9_KQ090019v1_alt, chr9_ML143353v1_fix, chr10_GL383545v1_alt, chr10_GL383546v1_alt, chr10_KI270824v1_alt, chr10_KI270825v1_alt, chr10_KN196480v1_fix, chr10_KN538365v1_fix, chr10_KN538366v1_fix, chr10_KN538367v1_fix, chr10_KQ090020v1_alt, chr10_KQ090021v1_fix, chr10_ML143354v1_fix, chr10_ML143355v1_fix, chr11_GL383547v1_alt, chr11_JH159136v1_alt, chr11_JH159137v1_alt, chr11_KI270721v1_random, chr11_KI270826v1_alt, chr11_KI270827v1_alt, chr11_KI270829v1_alt, chr11_KI270830v1_alt, chr11_KI270831v1_alt, chr11_KI270832v1_alt, chr11_KI270902v1_alt, chr11_KI270903v1_alt, chr11_KI270927v1_alt, chr11_KN196481v1_fix, chr11_KN538368v1_alt, chr11_KQ090022v1_fix, chr11_KQ759759v1_fix, chr11_KV766195v1_fix, chr11_KZ559108v1_fix, chr11_KZ559109v1_fix, chr11_KZ559110v1_alt, chr11_KZ559111v1_alt, chr11_ML143356v1_fix, chr11_ML143357v1_fix, chr11_ML143358v1_fix, chr11_ML143359v1_fix, chr11_ML143360v1_fix, chr12_GL383549v1_alt, chr12_GL383550v2_alt, chr12_GL383551v1_alt, chr12_GL383552v1_alt, chr12_GL383553v2_alt, chr12_GL877875v1_alt, chr12_GL877876v1_alt, chr12_KI270833v1_alt, chr12_KI270834v1_alt, chr12_KI270835v1_alt, chr12_KI270836v1_alt, chr12_KI270837v1_alt, chr12_KI270904v1_alt, chr12_KN196482v1_fix, chr12_KN538369v1_fix, chr12_KN538370v1_fix, chr12_KQ090023v1_alt, chr12_KQ759760v1_fix, chr12_KZ208916v1_fix, chr12_KZ208917v1_fix, chr12_KZ208918v1_alt, chr12_KZ559112v1_alt, chr12_ML143361v1_fix, chr12_ML143362v1_fix, chr13_KI270838v1_alt, chr13_KI270839v1_alt, chr13_KI270840v1_alt, chr13_KI270841v1_alt, chr13_KI270842v1_alt, chr13_KI270843v1_alt, chr13_KN196483v1_fix, chr13_KN538371v1_fix, chr13_KN538372v1_fix, chr13_KN538373v1_fix, chr13_KQ090024v1_alt, chr13_KQ090025v1_alt, chr13_ML143363v1</span></span></code></pre>
@@ -345,7 +345,7 @@ a C-&gt;T variant then the variants will be removed.</p>
 variants are low-confidence due to the possibility of
 mis-alignments.</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/remove_splice_variants.html">remove_splice_variants</a></span><span class="op">(</span><span class="va">se</span>, <span class="va">txdb</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_se.html">remove_splice_variants</a></span><span class="op">(</span><span class="va">se</span>, <span class="va">txdb</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Warning in .Seqinfo.mergexy(x, y): Each of the 2 combined objects has sequence levels not in the other:</span></span>
 <span><span class="co">##   - in 'x': GL000008.2, GL000009.2, GL000194.1, GL000195.1, GL000205.2, GL000208.1, GL000213.1, GL000214.1, GL000216.2, GL000218.1, GL000219.1, GL000220.1, GL000221.1, GL000224.1, GL000225.1, GL000226.1, KI270302.1, KI270303.1, KI270304.1, KI270305.1, KI270310.1, KI270311.1, KI270312.1, KI270315.1, KI270316.1, KI270317.1, KI270320.1, KI270322.1, KI270329.1, KI270330.1, KI270333.1, KI270334.1, KI270335.1, KI270336.1, KI270337.1, KI270338.1, KI270340.1, KI270362.1, KI270363.1, KI270364.1, KI270366.1, KI270371.1, KI270372.1, KI270373.1, KI270374.1, KI270375.1, KI270376.1, KI270378.1, KI270379.1, KI270381.1, KI270382.1, KI270383.1, KI270384.1, KI270385.1, KI270386.1, KI270387.1, KI270388.1, KI270389.1, KI270390.1, KI270391.1, KI270392.1, KI270393.1, KI270394.1, KI270395.1, KI270396.1, KI270411.1, KI270412.1, KI270414.1, KI270417.1, KI270418.1, KI270419.1, KI270420.1, KI270422.1, KI270423.1, KI270424.1, KI270425.1, KI270429.1, KI270435.1, KI270438.1, KI270442.1, KI270448.1, KI270465.1, KI270466.1, KI270467.1, KI270468.1, KI270507.1, KI270508.1, KI270509.1, KI270510.1, KI270511.1, KI270512.1, KI270515.1, KI270516.1, KI270517.1, KI270518.1, KI270519.1, KI270521.1, KI270522.1, KI270528.1, KI270529.1, KI270530.1, KI270538.1, KI270539.1, KI270544.1, KI270548.1, KI270579.1, KI270580.1, KI270581.1, KI270582.1, KI270583.1, KI270584.1, KI270587.1, KI270588.1, KI270589.1, KI270590.1, KI270591.1, KI270593.1, KI270706.1, KI270707.1, KI270708.1, KI270709.1, KI270710.1, KI270711.1, KI270712.1, KI270713.1, KI270714.1, KI270715.1, KI270716.1, KI270717.1, KI270718.1, KI270719.1, KI270720.1, KI270721.1, KI270722.1, KI270723.1, KI270724.1, KI270725.1, KI270726.1, KI270727.1, KI270728.1, KI270729.1, KI270730.1, KI270731.1, KI270732.1, KI270733.1, KI270734.1, KI270735.1, KI270736.1, KI270737.1, KI270738.1, KI270739.1, KI270740.1, KI270741.1, KI270742.1, KI270743.1, KI270744.1, KI270745.1, KI270746.1, KI270747.1, KI270748.1, KI270749.1, KI270750.1, KI270751.1, KI270752.1, KI270753.1, KI270754.1, KI270755.1, KI270756.1, KI270757.1</span></span>
 <span><span class="co">##   - in 'y': chr1_GL383518v1_alt, chr1_GL383519v1_alt, chr1_GL383520v2_alt, chr1_KI270706v1_random, chr1_KI270707v1_random, chr1_KI270708v1_random, chr1_KI270709v1_random, chr1_KI270710v1_random, chr1_KI270711v1_random, chr1_KI270712v1_random, chr1_KI270713v1_random, chr1_KI270714v1_random, chr1_KI270759v1_alt, chr1_KI270760v1_alt, chr1_KI270761v1_alt, chr1_KI270762v1_alt, chr1_KI270763v1_alt, chr1_KI270764v1_alt, chr1_KI270765v1_alt, chr1_KI270766v1_alt, chr1_KI270892v1_alt, chr1_KN196472v1_fix, chr1_KN196473v1_fix, chr1_KN196474v1_fix, chr1_KN538360v1_fix, chr1_KN538361v1_fix, chr1_KQ031383v1_fix, chr1_KQ458382v1_alt, chr1_KQ458383v1_alt, chr1_KQ458384v1_alt, chr1_KQ983255v1_alt, chr1_KV880763v1_alt, chr1_KZ208904v1_alt, chr1_KZ208905v1_alt, chr1_KZ208906v1_fix, chr1_KZ559100v1_fix, chr2_GL383521v1_alt, chr2_GL383522v1_alt, chr2_GL582966v2_alt, chr2_KI270715v1_random, chr2_KI270716v1_random, chr2_KI270767v1_alt, chr2_KI270768v1_alt, chr2_KI270769v1_alt, chr2_KI270770v1_alt, chr2_KI270771v1_alt, chr2_KI270772v1_alt, chr2_KI270773v1_alt, chr2_KI270774v1_alt, chr2_KI270775v1_alt, chr2_KI270776v1_alt, chr2_KI270893v1_alt, chr2_KI270894v1_alt, chr2_KN538362v1_fix, chr2_KN538363v1_fix, chr2_KQ031384v1_fix, chr2_KQ983256v1_alt, chr2_KZ208907v1_alt, chr2_KZ208908v1_alt, chr2_ML143341v1_fix, chr2_ML143342v1_fix, chr3_GL000221v1_random, chr3_GL383526v1_alt, chr3_JH636055v2_alt, chr3_KI270777v1_alt, chr3_KI270778v1_alt, chr3_KI270779v1_alt, chr3_KI270780v1_alt, chr3_KI270781v1_alt, chr3_KI270782v1_alt, chr3_KI270783v1_alt, chr3_KI270784v1_alt, chr3_KI270895v1_alt, chr3_KI270924v1_alt, chr3_KI270934v1_alt, chr3_KI270935v1_alt, chr3_KI270936v1_alt, chr3_KI270937v1_alt, chr3_KN196475v1_fix, chr3_KN196476v1_fix, chr3_KN538364v1_fix, chr3_KQ031385v1_fix, chr3_KQ031386v1_fix, chr3_KV766192v1_fix, chr3_KZ208909v1_alt, chr3_KZ559101v1_alt, chr3_KZ559102v1_alt, chr3_KZ559103v1_alt, chr3_KZ559104v1_fix, chr3_KZ559105v1_alt, chr3_ML143343v1_alt, chr4_GL000008v2_random, chr4_GL000257v2_alt, chr4_GL383527v1_alt, chr4_GL383528v1_alt, chr4_KI270785v1_alt, chr4_KI270786v1_alt, chr4_KI270787v1_alt, chr4_KI270788v1_alt, chr4_KI270789v1_alt, chr4_KI270790v1_alt, chr4_KI270896v1_alt, chr4_KI270925v1_alt, chr4_KQ090013v1_alt, chr4_KQ090014v1_alt, chr4_KQ090015v1_alt, chr4_KQ983257v1_fix, chr4_KQ983258v1_alt, chr4_KV766193v1_alt, chr4_ML143344v1_fix, chr4_ML143345v1_fix, chr4_ML143346v1_fix, chr4_ML143347v1_fix, chr4_ML143348v1_fix, chr4_ML143349v1_fix, chr5_GL000208v1_random, chr5_GL339449v2_alt, chr5_GL383530v1_alt, chr5_GL383531v1_alt, chr5_GL383532v1_alt, chr5_GL949742v1_alt, chr5_KI270791v1_alt, chr5_KI270792v1_alt, chr5_KI270793v1_alt, chr5_KI270794v1_alt, chr5_KI270795v1_alt, chr5_KI270796v1_alt, chr5_KI270897v1_alt, chr5_KI270898v1_alt, chr5_KN196477v1_alt, chr5_KV575243v1_alt, chr5_KV575244v1_fix, chr5_KZ208910v1_alt, chr5_ML143350v1_fix, chr6_GL000250v2_alt, chr6_GL000251v2_alt, chr6_GL000252v2_alt, chr6_GL000253v2_alt, chr6_GL000254v2_alt, chr6_GL000255v2_alt, chr6_GL000256v2_alt, chr6_GL383533v1_alt, chr6_KB021644v2_alt, chr6_KI270758v1_alt, chr6_KI270797v1_alt, chr6_KI270798v1_alt, chr6_KI270799v1_alt, chr6_KI270800v1_alt, chr6_KI270801v1_alt, chr6_KI270802v1_alt, chr6_KN196478v1_fix, chr6_KQ031387v1_fix, chr6_KQ090016v1_fix, chr6_KQ090017v1_alt, chr6_KV766194v1_fix, chr6_KZ208911v1_fix, chr6_ML143351v1_fix, chr7_GL383534v2_alt, chr7_KI270803v1_alt, chr7_KI270804v1_alt, chr7_KI270805v1_alt, chr7_KI270806v1_alt, chr7_KI270807v1_alt, chr7_KI270808v1_alt, chr7_KI270809v1_alt, chr7_KI270899v1_alt, chr7_KQ031388v1_fix, chr7_KV880764v1_fix, chr7_KV880765v1_fix, chr7_KZ208912v1_fix, chr7_KZ208913v1_alt, chr7_KZ559106v1_alt, chr7_ML143352v1_fix, chr8_KI270810v1_alt, chr8_KI270811v1_alt, chr8_KI270812v1_alt, chr8_KI270813v1_alt, chr8_KI270814v1_alt, chr8_KI270815v1_alt, chr8_KI270816v1_alt, chr8_KI270817v1_alt, chr8_KI270818v1_alt, chr8_KI270819v1_alt, chr8_KI270820v1_alt, chr8_KI270821v1_alt, chr8_KI270822v1_alt, chr8_KI270900v1_alt, chr8_KI270901v1_alt, chr8_KI270926v1_alt, chr8_KV880766v1_fix, chr8_KV880767v1_fix, chr8_KZ208914v1_fix, chr8_KZ208915v1_fix, chr8_KZ559107v1_alt, chr9_GL383539v1_alt, chr9_GL383540v1_alt, chr9_GL383541v1_alt, chr9_GL383542v1_alt, chr9_KI270717v1_random, chr9_KI270718v1_random, chr9_KI270719v1_random, chr9_KI270720v1_random, chr9_KI270823v1_alt, chr9_KN196479v1_fix, chr9_KQ090018v1_alt, chr9_KQ090019v1_alt, chr9_ML143353v1_fix, chr10_GL383545v1_alt, chr10_GL383546v1_alt, chr10_KI270824v1_alt, chr10_KI270825v1_alt, chr10_KN196480v1_fix, chr10_KN538365v1_fix, chr10_KN538366v1_fix, chr10_KN538367v1_fix, chr10_KQ090020v1_alt, chr10_KQ090021v1_fix, chr10_ML143354v1_fix, chr10_ML143355v1_fix, chr11_GL383547v1_alt, chr11_JH159136v1_alt, chr11_JH159137v1_alt, chr11_KI270721v1_random, chr11_KI270826v1_alt, chr11_KI270827v1_alt, chr11_KI270829v1_alt, chr11_KI270830v1_alt, chr11_KI270831v1_alt, chr11_KI270832v1_alt, chr11_KI270902v1_alt, chr11_KI270903v1_alt, chr11_KI270927v1_alt, chr11_KN196481v1_fix, chr11_KN538368v1_alt, chr11_KQ090022v1_fix, chr11_KQ759759v1_fix, chr11_KV766195v1_fix, chr11_KZ559108v1_fix, chr11_KZ559109v1_fix, chr11_KZ559110v1_alt, chr11_KZ559111v1_alt, chr11_ML143356v1_fix, chr11_ML143357v1_fix, chr11_ML143358v1_fix, chr11_ML143359v1_fix, chr11_ML143360v1_fix, chr12_GL383549v1_alt, chr12_GL383550v2_alt, chr12_GL383551v1_alt, chr12_GL383552v1_alt, chr12_GL383553v2_alt, chr12_GL877875v1_alt, chr12_GL877876v1_alt, chr12_KI270833v1_alt, chr12_KI270834v1_alt, chr12_KI270835v1_alt, chr12_KI270836v1_alt, chr12_KI270837v1_alt, chr12_KI270904v1_alt, chr12_KN196482v1_fix, chr12_KN538369v1_fix, chr12_KN538370v1_fix, chr12_KQ090023v1_alt, chr12_KQ759760v1_fix, chr12_KZ208916v1_fix, chr12_KZ208917v1_fix, chr12_KZ208918v1_alt, chr12_KZ559112v1_alt, chr12_ML143361v1_fix, chr12_ML143362v1_fix, chr13_KI270838v1_alt, chr13_KI270839v1_alt, chr13_KI270840v1_alt, chr13_KI270841v1_alt, chr13_KI270842v1_alt, chr13_KI270843v1_alt, chr13_KN196483v1_fix, chr13_KN538371v1_fix, chr13_KN538372v1_fix, chr13_KN538373v1_fix, chr13_KQ090024v1_alt, chr13_KQ090025v1_alt, chr13_ML143363v1</span></span></code></pre>
@@ -438,9 +438,9 @@ editing site.</p>
 Session info
 </summary><div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## R version 4.2.0 (2022-04-22)</span></span>
+<pre><code><span><span class="co">## R version 4.2.1 (2022-06-23)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu (64-bit)</span></span>
-<span><span class="co">## Running under: Ubuntu 20.04.4 LTS</span></span>
+<span><span class="co">## Running under: Ubuntu 20.04.5 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3</span></span>
@@ -459,66 +459,66 @@ Session info
 <span><span class="co">## [8] base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] TxDb.Hsapiens.UCSC.hg38.knownGene_3.15.0</span></span>
+<span><span class="co">##  [1] TxDb.Hsapiens.UCSC.hg38.knownGene_3.16.0</span></span>
 <span><span class="co">##  [2] rtracklayer_1.57.0                      </span></span>
-<span><span class="co">##  [3] SummarizedExperiment_1.27.1             </span></span>
+<span><span class="co">##  [3] SummarizedExperiment_1.27.3             </span></span>
 <span><span class="co">##  [4] MatrixGenerics_1.9.1                    </span></span>
 <span><span class="co">##  [5] matrixStats_0.62.0                      </span></span>
-<span><span class="co">##  [6] GenomicFeatures_1.49.5                  </span></span>
+<span><span class="co">##  [6] GenomicFeatures_1.49.7                  </span></span>
 <span><span class="co">##  [7] AnnotationDbi_1.59.1                    </span></span>
 <span><span class="co">##  [8] Biobase_2.57.1                          </span></span>
-<span><span class="co">##  [9] GenomicRanges_1.49.0                    </span></span>
-<span><span class="co">## [10] GenomeInfoDb_1.33.3                     </span></span>
-<span><span class="co">## [11] IRanges_2.31.0                          </span></span>
-<span><span class="co">## [12] S4Vectors_0.35.1                        </span></span>
-<span><span class="co">## [13] BiocGenerics_0.43.1                     </span></span>
+<span><span class="co">##  [9] GenomicRanges_1.49.1                    </span></span>
+<span><span class="co">## [10] GenomeInfoDb_1.33.7                     </span></span>
+<span><span class="co">## [11] IRanges_2.31.2                          </span></span>
+<span><span class="co">## [12] S4Vectors_0.35.4                        </span></span>
+<span><span class="co">## [13] BiocGenerics_0.43.4                     </span></span>
 <span><span class="co">## [14] raer_0.99.0                             </span></span>
 <span><span class="co">## [15] BiocStyle_2.25.0                        </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] bitops_1.0-7             fs_1.5.2                </span></span>
 <span><span class="co">##  [3] bit64_4.0.5              filelock_1.0.2          </span></span>
-<span><span class="co">##  [5] progress_1.2.2           httr_1.4.3              </span></span>
-<span><span class="co">##  [7] rprojroot_2.0.3          tools_4.2.0             </span></span>
-<span><span class="co">##  [9] bslib_0.3.1              utf8_1.2.2              </span></span>
+<span><span class="co">##  [5] progress_1.2.2           httr_1.4.4              </span></span>
+<span><span class="co">##  [7] rprojroot_2.0.3          tools_4.2.1             </span></span>
+<span><span class="co">##  [9] bslib_0.4.0              utf8_1.2.2              </span></span>
 <span><span class="co">## [11] R6_2.5.1                 DBI_1.1.3               </span></span>
 <span><span class="co">## [13] tidyselect_1.1.2         prettyunits_1.1.1       </span></span>
 <span><span class="co">## [15] curl_4.3.2               bit_4.0.4               </span></span>
-<span><span class="co">## [17] compiler_4.2.0           textshaping_0.3.6       </span></span>
-<span><span class="co">## [19] cli_3.3.0                xml2_1.3.3              </span></span>
-<span><span class="co">## [21] desc_1.4.1               DelayedArray_0.23.0     </span></span>
-<span><span class="co">## [23] bookdown_0.27            sass_0.4.1              </span></span>
-<span><span class="co">## [25] rappdirs_0.3.3           pkgdown_2.0.4           </span></span>
-<span><span class="co">## [27] systemfonts_1.0.4        stringr_1.4.0           </span></span>
-<span><span class="co">## [29] digest_0.6.29            Rsamtools_2.13.3        </span></span>
-<span><span class="co">## [31] R.utils_2.12.0           rmarkdown_2.14          </span></span>
-<span><span class="co">## [33] XVector_0.37.0           pkgconfig_2.0.3         </span></span>
-<span><span class="co">## [35] htmltools_0.5.2          dbplyr_2.2.1            </span></span>
+<span><span class="co">## [17] compiler_4.2.1           textshaping_0.3.6       </span></span>
+<span><span class="co">## [19] cli_3.4.1                xml2_1.3.3              </span></span>
+<span><span class="co">## [21] desc_1.4.2               DelayedArray_0.23.2     </span></span>
+<span><span class="co">## [23] bookdown_0.29            sass_0.4.2              </span></span>
+<span><span class="co">## [25] rappdirs_0.3.3           pkgdown_2.0.6           </span></span>
+<span><span class="co">## [27] systemfonts_1.0.4        stringr_1.4.1           </span></span>
+<span><span class="co">## [29] digest_0.6.29            Rsamtools_2.13.4        </span></span>
+<span><span class="co">## [31] R.utils_2.12.0           rmarkdown_2.16          </span></span>
+<span><span class="co">## [33] XVector_0.37.1           pkgconfig_2.0.3         </span></span>
+<span><span class="co">## [35] htmltools_0.5.3          dbplyr_2.2.1            </span></span>
 <span><span class="co">## [37] fastmap_1.1.0            BSgenome_1.65.2         </span></span>
-<span><span class="co">## [39] rlang_1.0.3              RSQLite_2.2.14          </span></span>
+<span><span class="co">## [39] rlang_1.0.6              RSQLite_2.2.17          </span></span>
 <span><span class="co">## [41] jquerylib_0.1.4          BiocIO_1.7.1            </span></span>
-<span><span class="co">## [43] generics_0.1.2           jsonlite_1.8.0          </span></span>
-<span><span class="co">## [45] BiocParallel_1.31.10     R.oo_1.25.0             </span></span>
-<span><span class="co">## [47] dplyr_1.0.9              RCurl_1.98-1.7          </span></span>
-<span><span class="co">## [49] magrittr_2.0.3           GenomeInfoDbData_1.2.8  </span></span>
-<span><span class="co">## [51] Matrix_1.4-1             Rcpp_1.0.8.3            </span></span>
+<span><span class="co">## [43] generics_0.1.3           jsonlite_1.8.0          </span></span>
+<span><span class="co">## [45] BiocParallel_1.31.12     R.oo_1.25.0             </span></span>
+<span><span class="co">## [47] dplyr_1.0.10             RCurl_1.98-1.8          </span></span>
+<span><span class="co">## [49] magrittr_2.0.3           GenomeInfoDbData_1.2.9  </span></span>
+<span><span class="co">## [51] Matrix_1.5-1             Rcpp_1.0.9              </span></span>
 <span><span class="co">## [53] fansi_1.0.3              R.methodsS3_1.8.2       </span></span>
-<span><span class="co">## [55] lifecycle_1.0.1          stringi_1.7.6           </span></span>
+<span><span class="co">## [55] lifecycle_1.0.2          stringi_1.7.8           </span></span>
 <span><span class="co">## [57] yaml_2.3.5               zlibbioc_1.43.0         </span></span>
-<span><span class="co">## [59] BiocFileCache_2.5.0      grid_4.2.0              </span></span>
-<span><span class="co">## [61] blob_1.2.3               parallel_4.2.0          </span></span>
-<span><span class="co">## [63] crayon_1.5.1             lattice_0.20-45         </span></span>
-<span><span class="co">## [65] Biostrings_2.65.1        hms_1.1.1               </span></span>
-<span><span class="co">## [67] KEGGREST_1.37.3          knitr_1.39              </span></span>
-<span><span class="co">## [69] pillar_1.7.0             rjson_0.2.21            </span></span>
+<span><span class="co">## [59] BiocFileCache_2.5.0      grid_4.2.1              </span></span>
+<span><span class="co">## [61] blob_1.2.3               parallel_4.2.1          </span></span>
+<span><span class="co">## [63] crayon_1.5.2             lattice_0.20-45         </span></span>
+<span><span class="co">## [65] Biostrings_2.65.6        hms_1.1.2               </span></span>
+<span><span class="co">## [67] KEGGREST_1.37.3          knitr_1.40              </span></span>
+<span><span class="co">## [69] pillar_1.8.1             rjson_0.2.21            </span></span>
 <span><span class="co">## [71] codetools_0.2-18         biomaRt_2.53.2          </span></span>
 <span><span class="co">## [73] XML_3.99-0.10            glue_1.6.2              </span></span>
-<span><span class="co">## [75] evaluate_0.15            data.table_1.14.2       </span></span>
+<span><span class="co">## [75] evaluate_0.16            data.table_1.14.2       </span></span>
 <span><span class="co">## [77] BiocManager_1.30.18      png_0.1-7               </span></span>
-<span><span class="co">## [79] vctrs_0.4.1              purrr_0.3.4             </span></span>
+<span><span class="co">## [79] vctrs_0.4.2              purrr_0.3.4             </span></span>
 <span><span class="co">## [81] assertthat_0.2.1         cachem_1.0.6            </span></span>
-<span><span class="co">## [83] xfun_0.31                restfulr_0.0.15         </span></span>
-<span><span class="co">## [85] ragg_1.2.2               tibble_3.1.7            </span></span>
+<span><span class="co">## [83] xfun_0.33                restfulr_0.0.15         </span></span>
+<span><span class="co">## [85] ragg_1.2.3               tibble_3.1.8            </span></span>
 <span><span class="co">## [87] GenomicAlignments_1.33.1 memoise_2.0.1           </span></span>
 <span><span class="co">## [89] ellipsis_0.3.2</span></span></code></pre>
 </details>
@@ -536,7 +536,7 @@ Session info
 
 <div class="pkgdown-footer-right">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
     </footer>

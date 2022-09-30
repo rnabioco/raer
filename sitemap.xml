@@ -28,25 +28,16 @@
     <loc>https://rnabioco.github.io/raer/index.html</loc>
   </url>
   <url>
-    <loc>https://rnabioco.github.io/raer/reference/BedFile-class.html</loc>
-  </url>
-  <url>
     <loc>https://rnabioco.github.io/raer/reference/annot_from_gr.html</loc>
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/annot_snps.html</loc>
   </url>
   <url>
-    <loc>https://rnabioco.github.io/raer/reference/build_tag_index.html</loc>
-  </url>
-  <url>
     <loc>https://rnabioco.github.io/raer/reference/calc_AEI.html</loc>
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/calc_edit_frequency.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/close.BedFile.html</loc>
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/correct_strand.html</loc>
@@ -64,6 +55,9 @@
     <loc>https://rnabioco.github.io/raer/reference/filter_by_coverage.html</loc>
   </url>
   <url>
+    <loc>https://rnabioco.github.io/raer/reference/filter_se.html</loc>
+  </url>
+  <url>
     <loc>https://rnabioco.github.io/raer/reference/getCoverageAtPositions.html</loc>
   </url>
   <url>
@@ -74,9 +68,6 @@
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/get_splice_sites.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/get_tag_bam.html</loc>
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/index.html</loc>
@@ -103,18 +94,9 @@
     <loc>https://rnabioco.github.io/raer/reference/read_tabix.html</loc>
   </url>
   <url>
-    <loc>https://rnabioco.github.io/raer/reference/remove_clustered_variants.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/remove_multiallelic.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/remove_splice_variants.html</loc>
-  </url>
-  <url>
     <loc>https://rnabioco.github.io/raer/reference/sc_editing.html</loc>
   </url>
   <url>
-    <loc>https://rnabioco.github.io/raer/reference/show_tag_index.html</loc>
+    <loc>https://rnabioco.github.io/raer/reference/tag_index.html</loc>
   </url>
 </urlset>
