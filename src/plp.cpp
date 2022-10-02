@@ -91,8 +91,8 @@ SEXP run_pileup(std::vector<std::string> bampaths,
     }
   }
 
-  if(event_filters.size() < 7){
-    stop("event filters must be a vector of 7 positive integers ");
+  if(event_filters.size() != 8){
+    stop("event filters must be a vector of 8 positive integers ");
   }
 
   char* creadsoutfn;

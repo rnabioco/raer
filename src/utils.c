@@ -138,6 +138,47 @@ int dist_to_splice(bam1_t* b, int pos, int dist){
   return -1;
 }
 
+// return
+// -1 if overhand >= dist,
+// 0 if no flanking splice
+// or overlang length if less than dist
+int check_splice_overhang(bam1_t* b, int pos, int dist){
+  int n_cigar = b->core.n_cigar;
+  const uint32_t *cigar = bam_get_cigar(b);
+
+  int i, c, ip, cl, p_op, r;
+  ip = 0;
+  p_op = -1; // CIGAR macros are from 0-9,
+  for (i = 0; i < n_cigar; ++i){
+    c = bam_cigar_op(cigar[i]);
+    cl = bam_cigar_oplen(cigar[i]);
+    if(c == BAM_CMATCH && pos >= ip && pos <= (cl + ip)) {
+      // site is in the 3' exon
+      if(i > 0 && p_op == BAM_CREF_SKIP){
+        r = cl >= dist ? -1 : cl;
+        return r;
+      }
+      // site is in the 5' exon
+      if(i < n_cigar){
+        ++i;
+        c = bam_cigar_op(cigar[i]);
+        if(c == BAM_CREF_SKIP){
+          r = cl >= dist ? -1 : cl;
+          return r;
+        }
+      }
+      // site not flanked by splice
+      return 0;
+    }
+    p_op = c;
+    if (bam_cigar_type(c)&1){
+      ip += cl;
+      continue;
+    }
+  }
+  Rf_error("site not found in read: %s %i %i %i", bam_get_qname(b), pos, p_op, cl);
+}
+
 // return -1 if no indel found
 int dist_to_indel(bam1_t* b, int pos, int dist){
   int n_cigar = b->core.n_cigar;

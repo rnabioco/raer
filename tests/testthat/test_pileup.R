@@ -476,5 +476,45 @@ test_that("poor quality reads get excluded with min_read_bqual", {
   expect_equal(n_diff, cov)
 })
 
+test_that("sites within short splice overhangs can be excluded",{
 
+  # 5 spliced reads, 2 unspliced
+  fp <- FilterParam(library_type = "genomic-unstranded",
+                    min_splice_overhang = 0,
+                    min_base_quality = 0)
+  res <- get_pileup(bamfn, fafn, filterParam = fp, region = "SPCS3:220-220")
+  expect_equal(length(res), 1)
+  expect_equal(res$nRef, 7)
+
+  # excludes 1 read 5' of splice site (SRR5564269.2688337, cigar 51M120N100M)
+  fp <- FilterParam(library_type = "genomic-unstranded",
+                    min_splice_overhang = 52,
+                    min_base_quality = 0)
+  res <- get_pileup(bamfn, fafn, filterParam = fp, region = "SPCS3:220-220")
+  expect_equal(length(res), 1)
+  expect_equal(res$nRef, 6)
+
+  fp <- FilterParam(library_type = "genomic-unstranded",
+                    min_splice_overhang = 0,
+                    min_base_quality = 0)
+  res <- get_pileup(bamfn, fafn, filterParam = fp, region = "SPCS3:350-350")
+  expect_equal(length(res), 1)
+  expect_equal(res$nRef, 5)
+
+  # excludes 1 read 3' of splice site (SRR5564269.224850, cigar 73M120N78M)
+  fp <- FilterParam(library_type = "genomic-unstranded",
+                    min_splice_overhang = 79,
+                    min_base_quality = 0)
+  res <- get_pileup(bamfn, fafn, filterParam = fp, region = "SPCS3:350-350")
+  expect_equal(length(res), 1)
+  expect_equal(res$nRef, 4)
+
+  # excludes all 5 spliced reads
+  fp <- FilterParam(library_type = "genomic-unstranded",
+                    min_splice_overhang = 101,
+                    min_base_quality = 0)
+  res <- get_pileup(bamfn, fafn, filterParam = fp, region = "SPCS3:350-350")
+  expect_equal(length(res), 0)
+
+})
 unlink(c(tmp, sort_cbbam, idx))

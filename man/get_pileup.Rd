@@ -37,6 +37,7 @@ FilterParam(
   homopolymer_len = 0L,
   max_mismatch_type = c(0L, 0L),
   min_read_bqual = c(0, 0),
+  min_splice_overhang = 0L,
   ignore_query_Ns = FALSE
 )
 }
@@ -121,6 +122,9 @@ c(X, Y).}
 
 \item{min_read_bqual}{Exclude read if more than X percent of the bases have
 base qualities less than Y. Numeric vector of length 2. e.g. c(0.25, 20)}
+
+\item{min_splice_overhang}{Exclude read if site is located adjacent to splice
+site with an overhang of less than given length.}
 
 \item{ignore_query_Ns}{ignored for now}
 }

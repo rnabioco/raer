@@ -392,7 +392,7 @@ static void clear_pcounts(pcounts *p){
 // struct for event filter params
 typedef struct  {
   int nmer, splice_dist, indel_dist, trim_5p_dist, trim_3p_dist;
-  int n_mm_type, n_mm;
+  int n_mm_type, n_mm, min_overhang;
 } efilter;
 
 static void get_var_string(varhash_t *vhash, char *out){
@@ -845,6 +845,7 @@ SEXP run_cpileup(const char** cbampaths,
   ef->nmer = event_filters[4];
   ef->n_mm_type = event_filters[5];
   ef->n_mm = event_filters[6];
+  ef->min_overhang = event_filters[7];
 
   if(read_bqual_filter){
     conf->read_qual.pct = read_bqual_filter[0];
@@ -1067,6 +1068,9 @@ SEXP run_cpileup(const char** cbampaths,
 
         // check for splice in alignment nearby
         if(ef->splice_dist && dist_to_splice(p->b, p->qpos, ef->splice_dist) >= 0) continue;
+
+        // check if site in splice overhang and > min_overhang
+        if(ef->min_overhang && check_splice_overhang(p->b, p->qpos, ef->min_overhang) > 0) continue;
 
         // check if indel event nearby
         if(ef->indel_dist && dist_to_indel(p->b, p->qpos, ef->indel_dist) >= 0) continue;
