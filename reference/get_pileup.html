@@ -90,6 +90,7 @@
 <span>  homopolymer_len <span class="op">=</span> <span class="fl">0L</span>,</span>
 <span>  max_mismatch_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0L</span>, <span class="fl">0L</span><span class="op">)</span>,</span>
 <span>  min_read_bqual <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
+<span>  min_splice_overhang <span class="op">=</span> <span class="fl">0L</span>,</span>
 <span>  ignore_query_Ns <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -231,6 +232,11 @@ c(X, Y).</p></dd>
 <dt>min_read_bqual</dt>
 <dd><p>Exclude read if more than X percent of the bases have
 base qualities less than Y. Numeric vector of length 2. e.g. c(0.25, 20)</p></dd>
+
+
+<dt>min_splice_overhang</dt>
+<dd><p>Exclude read if site is located adjacent to splice
+site with an overhang of less than given length.</p></dd>
 
 
 <dt>ignore_query_Ns</dt>

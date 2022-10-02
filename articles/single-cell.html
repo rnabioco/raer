@@ -78,7 +78,7 @@
                         <h4 data-toc-skip class="author">Kent
 Riemondy</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2022-09-30</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2022-10-02</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/single-cell.Rmd" class="external-link"><code>vignettes/single-cell.Rmd</code></a></small>
       <div class="d-none name"><code>single-cell.Rmd</code></div>
@@ -218,19 +218,19 @@ dataset from 10x Genomics.</p>
 <span><span class="va">fns</span></span></code></pre></div>
 <pre><code><span><span class="co">## $bams</span></span>
 <span><span class="co">##                   10k_PBMC_3p_nextgem_Chromium_X_intron_cbsorted_genome_rediportal_xf25_chr16.bam </span></span>
-<span><span class="co">## "/tmp/RtmpkQ4tfk/10k_PBMC_3p_nextgem_Chromium_X_intron_cbsorted_genome_rediportal_xf25_chr16.bam" </span></span>
+<span><span class="co">## "/tmp/RtmpnAuTcK/10k_PBMC_3p_nextgem_Chromium_X_intron_cbsorted_genome_rediportal_xf25_chr16.bam" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $fasta</span></span>
 <span><span class="co">##                   hg38_chr16.fasta.bgz </span></span>
-<span><span class="co">## "/tmp/RtmpkQ4tfk/hg38_chr16.fasta.bgz" </span></span>
+<span><span class="co">## "/tmp/RtmpnAuTcK/hg38_chr16.fasta.bgz" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $edit_sites</span></span>
 <span><span class="co">##                   rediportal_sites.bed.gz </span></span>
-<span><span class="co">## "/tmp/RtmpkQ4tfk/rediportal_sites.bed.gz" </span></span>
+<span><span class="co">## "/tmp/RtmpnAuTcK/rediportal_sites.bed.gz" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $sce</span></span>
 <span><span class="co">##                   sce.rds </span></span>
-<span><span class="co">## "/tmp/RtmpkQ4tfk/sce.rds"</span></span></code></pre>
+<span><span class="co">## "/tmp/RtmpnAuTcK/sce.rds"</span></span></code></pre>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bam_fn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bams</span></span>
 <span><span class="va">fa_fn</span> <span class="op">&lt;-</span>  <span class="va">fns</span><span class="op">$</span><span class="va">fasta</span></span>
@@ -239,7 +239,7 @@ dataset from 10x Genomics.</p>
 <code>build_tag_index</code>.</p>
 <div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/tag_index.html">build_tag_index</a></span><span class="op">(</span><span class="va">bam_fn</span>, tag <span class="op">=</span> <span class="st">"CB"</span>, overwrite <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] "/tmp/RtmpkQ4tfk/10k_PBMC_3p_nextgem_Chromium_X_intron_cbsorted_genome_rediportal_xf25_chr16.bam.bri"</span></span></code></pre>
+<pre><code><span><span class="co">## [1] "/tmp/RtmpnAuTcK/10k_PBMC_3p_nextgem_Chromium_X_intron_cbsorted_genome_rediportal_xf25_chr16.bam.bri"</span></span></code></pre>
 <p>We can query the index to see the cell-barcodes are present in the
 bam file using <code><a href="../reference/tag_index.html">show_tag_index()</a></code>, which will return a
 data.frame containing each <code>tag</code> value and the number of
@@ -417,7 +417,7 @@ Session info
 <span><span class="co">##  [1] rtracklayer_1.57.0          GenomicFeatures_1.49.7     </span></span>
 <span><span class="co">##  [3] AnnotationDbi_1.59.1        scater_1.25.7              </span></span>
 <span><span class="co">##  [5] ggplot2_3.3.6               scuttle_1.7.4              </span></span>
-<span><span class="co">##  [7] SingleCellExperiment_1.19.0 SummarizedExperiment_1.27.3</span></span>
+<span><span class="co">##  [7] SingleCellExperiment_1.19.1 SummarizedExperiment_1.27.3</span></span>
 <span><span class="co">##  [9] Biobase_2.57.1              GenomicRanges_1.49.1       </span></span>
 <span><span class="co">## [11] GenomeInfoDb_1.33.7         IRanges_2.31.2             </span></span>
 <span><span class="co">## [13] S4Vectors_0.35.4            BiocGenerics_0.43.4        </span></span>
