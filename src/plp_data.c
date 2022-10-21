@@ -4,10 +4,9 @@
 
 /* All of the following code mostly is templated on the Rsamtools approach
    to store and grow a c-level datastructure with bam/pileup data.
-   The main deviation is handling data from multiple bam files. The
-   datastructure grows per position across multiple files, in contrast to
-   growing per region.
-   On finish, the c-level datastucture will be converted to a SEXP,
+   The main deviation is handling data from multiple bam files, and the fields stores.
+   The datastructure grows per position across multiple files, in contrast to
+   growing per region. On finish, the c-level datastucture will be converted to a SEXP,
    avoiding realloc'ing a SEXP during the pileup.
  */
 
