@@ -248,7 +248,7 @@ get_pileup <- function(bamfiles,
       reads,
       bad_reads,
       idx_ptr)
-
+    
     if (!in_memory) {
       if (res != 0) {
         stop("Error occured during pileup", call. = FALSE)
@@ -418,7 +418,7 @@ read_pileup <- function(tbx_fn, region = NULL) {
       sep = "\t")
   }
 
-  count_cols <- c("nRef", "nVar", "nA", "nT", "nC", "nG", "nN")
+  count_cols <- c("nRef", "nVar", "nA", "nT", "nC", "nG", "nN", "nX")
 
   colnames(from)[4:ncol(from)] <- c("Ref", "Var", count_cols)
 
@@ -442,7 +442,8 @@ empty_plp_record <-  function() {
     nT = integer(),
     nC = integer(),
     nG = integer(),
-    nN = integer())
+    nN = integer(),
+    nX = integer())
   df <- do.call(data.frame, col_types)
   gr <- GRanges(c(seqnames = NULL, ranges = NULL, strand = NULL))
   mcols(gr) <- df
@@ -619,7 +620,8 @@ PILEUP_COLS <-  c("seqnames",
                   "nT",
                   "nC",
                   "nG",
-                  "nN")
+                  "nN",
+                  "nX")
 
 # convert list of lists to list of grs
 lists_to_grs <- function(x, seqinfo = NULL) {

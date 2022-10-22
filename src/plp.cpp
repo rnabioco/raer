@@ -63,7 +63,7 @@ SEXP run_pileup(std::vector<std::string> bampaths,
   if(min_reads < 0){
     stop("min_reads must be positive");
   }
-
+  
   if(min_mapQ.size() == 0){
     stop("please supply min_mapQ parameter");
   }

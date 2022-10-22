@@ -37,7 +37,7 @@ int checkInterrupt() {
   return (R_ToplevelExec(chkIntFn, NULL) == FALSE);
 }
 
-KHASH_SET_INIT_STR(rname);
+KHASH_SET_INIT_STR(rname)
 typedef khash_t(rname) *rnhash_t;
 
 static unsigned char comp_base[256] = {
@@ -217,7 +217,7 @@ static int readaln(void *data, bam1_t *b) {
         skip = 1;
         continue;
       }
-      if(key)  free(key);
+      if(key) free(key);
     }
 
     // test required and filter flags
@@ -272,7 +272,7 @@ static void clear_rname_set(rnhash_t rnames)
 
 // structs for holding counts
 typedef struct {
-  int total, nr, nv, na, nt, ng, nc, nn;
+  int total, nr, nv, na, nt, ng, nc, nn, nx;
   int ref_b;
   varhash_t var;
 } counts;
@@ -284,8 +284,8 @@ typedef struct  {
 } pcounts;
 
 static void clear_counts(counts *p){
-  p->na = p->nc = p->ng = p->nn = p->nr = p->nt = p->nv = p->total = 0;
-   p->ref_b = 0;
+  p->na = p->nc = p->ng = p->nn = p->nr = p->nt = p->nv = p->total = p->nx = 0;
+  p->ref_b = 0;
   clear_varhash_set(p->var);
 }
 
@@ -329,7 +329,7 @@ static void print_counts(FILE *fp, counts *p, const char* ctig, int pos, int ref
   char vout[12];
   get_var_string(&(p->var), vout);
   fprintf(fp,
-          "%s\t%i\t%c\t%c\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n",
+          "%s\t%i\t%c\t%c\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n",
           ctig,
           pos + 1,
           strand,
@@ -341,7 +341,8 @@ static void print_counts(FILE *fp, counts *p, const char* ctig, int pos, int ref
           p->nt,
           p->nc,
           p->ng,
-          p->nn);
+          p->nn,
+          p->nx);
 }
 
 static void add_counts(PLP_DATA pd, int fi, counts *p, const char* ctig, int gpos, int ref, int strand){
@@ -406,6 +407,9 @@ static void add_counts(PLP_DATA pd, int fi, counts *p, const char* ctig, int gpo
       break;
     case NN_IDX:
       pd->pdat[fi].nn[idx] = p->nn;
+      break;
+    case NX_IDX:
+      pd->pdat[fi].nx[idx] = p->nx;
       break;
 
     default:
@@ -932,7 +936,7 @@ SEXP run_cpileup(const char** cbampaths,
 
     mplp_get_ref(data[0], tid, &ref, &ref_len); // not in of single region requested
     if (tid < 0) break;
-
+    
     // check user interrupt, using a 2^k value is 2-3x faster than say 1e6
     if (n_iter % 262144 == 0) {
       if(checkInterrupt()){
@@ -980,10 +984,6 @@ SEXP run_cpileup(const char** cbampaths,
 
         const bam_pileup1_t *p = plp[i] + j;
 
-        // add a filter_read() function for these filters
-        int rret = check_read_filters(p, ef, min_baseQ, min_mapQ[i]);
-        if(rret) continue;
-
         // get read base
         int c = p->qpos < p->b->core.l_qseq
           ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
@@ -995,6 +995,17 @@ SEXP run_cpileup(const char** cbampaths,
           REprintf("[internal] invert read orientation failure %i\n", invert);
           ret = -1;
           goto fail;
+        }
+        
+        // remove bad reads
+        int rret = check_read_filters(p, ef, min_baseQ, min_mapQ[i]);
+        if(rret) {
+          if(invert) {
+            plpc[i].mc->nx += 1;
+          } else {
+            plpc[i].pc->nx += 1; 
+          }
+          continue;
         }
 
         if(invert) c = (char)comp_base[(unsigned char)c];

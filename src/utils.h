@@ -25,7 +25,7 @@ KHASH_SET_INIT_STR(str)
 typedef khash_t(str) *strhash_t;
 int populate_lookup_from_file(strhash_t lookup, char *fn);
 
-KHASH_SET_INIT_STR(varhash);
+KHASH_SET_INIT_STR(varhash)
 typedef khash_t(varhash) *varhash_t;
 
 void clear_varhash_set(varhash_t vhash);

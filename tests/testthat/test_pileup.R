@@ -19,7 +19,7 @@ res <- get_pileup(bamfn, fafn, bedfn)
 
 test_that("pileup works", {
   expect_equal(length(res$Ref), 182)
-  expect_equal(ncol(as.data.frame(res)), 14)
+  expect_equal(ncol(as.data.frame(res)), 15)
 })
 
 test_that("filtering for variants in pileup works", {
@@ -36,7 +36,7 @@ test_that("n-bam pileup works", {
       "fr-first-strand")))
   expect_true(identical(res[[1]], res[[2]]))
   expect_equal(length(res[[1]]$Ref), 182)
-  expect_equal(ncol(as.data.frame(res[[1]])), 14)
+  expect_equal(ncol(as.data.frame(res[[1]])), 15)
 
   res <- get_pileup(c(bamfn, bam2fn), fafn, bedfn)
   expect_equal(length(res[[1]]$Ref), 182)
