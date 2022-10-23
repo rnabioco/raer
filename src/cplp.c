@@ -644,10 +644,15 @@ static int count_one_record(bam1_t *b, pcounts *pc, mplp_conf_t *conf,
   return 0;
 }
 
+/* return codes,
+ * 0 = read passes, 
+ * 1 = read fails filter should be counted as bad read
+ * 2 = read fails do no count as bad read
+ */
 static int check_read_filters(const bam_pileup1_t *p, efilter *ef, int baq, int maq){
 
-  // skip indel and ref skip ;
-  if(p->is_del || p->is_refskip) return(1) ;
+ // skip indel and ref skip ;
+  if(p->is_del || p->is_refskip) return(2) ;
 
   // filter based on mapq as not able to filter per file in pileup
   if (p->b->core.qual < maq) return(1) ;
@@ -655,9 +660,15 @@ static int check_read_filters(const bam_pileup1_t *p, efilter *ef, int baq, int 
   // check base quality
   int bq = p->qpos < p->b->core.l_qseq
     ? bam_get_qual(p->b)[p->qpos]
-  : 0;
-  if (bq < baq) return(1) ;
-
+    : 0;
+  if (bq < baq) {
+    if(bq == 0) { // overlapping read pairs get base qualities set to 0 by mplp 
+      return(2);
+    } else {
+      return(1);
+    } 
+  } 
+    
   // check if pos is within x dist from 5' end of read, qpos is 0-based
   if(trim_pos(p->b, p->qpos, ef->trim_5p_dist, ef->trim_3p_dist)) return(1);
 
@@ -983,7 +994,8 @@ SEXP run_cpileup(const char** cbampaths,
       for (j = 0; j < n_plp[i]; ++j) {
 
         const bam_pileup1_t *p = plp[i] + j;
-
+        
+ 
         // get read base
         int c = p->qpos < p->b->core.l_qseq
           ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
@@ -999,11 +1011,13 @@ SEXP run_cpileup(const char** cbampaths,
         
         // remove bad reads
         int rret = check_read_filters(p, ef, min_baseQ, min_mapQ[i]);
-        if(rret) {
-          if(invert) {
-            plpc[i].mc->nx += 1;
-          } else {
-            plpc[i].pc->nx += 1; 
+        if(rret > 0) {
+          if(rret == 1) {
+            if(invert) {
+              plpc[i].mc->nx += 1;
+            } else {
+              plpc[i].pc->nx += 1; 
+            }
           }
           continue;
         }
