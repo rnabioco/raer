@@ -4,7 +4,7 @@
 
 #include <ctype.h>
 
-#include "utils.h"
+#include "plp_utils.h"
 
 // https://stackoverflow.com/questions/26666614/how-do-i-check-if-an-externalptr-is-null-from-within-r
 SEXP isnull(SEXP pointer) {
@@ -466,6 +466,3 @@ int populate_lookup_from_file(strhash_t lookup, char *fn)
   fclose(fp);
   return (ret != -1) ? 0 : -1;
 }
-
-
-

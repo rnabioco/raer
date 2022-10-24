@@ -93,7 +93,7 @@ get_pileup <- function(bamfiles,
       stop("an outfile_prefix must be supplied if data is written to files")
     }
     in_memory <- TRUE
-    outfiles <- "."
+    outfiles <- character()
   } else {
     in_memory <- FALSE
     outfiles <- paste0(outfile_prefix, "_", seq_len(n_files), ".plp")
@@ -117,12 +117,11 @@ get_pileup <- function(bamfiles,
         region <- chroms
         chroms_to_process <- chroms
       } else {
-        # not sure how to catch NULL in rcpp so using "." to indicate no region instead
-        region <- "."
+        region <- character()
         chroms_to_process <- chroms
       }
     } else {
-      region <- "."
+      region <- character() 
     }
   } else {
     chroms_to_process <- get_region(region)$chrom
@@ -158,7 +157,7 @@ get_pileup <- function(bamfiles,
     } else {
       idx_ptr <- bedidx$.extptr
     }
-    bedfile <- "."
+    bedfile <- character() 
   }
 
   if (is.null(bam_flags)) {
@@ -177,7 +176,7 @@ get_pileup <- function(bamfiles,
       stop("reads must be a character vector of length 1")
     }
   } else {
-    reads <- "."
+    reads <- character()
   }
 
   if (!is.null(bad_reads)) {
@@ -185,7 +184,7 @@ get_pileup <- function(bamfiles,
       stop("bad_reads must be a character vector of length 1")
     }
   } else {
-    bad_reads <- "."
+    bad_reads <- character()
   }
 
   filterParam <- .adjustParams(filterParam, n_files)
@@ -228,26 +227,29 @@ get_pileup <- function(bamfiles,
       bed_gr <- GRanges(paste0(names(to_process), ":", 1, "-", to_process))
       rtracklayer::export(bed_gr, bedfile)
     }
-
-    res <- run_pileup(bampaths = bamfiles,
-      fapath = fafile,
-      region = region,
-      bedfn = ifelse(is.null(bedfile), ".", bedfile),
-      min_reads = fp$min_nucleotide_depth,
-      event_filters = event_filters,
-      min_mapQ = fp$min_mapq,
-      max_depth = fp$max_depth,
-      min_baseQ = fp$min_base_quality,
-      read_bqual_filter = fp$min_read_bqual,
-      libtype =  as.integer(lib_code),
-      in_memory = in_memory,
-      multi_region = use_index,
-      outfns = outfiles,
-      bam_flags = bam_flags,
-      fp$only_keep_variants,
-      reads,
-      bad_reads,
-      idx_ptr)
+    if(is.null(bedfile)) bedfile <- character()
+  
+    res <- .Call(".do_run_pileup", 
+                 bamfiles,
+                 as.integer(n_files),
+                 fafile,
+                 region, 
+                 bedfile,
+                 fp$min_nucleotide_depth,
+                 event_filters,
+                 fp$min_mapq,
+                 fp$max_depth,
+                 fp$min_base_quality,
+                 fp$min_read_bqual,
+                 as.integer(lib_code),
+                 bam_flags,
+                 fp$only_keep_variants,
+                 in_memory,
+                 use_index,
+                 outfiles,
+                 reads,
+                 bad_reads,
+                 idx_ptr)
     
     if (!in_memory) {
       if (res != 0) {
@@ -264,30 +266,35 @@ get_pileup <- function(bamfiles,
     run_in_parallel <- TRUE
     res <- bplapply(chroms_to_process, FUN = function(ctig) {
       start_time <- Sys.time()
-      tmp_outfiles <- unlist(lapply(seq_along(outfiles), function(x) tempfile()))
-      fn_df <- data.frame(contig = ctig,
-        bam_fn = bamfiles,
-        tmpfn = tmp_outfiles)
-
-      res <- run_pileup(bampaths = bamfiles,
-        fapath = fafile,
-        region = ctig,
-        bedfn = ifelse(is.null(bedfile), ".", bedfile),
-        min_reads = fp$min_nucleotide_depth,
-        event_filters = event_filters,
-        min_mapQ = fp$min_mapq,
-        max_depth = fp$max_depth,
-        min_baseQ = fp$min_base_quality,
-        read_bqual_filter = fp$min_read_bqual,
-        libtype =  as.integer(lib_code),
-        in_memory = in_memory,
-        multi_region = use_index,
-        outfns = tmp_outfiles,
-        bam_flags = bam_flags,
-        fp$only_keep_variants,
-        reads,
-        bad_reads,
-        idx_ptr)
+      if(length(outfiles) > 0){
+        tmp_outfiles <- unlist(lapply(seq_along(outfiles), function(x) tempfile()))
+        fn_df <- data.frame(contig = ctig,
+                            bam_fn = bamfiles,
+                            tmpfn = tmp_outfiles)
+      } 
+      if(is.null(ctig)) ctig <- character()
+      if(is.null(bedfile)) bedfile <- character()
+      res <- .Call(".do_run_pileup", 
+                 bamfiles,
+                 as.integer(n_files),
+                 fafile,
+                 ctig, 
+                 bedfile,
+                 fp$min_nucleotide_depth,
+                 event_filters,
+                 fp$min_mapq,
+                 fp$max_depth,
+                 fp$min_base_quality,
+                 fp$min_read_bqual,
+                 as.integer(lib_code),
+                 bam_flags,
+                 fp$only_keep_variants,
+                 in_memory,
+                 use_index,
+                 outfiles,
+                 reads,
+                 bad_reads,
+                 idx_ptr)
 
       if (!in_memory) {
         if (res != 0) {
@@ -457,7 +464,7 @@ empty_plp_record <-  function() {
       slot(obj, name) <- rep(slot(obj, name), len)
     } else {
       stop("%s requires either 1 value, or individual values,",
-        "for all input bamfiles", slot)
+           "for all input bamfiles", slot)
     }
   }
   slot(obj, name)

@@ -2,12 +2,12 @@
 #include "Rdefines.h"
 #include "plp_data.h"
 
-/* All of the following code mostly is templated on the Rsamtools approach
+/* The following code mostly is templated on the Rsamtools approach
    to store and grow a c-level datastructure with bam/pileup data.
-   The main deviation is handling data from multiple bam files, and the fields stores.
+   The main deviation is handling data from multiple bam files, and the fields stored.
    The datastructure grows per position across multiple files, in contrast to
-   growing per region. On finish, the c-level datastucture will be converted to a SEXP,
-   avoiding realloc'ing a SEXP during the pileup.
+   growing per region in rsamtools. On finish, the c-level datastucture will 
+   be converted to a SEXP, avoiding realloc'ing a SEXP during the pileup.
  */
 
 static const int BAM_INIT_SIZE = 1048576;

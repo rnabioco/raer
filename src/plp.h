@@ -2,14 +2,14 @@
 #define raer_pileup_H
 
 #include <Rinternals.h>
-SEXP run_cpileup(const char** cbampath,
+SEXP run_cpileup(char** cbampath,
                 int n,
                 char* fapath,
                 char* cregion,
                 int in_mem,
                 int multi_region_itr,
                 const char** outfn,
-                char* bedfn,
+                const char* bedfn,
                 int min_reads,
                 int max_depth,
                 int min_baseQ,
@@ -18,7 +18,7 @@ SEXP run_cpileup(const char** cbampath,
                 int* b_flags,
                 int* event_filters,
                 int* only_keep_variants,
-                char* reads_fn,
+                const char* reads_fn,
                 char* mismatches,
                 double* read_bqual_filter,
                 SEXP ext);
