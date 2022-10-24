@@ -13,7 +13,7 @@ extern "C" {
 /* arrays of pileup data
    to be stored for each file */
 typedef struct  {
-  int *pos, *nref, *nvar, *na, *nt, *nc, *ng, *nn;
+  int *pos, *nref, *nvar, *na, *nt, *nc, *ng, *nn, *nx;
   char **seqnames, **strand, **ref, **var;
 } _PLP_VECS, *PLP_VECS;
 
@@ -40,7 +40,7 @@ void finish_PLP_DATA(PLP_DATA pd);
 
 enum {
   SEQNAME_IDX = 0, POS_IDX, STRAND_IDX, REF_IDX, VAR_IDX, NREF_IDX, NVAR_IDX,
-  NA_IDX, NT_IDX, NC_IDX, NG_IDX, NN_IDX
+  NA_IDX, NT_IDX, NC_IDX, NG_IDX, NN_IDX, NX_IDX
 };
 
 /* From Rsamtools

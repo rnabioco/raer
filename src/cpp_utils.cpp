@@ -6,6 +6,32 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
+
+// [[Rcpp::export(rng = false)]]
+List get_region(std::string region){
+  const char* cregion;
+  cregion = region.c_str() ;
+  int beg, end;
+  const char *chr_pos ;
+  chr_pos = hts_parse_reg(cregion, &beg, &end) ;
+  if(!chr_pos){
+    stop("could not parse region:%s", region);
+  }
+  char *chr_name = (char*)malloc(chr_pos - cregion + 1);
+  memcpy(chr_name, cregion, chr_pos - cregion);
+  chr_name[chr_pos - cregion] = '\0';
+  String chr_name_r(chr_name);
+
+  List res;
+  // return 0 based start
+  res = List::create(Named("chrom") = chr_name_r,
+                     Named("start") = beg,
+                     Named("end") = end);
+  free(chr_name);
+  return res;
+}
+
+
 std::vector<std::string> tsv_values(std::string tsv) {
 
   std::vector<std::string> values ;

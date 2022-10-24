@@ -9,3 +9,4 @@
 ^README\.Rmd$
 ^docker$
 ^.vscode$
+^tools$

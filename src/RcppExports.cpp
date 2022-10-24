@@ -10,6 +10,16 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// get_region
+List get_region(std::string region);
+RcppExport SEXP _raer_get_region(SEXP regionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< std::string >::type region(regionSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_region(region));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cread_tabix
 List cread_tabix(std::string tbxpath, std::string region);
 RcppExport SEXP _raer_cread_tabix(SEXP tbxpathSEXP, SEXP regionSEXP) {
@@ -28,44 +38,6 @@ BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< std::string >::type tbxpath(tbxpathSEXP);
     rcpp_result_gen = Rcpp::wrap(list_tabix_chroms(tbxpath));
-    return rcpp_result_gen;
-END_RCPP
-}
-// run_pileup
-SEXP run_pileup(std::vector<std::string> bampaths, std::string fapath, std::string region, std::string bedfn, int min_reads, std::vector<int> event_filters, std::vector<int> min_mapQ, std::vector<int> bam_flags, std::vector<int> libtype, std::vector<std::string> outfns, std::vector<int> only_keep_variants, std::vector<double> read_bqual_filter, SEXP in_memory, SEXP multi_region, int max_depth, int min_baseQ, std::string reads, std::string bad_reads, SEXP ext);
-RcppExport SEXP _raer_run_pileup(SEXP bampathsSEXP, SEXP fapathSEXP, SEXP regionSEXP, SEXP bedfnSEXP, SEXP min_readsSEXP, SEXP event_filtersSEXP, SEXP min_mapQSEXP, SEXP bam_flagsSEXP, SEXP libtypeSEXP, SEXP outfnsSEXP, SEXP only_keep_variantsSEXP, SEXP read_bqual_filterSEXP, SEXP in_memorySEXP, SEXP multi_regionSEXP, SEXP max_depthSEXP, SEXP min_baseQSEXP, SEXP readsSEXP, SEXP bad_readsSEXP, SEXP extSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type bampaths(bampathsSEXP);
-    Rcpp::traits::input_parameter< std::string >::type fapath(fapathSEXP);
-    Rcpp::traits::input_parameter< std::string >::type region(regionSEXP);
-    Rcpp::traits::input_parameter< std::string >::type bedfn(bedfnSEXP);
-    Rcpp::traits::input_parameter< int >::type min_reads(min_readsSEXP);
-    Rcpp::traits::input_parameter< std::vector<int> >::type event_filters(event_filtersSEXP);
-    Rcpp::traits::input_parameter< std::vector<int> >::type min_mapQ(min_mapQSEXP);
-    Rcpp::traits::input_parameter< std::vector<int> >::type bam_flags(bam_flagsSEXP);
-    Rcpp::traits::input_parameter< std::vector<int> >::type libtype(libtypeSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type outfns(outfnsSEXP);
-    Rcpp::traits::input_parameter< std::vector<int> >::type only_keep_variants(only_keep_variantsSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type read_bqual_filter(read_bqual_filterSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type in_memory(in_memorySEXP);
-    Rcpp::traits::input_parameter< SEXP >::type multi_region(multi_regionSEXP);
-    Rcpp::traits::input_parameter< int >::type max_depth(max_depthSEXP);
-    Rcpp::traits::input_parameter< int >::type min_baseQ(min_baseQSEXP);
-    Rcpp::traits::input_parameter< std::string >::type reads(readsSEXP);
-    Rcpp::traits::input_parameter< std::string >::type bad_reads(bad_readsSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type ext(extSEXP);
-    rcpp_result_gen = Rcpp::wrap(run_pileup(bampaths, fapath, region, bedfn, min_reads, event_filters, min_mapQ, bam_flags, libtype, outfns, only_keep_variants, read_bqual_filter, in_memory, multi_region, max_depth, min_baseQ, reads, bad_reads, ext));
-    return rcpp_result_gen;
-END_RCPP
-}
-// get_region
-List get_region(std::string region);
-RcppExport SEXP _raer_get_region(SEXP regionSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< std::string >::type region(regionSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_region(region));
     return rcpp_result_gen;
 END_RCPP
 }

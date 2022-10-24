@@ -4,7 +4,7 @@
 #include <htslib/hts_log.h>
 #include <bedidx.h>
 #include "bedfile.h"
-#include "utils.h"
+#include "plp_utils.h"
 #include "plp_data.h"
 
 #include <math.h>
@@ -21,7 +21,7 @@
 #include <inttypes.h>
 
 #include <time.h>
-
+ 
 #include <Rinternals.h>
 
 #define STRICT_R_HEADERS
@@ -37,14 +37,8 @@ int checkInterrupt() {
   return (R_ToplevelExec(chkIntFn, NULL) == FALSE);
 }
 
-KHASH_SET_INIT_STR(varhash);
-typedef khash_t(varhash) *varhash_t;
-
-KHASH_SET_INIT_STR(rname);
+KHASH_SET_INIT_STR(rname)
 typedef khash_t(rname) *rnhash_t;
-
-KHASH_SET_INIT_STR(str)
-  typedef khash_t(str) *strhash_t;
 
 static unsigned char comp_base[256] = {
   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,
@@ -65,85 +59,13 @@ static unsigned char comp_base[256] = {
   240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
 };
 
-int8_t seq_comp_table[16] = { 0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15 };
-
-/* from samtools bam_fastq.c
-
-* Reverse a string in place.
-* From http://stackoverflow.com/questions/8534274/is-the-strrev-function-not-available-in-linux.
-* Author Sumit-naik: http://stackoverflow.com/users/4590926/sumit-naik
-*/
-  static char *reverse(char *str)
-  {
-    int i = strlen(str)-1,j=0;
-    char ch;
-    while (i>j) {
-      ch = str[i];
-      str[i]= str[j];
-      str[j] = ch;
-      i--;
-      j++;
-    }
-    return str;
-  }
-
-
-/* from samtools bam_view.c */
-
-static int populate_lookup_from_file(strhash_t lookup, char *fn)
-{
-  FILE *fp;
-  char buf[1024];
-  int ret = 0;
-  fp = fopen(fn, "r");
-  if (fp == NULL) {
-    Rf_error("failed to open \"%s\" for reading", fn);
-    return -1;
-  }
-
-  while (ret != -1 && !feof(fp) && fscanf(fp, "%1023s", buf) > 0) {
-    char *d = strdup(buf);
-    if (d != NULL) {
-      kh_put(str, lookup, d, &ret);
-      if (ret == 0) free(d); /* Duplicate */
-    } else {
-      ret = -1;
-    }
-  }
-  if (ferror(fp)) ret = -1;
-  if (ret == -1) {
-    Rf_error("failed to read \"%s\"", fn);
-  }
-  fclose(fp);
-  return (ret != -1) ? 0 : -1;
-}
-
-/* from samtools bam_fastq.c */
-/* return the read, reverse complemented if necessary */
-static char *get_read(const bam1_t *rec)
-{
-  int len = rec->core.l_qseq + 1;
-  char *read = calloc(1, len);
-  char *seq = (char *)bam_get_seq(rec);
-  int n;
-
-  if (!read) return NULL;
-
-  for (n=0; n < rec->core.l_qseq; n++) {
-    if (rec->core.flag & BAM_FREVERSE) read[n] = seq_nt16_str[seq_comp_table[bam_seqi(seq,n)]];
-    else                               read[n] = seq_nt16_str[bam_seqi(seq,n)];
-  }
-  if (rec->core.flag & BAM_FREVERSE) reverse(read);
-  return read;
-}
-
 typedef struct {
   int minq;
   double pct;
 } read_qual_t;
 
 typedef struct {
-  int min_mq, flag, min_baseQ, max_depth, all, multi;
+  int min_mq, flag, min_baseQ, max_depth, all, multi, output_reads;
   read_qual_t read_qual;
   uint32_t keep_flag[2];
   char *reg, *fai_fname, *output_fname;
@@ -180,8 +102,8 @@ typedef struct {
   bam_pileup1_t **plp;
 } mplp_pileup_t;
 
-/* from bam_plcmd.c */
 
+/* from bam_plcmd.c */
 static int mplp_get_ref(mplp_aux_t *ma, int tid, char **ref, hts_pos_t *ref_len) {
 
   mplp_ref_t *r = ma->ref;
@@ -270,7 +192,6 @@ static int readaln(void *data, bam1_t *b) {
         key = malloc(len + 1);
         if(!key) {
           Rf_error( "malloc failed\n");
-          exit(EXIT_FAILURE);
         }
         strcpy(key, bam_get_qname(b));
         key[len] = '\0';
@@ -279,7 +200,6 @@ static int readaln(void *data, bam1_t *b) {
         key = malloc(len + 2 + 1);
         if(!key) {
           Rf_error( "malloc failed\n");
-          exit(EXIT_FAILURE);
         }
         if((b)->core.flag&BAM_FREAD1){
           c = '1' ;
@@ -297,14 +217,13 @@ static int readaln(void *data, bam1_t *b) {
         skip = 1;
         continue;
       }
-      if(key)  free(key);
+      if(key) free(key);
     }
 
     // test required and filter flags
     test_flag = (g->conf->keep_flag[0] & ~b->core.flag) |
       (g->conf->keep_flag[1] & b->core.flag);
     if (~test_flag & 2047u){ skip = 1; continue;}
-
 
     // test overlap
     if (g->conf->bed && !g->conf->multi) {
@@ -351,22 +270,9 @@ static void clear_rname_set(rnhash_t rnames)
   }
 }
 
-static void clear_varhash_set(varhash_t vhash)
-{
-  khint_t k;
-  if(vhash){
-    for (k = kh_begin(vhash); k < kh_end(vhash); ++k){
-      if (kh_exist(vhash, k)){
-        free((char*)kh_key(vhash, k));
-      }
-      kh_clear(varhash, vhash);
-    }
-  }
-}
-
 // structs for holding counts
 typedef struct {
-  int total, nr, nv, na, nt, ng, nc, nn;
+  int total, nr, nv, na, nt, ng, nc, nn, nx;
   int ref_b;
   varhash_t var;
 } counts;
@@ -378,8 +284,8 @@ typedef struct  {
 } pcounts;
 
 static void clear_counts(counts *p){
-  p->na = p->nc = p->ng = p->nn = p->nr = p->nt = p->nv = p->total = 0;
-   p->ref_b = 0;
+  p->na = p->nc = p->ng = p->nn = p->nr = p->nt = p->nv = p->total = p->nx = 0;
+  p->ref_b = 0;
   clear_varhash_set(p->var);
 }
 
@@ -423,7 +329,7 @@ static void print_counts(FILE *fp, counts *p, const char* ctig, int pos, int ref
   char vout[12];
   get_var_string(&(p->var), vout);
   fprintf(fp,
-          "%s\t%i\t%c\t%c\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n",
+          "%s\t%i\t%c\t%c\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n",
           ctig,
           pos + 1,
           strand,
@@ -435,7 +341,8 @@ static void print_counts(FILE *fp, counts *p, const char* ctig, int pos, int ref
           p->nt,
           p->nc,
           p->ng,
-          p->nn);
+          p->nn,
+          p->nx);
 }
 
 static void add_counts(PLP_DATA pd, int fi, counts *p, const char* ctig, int gpos, int ref, int strand){
@@ -500,6 +407,9 @@ static void add_counts(PLP_DATA pd, int fi, counts *p, const char* ctig, int gpo
       break;
     case NN_IDX:
       pd->pdat[fi].nn[idx] = p->nn;
+      break;
+    case NX_IDX:
+      pd->pdat[fi].nx[idx] = p->nx;
       break;
 
     default:
@@ -570,7 +480,7 @@ static void store_counts(PLP_DATA pd, pcounts *pc, int *only_variants, int n, in
 }
 
 
-int write_fasta(bam1_t *b, mplp_conf_t *conf, const char* ref, char read, int pos){
+static int write_fasta(bam1_t *b, mplp_conf_t *conf, const char* ref, char read, int pos){
   if(!conf->reads_fp){
     return -1;
   }
@@ -589,7 +499,7 @@ int write_fasta(bam1_t *b, mplp_conf_t *conf, const char* ref, char read, int po
 
 // add/check for readname (with 1 or 2 appended if paired) to hash table
 // if unique write to bam file
-int write_reads(bam1_t *b,  mplp_conf_t *conf, const char* ref, const int pos){
+static int write_reads(bam1_t *b,  mplp_conf_t *conf, const char* ref, const int pos){
 
   char* key;
   char c;
@@ -638,105 +548,150 @@ int write_reads(bam1_t *b,  mplp_conf_t *conf, const char* ref, const int pos){
   return 0;
 }
 
-// Parse MD tag and enumerate types and number of mismatches
-// Determine if read passes n_mis and n_types thresholds
-//
-//
-// returns: -1 if no MD tag
-//           0 if read passes filter
-//           >0 with # of unique mismatches if doesn't pass
-//
-// based on cigar and MD parsing code from htsbox (written by Heng Li)
-// https://github.com/lh3/htsbox/blob/ffc1e8ad4f61291c676a323ed833ade3ee681f7c/samview.c#L117
+static int count_one_record(bam1_t *b, pcounts *pc, mplp_conf_t *conf,
+                            const char* ctig, int pos, int pref_b, int mref_b,
+                            int read_base, int invert, int i){
+  int hret = 0;
 
-int parse_mismatches(bam1_t* b,const int pos, int n_types, int n_mis){
-  int ret = 0;
-  if(n_types < 1 && n_mis < 1){
-    return ret;
-  }
-  const uint32_t *cigar = bam_get_cigar(b);
-  int k, x, y, c;
+  char mvar[3];
+  char pvar[3];
+  mvar[2] = '\0';
+  pvar[2] = '\0';
 
-  uint8_t *pMD = 0;
-  char *p;
-  int nm = 0;
+  if(invert){
+    pc->mc->total += 1;
 
-  char vars[3];
-  vars[2] = '\0';
-  varhash_t vh;
-  vh = kh_init(varhash);
+    // check if read base == ref base
+    if(mref_b == read_base){
+      pc->mc->nr += 1;
+    } else {
+      mvar[0] = mref_b;
+      mvar[1] = read_base;
 
-  if ((pMD = bam_aux_get(b, "MD")) != 0) {
-    for (k = x = y = 0; k < b->core.n_cigar; ++k) {
-        int op = bam_cigar_op(cigar[k]);
-        int len = bam_cigar_oplen(cigar[k]);
-        if (op == BAM_CMATCH || op == BAM_CEQUAL || op == BAM_CDIFF) {
-          x += len, y += len;
-        } else if (op == BAM_CINS || op == BAM_CSOFT_CLIP)
-          y += len;
-    }
+      // store variants as (AG, AT, AC, etc.) hash set
+      char *var = strdup(mvar);
+      kh_put(varhash, pc->mc->var, var, &hret);
+      if (hret == 0) free(var);
 
-    p = bam_aux2Z(pMD);
-
-    y = 0;
-    while (isdigit(*p)) {
-      y += strtol(p, &p, 10);
-      if (*p == 0) {
-        break;
-      } else if (*p == '^') { // deletion
-        ++p;
-        while (isalpha(*p)) ++p;
-      } else {
-        while (isalpha(*p)) {
-          if (y >= x) {
-            y = -1;
-            break;
-          }
-          c = y < b->core.l_qseq
-            ? seq_nt16_str[bam_seqi(bam_get_seq(b), y)]
-          : 'N';
-          nm += 1;
-
-          vars[0] = *p;
-          vars[1] = c;
-          char *var = strdup(vars);
-          int rval = 0;
-          kh_put(varhash, vh, var, &rval);
-          if(rval == -1){
-            Rf_error("issue tabulating variants per read at, %s", bam_get_qname(b));
-          } else if (rval == 0){
-            free(var);
-          }
-          ++y, ++p;
+      if(i == 0 && conf->output_reads){
+        int wret = write_reads(b, conf, ctig, pos);
+        if(wret != 0){
+          REprintf( "writing mismatched reads failed\n");
+          return -1;
         }
-        if (y == -1) break;
       }
+      pc->mc->nv += 1;
+    }
+    switch(read_base) {
+    case 'A':
+      pc->mc->na += 1;
+      break;
+    case 'C':
+      pc->mc->nc += 1;
+      break;
+    case 'G':
+      pc->mc->ng += 1;
+      break;
+    case 'T':
+      pc->mc->nt += 1;
+      break;
+    default:
+      pc->mc->nn += 1;
+    break;
     }
 
-    if (x != y) {
-      REprintf("inconsistent MD for read '%s' (%d != %d); ignore MD\n", bam_get_qname(b), x, y);
-      ret = -1;
-    }
+    // count reads from plus strand
+  } else {
+    pc->pc->total += 1;
 
-    if(kh_size(vh) >= n_types && nm >= n_mis){
-      ret = kh_size(vh);
+    if(pref_b == read_base){
+      pc->pc->nr += 1;
+    } else {
+
+      pvar[0] = pref_b;
+      pvar[1] = read_base;
+
+      char *var = strdup(pvar);
+      kh_put(varhash, pc->pc->var, var, &hret);
+      if (hret == 0) free(var);
+      if(i == 0 && conf->output_reads){
+        int wret = write_reads(b, conf, ctig, pos);
+        if(wret != 0){
+          REprintf( "writing mismatched reads failed\n");
+          return -1;
+        }
+      }
+      pc->pc->nv += 1;
     }
-    clear_varhash_set(vh);
-    kh_destroy(varhash, vh);
+    switch(read_base) {
+    case 'A':
+      pc->pc->na += 1;
+      break;
+    case 'C':
+      pc->pc->nc += 1;
+      break;
+    case 'G':
+      pc->pc->ng += 1;
+      break;
+    case 'T':
+      pc->pc->nt += 1;
+      break;
+    default:
+      pc->pc->nn += 1;
+    break;
+    }
   }
-  return ret;
-
+  return 0;
 }
 
+/* return codes,
+ * 0 = read passes, 
+ * 1 = read fails filter should be counted as bad read
+ * 2 = read fails do no count as bad read
+ */
+static int check_read_filters(const bam_pileup1_t *p, efilter *ef, int baq, int maq){
 
-SEXP run_cpileup(const char** cbampaths,
+ // skip indel and ref skip ;
+  if(p->is_del || p->is_refskip) return(2) ;
+
+  // filter based on mapq as not able to filter per file in pileup
+  if (p->b->core.qual < maq) return(1) ;
+
+  // check base quality
+  int bq = p->qpos < p->b->core.l_qseq
+    ? bam_get_qual(p->b)[p->qpos]
+    : 0;
+  if (bq < baq) {
+    if(bq == 0) { // overlapping read pairs get base qualities set to 0 by mplp 
+      return(2);
+    } else {
+      return(1);
+    } 
+  } 
+    
+  // check if pos is within x dist from 5' end of read, qpos is 0-based
+  if(trim_pos(p->b, p->qpos, ef->trim_5p_dist, ef->trim_3p_dist)) return(1);
+
+  // check for splice in alignment nearby
+  if(ef->splice_dist && dist_to_splice(p->b, p->qpos, ef->splice_dist) >= 0) return(1);
+
+  // check if site in splice overhang and > min_overhang
+  if(ef->min_overhang && check_splice_overhang(p->b, p->qpos, ef->min_overhang) > 0) return(1);
+
+  // check if indel event nearby
+  if(ef->indel_dist && dist_to_indel(p->b, p->qpos, ef->indel_dist) >= 0) return(1);
+
+  return 0;
+}
+
+SEXP run_cpileup(char** cbampaths,
                 int n,
                 char* cfapath,
                 char* cregion,
                 int in_mem,
                 int multi_region_itr,
-                char** coutfns,
-                char* cbedfn,
+                const char** coutfns,
+                const char* cbedfn,
                 int min_reads,
                 int max_depth,
                 int min_baseQ,
@@ -745,15 +700,15 @@ SEXP run_cpileup(const char** cbampaths,
                 int* b_flags,
                 int* event_filters,
                 int* only_keep_variants,
-                char* reads_fn,
+                const char* reads_fn,
                 char* mismatches,
                 double* read_bqual_filter,
                 SEXP ext) {
 
   hts_set_log_level(HTS_LOG_ERROR);
-
+  
   mplp_aux_t **data;
-  int i, tid, *n_plp, tid0 = 0, ret = 0;
+  int i, tid, *n_plp, ret = 0;
   hts_pos_t pos, beg0 = 0, end0 = INT32_MAX, ref_len;
 
   if(min_baseQ < 0) min_baseQ = 0;
@@ -781,12 +736,11 @@ SEXP run_cpileup(const char** cbampaths,
   data = calloc(n, sizeof(mplp_aux_t*));
   plp = calloc(n, sizeof(bam_pileup1_t*));
   n_plp = calloc(n, sizeof(int));
-
+  
   if(cfapath){
     conf->fai_fname = cfapath;
     conf->fai = fai_load(conf->fai_fname);
   }
-
   // load and index bed intervals or use pointer to index
   // optionally build a multi-region iterator
   if(cbedfn){
@@ -802,7 +756,7 @@ SEXP run_cpileup(const char** cbampaths,
   }
   // single region for pileup
   if(cregion) conf->reg = cregion;
-
+  
   if(mismatches){
     int chk = 0;
     if(n > 1){
@@ -817,7 +771,7 @@ SEXP run_cpileup(const char** cbampaths,
       Rf_error("issue building hash");
     }
   }
-
+  
   // if multiple bam files, use minimum mapQ for initial filtering,
   // then later filter in pileup loop
   if(min_mapQ[0] >= 0) {
@@ -851,17 +805,15 @@ SEXP run_cpileup(const char** cbampaths,
     conf->read_qual.pct = read_bqual_filter[0];
     conf->read_qual.minq = (int)read_bqual_filter[1];
   }
-
+  
   // read the header of each file in the list and initialize data
   for (i = 0; i < n; ++i) {
     bam_hdr_t *h_tmp;
     data[i] = calloc(1, sizeof(mplp_aux_t));
     data[i]->fp = sam_open(cbampaths[i], "rb");
-
     if ( !data[i]->fp ) {
       Rf_error("failed to open %s: %s\n", cbampaths[i], strerror(errno));
     }
-
     if (conf->fai_fname) {
       if (hts_set_fai_filename(data[i]->fp, conf->fai_fname) != 0) {
         Rf_error("failed to process %s: %s\n",
@@ -891,7 +843,6 @@ SEXP run_cpileup(const char** cbampaths,
       if(i == 0){
         beg0 = data[i]->iter->beg;
         end0 = data[i]->iter->end;
-        tid0 = data[i]->iter->tid;
       }
       hts_idx_destroy(idx);
 
@@ -922,7 +873,6 @@ SEXP run_cpileup(const char** cbampaths,
       if(i == 0){
         beg0 = data[i]->iter->beg;
         end0 = data[i]->iter->end;
-        tid0 = data[i]->iter->tid;
       }
     } else {
      data[i]->iter = NULL;
@@ -935,10 +885,9 @@ SEXP run_cpileup(const char** cbampaths,
       data[i]->h = h;
     }
   }
-
-  int write_mismatched_reads = 0;
+  
   if (reads_fn){
-    write_mismatched_reads = 1;
+    conf->output_reads = 1;
     conf->reads_fp = fopen(R_ExpandFileName(reads_fn), "w");
     if (!conf->reads_fp) {
       Rf_error("failed to open %s: %s\n",R_ExpandFileName(reads_fn), strerror(errno));
@@ -975,6 +924,7 @@ SEXP run_cpileup(const char** cbampaths,
      }
      plpc[i].pc = R_Calloc(1, counts);
      plpc[i].mc = R_Calloc(1, counts);
+
      //initialize variant string set (AG, AT, TC) etc.
      if (plpc[i].pc->var == NULL) {
        plpc[i].pc->var = kh_init(varhash);
@@ -984,13 +934,6 @@ SEXP run_cpileup(const char** cbampaths,
      }
   }
 
-  char mvar[3];
-  char pvar[3];
-  mvar[2] = '\0';
-  pvar[2] = '\0';
-
-  int hret ;
-
   int last_tid = -1;
   int n_iter = 0;
   while ((ret = bam_mplp64_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
@@ -999,7 +942,7 @@ SEXP run_cpileup(const char** cbampaths,
 
     mplp_get_ref(data[0], tid, &ref, &ref_len); // not in of single region requested
     if (tid < 0) break;
-
+    
     // check user interrupt, using a 2^k value is 2-3x faster than say 1e6
     if (n_iter % 262144 == 0) {
       if(checkInterrupt()){
@@ -1010,7 +953,7 @@ SEXP run_cpileup(const char** cbampaths,
     if (conf->bed && tid >= 0 && !bed_overlap(conf->bed, sam_hdr_tid2name(h, tid), pos, pos+1)) continue;
 
     // if writing out reads with mismatches, clear out hash table of read names at each chromosome,
-    if(tid != last_tid && write_mismatched_reads){
+    if(tid != last_tid && conf->output_reads){
       if (kh_size(conf->rnames)) {
         clear_rname_set(conf->rnames);
       }
@@ -1046,191 +989,58 @@ SEXP run_cpileup(const char** cbampaths,
       for (j = 0; j < n_plp[i]; ++j) {
 
         const bam_pileup1_t *p = plp[i] + j;
-
-        // consider writing function to process each read
-        // eg parse_read(...)
-
-        // add a filter_read() function for these filters
-        // skip indel and ref skip ;
-        if(p->is_del || p->is_refskip) continue ;
-
-        // filter based on mapq as not able to filter per file in pileup
-        if (p->b->core.qual < min_mapQ[i]) continue ;
-
-        // check base quality
-        int bq = p->qpos < p->b->core.l_qseq
-                 ? bam_get_qual(p->b)[p->qpos]
-                 : 0;
-        if (bq < min_baseQ) continue ;
-
-        // check if pos is within x dist from 5' end of read, qpos is 0-based
-        if(trim_pos(p->b, p->qpos, ef->trim_5p_dist, ef->trim_3p_dist)) continue;
-
-        // check for splice in alignment nearby
-        if(ef->splice_dist && dist_to_splice(p->b, p->qpos, ef->splice_dist) >= 0) continue;
-
-        // check if site in splice overhang and > min_overhang
-        if(ef->min_overhang && check_splice_overhang(p->b, p->qpos, ef->min_overhang) > 0) continue;
-
-        // check if indel event nearby
-        if(ef->indel_dist && dist_to_indel(p->b, p->qpos, ef->indel_dist) >= 0) continue;
-
+        
+ 
         // get read base
         int c = p->qpos < p->b->core.l_qseq
           ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
         : 'N';
 
-        int is_neg = 0;
-        is_neg = bam_is_rev(p->b) ;
-
-        // store base counts based on library type and r1/r2 status, should make as a function
-        int invert = 0;
-        if(libtype[i] == 1){
-
-          if(!(p->b->core.flag&BAM_FPAIRED)){
-            if(!(is_neg)) {
-              invert = 1;
-            }
-          } else if (p->b->core.flag & (BAM_FREAD1)) {
-
-            if(!(is_neg)) {
-              invert = 1;
-            }
-
-          } else if (p->b->core.flag & (BAM_FREAD2)) {
-
-            if(is_neg){
-              invert = 1;
-            }
-          }
-
-        } else if (libtype[i] == 2){
-
-          if(!(p->b->core.flag&BAM_FPAIRED)){
-            if(is_neg) {
-              invert = 1;
-            }
-          } else if (p->b->core.flag & (BAM_FREAD1)) {
-
-            if(is_neg){
-              invert = 1;
-            }
-          } else if (p->b->core.flag & (BAM_FREAD2)) {
-
-            if(!(is_neg)) {
-              invert = 1;
-            }
-          }
-        } else if (libtype[i] == 3){
-          if(is_neg){
-            invert = 1;
-          }
+        // store base counts based on library type and r1/r2 status
+        int invert = invert_read_orientation(p->b, libtype[i]);
+        if(invert < 0){
+          REprintf("[internal] invert read orientation failure %i\n", invert);
+          ret = -1;
+          goto fail;
         }
-        // if libtype == 0, do nothing, report as plus strand
+        
+        // remove bad reads
+        int rret = check_read_filters(p, ef, min_baseQ, min_mapQ[i]);
+        if(rret > 0) {
+          if(rret == 1) {
+            if(invert) {
+              plpc[i].mc->nx += 1;
+            } else {
+              plpc[i].pc->nx += 1; 
+            }
+          }
+          continue;
+        }
 
-        // add a function to miminize duplication here:
-  	    // count reads that align to minus strand
-        if(invert){
-          c = (char)comp_base[(unsigned char)c];
-          plpc[i].mc->total += 1;
+        if(invert) c = (char)comp_base[(unsigned char)c];
 
-          // check if read base == ref base
-          if(mref_b == c){
-            plpc[i].mc->nr += 1;
-          } else {
-            int m;
-            // drop read if >= mismatch different types and at least n_mm mismatches
-            if(ef->n_mm_type > 0 || ef->n_mm > 0) {
-              m = parse_mismatches(p->b, pos, ef->n_mm_type, ef->n_mm);
+        // check read for >= mismatch different types and at least n_mm mismatches
+        if(ef->n_mm_type > 0 || ef->n_mm > 0) {
+          if((invert && mref_b != c) || pref_b != c){
+            int m = parse_mismatches(p->b, pos, ef->n_mm_type, ef->n_mm);
               if(m > 0) continue;
             }
-            mvar[0] = mref_b;
-            mvar[1] = c;
-
-            // store variants as (AG, AT, AC, etc.) hash set
-            char *var = strdup(mvar);
-            kh_put(varhash, plpc[i].mc->var, var, &hret);
-            if (hret == 0) free(var);
-
-            if(i == 0 && write_mismatched_reads){
-              int wret = write_reads(p->b, conf, sam_hdr_tid2name(h, tid), pos);
-              if(wret != 0){
-                REprintf( "writing mismatched reads failed\n");
-                ret = -1;
-                goto fail;
-              }
-            }
-            plpc[i].mc->nv += 1;
-          }
-          switch(c) {
-            case 'A':
-              plpc[i].mc->na += 1;
-              break;
-            case 'C':
-              plpc[i].mc->nc += 1;
-              break;
-            case 'G':
-              plpc[i].mc->ng += 1;
-              break;
-            case 'T':
-              plpc[i].mc->nt += 1;
-              break;
-            default:
-              plpc[i].mc->nn += 1;
-              break;
-          }
-
-        // count reads from plus strand
-        } else {
-          plpc[i].pc->total += 1;
-
-          if(pref_b == c){
-            plpc[i].pc->nr += 1;
-          } else {
-            int m;
-            // drop read if >= mismatch different types and at least n_mm mismatches
-            if(ef->n_mm_type > 0 || ef->n_mm > 0) {
-              m = parse_mismatches(p->b, pos, ef->n_mm_type, ef->n_mm);
-              if(m > 0) continue;
-            }
-            pvar[0] = pref_b;
-            pvar[1] = c;
-
-            char *var = strdup(pvar);
-            kh_put(varhash, plpc[i].pc->var, var, &hret);
-            if (hret == 0) free(var);
-            if(i == 0 && write_mismatched_reads){
-              int wret = write_reads(p->b, conf,  sam_hdr_tid2name(h, tid), pos);
-              if(wret != 0){
-                REprintf( "writing mismatched reads failed\n");
-                ret = -1;
-                goto fail;
-              }
-            }
-            plpc[i].pc->nv += 1;
-          }
-          switch(c) {
-            case 'A':
-              plpc[i].pc->na += 1;
-              break;
-            case 'C':
-              plpc[i].pc->nc += 1;
-              break;
-            case 'G':
-              plpc[i].pc->ng += 1;
-              break;
-            case 'T':
-              plpc[i].pc->nt += 1;
-              break;
-            default:
-              plpc[i].pc->nn += 1;
-              break;
-          }
         }
+
+        // increment counts
+        int cret = count_one_record(p->b, &plpc[i], conf,
+                                    sam_hdr_tid2name(h, tid), pos,
+                                    pref_b, mref_b,
+                                    c, invert, i);
+        if(cret < 0) {
+          ret = -1;
+          goto fail;
+        }
+
       }
     }
 
-    //write/store records if pass depth criteria
+    // write or store records if pass depth criteria
     store_counts(pd, plpc, only_keep_variants, n, min_reads, sam_hdr_tid2name(h, tid),
                  pos, pref_b, mref_b,
                  in_mem);
@@ -1268,7 +1078,7 @@ fail:
   // don't destroy index if passed from R
   if (conf->bed && Rf_isNull(ext)) bed_destroy(conf->bed);
 
-  if (write_mismatched_reads) {
+  if (conf->output_reads) {
     clear_rname_set(conf->rnames);
     kh_destroy(rname, conf->rnames);
     fclose(conf->reads_fp);
@@ -1293,4 +1103,196 @@ fail:
 }
 
 
+static void check_plp_args(SEXP bampaths,
+              SEXP n,
+              SEXP fapath,
+              SEXP region,
+              SEXP in_mem,
+              SEXP multi_region_itr,
+              SEXP outfns,
+              SEXP bedfn,
+              SEXP min_reads,
+              SEXP max_depth,
+              SEXP min_baseQ,
+              SEXP min_mapQ,
+              SEXP libtype,
+              SEXP b_flags,
+              SEXP event_filters,
+              SEXP only_keep_variants,
+              SEXP reads_fn,
+              SEXP mismatches_fn,
+              SEXP read_bqual_filter,
+              SEXP ext) {
+  
+  if(!IS_INTEGER(n) || (LENGTH(n) != 1)){
+    Rf_error("'n' must be integer(1)");
+  } 
+  int n_files = INTEGER(n)[0];
 
+  if(!IS_CHARACTER(bampaths) || (LENGTH(bampaths) != n_files)){
+    Rf_error("'bampaths' must be character vector equal in length to number of bam files");
+  }
+  
+  if(!IS_CHARACTER(fapath) || (LENGTH(fapath) != 1)){
+    Rf_error("'fapath' must be character(1)");
+  }
+  
+  if(!IS_CHARACTER(region) || (LENGTH(region) > 1)){
+    Rf_error("'region' must be character of length 0 or 1");
+  }
+  
+  if(!IS_CHARACTER(bedfn) || (LENGTH(bedfn) > 1)){
+    Rf_error("'bedfn' must be character of length 0 or 1");
+  }
+  
+  if(!IS_LOGICAL(in_mem) || (LENGTH(in_mem) != 1)){
+    Rf_error("'in_mem' must be logical(1)");
+  }
+  
+  if(!IS_LOGICAL(multi_region_itr) || (LENGTH(multi_region_itr) != 1)){
+    Rf_error("'multi_region_itr' must be logical(1)");
+  }
+  
+  if(!IS_LOGICAL(only_keep_variants) || (LENGTH(only_keep_variants) != n_files)){
+    Rf_error("'only_keep_variants' must be logical of same length as bamfiles");
+  }
+  
+  if(!IS_INTEGER(min_mapQ) || (LENGTH(min_mapQ) != n_files)){
+    Rf_error("'min_mapQ' must be integer of same length as bamfiles");
+  }
+    
+  if(!IS_INTEGER(libtype) || (LENGTH(libtype) != n_files)){
+    Rf_error("'lib_type' must be integer of same length as bamfiles");
+  }
+
+  if(!IS_INTEGER(b_flags) || (LENGTH(b_flags) != 2)){
+     Rf_error("'b_flags' must be integer of length 2"); 
+  }
+
+  if(!LOGICAL(in_mem)[0] && (!IS_CHARACTER(outfns) || (LENGTH(outfns) != n_files))){
+    Rf_error("'outfns' must be character vector equal in length to number of bam files");
+  }
+  
+  if(!IS_INTEGER(min_reads) || (LENGTH(min_reads) != 1)){
+    Rf_error("'min_reads' must be integer(1)");
+  }
+  
+  if(!IS_INTEGER(max_depth) || (LENGTH(max_depth) != 1)){
+    Rf_error("'max_depth' must be integer(1)");
+  }
+  
+  if(!IS_INTEGER(min_baseQ) || (LENGTH(min_baseQ) != 1)){
+    Rf_error("'min_baseQ' must be integer(1)");
+  }
+  
+  if(!IS_CHARACTER(reads_fn) || (LENGTH(reads_fn) > 1)){
+     Rf_error("'reads_fn' must be character of length 0 or 1"); 
+  }
+  
+  if(!IS_CHARACTER(mismatches_fn) || (LENGTH(mismatches_fn) > 1)){
+     Rf_error("'mismatches_fn' must be character of length 0 or 1"); 
+  }
+  
+  if(!IS_NUMERIC(read_bqual_filter) || (LENGTH(read_bqual_filter) != 2)){
+     Rf_error("'read_bqual_filter' must be numeric of length 2"); 
+  }
+  
+  if(!IS_INTEGER(event_filters) || (LENGTH(event_filters) != 8)){
+     Rf_error("'event_filters' must be integer of length 8"); 
+  }
+}
+
+SEXP do_run_pileup(SEXP bampaths,
+              SEXP n,
+              SEXP fapath,
+              SEXP region,
+              SEXP bedfn,
+              SEXP min_reads,
+              SEXP event_filters,
+              SEXP min_mapQ,
+              SEXP max_depth,
+              SEXP min_baseQ,
+              SEXP read_bqual_filter,
+              SEXP libtype,
+              SEXP b_flags,
+              SEXP only_keep_variants,
+              SEXP in_mem,
+              SEXP multi_region_itr,
+              SEXP outfns,
+              SEXP reads_fn,
+              SEXP mismatches_fn,
+              SEXP ext) {
+  
+  check_plp_args(bampaths,
+                 n, 
+                 fapath, 
+                 region, 
+                 in_mem,
+                 multi_region_itr, 
+                 outfns,
+                 bedfn,
+                 min_reads,
+                 max_depth,
+                 min_baseQ,
+                 min_mapQ,
+                 libtype,
+                 b_flags,
+                 event_filters,
+                 only_keep_variants,
+                 reads_fn,
+                 mismatches_fn,
+                 read_bqual_filter,
+                 ext);
+  
+  int i;
+  char ** cbampaths = (char **) R_alloc(sizeof(const char *), Rf_length(bampaths));
+  for (i = 0; i < LENGTH(bampaths); ++i){
+    cbampaths[i] = (char *) translateChar(STRING_ELT(bampaths, i));
+  }
+
+  const char *cbedfn = LENGTH(bedfn) == 0 ? 
+    NULL : translateChar(STRING_ELT(bedfn, 0));
+  
+  char *cregion = LENGTH(region) == 0 ? 
+    NULL : (char *) translateChar(STRING_ELT(region, 0));
+
+  const char *creads_fn = LENGTH(reads_fn) == 0 ? 
+    NULL : translateChar(STRING_ELT(reads_fn, 0));
+
+  char *cmismatches_fn = LENGTH(mismatches_fn) == 0 ? 
+    NULL : (char *) translateChar(STRING_ELT(mismatches_fn, 0));
+  
+  const char ** coutfns; 
+  if(LENGTH(outfns) > 0){
+    coutfns= (const char **) R_alloc(sizeof(const char *), Rf_length(outfns));
+    for (i = 0; i < LENGTH(outfns); ++i){
+      coutfns[i] = (char *) translateChar(STRING_ELT(outfns, i));
+    }
+  } else {
+    coutfns = NULL;
+  }
+
+  SEXP res;
+  res = run_cpileup(cbampaths,
+                    INTEGER(n)[0],
+                    (char *) translateChar(STRING_ELT(fapath, 0)), // already checked for length 1 and required arg
+                    cregion,
+                    LOGICAL(in_mem)[0],
+                    LOGICAL(multi_region_itr)[0],
+                    coutfns,
+                    cbedfn,
+                    INTEGER(min_reads)[0],
+                    INTEGER(max_depth)[0],
+                    INTEGER(min_baseQ)[0],
+                    INTEGER(min_mapQ),
+                    INTEGER(libtype),
+                    INTEGER(b_flags),
+                    INTEGER(event_filters),
+                    LOGICAL(only_keep_variants),
+                    creads_fn,
+                    cmismatches_fn,
+                    REAL(read_bqual_filter),
+                    ext);
+
+  return res ;
+}

@@ -2,13 +2,12 @@
 #include "Rdefines.h"
 #include "plp_data.h"
 
-/* All of the following code mostly is templated on the Rsamtools approach
+/* The following code mostly is templated on the Rsamtools approach
    to store and grow a c-level datastructure with bam/pileup data.
-   The main deviation is handling data from multiple bam files. The
-   datastructure grows per position across multiple files, in contrast to
-   growing per region.
-   On finish, the c-level datastucture will be converted to a SEXP,
-   avoiding realloc'ing a SEXP during the pileup.
+   The main deviation is handling data from multiple bam files, and the fields stored.
+   The datastructure grows per position across multiple files, in contrast to
+   growing per region in rsamtools. On finish, the c-level datastucture will 
+   be converted to a SEXP, avoiding realloc'ing a SEXP during the pileup.
  */
 
 static const int BAM_INIT_SIZE = 1048576;
@@ -23,6 +22,7 @@ PLP_DATA init_PLP_DATA(SEXP result, int n) {
     plpd->pdat[i].ng = R_Calloc(1, int);
     plpd->pdat[i].nc = R_Calloc(1, int);
     plpd->pdat[i].nn = R_Calloc(1, int);
+    plpd->pdat[i].nx = R_Calloc(1, int);
     plpd->pdat[i].nref = R_Calloc(1, int);
     plpd->pdat[i].nvar = R_Calloc(1, int);
     plpd->pdat[i].pos = R_Calloc(1, int);
@@ -84,6 +84,9 @@ int grow_PLP_DATA(PLP_DATA pd, int len)
         break;
       case NN_IDX:
         pd->pdat[i].nn = _Rs_Realloc(pd->pdat[i].nn, len, int);
+        break;
+      case NX_IDX:
+        pd->pdat[i].nx = _Rs_Realloc(pd->pdat[i].nx, len, int);
         break;
       default:
         Rf_error("[raer internal] unhandled grow_PLP_DATA");
@@ -211,6 +214,14 @@ void finish_PLP_DATA(PLP_DATA pd) {
         R_Free(pd->pdat[f_idx].nn);
         break;
 
+      case NX_IDX:
+        s = Rf_lengthgets(s, pd->icnt);
+        SET_VECTOR_ELT(r, col_idx, s);
+        memcpy(INTEGER(s), pd->pdat[f_idx].nx, pd->icnt * sizeof(int));
+        R_Free(pd->pdat[f_idx].nx);
+        break;
+
+
       default:
         Rf_error("[raer internal] unhandled finish_PLP_DATA");
       break;
@@ -243,7 +254,7 @@ SEXP get_or_grow_PLP_DATA(PLP_DATA pd, int len)
  */
 static const char *TMPL_ELT_NMS[] = {
   "seqname", "pos", "strand", "Ref", "Var", "nRef", "nVar", "nA",
-  "nT", "nC", "nG", "nN"
+  "nT", "nC", "nG", "nN", "nX"
   /* "vtype", "value" */
 };
 
@@ -285,6 +296,7 @@ SEXP pileup_template() {
  SET_VECTOR_ELT(tmpl, NC_IDX, NEW_INTEGER(0));
  SET_VECTOR_ELT(tmpl, NG_IDX, NEW_INTEGER(0));
  SET_VECTOR_ELT(tmpl, NN_IDX, NEW_INTEGER(0));
+ SET_VECTOR_ELT(tmpl, NX_IDX, NEW_INTEGER(0));
 
  SEXP names = PROTECT(NEW_CHARACTER(N_TMPL_ELTS));
  for (int i = 0; i < N_TMPL_ELTS; ++i)
