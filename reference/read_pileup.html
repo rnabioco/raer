@@ -80,7 +80,7 @@ region specifiers are supported.</p></dd>
 <span class="r-in"><span><span class="va">plp_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">plp</span> <span class="op">&lt;-</span> <span class="fu"><a href="get_pileup.html">get_pileup</a></span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">fafn</span>, return_data <span class="op">=</span> <span class="cn">FALSE</span>, outfile_prefix <span class="op">=</span> <span class="va">plp_fn</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">read_pileup</span><span class="op">(</span><span class="va">plp</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 1666 ranges and 9 metadata columns:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 1666 ranges and 10 metadata columns:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          seqnames    ranges strand |         Ref         Var      nRef</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt; &lt;integer&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      [1]     SSR3         1      - |           C           -        13</span>
@@ -107,6 +107,19 @@ region specifiers are supported.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [1664]         0        33         0         0         0         0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [1665]         0        35         0         0         0         0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [1666]         0         0         0         0        34         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 nX</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          &lt;integer&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      [1]         2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      [2]         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      [3]         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      [4]         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      [5]         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      ...       ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1662]         3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1663]         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1664]         2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1665]         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1666]         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   -------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   seqinfo: 3 sequences from an unspecified genome; no seqlengths</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">plp</span>, <span class="va">plp_fn</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">plp</span>, <span class="st">".tbi"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
