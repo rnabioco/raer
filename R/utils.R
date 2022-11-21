@@ -34,7 +34,7 @@ read_tabix <- function(filename,
   filename <- path.expand(filename)
   # returned as a list to avoid stringsAsFactors
   df <- cread_tabix(filename, region)
-  numeric_cols <- intersect(c("start", "end", "pos"),  colnames(df))
+  numeric_cols <- intersect(c("start", "end", "pos"), colnames(df))
   if (!is.null(numeric_cols)) {
     for (i in numeric_cols) {
       df[[i]] <- as.numeric(df[[i]])
@@ -73,10 +73,12 @@ raer_example <- function(path) {
 #' @param pos GRanges containing editing sites
 #' @importFrom GenomeInfoDb `seqlevels<-` seqlevels
 getCoverageAtPositions <- function(cov, pos) {
-  if (length(setdiff(seqlevels(pos), names(cov))) > 0L)
+  if (length(setdiff(seqlevels(pos), names(cov))) > 0L) {
     stop("Some seqlevels are missing from coverage")
-  if (any(width(pos) > 1L))
+  }
+  if (any(width(pos) > 1L)) {
     stop("Some ranges are of width > 1")
+  }
   seqlevels(pos) <- names(cov)
   ord <- order(seqnames(pos))
   ans <- integer(length(pos))
@@ -98,7 +100,7 @@ split_vec <- function(x, n) split(x, ceiling(seq_along(x) / n))
 
 
 # flatten top list, keeping names from inner list
-unlist_w_names <- function(x){
+unlist_w_names <- function(x) {
   nms <- unlist(lapply(x, names))
   res <- unlist(x, use.names = FALSE)
   names(res) <- nms

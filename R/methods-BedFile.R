@@ -13,13 +13,16 @@
 #' bed_fn <- system.file("extdata", "regions.bed", package = "raer")
 #' indexBed(bed_fn)
 #' @export
-setMethod(indexBed, "character",
+setMethod(
+  indexBed, "character",
   function(file) {
     stopifnot(file.exists(file))
     file <- normalizePath(path.expand(file))
 
-    obj <- .BedFile$new(path = file,
-      open = FALSE)
+    obj <- .BedFile$new(
+      path = file,
+      open = FALSE
+    )
 
     tryCatch(
       {
@@ -28,10 +31,12 @@ setMethod(indexBed, "character",
       },
       error = function(err) {
         stop(conditionMessage(err), "\n  file: ", file)
-      })
+      }
+    )
 
     return(obj)
-  })
+  }
+)
 
 #' Close a BedFile index connection
 #'
@@ -59,7 +64,8 @@ close.BedFile <-
       },
       error = function(err) {
         stop(conditionMessage(err), "\n  file: ", con)
-      })
+      }
+    )
 
     invisible(con)
   }

@@ -54,8 +54,9 @@ chr4snps <- import(fns$snps)
 
 rmskhg38 <- read.table(fns$rmsk)
 rmskhg38 <- makeGRangesFromDataFrame(rmskhg38,
-                                     keep.extra.columns = TRUE, 
-                                     starts.in.df.are.0based = TRUE)
+  keep.extra.columns = TRUE,
+  starts.in.df.are.0based = TRUE
+)
 ```
 
 
@@ -70,22 +71,25 @@ fafn <- fns$fasta
 Filtering parameters for the `get_pileup()` function can accept multiple arguments matched to the input bam files.
 
 ```{r}
-fp <- FilterParam(min_nucleotide_depth = 1,
-                  min_base_quality = 30,
-                  min_mapq = c(255, 30),
-                  library_type = c("fr-first-strand", "genomic-unstranded"),
-                  trim_5p = 5,
-                  trim_3p = 5,
-                  indel_dist = 4,
-                  homopolymer_len = 6,
-                  max_mismatch_type = c(3, 3),
-                  min_read_bqual = c(0.25, 20),
-                  only_keep_variants = c(TRUE, FALSE))
+fp <- FilterParam(
+  min_nucleotide_depth = 1,
+  min_base_quality = 30,
+  min_mapq = c(255, 30),
+  library_type = c("fr-first-strand", "genomic-unstranded"),
+  trim_5p = 5,
+  trim_3p = 5,
+  indel_dist = 4,
+  homopolymer_len = 6,
+  max_mismatch_type = c(3, 3),
+  min_read_bqual = c(0.25, 20),
+  only_keep_variants = c(TRUE, FALSE)
+)
 
 plps <- get_pileup(c(rna_bam, wgs_bam),
-                  fafile = fafn,
-                  chrom = "chr4",
-                  filterParam = fp)
+  fafile = fafn,
+  chrom = "chr4",
+  filterParam = fp
+)
 names(plps) <- c("rna", "dna")
 plps
 ```
@@ -105,7 +109,7 @@ passing these DNA-seq based filters independent of strand.
 
 ```{r}
 to_keep <- (assay(se, "nRef")[, "dna"] >= 5 & assay(se, "Var")[, "dna"] == "-")
-se <- subsetByOverlaps(se, se[to_keep,], ignore.strand = TRUE)
+se <- subsetByOverlaps(se, se[to_keep, ], ignore.strand = TRUE)
 nrow(se)
 ```
 
@@ -130,7 +134,7 @@ rowData(se)[c("repName", "repFamily")]
 
 
 ```{r}
-se <- se[!rowData(se)$repFamily  %in% c("Simple_repeat", "Low Complexity")]
+se <- se[!rowData(se)$repFamily %in% c("Simple_repeat", "Low Complexity")]
 ```
 
 Next we'll remove sites adjacent to other sites with different variant types. For example if an A->G variant is located proximal to a C->T variant then the variants will be removed.  

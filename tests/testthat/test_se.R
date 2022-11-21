@@ -30,7 +30,8 @@ test_that("creating a RangedSummarizedExperiment works", {
 
   # Three samples
   se_obj5 <- create_se(list(plp, plp2, plp3),
-    sample_names = c("sample_1", "sample_2", "sample_3"))
+    sample_names = c("sample_1", "sample_2", "sample_3")
+  )
   expect_equal(length(assays(se_obj5)), 7)
   expect_equal(ncol(assays(se_obj5)[[1]]), 3)
 
@@ -62,9 +63,11 @@ test_that("creating a sparse RangedSummarizedExperiment works", {
   plps <- list(plp, plp_short, plp2)
   # sparse coerces all missing values to 0
   sres <- create_se(plps, assay_cols = c("nA", "nG"), sparse = TRUE)
-  dres <- create_se(plps, assay_cols = c("nA", "nG"),
+  dres <- create_se(plps,
+    assay_cols = c("nA", "nG"),
     sparse = FALSE,
-    fill_na = 0L)
+    fill_na = 0L
+  )
 
   expect_true(all(names(assays(sres)) == c("nA", "nG")))
 

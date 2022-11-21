@@ -56,7 +56,6 @@ calc_AEI <- function(bam_fn,
                      filterParam = FilterParam(),
                      BPPARAM = SerialParam(),
                      verbose = FALSE) {
-
   chroms <- names(Rsamtools::scanBamHeader(bam_fn)[[1]]$targets)
 
   if (length(bam_fn) != 1) {
@@ -64,10 +63,12 @@ calc_AEI <- function(bam_fn,
   }
 
   if (is.null(alu_ranges)) {
-    warning("querying the whole genome will be very ",
+    warning(
+      "querying the whole genome will be very ",
       "memory intensive and inaccurate.\n",
       "Consider supplying a GRanges object with ALU\n",
-      "or related repeats for your species ")
+      "or related repeats for your species "
+    )
   }
 
   genes_gr <- NULL
@@ -83,7 +84,6 @@ calc_AEI <- function(bam_fn,
     } else {
       genes_gr <- txdb
     }
-
   }
 
   if (!is.null(alu_ranges)) {
@@ -91,10 +91,10 @@ calc_AEI <- function(bam_fn,
       if (!file.exists(alu_ranges)) {
         stop("supplied alu ranges bedfile does not exist:\n",
           alu_ranges,
-          call. = FALSE)
+          call. = FALSE
+        )
       }
       alu_bed_fn <- alu_ranges
-
     } else if (is(alu_ranges, "GRanges")) {
       alu_bed_fn <- tempfile(fileext = ".bed")
       tmp_files <- c(tmp_files, alu_bed_fn)
@@ -130,8 +130,10 @@ calc_AEI <- function(bam_fn,
         snps <- snpsByOverlaps(snp_db, alu_ranges)
         snps <- split(snps, seqnames(snps))[chroms]
       } else {
-        stop("removing snps using a SNPloc package requires ",
-          "alu_ranges to be supplied ")
+        stop(
+          "removing snps using a SNPloc package requires ",
+          "alu_ranges to be supplied "
+        )
       }
     } else {
       stop("unknown snpdb object type")
@@ -140,15 +142,18 @@ calc_AEI <- function(bam_fn,
   if (is.null(snps)) {
     aei <- bpmapply(.calc_AEI_per_chrom,
       chroms,
-      MoreArgs = list(bam_fn = bam_fn,
+      MoreArgs = list(
+        bam_fn = bam_fn,
         fasta_fn = fasta_fn,
         alu_bed_fn = alu_bed_fn,
         filterParam = filterParam,
         snp_gr = NULL,
         genes_gr = genes_gr,
-        verbose = verbose),
+        verbose = verbose
+      ),
       BPPARAM = BPPARAM,
-      SIMPLIFY = FALSE)
+      SIMPLIFY = FALSE
+    )
   } else {
     if (length(chroms) != length(snps)) {
       stop("issue subsetting SNPdb and chromosomes")
@@ -156,14 +161,17 @@ calc_AEI <- function(bam_fn,
     aei <- bpmapply(.calc_AEI_per_chrom,
       chroms,
       snps,
-      MoreArgs = list(bam_fn = bam_fn,
+      MoreArgs = list(
+        bam_fn = bam_fn,
         fasta_fn = fasta_fn,
         alu_bed_fn = alu_bed_fn,
         filterParam = filterParam,
         genes_gr = genes_gr,
-        verbose = verbose),
+        verbose = verbose
+      ),
       BPPARAM = BPPARAM,
-      SIMPLIFY = FALSE)
+      SIMPLIFY = FALSE
+    )
   }
   bpstop(BPPARAM)
 
@@ -205,12 +213,14 @@ calc_AEI <- function(bam_fn,
     fafile = fasta_fn,
     bedfile = alu_bed_fn,
     chroms = chrom,
-    filterParam = filterParam)
+    filterParam = filterParam
+  )
 
   if (!is.null(snp_gr) && !is.null(plp)) {
     plp <- subsetByOverlaps(plp, snp_gr,
       invert = TRUE,
-      ignore.strand = TRUE)
+      ignore.strand = TRUE
+    )
   }
 
   if (filterParam@library_type == "genomic-unstranded") {
@@ -232,9 +242,11 @@ calc_AEI <- function(bam_fn,
       id <- paste0(rb, "_", ab)
       n_alt <- sum(mcols(j)[[paste0("n", ab)]])
       n_ref <- sum(mcols(j)[[paste0("n", rb)]])
-      var_list[[id]]  <- c(alt = n_alt,
+      var_list[[id]] <- c(
+        alt = n_alt,
         ref = n_ref,
-        prop = 0)
+        prop = 0
+      )
     }
   }
   var_list
@@ -261,7 +273,8 @@ calc_AEI <- function(bam_fn,
 #' if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
 #'   gr <- GRanges(rep("22", 10),
 #'     IRanges(seq(10510077, 10610077, by = 1000)[1:10], width = 250),
-#'     strand = "+")
+#'     strand = "+"
+#'   )
 #'   get_overlapping_snps(gr, SNPlocs.Hsapiens.dbSNP144.GRCh38)
 #' }
 #' @importFrom rtracklayer export
@@ -269,25 +282,25 @@ calc_AEI <- function(bam_fn,
 #' @export
 get_overlapping_snps <- function(gr,
                                  snpDb,
-                                 output_file = NULL){
+                                 output_file = NULL) {
   gr <- gr[seqnames(gr) %in% seqnames(snpDb)]
 
   # iterate through each contig, drop mcols (snpID) to reduce memory
   alu_snps <- vector("list", length = length(seqnames(snpDb)))
-  for(i in seq_along(seqnames(snpDb))){
+  for (i in seq_along(seqnames(snpDb))) {
     x <- seqnames(snpDb)[i]
     tmp_gr <- gr[seqnames(gr) == x]
 
     xx <- BSgenome::snpsByOverlaps(snpDb, tmp_gr)
     mcols(xx) <- NULL
 
-    if(!is.null(output_file)){
+    if (!is.null(output_file)) {
       rtracklayer::export(xx, output_file, append = TRUE, ignore.strand = TRUE)
     } else {
       alu_snps[[i]] <- xx
     }
   }
-  if(!is.null(output_file)){
+  if (!is.null(output_file)) {
     return(output_file)
   }
   unlist(as(alu_snps, "GRangesList"))
@@ -320,15 +333,16 @@ get_overlapping_snps <- function(gr,
 #' fp <- FilterParam(library_type = "genomic-unstranded")
 #' plp <- get_pileup(bamfn, fafn, filterParam = fp)
 #'
-#' genes <- GRanges(c("DHFR:200-400:+",
+#' genes <- GRanges(c(
+#'   "DHFR:200-400:+",
 #'   "SPCS3:100-200:-",
 #'   "SSR3:3-10:-",
-#'   "SSR3:6-12:+"))
+#'   "SSR3:6-12:+"
+#' ))
 #' correct_strand(plp, genes)
 #' @importFrom stringr str_count
 #' @export
 correct_strand <- function(gr, genes_gr) {
-
   if (length(gr) == 0) {
     return(gr)
   }
@@ -347,9 +361,14 @@ correct_strand <- function(gr, genes_gr) {
 
   gr$Ref[flip_rows] <- BASE_MAP[gr$Ref[flip_rows]]
 
-  gr$Var[flip_rows] <- unlist(lapply(str_split(gr$Var[flip_rows], ","),
-    function(x) paste0(unname(ALLELE_MAP[x]),
-      collapse = ",")))
+  gr$Var[flip_rows] <- unlist(lapply(
+    str_split(gr$Var[flip_rows], ","),
+    function(x) {
+      paste0(unname(ALLELE_MAP[x]),
+        collapse = ","
+      )
+    }
+  ))
 
   # complement the nucleotide counts by reordering the columns
   cols_to_swap <- c("nA", "nT", "nC", "nG")
@@ -364,7 +383,8 @@ correct_strand <- function(gr, genes_gr) {
 }
 
 
-ALLELE_MAP <- c(TA = "CT",
+ALLELE_MAP <- c(
+  TA = "CT",
   CA = "GT",
   GA = "AT",
   AT = "TC",
@@ -376,7 +396,8 @@ ALLELE_MAP <- c(TA = "CT",
   AG = "TA",
   TG = "CA",
   CG = "GA",
-  `-` = "-")
+  `-` = "-"
+)
 
 BASE_MAP <- c(
   "A" = "T",

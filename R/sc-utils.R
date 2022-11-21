@@ -38,24 +38,33 @@ build_tag_index <- function(bamfile, tag = "CB", n_records_to_check = 1e6,
   }
 
   if (n_records_to_check < 1) {
-    message("disabling checks for tag in bam\n",
-      "set n_records_to_check > 0 to enable checks")
+    message(
+      "disabling checks for tag in bam\n",
+      "set n_records_to_check > 0 to enable checks"
+    )
   } else {
     Rsamtools::yieldSize(bfo) <- n_records_to_check
     mapped <- scanBamFlag(isSecondaryAlignment = FALSE, isUnmappedQuery = FALSE)
     alns <- Rsamtools::scanBam(bfo,
-      param = Rsamtools::ScanBamParam(tag = tag,
-        flag = mapped))
+      param = Rsamtools::ScanBamParam(
+        tag = tag,
+        flag = mapped
+      )
+    )
     tag_vals <- alns[[1]]$tag[[tag]]
     if (length(tag_vals) == 0) {
-      stop("unable to find tag ", tag,
+      stop(
+        "unable to find tag ", tag,
         " in first ", n_records_to_check,
-        " records of bam file")
+        " records of bam file"
+      )
     }
     if (!is.character(tag_vals)) {
-      stop("invalid type ", typeof(tag_vals), " \n",
+      stop(
+        "invalid type ", typeof(tag_vals), " \n",
         "Indexing only supports type character\n",
-        "e.g: tags with Z, e.g. CB:Z:ABCBACB")
+        "e.g: tags with Z, e.g. CB:Z:ABCBACB"
+      )
     }
   }
   if (Rsamtools::isOpen(bfo)) close(bfo)
@@ -119,10 +128,12 @@ get_tag_bam <- function(bamfile,
   bamfile <- path.expand(bamfile)
   idx_file <- paste0(bamfile, ".bri")
   if (!file.exists(idx_file)) {
-    stop("bam file must be sorted by tag, and indexed with build_index\n",
+    stop(
+      "bam file must be sorted by tag, and indexed with build_index\n",
       "samtools sort -t CB your.bam\n",
       "then index in R:\n",
-      "raer::build_tag_index('your_sorted.bam', tag = 'CB')")
+      "raer::build_tag_index('your_sorted.bam', tag = 'CB')"
+    )
   }
   stopifnot(is.character(barcodes) && length(barcodes) > 0)
 
@@ -183,32 +194,36 @@ check_missing_barcodes <- function(cbs, bamfile) {
 #' @examples
 #' library(rtracklayer)
 #' bam_fn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
-#' sites <- GRanges(rep("SSR3", 101),
-#'                  IRanges(100:200, width = 1))
+#' sites <- GRanges(
+#'   rep("SSR3", 101),
+#'   IRanges(100:200, width = 1)
+#' )
 #' filter_by_coverage(bam_fn, sites, min_counts = 24)
 #' @importFrom GenomicAlignments coverage
 #' @export
 filter_by_coverage <- function(bamfile, gr, min_counts,
                                param = NULL, verbose = FALSE,
                                ...) {
-  if(is.character(gr)){
-    if(!file.exists(gr)) stop(gr, " file not found")
+  if (is.character(gr)) {
+    if (!file.exists(gr)) stop(gr, " file not found")
     gr <- rtracklayer::import(gr)
   }
   gr <- GenomicRanges::sort(gr)
   n_sites <- length(gr)
 
-  if(is.null(param)){
-    covflags <- scanBamFlag(isSecondaryAlignment = FALSE,
-                isDuplicate = FALSE,
-                isSupplementaryAlignment = FALSE,
-                isNotPassingQualityControls = FALSE)
+  if (is.null(param)) {
+    covflags <- scanBamFlag(
+      isSecondaryAlignment = FALSE,
+      isDuplicate = FALSE,
+      isSupplementaryAlignment = FALSE,
+      isNotPassingQualityControls = FALSE
+    )
     param <- ScanBamParam(flag = covflags)
   }
 
   cvg <- GenomicAlignments::coverage(bamfile, param = param, ...)
   shared_seqs <- intersect(names(cvg), GenomeInfoDb::seqlevels(gr))
-  if(length(shared_seqs) == 0){
+  if (length(shared_seqs) == 0) {
     stop("no shared seqnames found, check input bamfile and bedfile chromosome names")
   }
   cvg <- cvg[shared_seqs]
@@ -219,10 +234,12 @@ filter_by_coverage <- function(bamfile, gr, min_counts,
   mcols(gr)$score <- cvg
   gr <- gr[cvg >= min_counts]
   if (verbose) {
-    message("Input bed contained ", n_sites, " sites\n",
-            n_sites - length(gr), " sites do not have at least ",
-            min_counts, " reads \n",
-            "and will be ignored.")
+    message(
+      "Input bed contained ", n_sites, " sites\n",
+      n_sites - length(gr), " sites do not have at least ",
+      min_counts, " reads \n",
+      "and will be ignored."
+    )
   }
   gr
 }
@@ -238,35 +255,43 @@ get_cell_pileup <- function(bamfn,
                             id = NULL,
                             ...) {
   if (verbose) {
-    if(per_cell){
-      message("working on: batch ", idx,
-              " (cells ", 1 + ((idx-1) * length(cellbarcodes)),
-              "-",
-              idx * length(cellbarcodes),
-              ")")
+    if (per_cell) {
+      message(
+        "working on: batch ", idx,
+        " (cells ", 1 + ((idx - 1) * length(cellbarcodes)),
+        "-",
+        idx * length(cellbarcodes),
+        ")"
+      )
     } else {
       message("working on: group ", idx)
     }
   }
 
-  if(per_cell){
-    bam <- lapply(cellbarcodes,
-                  function(x){
-                    get_tag_bam(bamfn,
-                                barcodes = x,
-                                outbam = NULL)})
+  if (per_cell) {
+    bam <- lapply(
+      cellbarcodes,
+      function(x) {
+        get_tag_bam(bamfn,
+          barcodes = x,
+          outbam = NULL
+        )
+      }
+    )
     bam <- unlist(bam)
   } else {
     bam <- get_tag_bam(bamfn,
-                       barcodes = cellbarcodes,
-                       outbam = NULL)
+      barcodes = cellbarcodes,
+      outbam = NULL
+    )
   }
   on.exit(unlink(c(bam, paste0(bam, ".bai"))))
   out <- get_pileup(bam,
-                    fafile = fafn,
-                    BPPARAM = BiocParallel::SerialParam(),
-                    ...)
-  if(per_cell) {
+    fafile = fafn,
+    BPPARAM = BiocParallel::SerialParam(),
+    ...
+  )
+  if (per_cell) {
     # figure out numeric assays
     num_cols <- assay_cols[which(sapply(mcols(out[[1]])[assay_cols], is.numeric))]
     # remove zero depth (helps with making the sparseMatrices)
@@ -278,11 +303,12 @@ get_cell_pileup <- function(bamfn,
     id <- NULL
   }
   out <- create_se(out,
-                  assay_cols = assay_cols,
-                  sparse = TRUE,
-                  fill_na = 0L,
-                  sample_names = id,
-                  verbose = verbose)
+    assay_cols = assay_cols,
+    sparse = TRUE,
+    fill_na = 0L,
+    sample_names = id,
+    verbose = verbose
+  )
   out
 }
 
@@ -325,12 +351,14 @@ get_cell_pileup <- function(bamfn,
 #' # will be slow with many sites and cells
 #' # bam file will be indexed by build_tag_index() if not already done.
 #' fp <- FilterParam(library_type = "fr-second-strand")
-#' se <- sc_editing(bamfile = bamfn,
+#' se <- sc_editing(
+#'   bamfile = bamfn,
 #'   fafile = raer_example("mouse_tiny.fasta"),
 #'   bedfile = raer_example("5k_neuron_sites.bed.gz"),
 #'   cell_barcodes = cbs[1:15],
 #'   verbose = FALSE,
-#'   filterParam = fp)
+#'   filterParam = fp
+#' )
 #'
 #' # pool cell barcodes across clusters
 #' # pass a named list, with each list entry corresponding to a vector
@@ -340,12 +368,14 @@ get_cell_pileup <- function(bamfn,
 #' cb_lst <- split(cbs, cut(seq_along(cbs), breaks = 5))
 #' names(cb_lst) <- paste0("cluster", 1:5)
 #'
-#' se <- sc_editing(bamfile = bamfn,
+#' se <- sc_editing(
+#'   bamfile = bamfn,
 #'   fafile = raer_example("mouse_tiny.fasta"),
 #'   bedfile = raer_example("5k_neuron_sites.bed.gz"),
 #'   cell_barcodes = cb_lst,
 #'   verbose = FALSE,
-#'   filterParam = fp)
+#'   filterParam = fp
+#' )
 #' assays(se)$nA
 #' assays(se)$nG
 #'
@@ -364,12 +394,14 @@ sc_editing <- function(bamfile,
                        batch_size = 50,
                        verbose = TRUE,
                        ...) {
-
   if (!all(assay_cols %in% PILEUP_COLS)) {
     allowed_vals <- paste(PILEUP_COLS[5:length(PILEUP_COLS)],
-                          collapse = ", ")
-    stop("assay_cols input not correct\n  ",
-         "must match ", allowed_vals)
+      collapse = ", "
+    )
+    stop(
+      "assay_cols input not correct\n  ",
+      "must match ", allowed_vals
+    )
   }
 
   # fail early if incorrect args passed through ...
@@ -401,21 +433,23 @@ sc_editing <- function(bamfile,
 
   if (verbose) message("beginning pileup")
   res <- bpmapply(get_cell_pileup,
-                  cellbarcodes = cell_barcodes,
-                  idx = seq_along(cell_barcodes),
-                  id = names(cell_barcodes),
-                  MoreArgs = list(
-                    bamfn = bamfile,
-                    fafn = fafile,
-                    assay_cols = assay_cols,
-                    per_cell = per_cell,
-                    bedfile = bedfile,
-                    bedidx = NULL,
-                    return_data = TRUE,
-                    verbose = verbose,
-                    ...),
-                  BPPARAM = BPPARAM,
-                  SIMPLIFY = FALSE)
+    cellbarcodes = cell_barcodes,
+    idx = seq_along(cell_barcodes),
+    id = names(cell_barcodes),
+    MoreArgs = list(
+      bamfn = bamfile,
+      fafn = fafile,
+      assay_cols = assay_cols,
+      per_cell = per_cell,
+      bedfile = bedfile,
+      bedidx = NULL,
+      return_data = TRUE,
+      verbose = verbose,
+      ...
+    ),
+    BPPARAM = BPPARAM,
+    SIMPLIFY = FALSE
+  )
   bpstop(BPPARAM)
   if (verbose) message("pileup completing, binding summarizedExperiments")
   bind_se(res)

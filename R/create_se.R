@@ -67,9 +67,11 @@ create_se <- function(plps,
     }
   } else {
     if (length(plps) != length(sample_names)) {
-      stop("You must provide the same number of sample names as pileup results",
+      stop(
+        "You must provide the same number of sample names as pileup results",
         "You supplied ", length(plps), " pileup results but supplied ",
-        length(sample_names), " sample names.")
+        length(sample_names), " sample names."
+      )
     }
     names(plps) <- sample_names
   }
@@ -89,13 +91,17 @@ create_se <- function(plps,
     non_sparse_assays <- assay_cols
   } else {
     # character matrices aren't handled by Matrix
-    ns <- !unlist(lapply(mcols(plps[[1]])[, assay_cols],
-      function(x) is.numeric(x)))
+    ns <- !unlist(lapply(
+      mcols(plps[[1]])[, assay_cols],
+      function(x) is.numeric(x)
+    ))
     non_sparse_assays <- assay_cols[ns]
     if (any(ns)) {
-      warning("sparseMatrices can only be generated for numeric values.\n",
+      warning(
+        "sparseMatrices can only be generated for numeric values.\n",
         non_sparse_assays, " will be stored as dense matrices ",
-        "which may consume excessive memory.")
+        "which may consume excessive memory."
+      )
     }
   }
 
@@ -103,12 +109,15 @@ create_se <- function(plps,
 
   plp_assays <- fill_matrices(plps, non_sparse_assays, all_ranges, verbose)
   sp_plp_assays <- fill_sparse_matrices(plps, sparse_assays, all_ranges,
-                                        use_hashmap = TRUE, verbose)
+    use_hashmap = TRUE, verbose
+  )
   plp_assays <- c(plp_assays, sp_plp_assays)
 
-  se <- SummarizedExperiment(assays = plp_assays,
+  se <- SummarizedExperiment(
+    assays = plp_assays,
     rowRanges = all_ranges,
-    colData = DataFrame(sample = sample_names))
+    colData = DataFrame(sample = sample_names)
+  )
   colnames(se) <- se$sample
   rownames(se) <- site_names(rowRanges(se))
 
@@ -132,7 +141,8 @@ fill_matrices <- function(plps, assays, gr, verbose = TRUE) {
   plp_assays <- lapply(assays, function(x) {
     matrix(NA,
       nrow = NROW(gr),
-      ncol = length(plps))
+      ncol = length(plps)
+    )
   })
   names(plp_assays) <- assays
 
@@ -153,16 +163,18 @@ fill_matrices <- function(plps, assays, gr, verbose = TRUE) {
 }
 
 
-bind_se <- function(ses){
+bind_se <- function(ses) {
   all_assays <- lapply(ses, function(x) names(assays(x)))
   assay_names <- unique(unlist(all_assays))
-  stopifnot(all(unlist(lapply(all_assays,
-                              function(x) {
-                                length(setdiff(assay_names, x)) == 0
-                                }))))
+  stopifnot(all(unlist(lapply(
+    all_assays,
+    function(x) {
+      length(setdiff(assay_names, x)) == 0
+    }
+  ))))
 
   assay_dat <- vector("list", length = length(assay_names))
-  for(i in seq_along(assay_names)){
+  for (i in seq_along(assay_names)) {
     an <- assay_names[i]
     an_assays <- lapply(ses, function(x) assay(x, an))
     assay_dat[[i]] <- cbind_sparse(an_assays)
@@ -175,9 +187,11 @@ bind_se <- function(ses){
   rn <- rownames(assay_dat[[1]])
   rowrng <- unlist(GRangesList(lapply(ses, rowRanges)), use.names = FALSE)
   rowrng <- rowrng[rn, , drop = FALSE]
-  SummarizedExperiment(assays = assay_dat,
-                       rowRanges = rowrng,
-                       colData = cdat)
+  SummarizedExperiment(
+    assays = assay_dat,
+    rowRanges = rowrng,
+    colData = cdat
+  )
 }
 
 
@@ -223,7 +237,8 @@ fill_sparse_matrices <- function(plps, assays, gr, use_hashmap = TRUE, verbose =
         all_hits[[i]] <- integer(0)
       } else {
         all_hits[[i]] <- sort(unlist(hm$mget(site_names(plps[[i]])),
-          use.names = FALSE))
+          use.names = FALSE
+        ))
       }
     }
     hm$reset()
@@ -242,8 +257,10 @@ fill_sparse_matrices <- function(plps, assays, gr, use_hashmap = TRUE, verbose =
       hits[[vi]] <- hits[[vi]][to_keep[[vi]]]
     }
     x <- cpp_fill_sparse_matrix(vals, hits)
-    plp_assays[[i]] <- sparseMatrix(i = x[, 1], j = x[, 2], x = x[, 3],
-      dims = c(length(gr), length(plps)))
+    plp_assays[[i]] <- sparseMatrix(
+      i = x[, 1], j = x[, 2], x = x[, 3],
+      dims = c(length(gr), length(plps))
+    )
   }
   plp_assays
 }
@@ -252,7 +269,7 @@ fill_sparse_matrices <- function(plps, assays, gr, use_hashmap = TRUE, verbose =
 # adapted from user6376297
 # https://stackoverflow.com/a/56547070/6276041
 # cbind sparse matrices with differing row entries
-cbind_sparse <- function(mats){
+cbind_sparse <- function(mats) {
   stopifnot(all(unlist(lapply(mats, function(x) is(x, "dgCMatrix")))))
   rn <- unique(unlist(lapply(mats, rownames)))
   cn <- unique(unlist(lapply(mats, colnames)))
@@ -263,8 +280,8 @@ cbind_sparse <- function(mats){
 
   init_x <- 1
   for (idx in seq_along(mats)) {
-    cindnew <- match(colnames(mats[[idx]]),cn)
-    rindnew <- match(rownames(mats[[idx]]),rn)
+    cindnew <- match(colnames(mats[[idx]]), cn)
+    rindnew <- match(rownames(mats[[idx]]), rn)
     ind <- summary(mats[[idx]])
     nval <- nrow(ind)
     end <- nval + init_x - 1
@@ -274,11 +291,13 @@ cbind_sparse <- function(mats){
     init_x <- end + 1
   }
 
-  sparseMatrix(i = i,
-               j = j,
-               x = x,
-               dims=c(length(rn), length(cn)),
-               dimnames=list(rn, cn))
+  sparseMatrix(
+    i = i,
+    j = j,
+    x = x,
+    dims = c(length(rn), length(cn)),
+    dimnames = list(rn, cn)
+  )
 }
 
 
@@ -287,9 +306,11 @@ site_names <- function(gr) {
   if (length(gr) == 0) {
     return(NULL)
   }
-  stringr::str_c(seqnames(gr),
+  stringr::str_c(
+    seqnames(gr),
     "_",
     start(gr),
     "_",
-    as.integer(strand(gr)))
+    as.integer(strand(gr))
+  )
 }

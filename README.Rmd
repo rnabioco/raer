@@ -59,13 +59,16 @@ res
 Multiple bam files can be processed, which enables rapid comparisons of RNA-Seq vs. WGS or WXS data, or RNA-Seq vs RNA-seq (ADAR WT VS ADAR KO).
 
 ```{r}
-fp <- FilterParam(only_keep_variants = TRUE,
-                  library_type = "fr-first-strand",
-                  min_nucleotide_depth = 2)
+fp <- FilterParam(
+  only_keep_variants = TRUE,
+  library_type = "fr-first-strand",
+  min_nucleotide_depth = 2
+)
 
-plps <- get_pileup(c(bam2fn, bamfn), 
-                  fafn, 
-                  filterParam = fp)
+plps <- get_pileup(c(bam2fn, bamfn),
+  fafn,
+  filterParam = fp
+)
 plps
 ```
 
