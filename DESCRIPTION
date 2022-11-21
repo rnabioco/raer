@@ -60,7 +60,7 @@ Suggests:
     AnnotationHub
 LinkingTo: 
     Rcpp,
-    Rhtslib
+    Rhtslib (>= 2.0.0)
 SystemRequirements: 
     C++11, 
     GNU make, 
