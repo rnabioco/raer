@@ -147,7 +147,7 @@ fafn <- system.file("extdata", "human.fasta", package = "raer")
 
 plp <- get_pileup(bamfn, fafn)
 plps <- get_pileup(c(bamfn, bam2fn), fafn)
-fp <- FilterParam(only_keep_variants = TRUE,  min_nucleotide_depth = 55)
+fp <- FilterParam(only_keep_variants = TRUE, min_nucleotide_depth = 55)
 get_pileup(bamfn, fafn, filterParam = fp)
 
 }
