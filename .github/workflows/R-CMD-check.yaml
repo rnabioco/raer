@@ -41,8 +41,12 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          extra-packages: any::rcmdcheck, any::BiocManager
           needs: check
+
+      - name: Install Bioconductor
+        run: |
+          BiocManager::install(version = "3.16")
 
       - uses: r-lib/actions/check-r-package@v2
         with:
