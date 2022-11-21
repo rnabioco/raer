@@ -5,7 +5,7 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/rnabioco/raer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/rnabioco/raer/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check-bioc](https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml/badge.svg)](https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml)
 <!-- badges: end -->
 
 raer is an R package that facilitates rapid interactive analysis of RNA
