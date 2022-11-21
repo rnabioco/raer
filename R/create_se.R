@@ -171,7 +171,9 @@ bind_se <- function(ses){
 
   cdat <- do.call(rbind, lapply(ses, colData))
 
-  stopifnot(Reduce(identical, lapply(assay_dat, rownames)))
+  rns <- lapply(assay_dat, rownames)
+  stopifnot(all(unlist(lapply(rns[-1], identical, rns[[1]]))))
+
   rn <- rownames(assay_dat[[1]])
   rowrng <- unlist(GRangesList(lapply(ses, rowRanges)), use.names = FALSE)
   rowrng <- rowrng[rn, , drop = FALSE]
@@ -257,29 +259,38 @@ cbind_sparse <- function(mats){
   rn <- unique(unlist(lapply(mats, rownames)))
   cn <- unique(unlist(lapply(mats, colnames)))
   nvals <- sum(unlist(lapply(mats, Matrix::nnzero)))
-  x <- integer(nvals)
-  i <- integer(nvals)
-  j <- integer(nvals)
+  if(nvals > 0){
+    x <- integer(nvals)
+    i <- integer(nvals)
+    j <- integer(nvals)
 
-  init_x <- 1
-  for (idx in seq_along(mats)) {
-    cindnew <- match(colnames(mats[[idx]]),cn)
-    rindnew <- match(rownames(mats[[idx]]),rn)
-    ind <- summary(mats[[idx]])
-    nval <- nrow(ind)
-    end <- nval + init_x - 1
-    i[init_x:end] <- rindnew[ind$i]
-    j[init_x:end] <- cindnew[ind$j]
-    x[init_x:end] <- ind$x
-    init_x <- end + 1
+    init_x <- 1
+    for (idx in seq_along(mats)) {
+      cindnew <- match(colnames(mats[[idx]]),cn)
+      rindnew <- match(rownames(mats[[idx]]),rn)
+      ind <- summary(mats[[idx]])
+      nval <- nrow(ind)
+      end <- nval + init_x - 1
+      i[init_x:end] <- rindnew[ind$i]
+      j[init_x:end] <- cindnew[ind$j]
+      x[init_x:end] <- ind$x
+      init_x <- end + 1
+    }
+
+    res <- sparseMatrix(i = i,
+                        j = j,
+                        x = x,
+                        dims=c(length(rn), length(cn)),
+                        dimnames=list(rn, cn))
+  } else {
+    res <- sparseMatrix(i = integer(0),
+                        p = 0,
+                        dims=c(length(rn), length(cn)),
+                        dimnames=list(rn, cn))
   }
-
-  sparseMatrix(i = i,
-               j = j,
-               x = x,
-               dims=c(length(rn), length(cn)),
-               dimnames=list(rn, cn))
+  res
 }
+
 
 
 #' @importFrom stringr str_c
