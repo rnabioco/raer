@@ -45,7 +45,7 @@ jobs:
           needs: check
 
       - name: Install Bioconductor 3.16
-        run: BiocManager::install(version = "3.16")
+        run: BiocManager::install(version = "3.16", ask = FALSE)
         shell: Rscript {0}
 
       - uses: r-lib/actions/check-r-package@v2
