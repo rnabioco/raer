@@ -67,12 +67,14 @@ cbs[1:5]
 # will be slow with many sites and cells
 # bam file will be indexed by build_tag_index() if not already done.
 fp <- FilterParam(library_type = "fr-second-strand")
-se <- sc_editing(bamfile = bamfn,
+se <- sc_editing(
+  bamfile = bamfn,
   fafile = raer_example("mouse_tiny.fasta"),
   bedfile = raer_example("5k_neuron_sites.bed.gz"),
   cell_barcodes = cbs[1:15],
   verbose = FALSE,
-  filterParam = fp)
+  filterParam = fp
+)
 
 # pool cell barcodes across clusters
 # pass a named list, with each list entry corresponding to a vector
@@ -82,12 +84,14 @@ se <- sc_editing(bamfile = bamfn,
 cb_lst <- split(cbs, cut(seq_along(cbs), breaks = 5))
 names(cb_lst) <- paste0("cluster", 1:5)
 
-se <- sc_editing(bamfile = bamfn,
+se <- sc_editing(
+  bamfile = bamfn,
   fafile = raer_example("mouse_tiny.fasta"),
   bedfile = raer_example("5k_neuron_sites.bed.gz"),
   cell_barcodes = cb_lst,
   verbose = FALSE,
-  filterParam = fp)
+  filterParam = fp
+)
 assays(se)$nA
 assays(se)$nG
 

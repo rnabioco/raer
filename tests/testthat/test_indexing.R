@@ -25,7 +25,7 @@ test_that("bedindex can be used with pileup", {
 test_that("close cleans up index", {
   idx <- close(idx)
   expect_false(idx$open)
-  expect_error(get_pileup(bamfn, fafn,  bedidx = idx))
+  expect_error(get_pileup(bamfn, fafn, bedidx = idx))
 })
 
 test_that("tag index works", {
@@ -60,12 +60,15 @@ test_that("CB tag retrival works", {
 
   bam_cbs <- alns[[1]]$tag[[tag_val]]
   expect_equal(length(setdiff(query_cbs, bam_cbs)), 0L,
-    info = paste0("failed with using ", n_cbs, " cbs"))
+    info = paste0("failed with using ", n_cbs, " cbs")
+  )
   expect_true(length(unique(bam_cbs)) == length(query_cbs))
 
   # output is coordinate sorted
-  expect_equal(scanBamHeader(bam_out)[[1]]$text$`@HD`[2],
-    "SO:coordinate")
+  expect_equal(
+    scanBamHeader(bam_out)[[1]]$text$`@HD`[2],
+    "SO:coordinate"
+  )
   # coordinate sorted bam throws error when indexing
   expect_error(build_tag_index(bam_out))
 
@@ -90,7 +93,8 @@ test_that("other tag (UB) retrival works", {
 
   bam_cbs <- alns[[1]]$tag[[tag_val]]
   expect_equal(length(setdiff(query_cbs, bam_cbs)), 0L,
-    info = paste0("failed with using ", n_cbs, " cbs"))
+    info = paste0("failed with using ", n_cbs, " cbs")
+  )
   expect_true(length(unique(bam_cbs)) == length(query_cbs))
 
   unlink(c(bam_out, paste0(bam_out, ".bai")))

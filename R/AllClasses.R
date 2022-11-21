@@ -8,6 +8,9 @@
 #' @field open logical indicating if the index is open
 #' @rdname index_bed
 .BedFile <- setRefClass("BedFile",
-  fields = list(.extptr = "externalptr",
+  fields = list(
+    .extptr = "externalptr",
     path = "character",
-    open = "logical"))
+    open = "logical"
+  )
+)

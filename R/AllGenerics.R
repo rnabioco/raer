@@ -20,11 +20,15 @@
 #' @examples
 #' if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
 #'   gr <- GRanges(rep("22", 10),
-#'                 IRanges(seq(10510077,
-#'                             10610077,
-#'                             by = 1000)[1:10],
-#'                         width = 250),
-#'                 strand = "+")
+#'     IRanges(
+#'       seq(10510077,
+#'         10610077,
+#'         by = 1000
+#'       )[1:10],
+#'       width = 250
+#'     ),
+#'     strand = "+"
+#'   )
 #'   annot_snps(gr, SNPlocs.Hsapiens.dbSNP144.GRCh38)
 #' }
 #' @seealso [SNPlocs.Hsapiens.dbSNP144.GRCh38](https://bioconductor.org/packages/release/data/annotation/html/SNPlocs.Hsapiens.dbSNP144.GRCh38.html)
@@ -37,5 +41,7 @@ annot_snps <- function(obj, ...) {
 #' Unused for now.
 #' @rdname index_bed
 #' @export
-setGeneric("indexBed",
-  function(file, ...) standardGeneric("indexBed"))
+setGeneric(
+  "indexBed",
+  function(file, ...) standardGeneric("indexBed")
+)

@@ -45,7 +45,6 @@ calc_edit_frequency <- function(se,
                                 replace_na = TRUE,
                                 edit_frequency = 0,
                                 min_count = 1) {
-
   # Set edit to and from for pre defined types
   if (is.null(edit_from) | is.null(edit_to)) {
     edit_from <- "Ref"
@@ -62,23 +61,27 @@ calc_edit_frequency <- function(se,
     se <- se[mcols(rowRanges(se))$Ref == edit_from, ]
   }
 
-  if("depth" %in% names(assays(se))){
-    warning("depth has been overwritten with sum of ",
-            to_col, from_col,
-            "assays")
+  if ("depth" %in% names(assays(se))) {
+    warning(
+      "depth has been overwritten with sum of ",
+      to_col, from_col,
+      "assays"
+    )
   }
 
   assay(se, "depth") <- assay(se, to_col) + assay(se, from_col)
   no_depth <- Matrix::rowSums(assay(se, "depth")) == 0
-  if(any(no_depth)){
-    warning(sum(no_depth), " sites had no coverage for calculating editing\n",
-            "    these sites have been removed")
+  if (any(no_depth)) {
+    warning(
+      sum(no_depth), " sites had no coverage for calculating editing\n",
+      "    these sites have been removed"
+    )
     se <- se[!no_depth, ]
   }
 
-  if(is(assay(se, to_col), "sparseMatrix") ||
-     is(assay(se, from_col), "sparseMatrix")){
-    if(replace_na) {
+  if (is(assay(se, to_col), "sparseMatrix") ||
+    is(assay(se, from_col), "sparseMatrix")) {
+    if (replace_na) {
       stop("NA values cannot be stored in sparseMatrices")
     }
     # compute editing frequencies, only at non-zero depth positions
@@ -86,10 +89,11 @@ calc_edit_frequency <- function(se,
     # if coerced to simple matrix these will have editing
     # frequencies of 0
     idx <- Matrix::which(assay(se, "depth") > 0, arr.ind = TRUE)
-    res <- Matrix::sparseMatrix(idx[,1],
-                                idx[,2],
-                                x = assay(se, to_col)[idx] /
-                                  assay(se, "depth")[idx])
+    res <- Matrix::sparseMatrix(idx[, 1],
+      idx[, 2],
+      x = assay(se, to_col)[idx] /
+        assay(se, "depth")[idx]
+    )
     dimnames(res) <- dimnames(assay(se, from_col))
   } else {
     res <- assay(se, to_col) / assay(se, "depth")
@@ -130,7 +134,6 @@ calc_edit_frequency <- function(se,
 #' @importFrom Matrix colSums
 count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
                         edit_from = NULL, edit_to = NULL) {
-
   n_pass_filter <- Matrix::colSums((assay(se, "edit_freq") > edit_frequency) &
     ((assay(se, paste0("n", edit_from)) +
       assay(se, paste0("n", edit_to))) >=
@@ -188,7 +191,6 @@ prep_for_de <- function(se,
                         min_prop = 0.1,
                         max_prop = 0.9,
                         min_samples = 3) {
-
   # Set edit to and from for pre defined types
   if (type == "AI") {
     edit_from <- "A"
@@ -221,8 +223,10 @@ prep_for_de <- function(se,
   mdata <- rbind(ref_mdata, alt_mdata)
 
   # create a new SummarizedExperiment
-  res <- SummarizedExperiment(assays = list(counts = res),
-    colData = mdata)
+  res <- SummarizedExperiment(
+    assays = list(counts = res),
+    colData = mdata
+  )
   return(res)
 }
 
@@ -269,15 +273,18 @@ perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
                        condition_col = "condition",
                        condition_control = NULL,
                        condition_treatment = NULL) {
-
   # Make sure all variables are present
   if (!sample_col %in% colnames(colData(deobj))) {
-    stop(paste0("somple_col must be a column in the colDat of your deobj. '",
-      sample_col, "' not found in colnames(colData(deobj))!"))
+    stop(paste0(
+      "somple_col must be a column in the colDat of your deobj. '",
+      sample_col, "' not found in colnames(colData(deobj))!"
+    ))
   }
   if (!condition_col %in% colnames(colData(deobj))) {
-    stop(paste0("condition_col must be a column in the colData of your deobj. '",
-      condition_col, "' not found in colnames(colData(deobj))!"))
+    stop(paste0(
+      "condition_col must be a column in the colData of your deobj. '",
+      condition_col, "' not found in colnames(colData(deobj))!"
+    ))
   }
 
   # Rename columns based on the input
@@ -288,7 +295,7 @@ perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
     colData(deobj)$condition <- NULL
   }
 
-  new_columns  <- as.data.frame(colData(deobj))
+  new_columns <- as.data.frame(colData(deobj))
   names(new_columns)[names(new_columns) == condition_col] <- "condition"
   names(new_columns)[names(new_columns) == sample_col] <- "sample"
   new_columns <- new_columns[c("sample", "condition")]
@@ -298,43 +305,53 @@ perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
   # Check that condition_control and condition_treatment are correct
   if (is.null(condition_control)) {
     options <- unique(colData(deobj)$condition)
-    stop(paste0("condition_control must be set. This should be the level of",
+    stop(paste0(
+      "condition_control must be set. This should be the level of",
       " your meta data that corresponds to your control. Possible",
       " options from your experiment are: ",
-      stringr::str_c(options, collapse = ", ")))
+      stringr::str_c(options, collapse = ", ")
+    ))
   }
   if (is.null(condition_treatment)) {
     options <- unique(colData(deobj)$condition)
-    stop(paste0("condition_treatment must be set. This should be the level of",
+    stop(paste0(
+      "condition_treatment must be set. This should be the level of",
       " your meta data that corresponds to your control. Possible",
       " options from your experiment are: ",
-      str_c(options, collapse = ", ")))
+      str_c(options, collapse = ", ")
+    ))
   }
 
   # Check that the treatment and control are in the object
   if (!condition_control %in% colData(deobj)$condition) {
     options <- unique(colData(deobj)$condition)
-    stop(paste0("condition_control must be a column in your deobj colData. '",
+    stop(paste0(
+      "condition_control must be a column in your deobj colData. '",
       condition_control, "' not found in the levels of the condition",
       " column of colData(deobj)! Possible",
       " options from your experiment are: ",
-      str_c(options, collapse = ", ")))
+      str_c(options, collapse = ", ")
+    ))
   }
   if (!condition_treatment %in% colData(deobj)$condition) {
     options <- unique(colData(deobj)$condition)
-    stop(paste0("condition_treatment must be a column in your deobj colData. '",
+    stop(paste0(
+      "condition_treatment must be a column in your deobj colData. '",
       condition_treatment, "' not found in the levels of the condition",
       " column of colData(deobj)! Possible",
       " options from your experiment are: ",
-      str_c(options, collapse = ", ")))
+      str_c(options, collapse = ", ")
+    ))
   }
   if (type == "edgeR") {
     results <- run_edger(deobj, condition_control, condition_treatment)
   } else if (type == "DESeq2") {
     results <- run_deseq2(deobj, condition_control, condition_treatment)
   } else {
-    stop(paste0("Unrecognized type: '", type, "'. type must be either edgeR",
-      " or DESeq2."))
+    stop(paste0(
+      "Unrecognized type: '", type, "'. type must be either edgeR",
+      " or DESeq2."
+    ))
   }
   return(results)
 }
@@ -363,16 +380,21 @@ run_deseq2 <- function(deobj, condition_control = NULL,
                        condition_treatment = NULL) {
   if (!requireNamespace("DESeq2", quietly = TRUE)) {
     stop(paste0("Package \"DESeq2\" needed to run differential analysis. Please install it."),
-      call. = FALSE)
+      call. = FALSE
+    )
   }
 
   design <- ~ 0 + condition:sample + condition:count
 
   # See if the design is full rank, if not, remove sample info
-  test_mat <- try(DESeq2::DESeqDataSetFromMatrix(countData = assay(deobj,
-    "counts"),
-  colData = colData(deobj),
-  design = design), silent = TRUE)
+  test_mat <- try(DESeq2::DESeqDataSetFromMatrix(
+    countData = assay(
+      deobj,
+      "counts"
+    ),
+    colData = colData(deobj),
+    design = design
+  ), silent = TRUE)
 
   if (is(test_mat, "try-error")) {
     sample <- deobj$sample
@@ -384,9 +406,11 @@ run_deseq2 <- function(deobj, condition_control = NULL,
     mod_mat <- design
   }
 
-  dds <- DESeq2::DESeqDataSetFromMatrix(countData = assay(deobj, "counts"),
+  dds <- DESeq2::DESeqDataSetFromMatrix(
+    countData = assay(deobj, "counts"),
     colData = colData(deobj),
-    design = design)
+    design = design
+  )
 
   # We don't want size factors because we are looking at ratios within a sample
   DESeq2::sizeFactors(dds) <- rep(1, nrow(colData(deobj)))
@@ -414,16 +438,19 @@ run_deseq2 <- function(deobj, condition_control = NULL,
   treatment_vs_control <- DESeq2::results(dds,
     contrast = (alt_treatment -
       ref_treatment) -
-      (alt_control - ref_control))
+      (alt_control - ref_control)
+  )
 
   deseq_res <- as.data.frame(treatment_vs_control)
   deseq_res <- deseq_res[deseq_res$padj < 0.05, ]
   deseq_res <- deseq_res[order(deseq_res$log2FoldChange, decreasing = TRUE), ]
 
-  return(list(de_obj = dds,
+  return(list(
+    de_obj = dds,
     results_full = treatment_vs_control,
     sig_results = deseq_res,
-    model_matrix = mod_mat))
+    model_matrix = mod_mat
+  ))
 }
 
 # Perform differential editing with edgeR
@@ -446,10 +473,10 @@ run_deseq2 <- function(deobj, condition_control = NULL,
 #   a variable in your condition_col of colData(deobj).
 run_edger <- function(deobj, condition_control = NULL,
                       condition_treatment = NULL) {
-
   if (!requireNamespace("edgeR", quietly = TRUE)) {
     stop(paste0("Package \"edgeR\" needed to run differential analysis. Please install it."),
-      call. = FALSE)
+      call. = FALSE
+    )
   }
 
   sample <- deobj$sample
@@ -485,15 +512,17 @@ run_edger <- function(deobj, condition_control = NULL,
     (alt_control - ref_control))
 
   treatment_vs_control <- edgeR::topTags(treatment_vs_control,
-    n = nrow(treatment_vs_control))
+    n = nrow(treatment_vs_control)
+  )
 
   edger_res <- as.data.frame(treatment_vs_control)
   edger_res <- edger_res[edger_res$FDR < 0.05, ]
   edger_res <- edger_res[order(edger_res$PValue), ]
 
-  return(list(de_obj = fit,
+  return(list(
+    de_obj = fit,
     results_full = treatment_vs_control,
     sig_results = edger_res,
-    model_matrix = design))
-
+    model_matrix = design
+  ))
 }

@@ -65,7 +65,7 @@ fns
 
 ```{r}
 bam_fn <- fns$bams
-fa_fn <-  fns$fasta
+fa_fn <- fns$fasta
 bed_fn <- fns$edit_sites
 ```
 
@@ -103,16 +103,20 @@ Arguments for `get_pileup()` can be passed to `sc_editing()`. Additionally, the 
 
 ```{r}
 cbs <- colnames(sce)
-se <- sc_editing(bamfile = bam_fn,
-                 fafile = fa_fn,
-                 bedfile = bed_fn,
-                 cell_barcodes = cbs,
-                 assay_cols = c("nA", "nG"),
-                 filterParam = FilterParam(min_base_quality = 30L,
-                                           library_type = "fr-second-strand",
-                                           min_nucleotide_depth = 1L,
-                                           trim_5p = 5L,
-                                           trim_3p = 5L))
+se <- sc_editing(
+  bamfile = bam_fn,
+  fafile = fa_fn,
+  bedfile = bed_fn,
+  cell_barcodes = cbs,
+  assay_cols = c("nA", "nG"),
+  filterParam = FilterParam(
+    min_base_quality = 30L,
+    library_type = "fr-second-strand",
+    min_nucleotide_depth = 1L,
+    trim_5p = 5L,
+    trim_3p = 5L
+  )
+)
 se
 ```
 
@@ -131,9 +135,9 @@ altExp(sce, "edits") <- small_se
 With the editing sites added to the SingleCellExperiment we can use plotting and other methods previously developed for single cell analysis. Here we'll visualize editing sites with the highest edited read counts.
 
 ```{r}
-to_plot <- rownames(altExp(sce))[order(rowSums(assay(altExp(sce), "nG")) , decreasing = TRUE)]
+to_plot <- rownames(altExp(sce))[order(rowSums(assay(altExp(sce), "nG")), decreasing = TRUE)]
 
-lapply(to_plot[1:10], function(x){
+lapply(to_plot[1:10], function(x) {
   plotUMAP(sce, colour_by = x, by_exprs_values = "nG")
 })
 ```
@@ -141,10 +145,11 @@ lapply(to_plot[1:10], function(x){
 ```{r}
 altExp(sce)$cell_type <- sce$celltype
 
-plotGroupedHeatmap(altExp(sce), 
-            features = to_plot[1:25], 
-            group = "cell_type",
-            exprs_values = "nG")
+plotGroupedHeatmap(altExp(sce),
+  features = to_plot[1:25],
+  group = "cell_type",
+  exprs_values = "nG"
+)
 ```
 
 Various tools in Bioconductor can be used to provide additional annotation information about each RNA editing site.  The `VariantAnnotation` package provides powerful functionality to annotate the location of each editing site, and provide information about alterations in codons or splice site.

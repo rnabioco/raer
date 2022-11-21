@@ -19,7 +19,7 @@ This function will return intervals containing splice sites and
 adjacent regions.
 }
 \examples{
-if(require(TxDb.Hsapiens.UCSC.hg38.knownGene)){
+if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
   txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
   res <- get_splice_sites(txdb)
   res[1:5]

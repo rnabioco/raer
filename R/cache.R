@@ -19,12 +19,14 @@ download_GSE99249 <- function(path) {
   options(timeout = max(1000, getOption("timeout")))
   baseURL <- "https://raer-test-data.s3.us-west-2.amazonaws.com/GSE99249/"
 
-  bam_fns <- c("SRR5564260_dedup_sorted.bam",
+  bam_fns <- c(
+    "SRR5564260_dedup_sorted.bam",
     "SRR5564261_dedup_sorted.bam",
     "SRR5564269_dedup_sorted.bam",
     "SRR5564270_dedup_sorted.bam",
     "SRR5564271_dedup_sorted.bam",
-    "SRR5564277_dedup_sorted.bam")
+    "SRR5564277_dedup_sorted.bam"
+  )
   GSE99249_files <- list(
     bams = bam_fns,
     bai = paste0(bam_fns, ".bai"),
@@ -70,8 +72,10 @@ download_NA12878 <- function(path) {
 
   baseURL <- "https://raer-test-data.s3.us-west-2.amazonaws.com/NA12878/"
 
-  bam_fns <- c("ERR262996_dedup_chr4_sub.bam",
-    "SRR1258218_Aligned.sorted.dedup_sub.bam")
+  bam_fns <- c(
+    "ERR262996_dedup_chr4_sub.bam",
+    "SRR1258218_Aligned.sorted.dedup_sub.bam"
+  )
   NA12878_files <- list(
     bams = bam_fns,
     bai = paste0(bam_fns, ".bai"),
@@ -124,7 +128,7 @@ download_human_pbmc <- function(path) {
 
   bam_fn <- c("10k_PBMC_3p_nextgem_Chromium_X_intron_cbsorted_genome_rediportal_xf25_chr16.bam")
   pbmc_files <- list(
-    bams= bam_fn,
+    bams = bam_fn,
     fasta = "hg38_chr16.fasta.bgz",
     edit_sites = "rediportal_sites.bed.gz",
     sce = "sce.rds"

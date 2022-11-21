@@ -16,7 +16,7 @@ vignette: >
 ---
 
 ```{r, echo=FALSE, results="hide"}
-knitr::opts_chunk$set(message=FALSE, warning=FALSE)
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 ```
 
 # Differential Editing tutorial
@@ -47,14 +47,14 @@ fns <- download_GSE99249(data_dir)
 Next we'll collect a vector containing the paths to each BAM file These BAM files are a subset of the full BAM files, containing only alignments from chromosome 18.
 
 ```{r}
-bam_files <- fns$bams 
+bam_files <- fns$bams
 bam_files[1:2]
 ```
 
 Next we'll need a FASTA file to quantify the editing sites. We'll use a FASTA file only containing chromosome 18 for this demo. The fasta can be compressed. 
 
 ```{r}
-fafn <- fns$fasta 
+fafn <- fns$fasta
 fafn
 ```
 
@@ -72,18 +72,21 @@ The `get_pileup()` function will calculate base counts across multiple BAM files
 Internally, `get_pileup()` will write the pileups to temporary files. However, these files can also be stored in a tabix-indexed format, for later retrieval, or for querying specific regions.
 
 ```{r}
-fp <- FilterParam(only_keep_variants = TRUE,
-                  trim_5p = 5, 
-                  trim_3p = 5, 
-                  min_base_quality = 30L,
-                  min_mapq = 255L, 
-                  library_type = "fr-first-strand")
+fp <- FilterParam(
+  only_keep_variants = TRUE,
+  trim_5p = 5,
+  trim_3p = 5,
+  min_base_quality = 30L,
+  min_mapq = 255L,
+  library_type = "fr-first-strand"
+)
 
-plps <- get_pileup(bam_files, 
-                   fafile = fafn, 
-                   bedfile = bedfn,
-                   region = "chr18", 
-                   filterParam = fp)
+plps <- get_pileup(bam_files,
+  fafile = fafn,
+  bedfile = bedfn,
+  region = "chr18",
+  filterParam = fp
+)
 
 plps[[1]]
 ```
@@ -93,7 +96,7 @@ The base counts are returned in a stand specific fashion depending on the `libra
 Pileups from multiple BAM files can be stored in a `summarizedExperiment` object, which permits comparisons across each sample. The `rowData()` and `rowRanges()` slots can be populated with information related to each editing site, and similarly the `colData()` slot can be used to store sample metadata. The summarizedExperiment objectcan also interface with other derivative classes, such as `singleCellExperiment()`. 
 
 ```{r}
-names(plps) <- names(bam_files) 
+names(plps) <- names(bam_files)
 se <- create_se(plps)
 ```
 
@@ -107,13 +110,21 @@ Next we will add sample metadata to the `summarizedExperiment`, which will be us
 
 
 ```{r}
-colData(se)$genotype_treatment <- rep(c("ADAR1KO Interferon beta",  
-                                        "Wildtype Interferon beta"), 
-                                      each = 3)
+colData(se)$genotype_treatment <- rep(
+  c(
+    "ADAR1KO Interferon beta",
+    "Wildtype Interferon beta"
+  ),
+  each = 3
+)
 
-colData(se)$genotype <- rep(c("ADAR1KO", 
-                              "Wildtype"),
-                            each = 3)
+colData(se)$genotype <- rep(
+  c(
+    "ADAR1KO",
+    "Wildtype"
+  ),
+  each = 3
+)
 colData(se)
 ```
 
@@ -123,18 +134,19 @@ We next use the `calc_edit_frequency` function to identify the percent of edits 
 
 
 ```{r}
-se_filtered <- calc_edit_frequency(se, 
-                                   edit_from = "A",
-                                   edit_to = "G",
-                                   drop = TRUE)
+se_filtered <- calc_edit_frequency(se,
+  edit_from = "A",
+  edit_to = "G",
+  drop = TRUE
+)
 ```
 
 We can next subset the `summarizedExperiment` object to low frequency editing events. For this analysis we will require than an editing site shows editing in at least 1 sample, and have at least 5 counts in each sample. 
 
 ```{r}
 has_editing <- rowSums(assay(se_filtered, "edit_freq") > 0) >= 1
-has_depth <- rowSums(((assay(se_filtered, "nRef") + 
-                         assay(se_filtered, "nVar")) >= 5)) == ncol(se_filtered)
+has_depth <- rowSums(((assay(se_filtered, "nRef") +
+  assay(se_filtered, "nVar")) >= 5)) == ncol(se_filtered)
 
 se_filtered <- se_filtered[has_editing & has_depth, ]
 se_filtered
@@ -144,9 +156,10 @@ Once the object has been filtered, you can prepare it for DE. This means making 
 
 ```{r}
 deobj <- prep_for_de(se_filtered,
-                     min_prop = 0.1,
-                     max_prop = 0.9,
-                     min_samples = 3)
+  min_prop = 0.1,
+  max_prop = 0.9,
+  min_samples = 3
+)
 
 assay(deobj, "counts")[1:3, ]
 ```
@@ -164,11 +177,13 @@ It is probably best to update the levels of your object, but if you don't, this 
 To run using `DESeq2`, set `type = DESeq2` in the `de_results` function. This function requires you to specify what your control and treatment are from your condition column of your `deobj`. `edgeR` is also supported. 
 
 ```{r}
-de_results <- perform_de(deobj, type = "DESeq2", 
-                         sample_col = "sample",
-                         condition_col = "genotype",
-                         condition_control = "Wildtype",
-                         condition_treatment = "ADAR1KO")
+de_results <- perform_de(deobj,
+  type = "DESeq2",
+  sample_col = "sample",
+  condition_col = "genotype",
+  condition_control = "Wildtype",
+  condition_treatment = "ADAR1KO"
+)
 ```
 
 This returns a list containing the dds object, the full results, the significant results, and the model matrix. 
@@ -180,9 +195,10 @@ de_results$sig_results[1:5, ]
 ```{r, fig.height=7, fig.width=5}
 top_sites <- rownames(de_results$sig_results)[1:20]
 
-Heatmap(assay(se_filtered, "edit_freq")[top_sites, ], 
-        col = viridis(100), 
-        column_labels = se_filtered$genotype_treatment)
+Heatmap(assay(se_filtered, "edit_freq")[top_sites, ],
+  col = viridis(100),
+  column_labels = se_filtered$genotype_treatment
+)
 ```
 
 ```{r}

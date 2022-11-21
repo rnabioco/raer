@@ -39,7 +39,7 @@ remove_multiallelic <- function(se) {
 #' @return
 #' GenomicRanges object containing positions of splice sites, with flanking bases.
 #' @examples
-#' if(require(TxDb.Hsapiens.UCSC.hg38.knownGene)){
+#' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
 #'   txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 #'   res <- get_splice_sites(txdb)
 #'   res[1:5]
@@ -55,13 +55,19 @@ get_splice_sites <- function(txdb, slop = 4) {
   usub <- unlist(gr)
 
   int_start <- GRanges(seqnames(usub),
-    IRanges(start(usub) - slop,
-      start(usub) + slop - 1),
-    strand = strand(usub))
+    IRanges(
+      start(usub) - slop,
+      start(usub) + slop - 1
+    ),
+    strand = strand(usub)
+  )
   int_end <- GRanges(seqnames(usub),
-    IRanges(end(usub) - slop - 1,
-      end(usub) + slop),
-    strand = strand(usub))
+    IRanges(
+      end(usub) - slop - 1,
+      end(usub) + slop
+    ),
+    strand = strand(usub)
+  )
   int_pos <- c(int_start, int_end)
   sort(int_pos)
 }
@@ -79,17 +85,23 @@ get_splice_sites <- function(txdb, slop = 4) {
 #'
 #' @rdname filter_se
 #' @examples
-#' if(require(TxDb.Hsapiens.UCSC.hg38.knownGene)){
+#' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
 #'   library(SummarizedExperiment)
-#'   nrows <- 5; ncols <- 6
+#'   nrows <- 5
+#'   ncols <- 6
 #'   counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
 #'   rowRanges <- GRanges(rep("chr1", 5),
-#'                     IRanges(c(12055, 12174, 12194, 12719, 12889), width=1),
-#'                     strand=rep("+", 5))
-#'   colData <- DataFrame(Treatment=rep(c("adar_wt", "adar_ko"), 3),
-#'                        row.names=LETTERS[1:6])
-#'   rse <- SummarizedExperiment(assays=SimpleList(counts=counts),
-#'                            rowRanges=rowRanges, colData=colData)
+#'     IRanges(c(12055, 12174, 12194, 12719, 12889), width = 1),
+#'     strand = rep("+", 5)
+#'   )
+#'   colData <- DataFrame(
+#'     Treatment = rep(c("adar_wt", "adar_ko"), 3),
+#'     row.names = LETTERS[1:6]
+#'   )
+#'   rse <- SummarizedExperiment(
+#'     assays = SimpleList(counts = counts),
+#'     rowRanges = rowRanges, colData = colData
+#'   )
 #'
 #'   se <- remove_splice_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
 #'   se
@@ -120,18 +132,24 @@ remove_splice_variants <- function(se, txdb,
 #' @param variant_dist distance in nucleotides for determining clustered variants
 #'
 #' @examples
-#' if(require(TxDb.Hsapiens.UCSC.hg38.knownGene)){
+#' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
 #'   library(SummarizedExperiment)
-#'   nrows <- 5; ncols <- 6
+#'   nrows <- 5
+#'   ncols <- 6
 #'   counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
 #'   rowRanges <- GRanges(rep("chr1", 5),
-#'                     IRanges(c(12055, 12174, 12194, 12719, 12889), width=1),
-#'                     strand=rep("+", 5))
+#'     IRanges(c(12055, 12174, 12194, 12719, 12889), width = 1),
+#'     strand = rep("+", 5)
+#'   )
 #'   mcols(rowRanges)$Var <- c("AG", "AT", "AC", "TC", "GC")
-#'   colData <- DataFrame(Treatment=rep(c("adar_wt", "adar_ko"), 3),
-#'                        row.names=LETTERS[1:6])
-#'   rse <- SummarizedExperiment(assays=SimpleList(counts=counts),
-#'                            rowRanges=rowRanges, colData=colData)
+#'   colData <- DataFrame(
+#'     Treatment = rep(c("adar_wt", "adar_ko"), 3),
+#'     row.names = LETTERS[1:6]
+#'   )
+#'   rse <- SummarizedExperiment(
+#'     assays = SimpleList(counts = counts),
+#'     rowRanges = rowRanges, colData = colData
+#'   )
 #'
 #'   se <- remove_clustered_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
 #'   se
@@ -145,7 +163,6 @@ remove_splice_variants <- function(se, txdb,
 remove_clustered_variants <- function(se, txdb,
                                       regions = c("transcript", "genome"),
                                       variant_dist = 100) {
-
   if (!is(txdb, "TxDb")) {
     stop("txdb must be a TxDb object")
   }
@@ -158,10 +175,12 @@ remove_clustered_variants <- function(se, txdb,
   if ("genome" %in% regions) {
     fo <- findOverlaps(x, x + variant_dist)
     vars <- split(x[subjectHits(fo)]$Var, queryHits(fo))
-    to_keep <- names(vars)[unlist(lapply(vars,
+    to_keep <- names(vars)[unlist(lapply(
+      vars,
       function(x) {
         length(unique(x)) == 1
-      }))]
+      }
+    ))]
 
     x <- x[as.integer(to_keep)]
   }
@@ -174,10 +193,12 @@ remove_clustered_variants <- function(se, txdb,
 
     fo <- findOverlaps(tx_sites, slop)
     vars <- split(tx_sites[subjectHits(fo)]$Var, queryHits(fo))
-    to_drop <- names(vars)[unlist(lapply(vars,
+    to_drop <- names(vars)[unlist(lapply(
+      vars,
       function(x) {
         length(unique(x)) > 1
-      }))]
+      }
+    ))]
     tx_sites <- tx_sites[as.integer(to_drop)]
     x <- x[setdiff(1:length(x), unique(tx_sites$xHits))]
   }
