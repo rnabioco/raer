@@ -44,9 +44,9 @@ jobs:
           extra-packages: any::rcmdcheck, any::BiocManager
           needs: check
 
-      - name: Install Bioconductor
-        run: |
-          BiocManager::install(version = "3.16")
+      - name: Install Bioconductor 3.16
+        run: BiocManager::install(version = "3.16")
+        shell: Rscript {0}
 
       - uses: r-lib/actions/check-r-package@v2
         with:
