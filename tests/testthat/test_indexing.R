@@ -1,4 +1,3 @@
-context("indexing")
 library(GenomicRanges)
 library(GenomicAlignments)
 library(Rsamtools)

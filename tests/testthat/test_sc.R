@@ -1,5 +1,3 @@
-context("sc_editing")
-
 library(BiocParallel)
 
 bamfn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
