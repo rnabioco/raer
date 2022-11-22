@@ -276,6 +276,7 @@ cbind_sparse <- function(mats) {
   rn <- unique(unlist(lapply(mats, rownames)))
   cn <- unique(unlist(lapply(mats, colnames)))
   nvals <- sum(unlist(lapply(mats, Matrix::nnzero)))
+
   if(nvals > 0){
     x <- integer(nvals)
     i <- integer(nvals)
@@ -288,9 +289,12 @@ cbind_sparse <- function(mats) {
       ind <- summary(mats[[idx]])
       nval <- nrow(ind)
       end <- nval + init_x - 1
-      i[init_x:end] <- rindnew[ind$i]
-      j[init_x:end] <- cindnew[ind$j]
-      x[init_x:end] <- ind$x
+      # handle binding a zero entry matrix to a non-zero
+      if(nval > 0){
+        i[init_x:end] <- rindnew[ind$i]
+        j[init_x:end] <- cindnew[ind$j]
+        x[init_x:end] <- ind$x
+      }
       init_x <- end + 1
     }
 
@@ -300,6 +304,7 @@ cbind_sparse <- function(mats) {
                         dims=c(length(rn), length(cn)),
                         dimnames=list(rn, cn))
   } else {
+    # handle binding a zero entry matrices
     res <- sparseMatrix(i = integer(0),
                         p = 0,
                         dims=c(length(rn), length(cn)),

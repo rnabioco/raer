@@ -1,5 +1,3 @@
-context("sc_editing")
-
 library(BiocParallel)
 
 bamfn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
@@ -33,4 +31,29 @@ test_that("basic functionality works", {
   )
   expect_equal(ncol(se), 5)
   expect_true(all(startsWith(colnames(se), "cluster")))
+})
+
+test_that("assays are properly stored", {
+  fp <- FilterParam(library_type = "fr-second-strand")
+  assays_to_keep <- c("nA", "nT", "nG", "nC", "nRef", "nVar")
+  se <- sc_editing(
+    bamfile = bamfn,
+    assay_cols = assays_to_keep,
+    fafile = raer_example("mouse_tiny.fasta"),
+    bedfile = raer_example("5k_neuron_sites.bed.gz"),
+    cell_barcodes = cb_lst,
+    verbose = FALSE,
+    filterParam = fp
+  )
+  expect_true(all(names(assays(se)) %in% assays_to_keep))
+  assays_to_keep <- c("notAnAssay")
+  expect_error(sc_editing(
+    bamfile = bamfn,
+    assay_cols = assays_to_keep,
+    fafile = raer_example("mouse_tiny.fasta"),
+    bedfile = raer_example("5k_neuron_sites.bed.gz"),
+    cell_barcodes = cb_lst,
+    verbose = FALSE,
+    filterParam = fp
+  ))
 })

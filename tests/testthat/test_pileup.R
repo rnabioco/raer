@@ -1,5 +1,3 @@
-context("get_pileup")
-
 library(GenomicRanges)
 library(GenomicAlignments)
 library(Biostrings)
