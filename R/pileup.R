@@ -46,7 +46,7 @@
 #' fp <- FilterParam(only_keep_variants = TRUE, min_nucleotide_depth = 55)
 #' get_pileup(bamfn, fafn, filterParam = fp)
 #'
-#' @importFrom Rsamtools bgzip indexTabix TabixFile scanTabix
+#' @importFrom Rsamtools bgzip indexTabix TabixFile scanTabix scanFaIndex
 #' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges
 #' @importFrom GenomeInfoDb seqlevels seqinfo seqlengths
@@ -132,6 +132,17 @@ get_pileup <- function(bamfiles,
     warning("the following chromosomes are not present in the bamfile(s):\n",
       paste(missing_chroms, collapse = "\n"),
       call. = FALSE
+    )
+    chroms_to_process <- setdiff(chroms_to_process, missing_chroms)
+  }
+
+  chroms_in_fa <- seqnames(Rsamtools::scanFaIndex(fafile))
+  missing_chroms <- chroms_to_process[!chroms_to_process %in% levels(chroms_in_fa)]
+
+  if(length(missing_chroms) > 0){
+    warning("the following chromosomes are not present in the fasta file:\n",
+            paste(missing_chroms, collapse = "\n"),
+            call. = FALSE
     )
     chroms_to_process <- setdiff(chroms_to_process, missing_chroms)
   }
