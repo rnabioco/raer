@@ -1,5 +1,3 @@
-context("get_pileup")
-
 library(GenomicRanges)
 library(GenomicAlignments)
 library(Biostrings)
@@ -579,3 +577,8 @@ test_that("sites within short splice overhangs can be excluded", {
   expect_equal(length(res), 0)
 })
 unlink(c(tmp, sort_cbbam, idx))
+
+test_that("chroms missing from fasta file will not be processed", {
+  mfafn <- raer_example("mouse_tiny.fasta")
+  expect_error(expect_warning(get_pileup(bamfn, mfafn, bedfn)))
+})
