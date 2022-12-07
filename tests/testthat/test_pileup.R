@@ -25,8 +25,14 @@ test_that("filtering for variants in pileup works", {
   res_all_vars <- get_pileup(bamfn, fafn, bedfn,
     filterParam = FilterParam(only_keep_variants = TRUE)
   )
-  expect_equal(length(vars), 2)
+  expect_equal(length(res_all_vars), 2)
   expect_equal(vars, res_all_vars)
+
+  res_2_vars <- get_pileup(bamfn, fafn, bedfn,
+                             filterParam = FilterParam(min_variant_reads = 2))
+  expect_equal(length(res_2_vars), 1)
+  expect_equal(vars[vars$nVar >= 2], res_2_vars)
+
 })
 
 test_that("n-bam pileup works", {

@@ -38,6 +38,7 @@ FilterParam(
   max_mismatch_type = c(0L, 0L),
   min_read_bqual = c(0, 0),
   min_splice_overhang = 0L,
+  min_variant_reads = 0L,
   ignore_query_Ns = FALSE
 )
 }
@@ -125,6 +126,10 @@ base qualities less than Y. Numeric vector of length 2. e.g. c(0.25, 20)}
 
 \item{min_splice_overhang}{Exclude read if site is located adjacent to splice
 site with an overhang of less than given length.}
+
+\item{min_variant_reads}{Required number of reads containing a variant for a site
+to be reported. Calculated per bam file, such that if 1 bam file has >= min_variant_reads,
+then the site will be reported.}
 
 \item{ignore_query_Ns}{ignored for now}
 }

@@ -285,7 +285,7 @@ static void clear_pcounts(pcounts *p){
 // struct for event filter params
 typedef struct  {
   int nmer, splice_dist, indel_dist, trim_5p_dist, trim_3p_dist;
-  int n_mm_type, n_mm, min_overhang;
+  int n_mm_type, n_mm, min_overhang, min_var_reads;
 } efilter;
 
 static void get_var_string(varhash_t *vhash, char *out){
@@ -408,7 +408,8 @@ static void add_counts(PLP_DATA pd, int fi, counts *p, const char* ctig, int gpo
 
 
 static void store_counts(PLP_DATA pd, pcounts *pc, int *only_variants, int n, int min_depth,
-                         const char* ctig, const int gpos, int pref, int mref, int in_memory){
+                         const char* ctig, const int gpos, int pref, int mref, int in_memory,
+                         int min_var_depth){
   int i;
   int pv = 0;
   int mv = 0;
@@ -416,18 +417,20 @@ static void store_counts(PLP_DATA pd, pcounts *pc, int *only_variants, int n, in
   int write_m = 0;
   int write_only_v = 0;
 
+  // todo: move outside of function
   for(i = 0; i < n; ++i){
     if(only_variants[i]){
       write_only_v = 1;
     }
   }
+
   // write out if any samples are > min_depth and any samples have a variant
   // predicated on the true or false values in only_variants
   for(i = 0; i < n; ++i){
-    if((pc + i)->pc->total >= min_depth){
+    if((pc + i)->pc->total >= min_depth && (pc + i)->pc->nv >= min_var_depth){
       write_p = 1;
     }
-    if((pc + i)->mc->total >= min_depth){
+    if((pc + i)->mc->total >= min_depth && (pc + i)->mc->nv >= min_var_depth){
       write_m = 1;
     }
     if(write_only_v && only_variants[i]){
@@ -787,6 +790,7 @@ SEXP run_cpileup(char** cbampaths,
   ef->n_mm_type = event_filters[5];
   ef->n_mm = event_filters[6];
   ef->min_overhang = event_filters[7];
+  ef->min_var_reads = event_filters[8];
 
   if(read_bqual_filter){
     conf->read_qual.pct = read_bqual_filter[0];
@@ -977,7 +981,6 @@ SEXP run_cpileup(char** cbampaths,
 
         const bam_pileup1_t *p = plp[i] + j;
 
-
         // get read base
         int c = p->qpos < p->b->core.l_qseq
           ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
@@ -1030,7 +1033,7 @@ SEXP run_cpileup(char** cbampaths,
     // write or store records if pass depth criteria
     store_counts(pd, plpc, only_keep_variants, n, min_reads, sam_hdr_tid2name(h, tid),
                  pos, pref_b, mref_b,
-                 in_mem);
+                 in_mem, ef->min_var_reads);
   }
 
 fail:
@@ -1184,8 +1187,8 @@ static void check_plp_args(SEXP bampaths,
      Rf_error("'read_bqual_filter' must be numeric of length 2");
   }
 
-  if(!IS_INTEGER(event_filters) || (LENGTH(event_filters) != 8)){
-     Rf_error("'event_filters' must be integer of length 8");
+  if(!IS_INTEGER(event_filters) || (LENGTH(event_filters) != 9)){
+     Rf_error("'event_filters' must be integer of length 9");
   }
 }
 
