@@ -321,10 +321,10 @@ site_names <- function(gr) {
     return(NULL)
   }
   stringr::str_c(
-    seqnames(gr),
+    decode(seqnames(gr)),
     "_",
-    start(gr),
+    decode(start(gr)),
     "_",
-    as.integer(strand(gr))
+    decode(strand(gr))
   )
 }
