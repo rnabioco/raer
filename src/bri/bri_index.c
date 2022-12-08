@@ -91,6 +91,9 @@ int compare_records_by_readname_offset(const void* r1, const void* r2, void* nam
 void bam_read_idx_save(bam_read_idx* bri, const char* filename)
 {
     FILE* fp = fopen(filename, "wb");
+    if(!fp) {
+      Rf_error("error writing index: %s", filename);
+    }
 
     // Sort records by readname
     sort_r(bri->records, bri->record_count, sizeof(bam_read_idx_record), compare_records_by_readname_offset, bri->readnames);

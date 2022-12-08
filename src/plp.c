@@ -40,6 +40,13 @@ int checkInterrupt() {
 KHASH_SET_INIT_STR(rname)
 typedef khash_t(rname) *rnhash_t;
 
+KHASH_SET_INIT_STR(str)
+typedef khash_t(str) *strhash_t;
+
+KHASH_SET_INIT_STR(varhash)
+typedef khash_t(varhash) *varhash_t;
+
+
 static unsigned char comp_base[256] = {
   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,
   16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,
@@ -102,6 +109,158 @@ typedef struct {
   bam_pileup1_t **plp;
 } mplp_pileup_t;
 
+
+
+void clear_varhash_set(varhash_t vhash)
+{
+  khint_t k;
+  if(vhash){
+    for (k = kh_begin(vhash); k < kh_end(vhash); ++k){
+      if (kh_exist(vhash, k)) free((char*)kh_key(vhash, k));
+    }
+    kh_clear(varhash, vhash);
+  }
+}
+
+// Parse MD tag and enumerate types and number of mismatches
+// Determine if read passes n_mis and n_types thresholds
+//
+//
+// returns: -1 if no MD tag
+//           0 if read passes filter
+//           >0 with # of unique mismatches if doesn't pass
+//
+// based on cigar and MD parsing code from htsbox (written by Heng Li)
+// https://github.com/lh3/htsbox/blob/ffc1e8ad4f61291c676a323ed833ade3ee681f7c/samview.c#L117
+
+int parse_mismatches(bam1_t* b,const int pos, int n_types, int n_mis){
+  int ret = 0;
+  if(n_types < 1 && n_mis < 1){
+    return ret;
+  }
+  const uint32_t *cigar = bam_get_cigar(b);
+  int k, x, y, c;
+
+  uint8_t *pMD = 0;
+  char *p;
+  int nm = 0;
+
+  char vars[3];
+  vars[2] = '\0';
+  varhash_t vh;
+  vh = kh_init(varhash);
+
+  if ((pMD = bam_aux_get(b, "MD")) != 0) {
+    for (k = x = y = 0; k < b->core.n_cigar; ++k) {
+      int op = bam_cigar_op(cigar[k]);
+      int len = bam_cigar_oplen(cigar[k]);
+      if (op == BAM_CMATCH || op == BAM_CEQUAL || op == BAM_CDIFF) {
+        x += len, y += len;
+      } else if (op == BAM_CINS || op == BAM_CSOFT_CLIP)
+        y += len;
+    }
+
+    p = bam_aux2Z(pMD);
+
+    y = 0;
+    while (isdigit(*p)) {
+      y += strtol(p, &p, 10);
+      if (*p == 0) {
+        break;
+      } else if (*p == '^') { // deletion
+        ++p;
+        while (isalpha(*p)) ++p;
+      } else {
+        while (isalpha(*p)) {
+          if (y >= x) {
+            y = -1;
+            break;
+          }
+          c = y < b->core.l_qseq
+            ? seq_nt16_str[bam_seqi(bam_get_seq(b), y)]
+          : 'N';
+          nm += 1;
+
+          vars[0] = *p;
+          vars[1] = c;
+          char *var = strdup(vars);
+          int rval = 0;
+          kh_put(varhash, vh, var, &rval);
+          if(rval == -1){
+            Rf_error("issue tabulating variants per read at, %s", bam_get_qname(b));
+          } else if (rval == 0){
+            free(var);
+          }
+          ++y, ++p;
+        }
+        if (y == -1) break;
+      }
+    }
+
+    if (x != y) {
+      REprintf("inconsistent MD for read '%s' (%d != %d); ignore MD\n", bam_get_qname(b), x, y);
+      ret = -1;
+    }
+
+    if(kh_size(vh) >= n_types && nm >= n_mis){
+      ret = kh_size(vh);
+    }
+  }
+  clear_varhash_set(vh);
+  kh_destroy(varhash, vh);
+  return ret;
+
+}
+
+int8_t seq_comp_table[16] = { 0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15 };
+
+/* from samtools bam_fastq.c */
+/* return the read, reverse complemented if necessary */
+char *get_read(const bam1_t *rec)
+{
+  int len = rec->core.l_qseq + 1;
+  char *read = calloc(1, len);
+  char *seq = (char *)bam_get_seq(rec);
+  int n;
+
+  if (!read) return NULL;
+
+  for (n=0; n < rec->core.l_qseq; n++) {
+    if (rec->core.flag & BAM_FREVERSE) read[n] = seq_nt16_str[seq_comp_table[bam_seqi(seq,n)]];
+    else                               read[n] = seq_nt16_str[bam_seqi(seq,n)];
+  }
+  if (rec->core.flag & BAM_FREVERSE) reverse(read);
+  return read;
+}
+
+/* from samtools bam_view.c */
+int populate_lookup_from_file(strhash_t lookup, char *fn)
+{
+  FILE *fp;
+  char buf[1024];
+  int ret = 0;
+  fp = fopen(fn, "r");
+  if (fp == NULL) {
+    Rf_error("failed to open \"%s\" for reading", fn);
+    return -1;
+  }
+
+  while (ret != -1 && !feof(fp) && fscanf(fp, "%1023s", buf) > 0) {
+    char *d = strdup(buf);
+    if (d != NULL) {
+      kh_put(str, lookup, d, &ret);
+      if (ret == 0) free(d); /* Duplicate */
+    } else {
+      ret = -1;
+    }
+  }
+  if (ferror(fp)) ret = -1;
+  if (ret == -1) {
+    Rf_error("failed to read \"%s\"", fn);
+  }
+  fclose(fp);
+  return (ret != -1) ? 0 : -1;
+}
 
 /* from bam_plcmd.c */
 static int mplp_get_ref(mplp_aux_t *ma, int tid, char **ref, hts_pos_t *ref_len) {
@@ -249,11 +408,9 @@ static void clear_rname_set(rnhash_t rnames)
   khint_t k;
   if(rnames){
     for (k = kh_begin(rnames); k < kh_end(rnames); ++k){
-      if (kh_exist(rnames, k)){
-        free((char*)kh_key(rnames, k));
-      }
-      kh_clear(rname, rnames);
+      if (kh_exist(rnames, k)) free((char*)kh_key(rnames, k));
     }
+    kh_clear(rname, rnames);
   }
 }
 
@@ -499,7 +656,6 @@ static int write_reads(bam1_t *b,  mplp_conf_t *conf, const char* ref, const int
     key = malloc(len + 1);
     if(!key) {
       Rf_error( "malloc failed\n");
-      exit(EXIT_FAILURE);
     }
     strcpy(key, bam_get_qname(b));
     key[len] = '\0';
@@ -508,7 +664,6 @@ static int write_reads(bam1_t *b,  mplp_conf_t *conf, const char* ref, const int
     key = malloc(len + 2 + 1);
     if(!key) {
       Rf_error( "malloc failed\n");
-      exit(EXIT_FAILURE);
     }
     if((b)->core.flag&BAM_FREAD1){
       c = '1' ;
@@ -522,7 +677,7 @@ static int write_reads(bam1_t *b,  mplp_conf_t *conf, const char* ref, const int
   }
 
   // try to add read to cache, check if already present
-  // key will be freed upon cleanup of hashtable, i believe
+  // key will be freed upon cleanup of hashtable
   int rret;
   kh_put(rname, conf->rnames, key, &rret);
   if (rret == 1) {
@@ -530,7 +685,6 @@ static int write_reads(bam1_t *b,  mplp_conf_t *conf, const char* ref, const int
     ret = write_fasta(b, conf, ref, c, pos + 1);
     if(ret < 0) {
       Rf_error("writing read failed\n");
-      exit(EXIT_FAILURE);
     }
   } else {
     free(key);
@@ -1076,9 +1230,10 @@ fail:
 
   if (mismatches) {
     khint_t k;
-    for (k = 0; k < kh_end(conf->brhash); ++k)
+    for (k = 0; k < kh_end(conf->brhash); ++k){
       if (kh_exist(conf->brhash, k)) free((char*)kh_key(conf->brhash, k));
-      kh_destroy(str, conf->brhash);
+    }
+    kh_destroy(str, conf->brhash);
   }
 
   UNPROTECT(1);

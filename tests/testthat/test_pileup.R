@@ -4,6 +4,7 @@ library(Biostrings)
 library(Rsamtools)
 library(rtracklayer)
 library(BiocParallel)
+library(stringr)
 
 bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
@@ -338,14 +339,6 @@ test_that("writing reads with mismatches works", {
   expect_false(any(duplicated(names(seqs))))
 })
 
-
-fout <- tempfile(fileext = ".fa")
-test_that("writing reads with mismatches works", {
-  plp <- get_pileup(bamfn, fafn, reads = fout)
-  plp <- plp[plp$Var != "-"]
-  seqs <- Rsamtools::scanFa(fout)
-  expect_false(any(duplicated(names(seqs))))
-})
 
 seqs <- Rsamtools::scanFa(fout)
 ids <- unlist(lapply(str_split(names(seqs), "_"), function(x) paste0(x[1], "_", x[2])))
