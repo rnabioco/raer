@@ -81,8 +81,10 @@ build_tag_index <- function(bamfile, tag = "CB", n_records_to_check = 1e6,
 #' @rdname tag_index
 #' @examples
 #' bam_fn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
+#'
 #' build_tag_index(bam_fn)
-#' show_tag_index(bam_fn)
+#'
+#' head(show_tag_index(bam_fn))
 #'
 #' @export
 show_tag_index <- function(bamfile) {

@@ -61,8 +61,10 @@ bam_fn <- raer_example("5k_neuron_mouse_xf25_1pct_ubsort.bam")
 build_tag_index(bam_fn, tag = "UB")
 
 bam_fn <- raer_example("5k_neuron_mouse_xf25_1pct_cbsort.bam")
+
 build_tag_index(bam_fn)
-show_tag_index(bam_fn)
+
+head(show_tag_index(bam_fn))
 
 library(GenomicAlignments)
 

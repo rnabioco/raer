@@ -18,7 +18,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r}
+```{r message=FALSE}
 library(raer)
 library(scater)
 library(SingleCellExperiment)
