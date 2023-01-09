@@ -45,3 +45,14 @@ setGeneric(
   "indexBed",
   function(file, ...) standardGeneric("indexBed")
 )
+
+
+#' @param ... For the generic, further arguments to pass to specific methods.
+#' Unused for now.
+#' @rdname index_bed
+#' @export
+setGeneric(
+  "indexRegions",
+  function(gr, ...) standardGeneric("indexRegions")
+)
+

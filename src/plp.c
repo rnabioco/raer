@@ -3,7 +3,7 @@
 #include <htslib/khash.h>
 #include <htslib/hts_log.h>
 #include <bedidx.h>
-#include "bedfile.h"
+#include "regfile.h"
 #include "plp_utils.h"
 #include "plp_data.h"
 
