@@ -1,6 +1,6 @@
 # raer 0.99.0
 
-* Implemented method to collapse reads with duplicate UMIs (#60). 
+* Implemented method to collapse reads with duplicate UMIs.
 
 * Added option to filter sites in pileup based on number of reads containing a variant (#54)
 

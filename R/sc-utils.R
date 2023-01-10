@@ -190,8 +190,8 @@ check_missing_barcodes <- function(cbs, bamfile) {
 #' examine
 #' @param min_counts minimum reads counts to require
 #' @param param A ScanBamParam object specifying how reads should be filtered.
-#' If not supplied the default behavior will ignore exclude alignments marked
-#' as secondary, duplicate, supplementary, or QC-fail.
+#' If not supplied the default behavior will ignore alignments marked
+#' as secondary, supplementary, or QC-fail.
 #' @param verbose If TRUE, print messages
 #' @param ... Additional arguments to supply to [GenomicAlignments::coverage()]
 #'
@@ -218,7 +218,6 @@ filter_by_coverage <- function(bamfile, gr, min_counts,
   if (is.null(param)) {
     covflags <- scanBamFlag(
       isSecondaryAlignment = FALSE,
-      isDuplicate = FALSE,
       isSupplementaryAlignment = FALSE,
       isNotPassingQualityControls = FALSE
     )

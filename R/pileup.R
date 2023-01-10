@@ -33,7 +33,7 @@
 #' , or with small bamfiles, this option may be slower than streaming.
 #' @param BPPARAM A [BiocParallel] class to control parallel execution. Parallel
 #' processing occurs per chromosome, so is disabled when run on a single region.
-#' @param verbose if TRUE, then report progress.
+#' @param verbose if TRUE, then report progress and warnings.
 #'
 #' @returns A list containing a `GRanges` object for each input bam file, or a vector
 #' of the output tabixed file names if `return_data` is FALSE.
@@ -132,10 +132,11 @@ get_pileup <- function(bamfiles,
   missing_chroms <- chroms_to_process[!chroms_to_process %in% names(contig_info)]
 
   if (length(missing_chroms) > 0) {
-    warning("the following chromosomes are not present in the bamfile(s):\n",
-      paste(missing_chroms, collapse = "\n"),
-      call. = FALSE
-    )
+    if(verbose){
+      warning("the following chromosomes are not present in the bamfile(s):\n",
+              paste(missing_chroms, collapse = "\n"),
+              call. = FALSE)
+    }
     chroms_to_process <- setdiff(chroms_to_process, missing_chroms)
   }
 
@@ -143,10 +144,11 @@ get_pileup <- function(bamfiles,
   missing_chroms <- chroms_to_process[!chroms_to_process %in% levels(chroms_in_fa)]
 
   if(length(missing_chroms) > 0){
-    warning("the following chromosomes are not present in the fasta file:\n",
+    if(verbose){
+      warning("the following chromosomes are not present in the fasta file:\n",
             paste(missing_chroms, collapse = "\n"),
-            call. = FALSE
-    )
+            call. = FALSE)
+    }
     chroms_to_process <- setdiff(chroms_to_process, missing_chroms)
   }
 

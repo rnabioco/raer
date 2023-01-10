@@ -88,7 +88,7 @@ paired-end second read or single end data.}
 \item{umi_tag}{The bam tag containing a UMI sequence. If supplied, multiple reads with the same
 UMI sequence will only be counted once per position.}
 
-\item{verbose}{if TRUE, then report progress.}
+\item{verbose}{if TRUE, then report progress and warnings.}
 
 \item{max_depth}{maximum read depth considered at each site}
 

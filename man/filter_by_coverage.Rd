@@ -15,8 +15,8 @@ examine}
 \item{min_counts}{minimum reads counts to require}
 
 \item{param}{A ScanBamParam object specifying how reads should be filtered.
-If not supplied the default behavior will ignore exclude alignments marked
-as secondary, duplicate, supplementary, or QC-fail.}
+If not supplied the default behavior will ignore alignments marked
+as secondary, supplementary, or QC-fail.}
 
 \item{verbose}{If TRUE, print messages}
 
