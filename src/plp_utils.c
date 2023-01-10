@@ -293,7 +293,16 @@ int invert_read_orientation(bam1_t* b, int libtype) {
 }
 
 
-
+char* get_aux_ztag(bam1_t *b, const char tag[2]){
+  char* str;
+  uint8_t* val = bam_aux_get(b, tag) ;
+  if(val){
+    str = bam_aux2Z(val);
+  } else {
+    str = NULL;
+  }
+  return(str);
+}
 
 
 /* from samtools bam_fastq.c

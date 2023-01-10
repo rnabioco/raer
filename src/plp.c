@@ -46,6 +46,10 @@ typedef khash_t(str) *strhash_t;
 KHASH_SET_INIT_STR(varhash)
 typedef khash_t(varhash) *varhash_t;
 
+KHASH_SET_INIT_STR(umihash)
+typedef khash_t(umihash) *umihash_t;
+
+
 
 static unsigned char comp_base[256] = {
   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,
@@ -81,6 +85,8 @@ typedef struct {
   rnhash_t rnames;
   strhash_t brhash;
   FILE *reads_fp;
+  int umi;
+  char *umi_tag;
   int argc;
   char **argv;
   char sep, empty;
@@ -119,6 +125,17 @@ void clear_varhash_set(varhash_t vhash)
       if (kh_exist(vhash, k)) free((char*)kh_key(vhash, k));
     }
     kh_clear(varhash, vhash);
+  }
+}
+
+void clear_umihash_set(umihash_t uhash)
+{
+  khint_t k;
+  if(uhash){
+    for (k = kh_begin(uhash); k < kh_end(uhash); ++k){
+      if (kh_exist(uhash, k)) free((char*)kh_key(uhash, k));
+    }
+    kh_clear(umihash, uhash);
   }
 }
 
@@ -419,6 +436,7 @@ typedef struct {
   int total, nr, nv, na, nt, ng, nc, nn, nx;
   int ref_b;
   varhash_t var;
+  umihash_t umi;
 } counts;
 
 typedef struct  {
@@ -431,6 +449,7 @@ static void clear_counts(counts *p){
   p->na = p->nc = p->ng = p->nn = p->nr = p->nt = p->nv = p->total = p->nx = 0;
   p->ref_b = 0;
   clear_varhash_set(p->var);
+  clear_umihash_set(p->umi);
 }
 
 static void clear_pcounts(pcounts *p){
@@ -828,6 +847,37 @@ static int check_read_filters(const bam_pileup1_t *p, efilter *ef, int baq, int 
   return 0;
 }
 
+/* return codes,
+ * -1 = read has no UMI,
+ * 0 = read has UMI already seen
+ * 1 = read has new UMI
+ */
+static int check_umi(const bam_pileup1_t *p, mplp_conf_t *conf,
+                     pcounts *plpc, int invert){
+  char* umi;
+  int ret;
+  if(invert){
+    umi = get_aux_ztag(p->b, conf->umi_tag);
+    if(umi == NULL) return -1;
+    char* umi_val = strdup(umi);
+    kh_put(umihash, plpc->mc->umi, umi_val, &ret);
+    if (ret == 0) {
+      free(umi_val);
+      return(0);
+    }
+  } else {
+    umi = get_aux_ztag(p->b, conf->umi_tag);
+    if(umi == NULL) return -1;
+    char *umi_val = strdup(umi);
+    kh_put(umihash, plpc->pc->umi, umi_val, &ret);
+    if (ret == 0) {
+      free(umi_val);
+      return(0);
+    }
+  }
+  return(1);
+}
+
 SEXP run_cpileup(char** cbampaths,
                 int n,
                 char* cfapath,
@@ -847,7 +897,8 @@ SEXP run_cpileup(char** cbampaths,
                 const char* reads_fn,
                 char* mismatches,
                 double* read_bqual_filter,
-                SEXP ext) {
+                SEXP ext,
+                char* umi_tag) {
 
   hts_set_log_level(HTS_LOG_ERROR);
 
@@ -949,6 +1000,11 @@ SEXP run_cpileup(char** cbampaths,
   if(read_bqual_filter){
     conf->read_qual.pct = read_bqual_filter[0];
     conf->read_qual.minq = (int)read_bqual_filter[1];
+  }
+
+  if(umi_tag){
+    conf->umi = 1;
+    conf->umi_tag = umi_tag;
   }
 
   // read the header of each file in the list and initialize data
@@ -1071,12 +1127,12 @@ SEXP run_cpileup(char** cbampaths,
      plpc[i].mc = R_Calloc(1, counts);
 
      //initialize variant string set (AG, AT, TC) etc.
-     if (plpc[i].pc->var == NULL) {
-       plpc[i].pc->var = kh_init(varhash);
-     }
-     if (plpc[i].mc->var == NULL) {
-       plpc[i].mc->var = kh_init(varhash);
-     }
+     if (plpc[i].pc->var == NULL) plpc[i].pc->var = kh_init(varhash);
+     if (plpc[i].mc->var == NULL) plpc[i].mc->var = kh_init(varhash);
+
+     //initialize umi string set
+     if (plpc[i].pc->umi == NULL) plpc[i].pc->umi = kh_init(umihash);
+     if (plpc[i].mc->umi == NULL) plpc[i].mc->umi = kh_init(umihash);
   }
 
   int last_tid = -1;
@@ -1150,6 +1206,13 @@ SEXP run_cpileup(char** cbampaths,
 
         // remove bad reads
         int rret = check_read_filters(p, ef, min_baseQ, min_mapQ[i]);
+
+        // only keep first read with a UMI tag per position
+        if(conf->umi){
+          int uret = check_umi(p, conf, &plpc[i], invert);
+          if(uret != 1) continue;
+        }
+
         if(rret > 0) {
           if(rret == 1) {
             if(invert) {
@@ -1207,6 +1270,8 @@ fail:
     clear_pcounts(&plpc[i]);
     kh_destroy(varhash, plpc[i].mc->var);
     kh_destroy(varhash, plpc[i].pc->var);
+    kh_destroy(umihash, plpc[i].mc->umi);
+    kh_destroy(umihash, plpc[i].pc->umi);
     R_Free(plpc[i].pc); R_Free(plpc[i].mc);
     if(!in_mem) fclose(pd->fps[i]);
   }
@@ -1267,7 +1332,8 @@ static void check_plp_args(SEXP bampaths,
               SEXP reads_fn,
               SEXP mismatches_fn,
               SEXP read_bqual_filter,
-              SEXP ext) {
+              SEXP ext,
+              SEXP umi) {
 
   if(!IS_INTEGER(n) || (LENGTH(n) != 1)){
     Rf_error("'n' must be integer(1)");
@@ -1345,6 +1411,10 @@ static void check_plp_args(SEXP bampaths,
   if(!IS_INTEGER(event_filters) || (LENGTH(event_filters) != 9)){
      Rf_error("'event_filters' must be integer of length 9");
   }
+
+  if(!IS_CHARACTER(umi) || (LENGTH(umi) > 1)){
+    Rf_error("'umi' must be character of length 0 or 1");
+  }
 }
 
 SEXP do_run_pileup(SEXP bampaths,
@@ -1366,7 +1436,8 @@ SEXP do_run_pileup(SEXP bampaths,
               SEXP outfns,
               SEXP reads_fn,
               SEXP mismatches_fn,
-              SEXP ext) {
+              SEXP ext,
+              SEXP umi) {
 
   check_plp_args(bampaths,
                  n,
@@ -1387,7 +1458,8 @@ SEXP do_run_pileup(SEXP bampaths,
                  reads_fn,
                  mismatches_fn,
                  read_bqual_filter,
-                 ext);
+                 ext,
+                 umi);
 
   int i;
   char ** cbampaths = (char **) R_alloc(sizeof(const char *), Rf_length(bampaths));
@@ -1406,6 +1478,10 @@ SEXP do_run_pileup(SEXP bampaths,
 
   char *cmismatches_fn = LENGTH(mismatches_fn) == 0 ?
     NULL : (char *) translateChar(STRING_ELT(mismatches_fn, 0));
+
+
+  char *umi_tag = LENGTH(umi) == 0 ?
+  NULL : (char *) translateChar(STRING_ELT(umi, 0));
 
   const char ** coutfns;
   if(LENGTH(outfns) > 0){
@@ -1437,7 +1513,8 @@ SEXP do_run_pileup(SEXP bampaths,
                     creads_fn,
                     cmismatches_fn,
                     REAL(read_bqual_filter),
-                    ext);
+                    ext,
+                    umi_tag);
 
   return res ;
 }

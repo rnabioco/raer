@@ -19,5 +19,5 @@ int check_splice_overhang(bam1_t* b, int pos, int dist);
 
 char *reverse(char *str);
 char *get_read(const bam1_t *rec);
-
+char *get_aux_ztag(bam1_t *b, const char tag[2]);
 #endif
