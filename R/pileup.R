@@ -20,6 +20,8 @@
 #' @param bad_reads a textfile containing read names to exclude from pileup. Readnames
 #' should be formated as readid_1 or readid_2 or readid for paired end first read
 #' paired-end second read or single end data.
+#' @param umi_tag The bam tag containing a UMI sequence. If supplied, multiple reads with the same
+#' UMI sequence will only be counted once per position.
 #' @param return_data if `TRUE`, data is returned as a GRanges, if `FALSE` a character vector
 #' of tabix-index files, specified by `outfile_prefix`, will be returned.
 #' @param outfile_prefix Output prefix for tabix indexed files. If `NULL`, no files will be
@@ -67,6 +69,7 @@ get_pileup <- function(bamfiles,
                        BPPARAM = SerialParam(),
                        use_index = FALSE,
                        bad_reads = NULL,
+                       umi_tag = NULL,
                        verbose = FALSE) {
   bamfiles <- path.expand(bamfiles)
   fafile <- path.expand(fafile)
@@ -201,6 +204,14 @@ get_pileup <- function(bamfiles,
     bad_reads <- character()
   }
 
+  if(!is.null(umi_tag)){
+    if(nchar(umi_tag) != 2) {
+      stop("umi_tag must be a character(1) with nchar of 2 ")
+    }
+  } else {
+    umi_tag <- character()
+  }
+
   filterParam <- .adjustParams(filterParam, n_files)
   fp <- .as.list_FilterParam(filterParam)
 
@@ -269,7 +280,8 @@ get_pileup <- function(bamfiles,
       outfiles,
       reads,
       bad_reads,
-      idx_ptr
+      idx_ptr,
+      umi_tag
     )
 
     if (!in_memory) {
@@ -317,7 +329,8 @@ get_pileup <- function(bamfiles,
           outfiles,
           reads,
           bad_reads,
-          idx_ptr
+          idx_ptr,
+          umi_tag
         )
 
         if (!in_memory) {

@@ -242,6 +242,8 @@ void bam_read_idx_build(const char* filename,
         if (aux_info) {
             readname = bam_aux2Z(aux_info) ;
         } else {
+            // update offset for next record
+            file_offset = bgzf_tell(fp->fp.bgzf);
             continue;
         }
 

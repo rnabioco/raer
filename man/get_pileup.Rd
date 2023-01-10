@@ -20,6 +20,7 @@ get_pileup(
   BPPARAM = SerialParam(),
   use_index = FALSE,
   bad_reads = NULL,
+  umi_tag = NULL,
   verbose = FALSE
 )
 
@@ -83,6 +84,9 @@ when querying a small number of sites in large bamfiles. With many sites in the 
 \item{bad_reads}{a textfile containing read names to exclude from pileup. Readnames
 should be formated as readid_1 or readid_2 or readid for paired end first read
 paired-end second read or single end data.}
+
+\item{umi_tag}{The bam tag containing a UMI sequence. If supplied, multiple reads with the same
+UMI sequence will only be counted once per position.}
 
 \item{verbose}{if TRUE, then report progress.}
 

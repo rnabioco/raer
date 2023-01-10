@@ -138,7 +138,9 @@ get_tag_bam <- function(bamfile,
     )
   }
   stopifnot(is.character(barcodes) && length(barcodes) > 0)
-
+  if(any(is.na(barcodes))){
+    stop("NA values are not permitted in input barcodes character vector")
+  }
   tmpbam <- tempfile(fileext = ".bam")
   if (is.null(outbam)) {
     outbam <- tempfile(fileext = ".bam")
@@ -335,6 +337,8 @@ get_cell_pileup <- function(bamfn,
 #'   Batching the cells reduces run time by avoiding  loading sequences from the
 #'   fasta file for each cell. Setting values above 50 is unlikely to further improve
 #'   runtime.
+#' @param bam_flags See arguments for `[get_pileup()]`
+#' @param umi_tag See arguments for `[get_pileup()]`
 #' @param verbose Display messages
 #' @param ... additional arguments passed to `[get_pileup()]`.
 #'
@@ -375,6 +379,7 @@ get_cell_pileup <- function(bamfn,
 #'   fafile = raer_example("mouse_tiny.fasta"),
 #'   bedfile = raer_example("5k_neuron_sites.bed.gz"),
 #'   cell_barcodes = cb_lst,
+#'   umi_tag = NULL,
 #'   verbose = FALSE,
 #'   filterParam = fp
 #' )
@@ -394,6 +399,8 @@ sc_editing <- function(bamfile,
                        tag_index_args = list(tag = "CB"),
                        BPPARAM = SerialParam(),
                        batch_size = 50,
+                       bam_flags = NULL,
+                       umi_tag = "UB",
                        verbose = TRUE,
                        ...) {
   if (!all(assay_cols %in% PILEUP_COLS)) {
@@ -404,6 +411,18 @@ sc_editing <- function(bamfile,
       "assay_cols input not correct\n  ",
       "must match ", allowed_vals
     )
+  }
+
+  if(is.null(bam_flags)){
+    bam_flags <- Rsamtools::scanBamFlag(
+      isSecondaryAlignment = FALSE,
+      isSupplementaryAlignment = FALSE,
+      isNotPassingQualityControls = FALSE
+    )
+  } else {
+    if (length(bam_flags) != 2 || !all(names(bam_flags) == c("keep0", "keep1"))) {
+      stop("bam_flags must be generated using Rsamtools::scanBamFlag()")
+    }
   }
 
   # fail early if incorrect args passed through ...
@@ -426,6 +445,10 @@ sc_editing <- function(bamfile,
     cell_barcodes <- split_vec(cell_barcodes, batch_size)
   } else {
     per_cell <- FALSE
+    if(!is.null(umi_tag)){
+      stop("deduplication using UMIs is only implemented when querying\n",
+           "single cells. please set umi_tag = NULL")
+    }
   }
 
   n_invalid_bcs <- check_missing_barcodes(cell_barcodes, bamfile)
@@ -446,6 +469,8 @@ sc_editing <- function(bamfile,
       bedfile = bedfile,
       bedidx = NULL,
       return_data = TRUE,
+      bam_flags = bam_flags,
+      umi_tag = umi_tag,
       verbose = verbose,
       ...
     ),

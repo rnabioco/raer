@@ -13,6 +13,8 @@ sc_editing(
   tag_index_args = list(tag = "CB"),
   BPPARAM = SerialParam(),
   batch_size = 50,
+  bam_flags = NULL,
+  umi_tag = "UB",
   verbose = TRUE,
   ...
 )
@@ -44,6 +46,10 @@ how many individual cell bams to process in each invocation of \code{get_pileup(
 Batching the cells reduces run time by avoiding  loading sequences from the
 fasta file for each cell. Setting values above 50 is unlikely to further improve
 runtime.}
+
+\item{bam_flags}{See arguments for \verb{[get_pileup()]}}
+
+\item{umi_tag}{See arguments for \verb{[get_pileup()]}}
 
 \item{verbose}{Display messages}
 
@@ -89,6 +95,7 @@ se <- sc_editing(
   fafile = raer_example("mouse_tiny.fasta"),
   bedfile = raer_example("5k_neuron_sites.bed.gz"),
   cell_barcodes = cb_lst,
+  umi_tag = NULL,
   verbose = FALSE,
   filterParam = fp
 )
