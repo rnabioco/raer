@@ -218,6 +218,8 @@ jobs:
         if: github.ref == 'refs/heads/main' && env.run_pkgdown == 'true' && runner.os == 'Linux'
         run: |
           remotes::install_cran("pkgdown")
+          remotes::install_github("r-lib/downlit")
+          remotes::install_github("rnabioco/rbitemplate")
         shell: Rscript {0}
 
       - name: Session info
