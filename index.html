@@ -11,12 +11,12 @@
     for extraction of allelic read counts from alignment files. ">
 <title>RNA editing tools in R • raer</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.1.3/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.1.3/bootstrap.bundle.min.js"></script><link href="deps/Source_Sans_Pro-0.4.2/font.css" rel="stylesheet">
-<link href="deps/Source_Code_Pro-0.4.2/font.css" rel="stylesheet">
+<link href="deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><link href="deps/Source_Sans_Pro-0.4.4/font.css" rel="stylesheet">
+<link href="deps/Source_Code_Pro-0.4.4/font.css" rel="stylesheet">
 <!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
-<!-- bootstrap-toc --><script src="https://cdn.rawgit.com/afeld/bootstrap-toc/v1.0.1/dist/bootstrap-toc.min.js"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="RNA editing tools in R">
+<!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="RNA editing tools in R">
 <meta property="og:description" content="Toolkit for identification and statistical testing 
     of RNA editing signals from within R. Provides support for identifying
     sites from bulk-RNA-seq, single cell RNA-seq datasets, and general methods 
@@ -55,6 +55,9 @@
     <a class="dropdown-item" href="articles/novel-sites.html">Identifying RNA editing sites using RNA and DNA sequencing data</a>
     <a class="dropdown-item" href="articles/single-cell.html">Identifying RNA editing sites in droplet single cell datasets</a>
   </div>
+</li>
+<li class="nav-item">
+  <a class="nav-link" href="news/index.html">Changelog</a>
 </li>
       </ul>
 <form class="form-inline my-2 my-lg-0" role="search">
@@ -103,7 +106,7 @@
 <span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_pileup.html">get_pileup</a></span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">fafn</span>, bedfile <span class="op">=</span> <span class="va">bedfn</span><span class="op">)</span></span>
 <span><span class="va">res</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span></span>
-<span><span class="co">#&gt; GRanges object with 5 ranges and 9 metadata columns:</span></span>
+<span><span class="co">#&gt; GRanges object with 5 ranges and 10 metadata columns:</span></span>
 <span><span class="co">#&gt;       seqnames    ranges strand |         Ref         Var      nRef      nVar</span></span>
 <span><span class="co">#&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
 <span><span class="co">#&gt;   [1]     SSR3       201      - |           A           -        14         0</span></span>
@@ -111,13 +114,13 @@
 <span><span class="co">#&gt;   [3]     SSR3       203      - |           T           -        14         0</span></span>
 <span><span class="co">#&gt;   [4]     SSR3       204      - |           T           -        15         0</span></span>
 <span><span class="co">#&gt;   [5]     SSR3       205      - |           T           -        16         0</span></span>
-<span><span class="co">#&gt;              nA        nT        nC        nG        nN</span></span>
-<span><span class="co">#&gt;       &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
-<span><span class="co">#&gt;   [1]        14         0         0         0         0</span></span>
-<span><span class="co">#&gt;   [2]         0        14         0         0         0</span></span>
-<span><span class="co">#&gt;   [3]         0        14         0         0         0</span></span>
-<span><span class="co">#&gt;   [4]         0        15         0         0         0</span></span>
-<span><span class="co">#&gt;   [5]         0        16         0         0         0</span></span>
+<span><span class="co">#&gt;              nA        nT        nC        nG        nN        nX</span></span>
+<span><span class="co">#&gt;       &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
+<span><span class="co">#&gt;   [1]        14         0         0         0         0         2</span></span>
+<span><span class="co">#&gt;   [2]         0        14         0         0         0         2</span></span>
+<span><span class="co">#&gt;   [3]         0        14         0         0         0         2</span></span>
+<span><span class="co">#&gt;   [4]         0        15         0         0         0         1</span></span>
+<span><span class="co">#&gt;   [5]         0        16         0         0         0         0</span></span>
 <span><span class="co">#&gt;   -------</span></span>
 <span><span class="co">#&gt;   seqinfo: 3 sequences from an unspecified genome</span></span></code></pre></div>
 <p>The <code><a href="reference/get_pileup.html">FilterParam()</a></code> class holds multiple options for customizing the output of <code><a href="reference/get_pileup.html">get_pileup()</a></code>.</p>
@@ -125,7 +128,7 @@
 <code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_pileup.html">FilterParam</a></span><span class="op">(</span>only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_pileup.html">get_pileup</a></span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">fafn</span>, filterParam <span class="op">=</span> <span class="va">fp</span><span class="op">)</span></span>
 <span><span class="va">res</span></span>
-<span><span class="co">#&gt; GRanges object with 31 ranges and 9 metadata columns:</span></span>
+<span><span class="co">#&gt; GRanges object with 31 ranges and 10 metadata columns:</span></span>
 <span><span class="co">#&gt;        seqnames    ranges strand |         Ref         Var      nRef      nVar</span></span>
 <span><span class="co">#&gt;           &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
 <span><span class="co">#&gt;    [1]     SSR3       102      - |           T          TG        12         1</span></span>
@@ -139,33 +142,36 @@
 <span><span class="co">#&gt;   [29]     DHFR       336      - |           G          GT        51         1</span></span>
 <span><span class="co">#&gt;   [30]     DHFR       430      - |           A          AT        37         1</span></span>
 <span><span class="co">#&gt;   [31]     DHFR       513      - |           T          TC        35         1</span></span>
-<span><span class="co">#&gt;               nA        nT        nC        nG        nN</span></span>
-<span><span class="co">#&gt;        &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
-<span><span class="co">#&gt;    [1]         0        12         0         1         0</span></span>
-<span><span class="co">#&gt;    [2]        13         0         0         1         0</span></span>
-<span><span class="co">#&gt;    [3]        18         0         0         1         0</span></span>
-<span><span class="co">#&gt;    [4]        18         0         0         1         0</span></span>
-<span><span class="co">#&gt;    [5]        10         0         0         8         0</span></span>
-<span><span class="co">#&gt;    ...       ...       ...       ...       ...       ...</span></span>
-<span><span class="co">#&gt;   [27]        56         0         0         1         0</span></span>
-<span><span class="co">#&gt;   [28]        55         0         0         1         0</span></span>
-<span><span class="co">#&gt;   [29]         0         1         0        51         0</span></span>
-<span><span class="co">#&gt;   [30]        37         1         0         0         0</span></span>
-<span><span class="co">#&gt;   [31]         0        35         1         0         0</span></span>
+<span><span class="co">#&gt;               nA        nT        nC        nG        nN        nX</span></span>
+<span><span class="co">#&gt;        &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
+<span><span class="co">#&gt;    [1]         0        12         0         1         0         6</span></span>
+<span><span class="co">#&gt;    [2]        13         0         0         1         0         4</span></span>
+<span><span class="co">#&gt;    [3]        18         0         0         1         0         1</span></span>
+<span><span class="co">#&gt;    [4]        18         0         0         1         0         1</span></span>
+<span><span class="co">#&gt;    [5]        10         0         0         8         0         2</span></span>
+<span><span class="co">#&gt;    ...       ...       ...       ...       ...       ...       ...</span></span>
+<span><span class="co">#&gt;   [27]        56         0         0         1         0         4</span></span>
+<span><span class="co">#&gt;   [28]        55         0         0         1         0         2</span></span>
+<span><span class="co">#&gt;   [29]         0         1         0        51         0         5</span></span>
+<span><span class="co">#&gt;   [30]        37         1         0         0         0         5</span></span>
+<span><span class="co">#&gt;   [31]         0        35         1         0         0         0</span></span>
 <span><span class="co">#&gt;   -------</span></span>
 <span><span class="co">#&gt;   seqinfo: 3 sequences from an unspecified genome</span></span></code></pre></div>
 <p>Multiple bam files can be processed, which enables rapid comparisons of RNA-Seq vs. WGS or WXS data, or RNA-Seq vs RNA-seq (ADAR WT VS ADAR KO).</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_pileup.html">FilterParam</a></span><span class="op">(</span>only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                  library_type <span class="op">=</span> <span class="st">"fr-first-strand"</span>,</span>
-<span>                  min_nucleotide_depth <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_pileup.html">FilterParam</a></span><span class="op">(</span></span>
+<span>  only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  library_type <span class="op">=</span> <span class="st">"fr-first-strand"</span>,</span>
+<span>  min_nucleotide_depth <span class="op">=</span> <span class="fl">2</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">plps</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_pileup.html">get_pileup</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">bam2fn</span>, <span class="va">bamfn</span><span class="op">)</span>, </span>
-<span>                  <span class="va">fafn</span>, </span>
-<span>                  filterParam <span class="op">=</span> <span class="va">fp</span><span class="op">)</span></span>
+<span><span class="va">plps</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_pileup.html">get_pileup</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">bam2fn</span>, <span class="va">bamfn</span><span class="op">)</span>,</span>
+<span>  <span class="va">fafn</span>,</span>
+<span>  filterParam <span class="op">=</span> <span class="va">fp</span></span>
+<span><span class="op">)</span></span>
 <span><span class="va">plps</span></span>
 <span><span class="co">#&gt; [[1]]</span></span>
-<span><span class="co">#&gt; GRanges object with 74 ranges and 9 metadata columns:</span></span>
+<span><span class="co">#&gt; GRanges object with 74 ranges and 10 metadata columns:</span></span>
 <span><span class="co">#&gt;        seqnames    ranges strand |         Ref         Var      nRef      nVar</span></span>
 <span><span class="co">#&gt;           &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
 <span><span class="co">#&gt;    [1]     SSR3       102      - |           T           -        15         0</span></span>
@@ -179,24 +185,24 @@
 <span><span class="co">#&gt;   [72]     DHFR       423      - |           T          TC        31         1</span></span>
 <span><span class="co">#&gt;   [73]     DHFR       430      - |           A           -        33         0</span></span>
 <span><span class="co">#&gt;   [74]     DHFR       513      - |           T           -        21         0</span></span>
-<span><span class="co">#&gt;               nA        nT        nC        nG        nN</span></span>
-<span><span class="co">#&gt;        &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
-<span><span class="co">#&gt;    [1]         0        15         0         0         0</span></span>
-<span><span class="co">#&gt;    [2]         0         0        21         1         0</span></span>
-<span><span class="co">#&gt;    [3]         1         0        25         0         0</span></span>
-<span><span class="co">#&gt;    [4]         8         0         0        16         0</span></span>
-<span><span class="co">#&gt;    [5]        24         0         0         1         0</span></span>
-<span><span class="co">#&gt;    ...       ...       ...       ...       ...       ...</span></span>
-<span><span class="co">#&gt;   [70]        31         1         0         0         0</span></span>
-<span><span class="co">#&gt;   [71]         1         0         0        28         0</span></span>
-<span><span class="co">#&gt;   [72]         0        31         1         0         0</span></span>
-<span><span class="co">#&gt;   [73]        33         0         0         0         0</span></span>
-<span><span class="co">#&gt;   [74]         0        21         0         0         0</span></span>
+<span><span class="co">#&gt;               nA        nT        nC        nG        nN        nX</span></span>
+<span><span class="co">#&gt;        &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
+<span><span class="co">#&gt;    [1]         0        15         0         0         0         7</span></span>
+<span><span class="co">#&gt;    [2]         0         0        21         1         0         0</span></span>
+<span><span class="co">#&gt;    [3]         1         0        25         0         0         0</span></span>
+<span><span class="co">#&gt;    [4]         8         0         0        16         0         0</span></span>
+<span><span class="co">#&gt;    [5]        24         0         0         1         0         1</span></span>
+<span><span class="co">#&gt;    ...       ...       ...       ...       ...       ...       ...</span></span>
+<span><span class="co">#&gt;   [70]        31         1         0         0         0         2</span></span>
+<span><span class="co">#&gt;   [71]         1         0         0        28         0         6</span></span>
+<span><span class="co">#&gt;   [72]         0        31         1         0         0         2</span></span>
+<span><span class="co">#&gt;   [73]        33         0         0         0         0         2</span></span>
+<span><span class="co">#&gt;   [74]         0        21         0         0         0         0</span></span>
 <span><span class="co">#&gt;   -------</span></span>
 <span><span class="co">#&gt;   seqinfo: 3 sequences from an unspecified genome</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; [[2]]</span></span>
-<span><span class="co">#&gt; GRanges object with 74 ranges and 9 metadata columns:</span></span>
+<span><span class="co">#&gt; GRanges object with 74 ranges and 10 metadata columns:</span></span>
 <span><span class="co">#&gt;        seqnames    ranges strand |         Ref         Var      nRef      nVar</span></span>
 <span><span class="co">#&gt;           &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
 <span><span class="co">#&gt;    [1]     SSR3       102      - |           T          TG        12         1</span></span>
@@ -210,19 +216,19 @@
 <span><span class="co">#&gt;   [72]     DHFR       423      - |           T           -        42         0</span></span>
 <span><span class="co">#&gt;   [73]     DHFR       430      - |           A          AT        37         1</span></span>
 <span><span class="co">#&gt;   [74]     DHFR       513      - |           T          TC        35         1</span></span>
-<span><span class="co">#&gt;               nA        nT        nC        nG        nN</span></span>
-<span><span class="co">#&gt;        &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
-<span><span class="co">#&gt;    [1]         0        12         0         1         0</span></span>
-<span><span class="co">#&gt;    [2]         0         0        17         0         0</span></span>
-<span><span class="co">#&gt;    [3]         0         0        16         0         0</span></span>
-<span><span class="co">#&gt;    [4]        16         0         0         0         0</span></span>
-<span><span class="co">#&gt;    [5]        15         0         0         0         0</span></span>
-<span><span class="co">#&gt;    ...       ...       ...       ...       ...       ...</span></span>
-<span><span class="co">#&gt;   [70]        43         0         0         0         0</span></span>
-<span><span class="co">#&gt;   [71]         0         0         0        43         0</span></span>
-<span><span class="co">#&gt;   [72]         0        42         0         0         0</span></span>
-<span><span class="co">#&gt;   [73]        37         1         0         0         0</span></span>
-<span><span class="co">#&gt;   [74]         0        35         1         0         0</span></span>
+<span><span class="co">#&gt;               nA        nT        nC        nG        nN        nX</span></span>
+<span><span class="co">#&gt;        &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
+<span><span class="co">#&gt;    [1]         0        12         0         1         0         6</span></span>
+<span><span class="co">#&gt;    [2]         0         0        17         0         0         1</span></span>
+<span><span class="co">#&gt;    [3]         0         0        16         0         0         1</span></span>
+<span><span class="co">#&gt;    [4]        16         0         0         0         0         0</span></span>
+<span><span class="co">#&gt;    [5]        15         0         0         0         0         2</span></span>
+<span><span class="co">#&gt;    ...       ...       ...       ...       ...       ...       ...</span></span>
+<span><span class="co">#&gt;   [70]        43         0         0         0         0         2</span></span>
+<span><span class="co">#&gt;   [71]         0         0         0        43         0         3</span></span>
+<span><span class="co">#&gt;   [72]         0        42         0         0         0         1</span></span>
+<span><span class="co">#&gt;   [73]        37         1         0         0         0         5</span></span>
+<span><span class="co">#&gt;   [74]         0        35         1         0         0         0</span></span>
 <span><span class="co">#&gt;   -------</span></span>
 <span><span class="co">#&gt;   seqinfo: 3 sequences from an unspecified genome</span></span></code></pre></div>
 <p>To facilitate comparisons across groups, the pileups can be stored in a <code>RangedSummarizedExperiment</code>.</p>
@@ -308,7 +314,7 @@
 
 <div class="pkgdown-footer-right">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
     </footer>
