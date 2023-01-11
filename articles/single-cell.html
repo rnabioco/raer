@@ -143,19 +143,19 @@ with other needed files can be downloaded using
 <span><span class="va">fns</span></span></code></pre></div>
 <pre><code><span><span class="co">## $bams</span></span>
 <span><span class="co">##                   10k_PBMC_3p_nextgem_Chromium_X_intron_cbsorted_genome_rediportal_xf25_chr16.bam </span></span>
-<span><span class="co">## "/tmp/RtmpRN0ldF/10k_PBMC_3p_nextgem_Chromium_X_intron_cbsorted_genome_rediportal_xf25_chr16.bam" </span></span>
+<span><span class="co">## "/tmp/RtmpWkhlMg/10k_PBMC_3p_nextgem_Chromium_X_intron_cbsorted_genome_rediportal_xf25_chr16.bam" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $fasta</span></span>
 <span><span class="co">##                   hg38_chr16.fasta.bgz </span></span>
-<span><span class="co">## "/tmp/RtmpRN0ldF/hg38_chr16.fasta.bgz" </span></span>
+<span><span class="co">## "/tmp/RtmpWkhlMg/hg38_chr16.fasta.bgz" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $edit_sites</span></span>
 <span><span class="co">##                   rediportal_sites.bed.gz </span></span>
-<span><span class="co">## "/tmp/RtmpRN0ldF/rediportal_sites.bed.gz" </span></span>
+<span><span class="co">## "/tmp/RtmpWkhlMg/rediportal_sites.bed.gz" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $sce</span></span>
 <span><span class="co">##                   sce.rds </span></span>
-<span><span class="co">## "/tmp/RtmpRN0ldF/sce.rds"</span></span></code></pre>
+<span><span class="co">## "/tmp/RtmpWkhlMg/sce.rds"</span></span></code></pre>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bam_fn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bams</span></span>
 <span><span class="va">fa_fn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">fasta</span></span>
@@ -164,7 +164,7 @@ with other needed files can be downloaded using
 <code>build_tag_index</code>.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/tag_index.html">build_tag_index</a></span><span class="op">(</span><span class="va">bam_fn</span>, tag <span class="op">=</span> <span class="st">"CB"</span>, overwrite <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] "/tmp/RtmpRN0ldF/10k_PBMC_3p_nextgem_Chromium_X_intron_cbsorted_genome_rediportal_xf25_chr16.bam.bri"</span></span></code></pre>
+<pre><code><span><span class="co">## [1] "/tmp/RtmpWkhlMg/10k_PBMC_3p_nextgem_Chromium_X_intron_cbsorted_genome_rediportal_xf25_chr16.bam.bri"</span></span></code></pre>
 <p>We can query the index to see the cell-barcodes are present in the
 bam file using <code><a href="../reference/tag_index.html">show_tag_index()</a></code>, which will return a
 data.frame containing each <code>tag</code> value and the number of
@@ -408,7 +408,7 @@ Session info
 <span><span class="co">##  [81] Biostrings_2.67.0         knitr_1.41               </span></span>
 <span><span class="co">##  [83] gridExtra_2.3             bookdown_0.31            </span></span>
 <span><span class="co">##  [85] xfun_0.36                 pheatmap_1.0.12          </span></span>
-<span><span class="co">##  [87] stringi_1.7.8             yaml_2.3.6               </span></span>
+<span><span class="co">##  [87] stringi_1.7.12            yaml_2.3.6               </span></span>
 <span><span class="co">##  [89] evaluate_0.19             codetools_0.2-18         </span></span>
 <span><span class="co">##  [91] tibble_3.1.8              BiocManager_1.30.19      </span></span>
 <span><span class="co">##  [93] cli_3.6.0                 systemfonts_1.0.4        </span></span>
