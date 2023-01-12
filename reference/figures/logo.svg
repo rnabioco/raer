@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 27.1.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 156 180.1" style="enable-background:new 0 0 156 180.1;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#2ED000;stroke:#00FF49;stroke-width:0.5;stroke-miterlimit:10;}
+	.st1{fill:#00FF49;}
+	.st2{font-family:'Courier';}
+	.st3{font-size:18px;}
+	.st4{font-size:6px;}
+	.st5{fill:none;stroke:#00FF49;stroke-width:0.5;stroke-miterlimit:10;}
+	.st6{fill:none;stroke:#00FF49;stroke-miterlimit:10;}
+	.st7{fill:url(#SVGID_1_);}
+	.st8{fill:url(#SVGID_00000175298464122337786460000007409217937462866107_);}
+	.st9{fill:#00170A;}
+	.st10{font-size:8.9099px;}
+	.st11{fill:url(#SVGID_00000123429280248608115730000013647535837264057764_);}
+	.st12{fill:url(#SVGID_00000171680874456831190200000005239333489164534181_);}
+	.st13{fill:url(#SVGID_00000114796673335424858040000009605395595571277758_);}
+	.st14{fill:#FFFFFF;}
+	.st15{fill:none;stroke:#FFFFFF;stroke-width:0.25;stroke-miterlimit:10;}
+	.st16{fill:url(#SVGID_00000020378627669050265860000005219927529439306891_);}
+	.st17{fill:none;stroke:#00FF49;stroke-width:0.1;stroke-miterlimit:10;}
+</style>
+<polygon class="st0" points="0,45 0,135.1 78,180.1 156,135.1 156,45 78,0 "/>
+<polygon points="4,47.9 4,133.7 78.2,176.6 152.5,133.7 152.5,47.9 78.2,5 "/>
+<text transform="matrix(1 0 0 1 50.4013 30.8119)" class="st1 st2 st3">radar</text>
+<g>
+	<g>
+		<text transform="matrix(0.8655 -0.5009 0.5009 0.8655 77.2297 175.0303)" class="st1 st2 st4">rnabioco.github.io/radar</text>
+	</g>
+</g>
+<g>
+	<g>
+		<ellipse class="st5" cx="76.7" cy="96.1" rx="58.2" ry="57.2"/>
+		<ellipse class="st5" cx="76.7" cy="96.1" rx="48.5" ry="47.7"/>
+		<ellipse class="st5" cx="76.7" cy="96.1" rx="38.8" ry="38.1"/>
+		<ellipse class="st5" cx="76.7" cy="96.1" rx="29.1" ry="28.6"/>
+		<ellipse class="st5" cx="76.7" cy="96.1" rx="19.4" ry="19.1"/>
+		<ellipse class="st5" cx="76.7" cy="96.1" rx="9.7" ry="9.5"/>
+	</g>
+	<g>
+		<path class="st6" d="M76.7,153.2"/>
+		<path class="st5" d="M76.7,96.1"/>
+		<path class="st5" d="M132.1,113.7"/>
+		<path class="st5" d="M76.7,96.1"/>
+		<path class="st6" d="M111,49.8"/>
+		<path class="st5" d="M76.7,96.1"/>
+		<path class="st6" d="M42.5,49.8"/>
+		<path class="st5" d="M76.7,96.1"/>
+		<path class="st5" d="M21.3,113.7"/>
+		<path class="st5" d="M76.7,96.1"/>
+	</g>
+</g>
+<radialGradient id="SVGID_1_" cx="32.3095" cy="84.6748" r="5.3258" gradientUnits="userSpaceOnUse">
+	<stop  offset="0.2972" style="stop-color:#00FF49"/>
+	<stop  offset="0.9791" style="stop-color:#000000"/>
+</radialGradient>
+<circle class="st7" cx="32.3" cy="84.7" r="5.3"/>
+<radialGradient id="SVGID_00000094608001596425154560000006943994596765023149_" cx="89.6381" cy="56.4498" r="5.826" gradientUnits="userSpaceOnUse">
+	<stop  offset="0.2972" style="stop-color:#E71F00"/>
+	<stop  offset="0.9791" style="stop-color:#000000"/>
+</radialGradient>
+<circle style="fill:url(#SVGID_00000094608001596425154560000006943994596765023149_);" cx="89.6" cy="56.4" r="5.8"/>
+<g>
+	<text transform="matrix(1 0 0 1 29.5342 87.1699)" class="st9 st2 st10">A</text>
+</g>
+<radialGradient id="SVGID_00000085221735090183470890000005344431494860110499_" cx="54.1854" cy="132.2795" r="5.3258" gradientUnits="userSpaceOnUse">
+	<stop  offset="0.2972" style="stop-color:#00FF49"/>
+	<stop  offset="0.9791" style="stop-color:#000000"/>
+</radialGradient>
+<circle style="fill:url(#SVGID_00000085221735090183470890000005344431494860110499_);" cx="54.2" cy="132.3" r="5.3"/>
+<g>
+	<text transform="matrix(1 0 0 1 51.41 134.7746)" class="st9 st2 st10">A</text>
+</g>
+<g>
+	
+		<radialGradient id="SVGID_00000121988074550018093850000016468219355834669712_" cx="51.4012" cy="56.2352" r="5.3258" gradientUnits="userSpaceOnUse">
+		<stop  offset="0.2972" style="stop-color:#00FF49"/>
+		<stop  offset="0.9791" style="stop-color:#000000"/>
+	</radialGradient>
+	<circle style="fill:url(#SVGID_00000121988074550018093850000016468219355834669712_);" cx="51.4" cy="56.2" r="5.3"/>
+	<g>
+		<text transform="matrix(1 0 0 1 48.6259 58.7303)" class="st9 st2 st10">A</text>
+	</g>
+</g>
+<radialGradient id="SVGID_00000147207816249451164330000005610633147996565917_" cx="100.5202" cy="129.6159" r="5.3258" gradientUnits="userSpaceOnUse">
+	<stop  offset="0.2972" style="stop-color:#00FF49"/>
+	<stop  offset="0.9791" style="stop-color:#000000"/>
+</radialGradient>
+<circle style="fill:url(#SVGID_00000147207816249451164330000005610633147996565917_);" cx="100.5" cy="129.6" r="5.3"/>
+<g>
+	<text transform="matrix(1 0 0 1 97.7449 132.111)" class="st9 st2 st10">A</text>
+</g>
+<g>
+	<text transform="matrix(1 0 0 1 86.9651 59.144)" class="st14 st2 st10">I</text>
+</g>
+<polyline class="st15" points="83.8,53.6 83.8,50.9 86.9,50.9 "/>
+<path class="st15" d="M83.8,53.6"/>
+<path class="st15" d="M83.8,58.7"/>
+<polyline class="st15" points="86.9,62.3 83.8,62.3 83.8,58.7 "/>
+<path class="st15" d="M86.9,62.3"/>
+<path class="st15" d="M92.7,62.3"/>
+<polyline class="st15" points="95.5,58.7 95.5,62.3 92.7,62.3 "/>
+<path class="st15" d="M95.5,58.7"/>
+<path class="st15" d="M95.5,53.6"/>
+<polyline class="st15" points="92.3,50.9 95.5,50.9 95.5,53.6 "/>
+<path class="st15" d="M86.9,50.9"/>
+<line class="st5" x1="76.7" y1="96.1" x2="132.4" y2="79.3"/>
+<linearGradient id="SVGID_00000052790201509451394190000005925328490278081706_" gradientUnits="userSpaceOnUse" x1="77.2296" y1="80.0526" x2="130.6078" y2="80.0526">
+	<stop  offset="0.2972" style="stop-color:#2ED000;stop-opacity:0.3"/>
+	<stop  offset="0.9791" style="stop-color:#000000"/>
+</linearGradient>
+<polyline style="fill:url(#SVGID_00000052790201509451394190000005925328490278081706_);" points="77.2,96.1 130.6,80.1 125.8,64.1 
+	"/>
+<line class="st17" x1="76.7" y1="34.5" x2="76.7" y2="157.5"/>
+<line class="st17" x1="15.2" y1="96.1" x2="138.2" y2="96.1"/>
+</svg>
