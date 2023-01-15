@@ -28,7 +28,7 @@ Imports:
     R.utils,
     GenomicRanges,
     IRanges,
-    Rsamtools,
+    Rsamtools (>= 2.15.1),
     BSgenome,
     Biostrings,
     SummarizedExperiment,
@@ -85,3 +85,5 @@ Config/Needs/website:
     pkgdown,
     rnabioco/rbitemplate
 Config/testthat/edition: 3
+Remotes:
+    Bioconductor/Rsamtools
