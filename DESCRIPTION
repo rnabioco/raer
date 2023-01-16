@@ -41,7 +41,8 @@ Imports:
     rtracklayer,
     stringr,
     fastmap,
-    Matrix
+    Matrix,
+    cli
 Suggests:
     testthat (>= 3.0.0),
     knitr,
@@ -60,7 +61,8 @@ Suggests:
     AnnotationHub
 LinkingTo: 
     Rcpp,
-    Rhtslib (>= 2.0.0)
+    Rhtslib (>= 2.0.0),
+    cli
 SystemRequirements: 
     C++11, 
     GNU make, 
