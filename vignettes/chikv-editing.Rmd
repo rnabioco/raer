@@ -1,0 +1,223 @@
+---
+title: "RNA editing during viral infection"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{chikv-editing}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette is an analysis of RNA editing 
+
+```{r libs, message=FALSE}
+library(raer)
+library(tidyverse)
+library(fs)
+
+library(BiocParallel)
+library(SummarizedExperiment)
+library(plyranges)
+library(rtracklayer)
+library(GenomicFeatures)
+```
+
+```{r setup_common_data}
+base_path = fs::path('/beevol/home/jhessel/projects/raer-chikv')
+samples = c('A1','A2','A3', 'M1', 'M2', 'M3')
+
+fns = list(
+  bams = fs::path(base_path, 'bam', str_c( samples, '.bam')),
+  bais = fs::path(base_path, 'bam', str_c(samples, '.bam.bai')),
+  fasta = fs::path(base_path, 'ref', 'mm10_CHIKV_AF15561.fa.gz'),
+  rmsk_db = fs::path(base_path, 'ref', 'rmsk.mm10.bed.gz'),
+  snp_db = fs::path(base_path, 'ref', 'snp142.mm10.bed.gz'),
+  gtf = fs::path(base_path, 'ref', 'gencode.knownGene.mm10.gtf.gz'),
+  rse = fs::path(base_path, 'rds', 'all_rse.rds')
+)
+```
+
+
+```{r run_pileup, eval = FALSE}
+fp <- FilterParam(
+  # min depth of 3 for each replicate
+  min_nucleotide_depth = 3,
+  min_base_quality = 30,
+  min_mapq = rep(255, 6),
+  library_type = rep("fr-first-strand", 6),
+  trim_5p = 5,
+  trim_3p = 5,
+  indel_dist = 4,
+  homopolymer_len = 6,
+  max_mismatch_type = c(3, 3),
+  min_read_bqual = c(0.25, 20),
+  only_keep_variants = rep(TRUE, 6)
+)
+
+bpp <- SnowParam(workers = 6)
+plps <- get_pileup(
+  fns$bams,
+  fafile = fns$fasta,
+  filterParam = fp,
+  BPPARAM = bpp
+)
+
+names(plps) <- c('A1','A2','A3','M1','M2','M3')
+plps
+
+all_rse <- create_se(plps)
+
+chikv_rse <- subsetByOverlaps(
+  all_rse,
+  filter(rowRanges(all_rse), seqnames == 'CHIKV_AF15561')
+)
+
+mm_rse <- subsetByOverlaps(
+  all_rse,
+  filter(rowRanges(all_rse), seqnames != 'CHIKV_AF15561')
+)
+
+
+saveRDS(all_rse, file = '~/projects/raer-chikv/rds/all_rse.rds', compress = 'xz')
+saveRDS(mm_rse, file = '~/projects/raer-chikv/rds/mm_rse.rds', compress = 'xz')
+saveRDS(chikv_rse, file = '~/projects/raer-chikv/rds/chikv_rse.rds', compress = 'xz')
+```
+
+```{r load_rds, eval = FALSE}
+# all_rse <- readRDS(file = '~/projects/raer-chikv/rds/all_rse.rds')
+mm_rse <- readRDS(file = '~/projects/raer-chikv/rds/mm_rse.rds')
+chikv_rse <- readRDS(file = '~/projects/raer-chikv/rds/chikv_rse.rds')
+```
+
+## Filters
+
+### threshold filters
+
+```{r}
+# filter for at least 3 reads at each site for at least 3 samples.
+# this removes a large chunk of the data that is low coverage, ~90% or so 
+keep_nvar <- rowSums(assay(mm_rse, "nVar")[, 1:6] >= 3) >= 3
+chikv_rse_filt <- chikv_rse[keep_nvar, ]
+
+chikv_rse_filt <- remove_multiallelic(chikv_rse_filt) |>
+  calc_edit_frequency()
+
+# filter on site depth >= 3 for at least 3 samples
+keep_depth <- rowSums(assay(chikv_rse_filt, "depth") >= 3) >= 3
+chikv_rse_filt <- chikv_rse_filt[keep_depth, ]
+
+# filter for edit_freq >= 0.05 for at least 3 samples
+keep_edit_freq <- rowSums(assay(chikv_rse_filt, "edit_freq")[, 1:6] > 0.05) >= 3
+chikv_rse_filt <- chikv_rse_filt[keep_edit_freq, ]
+```
+
+
+### annotation
+
+```{r annotate_rse}
+bed_to_gr <- function(x, name_col = 'name') {
+  read_tsv(x, col_names = c('seqnames', 'start', 'end', name_col, 'score', 'strand')) |>
+    plyranges::as_granges()
+}
+
+rmsk_db <- bed_to_gr(fns$rmsk_db, name_col = 'repName')
+snp_db  <- bed_to_gr(fns$snp_db, name_col = 'snpId')
+
+mm_rse_filt <- annot_from_gr(
+  mm_rse_filt,
+  rmsk_db,
+  cols_to_map = "repName"
+)
+
+mm_rse_filt <- annot_from_gr(
+  mm_rse_filt,
+  snp_db,
+  cols_to_map = "snpId"
+)
+
+# filter out simple repeats (having a '(' in the name) and anything with 'rich' in it. The rest
+# seem to be high complexity repeats of specific classes.
+keep_reps <- rowData(mm_rse_filt)[, 'repName'] |>
+  str_detect(
+    paste(c('\\(', 'rich'), collapse = '|'),
+    negate = TRUE
+  )
+keep_reps[is.na(keep_reps)] <- TRUE
+
+mm_rse_filt <- mm_rse_filt[keep_reps, ]
+mm_rse_filt <- mm_rse_filt[is.na(rowData(mm_rse_filt)$snpId)] 
+```
+
+### threshold filters 
+
+The order here is useful, the first `nVar` filter removes a large chunk of the data, so we only compute the next step on ~10% of the sites.
+
+```{r}
+tx_db <- GenomicFeatures::makeTxDbFromGRanges(
+  rtracklayer::import(fns$gtf)
+)
+
+mm_rse_filt <- remove_multiallelic(mm_rse_filt) |>
+  remove_clustered_variants(tx_db, variant_dist = 100) |>
+  remove_splice_variants(tx_db) |>
+  calc_edit_frequency()
+
+# filter on site depth >= 3 for at least 3 samples
+keep_depth <- rowSums(assay(mm_rse_filt, "depth") >= 3) >= 3
+mm_rse_filt <- mm_rse_filt[keep_depth, ]
+
+# filter for edit_freq >= 0.05 for at least 3 samples
+keep_edit_freq <- rowSums(assay(mm_rse_filt, "edit_freq")[, 1:6] > 0.05) >= 3
+mm_rse_filt <- mm_rse_filt[keep_edit_freq, ]
+```
+
+### replicates
+
+```{r}
+mocks <- c('M1', 'M2', 'M3')
+virus <- c('A1', 'A2', 'A3')
+
+edit_freqs <- assay(mm_rse_filt[rowData(mm_rse_filt)$Var == 'AG', ], 'edit_freq')
+
+keep_mocks <- rowSums(edit_freqs[, mocks] > 0) == 3
+keep_virus <- rowSums(edit_freqs[, virus] > 0) == 3
+
+table(keep_mocks | keep_virus)
+```
+
+## Save data
+
+```{r eval=FALSE}
+saveRDS(mm_rse_filt, '~/projects/raer-chikv/rds/mm_rse_filt.rds', compress = 'xz')
+# mm_rse_filt <- readRDS('~/projects/raer-chikv/rds/mm_rse_filt.rds')
+```
+
+## Exploratory analysis
+
+```{r}
+var_tbl <- assay(mm_rse_filt, "Var") |>
+  as.data.frame() |>
+  rownames_to_column('site') |>
+  as_tibble()
+
+tidy_var_tbl <- var_tbl |>
+  separate(site, into = c('chrom', 'pos', 'strand'), sep = '_') |>
+  pivot_longer(-c(chrom, pos, strand)) |>
+  separate(name, into = c('treat', 'rep'), sep = 1) |>
+  filter(value != '-') |>
+  filter(!str_detect(value, '^N'))
+
+tidy_var_tbl |>
+  group_by(treat) |>
+  count(value) |>
+  ggplot(aes(value, n)) + geom_col() + facet_grid(~treat)
+
+```
+
+
