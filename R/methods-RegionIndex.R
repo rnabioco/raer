@@ -12,6 +12,11 @@
 #' @examples
 #' bed_fn <- system.file("extdata", "regions.bed", package = "raer")
 #' gr <- import(bed_fn)
+#' gr <- tile(gr, width = 1) |> unlist()
+#' strand(gr) <- sample(c("+", "-"), length(gr), replace = TRUE)
+#' gr$ref <- sample(c("A", "T", "C", "G"), length(gr), replace = TRUE)
+#' gr$alt <- sample(c("A", "T", "C", "G"), length(gr), replace = TRUE)
+#' gr$idx <- seq_along(gr)
 #' indexRegions(gr)
 #' @export
 setMethod(
@@ -19,13 +24,28 @@ setMethod(
   function(gr) {
     stopifnot(all(width(gr) == 1))
 
+    gr_nms <- c("ref", "alt")
+    if(!all(gr_nms %in% names(mcols(gr)))){
+      stop("GRanges must have a ref and alt columns")
+    }
+
+    if(any(strand(gr) == "*")){
+      warning("strand not found in input, coercing strand to '+'")
+      strand(gr) <- "+"
+    }
+    gr$idx <- seq_along(gr)
+
     obj <- .RegionIndex$new(
       gr = gr,
       open = FALSE
     )
+
     l <- list(as.character(seqnames(gr)),
               as.integer(start(gr)),
-              as.integer(seq_along(gr)))
+              as.character(strand(gr)),
+              as.character(mcols(gr)$ref),
+              as.character(mcols(gr)$alt),
+              as.integer(mcols(gr)$idx))
 
     tryCatch(
       {

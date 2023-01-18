@@ -6,6 +6,11 @@
 #include <htslib/regidx.h>
 
 typedef struct {
+  char *strand, *ref, *alt;
+  int idx;
+} payload_t;
+
+typedef struct {
   regidx_t *index;
 } _REG_IDX;
 

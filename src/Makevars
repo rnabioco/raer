@@ -10,7 +10,7 @@ CXX_STD = CXX11
 
 SOURCES = $(wildcard bri/*.c )
 
-OBJECTS = RcppExports.o regfile.o bedidx.o plp.o plp_data.o plp_utils.o cpp_utils.o init.o scidx.o $(SOURCES:.c=.o)
+OBJECTS = RcppExports.o regfile.o bedidx.o plp.o plp_data.o plp_utils.o cpp_utils.o init.o sc-plp.o scidx.o $(SOURCES:.c=.o)
 
 .PHONY: all clean
 
