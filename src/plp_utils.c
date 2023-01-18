@@ -304,8 +304,6 @@ char* get_aux_ztag(bam1_t *b, const char tag[2]){
   return(str);
 }
 
-
-
 /* from samtools bam_fastq.c
 
  * Reverse a string in place.

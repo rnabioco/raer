@@ -7,7 +7,8 @@ fafn <- system.file("extdata", "human.fasta", package = "raer")
 bedfn <- system.file("extdata", "regions.bed", package = "raer")
 idx <- indexBed(bedfn)
 
-cbbam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_cbsort.bam", package = "raer")
+#cbbam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_cbsort.bam", package = "raer")
+cbbam_fn <- system.file("extdata", "5k_neuron_mouse_cbsort.bam", package = "raer")
 ubbam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_ubsort.bam", package = "raer")
 
 test_that("bedindex works", {
@@ -45,7 +46,7 @@ test_that("tag index works", {
 test_that("CB tag retrival works", {
   tag_val <- "CB"
   alns <- scanBam(cbbam_fn, param = ScanBamParam(tag = tag_val))
-  cbs <- unique(alns[[1]]$tag$CB)
+  cbs <- unique(na.omit(alns[[1]]$tag$CB))
 
   n_cbs <- sample(seq_along(cbs), 1, replace = FALSE)
   query_cbs <- cbs[seq_len(n_cbs)]
@@ -125,11 +126,10 @@ test_that("tag values can be obtained from index", {
   df <- show_tag_index(cbbam_fn)
   expect_equal(ncol(df), 2)
   expect_true(is(df, "data.frame"))
-  expect_true("AAACCCAGTCACTTAG-1" %in% df$tag)
 
   # check # of CB containing reads == #s reported in index
   alns <- scanBam(cbbam_fn, param = ScanBamParam(tag = "CB"))
-  tags <- alns[[1]]$tag$CB
+  tags <- na.omit(alns[[1]]$tag$CB)
   ex <- as.data.frame(table(tags))
   colnames(ex) <- c("tag", "n")
   expect_true(all(df == ex))
