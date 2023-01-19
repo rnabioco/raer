@@ -29,7 +29,7 @@ library(GenomicFeatures)
 ```
 
 ```{r setup_common_data}
-base_path = fs::path('/beevol/home/jhessel/projects/raer-chikv')
+base_path = fs::path('~/projects/raer-chikv')
 samples = c('A1','A2','A3', 'M1', 'M2', 'M3')
 
 fns = list(
@@ -195,16 +195,19 @@ table(keep_mocks | keep_virus)
 
 ```{r eval=FALSE}
 saveRDS(mm_rse_filt, '~/projects/raer-chikv/rds/mm_rse_filt.rds', compress = 'xz')
-# mm_rse_filt <- readRDS('~/projects/raer-chikv/rds/mm_rse_filt.rds')
+mm_rse_filt <- readRDS('~/projects/raer-chikv/rds/mm_rse_filt.rds')
 ```
 
 ## Exploratory analysis
 
 ```{r}
+#filtered data 
+
 var_tbl <- assay(mm_rse_filt, "Var") |>
   as.data.frame() |>
   rownames_to_column('site') |>
   as_tibble()
+
 
 tidy_var_tbl <- var_tbl |>
   separate(site, into = c('chrom', 'pos', 'strand'), sep = '_') |>
@@ -213,11 +216,72 @@ tidy_var_tbl <- var_tbl |>
   filter(value != '-') |>
   filter(!str_detect(value, '^N'))
 
+
+# sum total number of edit sites in filtered data
+filt_tot_valCounts <- tidy_var_tbl |>
+  group_by(treat) |>
+  dplyr::count(value)
+  
+tot_valCounts <- sum(filt_tot_valCounts$n) # total edit sites
+
+#create tidy table of filtered data with frequencies calculated
+filt_tbl <- filt_tot_valCounts |>
+  mutate(freq = n/tot_valCounts, step = 'filtered') 
+
+
+# raw data
+
+raw_var_tbl <- assay(mm_rse, "Var") |>
+  as.data.frame() |>
+  rownames_to_column('site') |>
+  as_tibble()
+
+raw_tidy_var_tbl <- raw_var_tbl |>
+  separate(site, into = c('chrom', 'pos', 'strand'), sep = '_') |>
+  pivot_longer(-c(chrom, pos, strand)) |>
+  separate(name, into = c('treat', 'rep'), sep = 1) |>
+  filter(!str_detect(value, ',')) |>
+  filter(value != '-') |>
+  filter(!str_detect(value, '^N'))
+
+# sum total number of edit sites in raw data
+raw_tot_valCounts <- raw_tidy_var_tbl |>
+  group_by(treat) |>
+  dplyr::count(value)
+  
+tot_RawValCounts <- sum(raw_tot_valCounts$n) #total edit sites
+
+raw_tbl <- raw_tot_valCounts |>
+  filter(!str_detect(value, ',')) |>
+  mutate(freq = n/tot_RawValCounts, step = 'raw') 
+raw_tbl <- head(raw_tbl, -1) # removes non-categorized data
+
+# combine
+all_tbl <- bind_rows(filt_tbl, raw_tbl)
+
+#calculate norm_freq
+x1 <- pivot_wider(all_tbl, names_from = step, values_from = value) |>
+  mutate(norm_freq = filtered / raw)
+  
+#plot number of edits by treatment  
 tidy_var_tbl |>
   group_by(treat) |>
-  count(value) |>
+  dplyr::count(value) |>
   ggplot(aes(value, n)) + geom_col() + facet_grid(~treat)
 
-```
 
+
+```
+ 
+ 
+#compare raw to filtered frequencies
+
+# add column to each table for type of data (raw or filtered)
+# calculate edit frequencies (freq) for each data (raw or filtered)
+# merge tables
+# pivot_wide (columns -> raw filt)
+# calculate across rows normalized freq into a new column called normalized freq
+
+
+ 
 
