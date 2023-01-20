@@ -26,10 +26,12 @@ SEXP print_regidx(SEXP ext){
   regidx_t *idx = (regidx_t *)ridx->index;
   regitr_t *itr = regitr_init(idx);
   payload_t *pld;
+  REprintf("total regions=%d\n", regidx_nregs(idx));
+
   while ( regitr_loop(itr)){
     pld = regitr_payload(itr, payload_t*);
 
-    REprintf("chr=%s  beg=%d  end=%d payload=%s,%s,%s,%d\n",
+    REprintf("chr=%s  beg=%d  end=%d payload=%d,%s,%s,%d\n",
              itr->seq,
              itr->beg+1,
              itr->end+1,
@@ -42,7 +44,7 @@ SEXP print_regidx(SEXP ext){
   return ScalarLogical(TRUE);
 }
 
-void load_payload(payload_t *pld, char* strand, char* ref,
+void load_payload(payload_t *pld, int strand, char* ref,
                   char* alt, int rowidx){
   pld->strand = strand;
   pld->alt = alt;
@@ -50,7 +52,7 @@ void load_payload(payload_t *pld, char* strand, char* ref,
   pld->idx = rowidx;
 }
 
-regidx_t *regidx_load(char** chroms, int* pos, char** strand,
+regidx_t *regidx_load(char** chroms, int* pos, int* strand,
                       char** ref, char** alt, int* rowidx,
                       int n_sites){
 
@@ -113,8 +115,8 @@ SEXP regidx_build(SEXP lst)
     Rf_error("'seqnames' must be character");
   if (!IS_INTEGER(pos) || LENGTH(pos) != n)
     Rf_error("'pos' must be integer of length ", n);
-  if (!IS_CHARACTER(strand) || LENGTH(pos) != n)
-    Rf_error("'strand' must be character of length ", n);
+  if (!IS_INTEGER(strand) || LENGTH(pos) != n)
+    Rf_error("'strand' must be integer(1 = +, 2 = -) of length ", n);
   if (!IS_CHARACTER(ref) || LENGTH(pos) != n)
     Rf_error("'ref' must be character of length ", n);
   if (!IS_CHARACTER(alt) || LENGTH(pos) != n)
@@ -127,21 +129,19 @@ SEXP regidx_build(SEXP lst)
   R_RegisterCFinalizerEx(ext, _regfile_finalizer, TRUE);
   UNPROTECT(1);
 
-  char **seqnms, **s, **r, **a;
+  char **seqnms, **r, **a;
   int i;
   seqnms = (char **) R_alloc(sizeof(const char *), n);
-  s = (char **) R_alloc(sizeof(const char *), n);
   r = (char **) R_alloc(sizeof(const char *), n);
   a = (char **) R_alloc(sizeof(const char *), n);
 
   for (i = 0; i < n; ++i){
     seqnms[i] = (char *) translateChar(STRING_ELT(seqnames, i));
-    s[i] = (char *) translateChar(STRING_ELT(strand, i));
     r[i] = (char *) translateChar(STRING_ELT(ref, i));
     a[i] = (char *) translateChar(STRING_ELT(alt, i));
   }
 
-  ridx->index = regidx_load(seqnms, INTEGER(pos), s,
+  ridx->index = regidx_load(seqnms, INTEGER(pos), INTEGER(strand),
                             r, a, INTEGER(rowidx), n);
 
   if (ridx->index == NULL) {

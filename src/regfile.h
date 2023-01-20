@@ -6,8 +6,8 @@
 #include <htslib/regidx.h>
 
 typedef struct {
-  char *strand, *ref, *alt;
-  int idx;
+  char *ref, *alt;
+  int idx, strand;
 } payload_t;
 
 typedef struct {

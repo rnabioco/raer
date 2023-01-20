@@ -22,8 +22,8 @@ extern SEXP bedfile_close(SEXP);
 extern SEXP regidx_build(SEXP);
 extern SEXP regidx_close(SEXP);
 extern SEXP print_regidx(SEXP);
-extern SEXP do_run_pileup(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
-extern SEXP do_run_scpileup(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP do_run_pileup(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP do_run_scpileup(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
 
 static const R_CallMethodDef CallEntries[] = {
@@ -40,8 +40,8 @@ static const R_CallMethodDef CallEntries[] = {
   {".regidx_close", (DL_FUNC) &regidx_close, 1},
   {".print_regidx", (DL_FUNC) &print_regidx, 1},
   {".isnull", (DL_FUNC) &isnull, 1},
-  {".do_run_pileup",(DL_FUNC) &do_run_pileup, 20},
-  {".do_run_scpileup",(DL_FUNC) &do_run_scpileup, 15},
+  {".do_run_pileup",(DL_FUNC) &do_run_pileup, 21},
+  {".do_run_scpileup",(DL_FUNC) &do_run_scpileup, 17},
   {NULL, NULL, 0}
 };
 
