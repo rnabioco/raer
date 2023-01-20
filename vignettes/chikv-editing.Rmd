@@ -65,8 +65,8 @@ fns = list(
 )
 ```
 
-This is the main raer pileup routeine. On this data set, takes about 4
-hours (parallelized) and generates a large RangedSummarizedExperiment
+This is the main raer pileup routine. On this data set, this step takes about 4
+hours (parallelized) and generates a large `RangedSummarizedExperiment` (`rse`)
 with \~48 million sites.
 
 ```{r run_pileup, eval=FALSE}
@@ -149,9 +149,9 @@ based on several criteria:
 This is a helper function to filter samples within each replicate.
 
 ```{r filter_fxn}
-filter_replicates <- function(rse, assay_type = NULL, thresh = 0, n_rep = 3) {
+filter_replicates <- function(rse, assay_name = NULL, thresh = NULL, n_rep = 3) {
  
-  x <- assay(rse, assay_type)[, 1:6]
+  x <- assay(rse, assay_name)[, 1:6]
   
   mocks <- c('M1', 'M2', 'M3')
   virus <- c('A1', 'A2', 'A3')
@@ -174,7 +174,7 @@ removes a large chunk of the data, so we only compute the next steps on
 # filter for at least 3 reads at each site every sample in the replicates.
 # this removes a large chunk of the data that is low coverage, ~90% or so
 # n = 861939 
-mm_rse_filt <- filter_replicates(mm_rse, "nVar")
+mm_rse_filt <- filter_replicates(mm_rse, "nVar", thresh = 3)
 
 # Next, remove sites based on gene annotations
 tx_db <- GenomicFeatures::makeTxDbFromGRanges(
@@ -233,6 +233,8 @@ rmsk_db <-  read_tsv(
 ) |>
   plyranges::as_granges()
 
+# XXX: it might be useful to get a version of this table that has `ref` and `alt` alleles
+# so we can quickly compute variant stats
 snp_db  <- read_tsv(
   fns$snp_db,
   col_names = c('seqnames', 'start', 'end', 'snpId', 'score', 'strand')
@@ -278,32 +280,48 @@ chikv_rse_filt <- qs::qread(fs::path(ext_path, '/rds/chikv_rse_filt.rds'), nthre
 ### Tidy and examine the variants
 
 ```{r tidy_data}
-tidy_mm_filt_vars <- assay(mm_rse_filt, "Var") |>
-  as.data.frame() |>
-  rownames_to_column("site") |>
-  as_tibble() |>
-  pivot_longer(-site) |>
-  # filter out ambiguous Vars
-  filter(value != '-' & !str_detect(value, '^N')) |>
+prep_tibble <- function(rse, assay_name) {
+  assay(rse, assay_name) |>
+    as.data.frame() |>
+    rownames_to_column("site") |>
+    as_tibble()
+}
+
+tidy_var <- prep_tibble(mm_rse_filt, "Var") |>
+  pivot_longer(-site) |> rename(var = value)
+tidy_depth <- prep_tibble(mm_rse_filt, "depth") |>
+  pivot_longer(-site) |> rename(depth = value)
+tidy_edit_freq <- prep_tibble(mm_rse_filt, "edit_freq") |>
+  pivot_longer(-site) |> rename(edit_freq = value)
+
+# combine the above
+tidy_all <- left_join(tidy_var, tidy_depth, by = c('site', 'name')) |>
+  left_join(tidy_edit_freq, by = c('site', 'name'))
+ 
+tidy_all <- tidy_all |> 
+  # filter out ambiguous var
+  filter(var != '-' & !str_detect(var, '^N')) |>
   # polish columns in variables
   separate(name, into = c('treat', 'rep'), sep = 1) |>
+  # use intuitive var, i.e. `AT` -> `A>T`
+  separate(var, into = c('ref', 'alt'), sep = 1) |>
+  unite(var, ref:alt, sep = '>') |>
+  # use intuitive treatment names
   mutate(treat = case_when(
     treat == 'A' ~ 'virus',
     treat == 'M' ~ 'mock'
   )) |>
-  separate(site, into = c('chrom', 'pos', 'strand'), sep = '_')
+  separate(site, into = c('chrom', 'pos', 'strand'), sep = '_') |>
+  mutate(pos = as.integer(pos), rep = as.integer(rep))
 ```
 
-```{r count_and_plot}
-# inspect the counts
-filt_var_counts <- tidy_mm_filt_vars |>
+```{r plot_counts}
+# inspect the var counts
+var_counts <- tidy_all |>
   group_by(treat, rep) |>
-  dplyr::count(value) |>
-  # make variants more intutive, i.e. `AT` -> `A>T`
-  separate(value, into = c('ref', 'alt'), sep = 1) |>
-  unite(var, ref:alt, sep = '>') 
+  dplyr::count(var)
 
-ggplot(filt_var_counts, aes(var, n, fill = rep)) +
+ggplot(var_counts, aes(var, n, fill = rep)) +
   geom_col() +
   facet_grid(~treat) +
   scale_fill_brewer(palette = 'Reds') +
@@ -353,3 +371,30 @@ The plot of counts above shows us a few things:
     remaining are at much lower levels.
 
 
+```{r plot_depth_edit_freq}
+plot_tbl <- tidy_all |>
+  mutate(log_depth = log10(depth)) |>
+  dplyr::select(-(chrom:strand), -depth) |>
+  pivot_longer(edit_freq:log_depth)
+
+ggplot(plot_tbl, aes(var, value, fill = factor(rep))) +
+ geom_boxplot(outlier.shape = NA) +
+ facet_grid(name ~ treat, scales = 'free_y') +
+ theme_cowplot() +
+ scale_fill_brewer(palette = 'Reds') +
+ theme(
+  axis.text.x = element_text(angle = 45, hjust = 1)
+)
+         
+```
+
+OK, now it seems like we're getting somewhere. The plot above shows that:
+
+- `A>G` has the *lowest* editing frequencing. I'm not entirely sure how to think
+  about this; I think we expect true editing events to be well under 100%
+  modified; the remaining sites with higher editing frequencies could just be
+  somewhat common variants that aren't filtered? At a minimum this gives us a
+  useful ad hoc filter.
+  
+- `A>G` has the *highest* log_depth, by ~0.5 log, which is great,
+  and I think a good indication that we're enriching for interesting sites.
