@@ -3,8 +3,11 @@ title: "RNA editing during viral infection"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{chikv-editing}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r, include = FALSE}
@@ -14,12 +17,32 @@ knitr::opts_chunk$set(
 )
 ```
 
-This vignette is an analysis of RNA editing 
+This is an analysis of RNA editing during a Chikungunya (CHIKV)
+infection of mouse lymph node tissue, described in:
+
+Carpentier KS, Sheridan RM, Lucas CJ, Davenport BJ, Li FS, Lucas ED,
+McCarthy MK, Reynoso GV, May NA, Tamburini BAJ, Hesselberth JR, Hickman
+HD, Morrison TE. MARCO+ lymphatic endothelial cells sequester
+arthritogenic alphaviruses to limit viremia and viral dissemination.
+EMBO J. 2021 Nov 15;40(22):e108966. doi: 10.15252/embj.2021108966. Epub
+2021 Oct 7. PMID: 34618370; PMCID: PMC8591538.
+
+Mice were infected with an attenuated strain of CHIKV and lymph nodes
+were harvested after 24 hours and analyzed by 10x Genomics 3'
+single-cell RNA sequencing, focusing on CD45- stromal cells.
+
+Data from triplicate infection and mock samples were analyzed by the
+CellRanger pipeline, and output BAM files serve as the input data below.
+
+-   Add quality control metrics here (cell numbers, levels of viral
+    RNA?)
 
 ```{r libs, message=FALSE}
 library(raer)
 library(tidyverse)
+library(cowplot)
 library(fs)
+library(qs)
 
 library(BiocParallel)
 library(SummarizedExperiment)
@@ -29,27 +52,30 @@ library(GenomicFeatures)
 ```
 
 ```{r setup_common_data}
-ext_path = path('~/projects/raer-chikv')
-samples = c('A1','A2','A3', 'M1', 'M2', 'M3')
+ext_path <- fs::path('~/projects/raer-chikv')
+samples <- c('A1','A2','A3', 'M1', 'M2', 'M3')
 
 fns = list(
-  bams    = path(ext_path, 'bam', str_c( samples, '.bam')),
-  bais    = path(ext_path, 'bam', str_c(samples, '.bam.bai')),
-  fasta   = path(ext_path, 'ref', 'mm10_CHIKV_AF15561.fa.gz'),
-  rmsk_db = path(ext_path, 'ref', 'rmsk.mm10.bed.gz'),
-  snp_db  = path(ext_path, 'ref', 'snp142.mm10.bed.gz'),
-  gtf     = path(ext_path, 'ref', 'gencode.knownGene.mm10.gtf.gz')
+  bams    = fs::path(ext_path, 'bam', str_c( samples, '.bam')),
+  bais    = fs::path(ext_path, 'bam', str_c(samples, '.bam.bai')),
+  fasta   = fs::path(ext_path, 'ref', 'mm10_CHIKV_AF15561.fa.gz'),
+  rmsk_db = fs::path(ext_path, 'ref', 'rmsk.mm10.tsv.gz'),
+  snp_db  = fs::path(ext_path, 'ref', 'snp142.mm10.bed.gz'),
+  gtf     = fs::path(ext_path, 'ref', 'gencode.knownGene.mm10.gtf.gz')
 )
 ```
 
+This is the main raer pileup routeine. On this data set, takes about 4
+hours (parallelized) and generates a large RangedSummarizedExperiment
+with \~48 million sites.
 
-```{r run_pileup, eval = FALSE}
+```{r run_pileup, eval=FALSE}
 fp <- FilterParam(
   # min depth of 3 for each replicate
   min_nucleotide_depth = 3,
   min_base_quality = 30,
   min_mapq = rep(255, 6),
-  library_type = rep("fr-first-strand", 6),
+  library_type = rep("fr-second-strand", 6),
   trim_5p = 5,
   trim_3p = 5,
   indel_dist = 4,
@@ -59,7 +85,7 @@ fp <- FilterParam(
   only_keep_variants = rep(TRUE, 6)
 )
 
-bpp <- SnowParam(workers = 6)
+bpp <- SnowParam(workers = 24)
 plps <- get_pileup(
   fns$bams,
   fafile = fns$fasta,
@@ -67,10 +93,14 @@ plps <- get_pileup(
   BPPARAM = bpp
 )
 
-names(plps) <- c('A1','A2','A3','M1','M2','M3')
+names(plps) <- samples 
 plps
 
 all_rse <- create_se(plps)
+
+# remove multi-allelics now, they're not much use later.
+# this step removes about 15% (~8 million) of the sites.
+all_rse <- remove_multiallelic(all_rse)
 
 chikv_rse <- subsetByOverlaps(
   all_rse,
@@ -82,127 +112,138 @@ mm_rse <- subsetByOverlaps(
   filter(rowRanges(all_rse), seqnames != 'CHIKV_AF15561')
 )
 
-# remove multi-allelics now, they're not much use later
-all_rse <- remove_multiallelic(all_rse)
-
-saveRDS(all_rse, path(ext_path, '/rds/all_rse.rds', compress = 'xz'))
-saveRDS(mm_rse, path(ext_path, '/rds/mm_rse.rds', compress = 'xz'))
-saveRDS(chikv_rse, path(ext_path, '/rds/chikv_rse.rds', compress = 'xz'))
+qs::qsave(all_rse, fs::path(ext_path, '/rds/all_rse.rds'), nthreads = 10)
+qs::qsave(mm_rse, fs::path(ext_path, '/rds/mm_rse.rds'), nthreads = 10)
+qs::qsave(chikv_rse, fs::path(ext_path, '/rds/chikv_rse.rds'), nthreads = 10)
 ```
+
+If rds files have already been created, you can start from here.
 
 ```{r load_rds, eval = FALSE}
-all_rse <- readRDS(path(ext_path, '/rds/all_rse.rds'))
-mm_rse <- readRDS(path(ext_path, '/rds/mm_rse.rds'))
-chikv_rse <- readRDS(path(ext_path, '/rds/chikv_rse.rds'))
+all_rse <- qs::qread(fs::path(ext_path, '/rds/all_rse.rds'), nthreads = 10)
+mm_rse <- qs::qread(fs::path(ext_path, '/rds/mm_rse.rds'), nthreads = 10)
+chikv_rse <- qs::qread(fs::path(ext_path, '/rds/chikv_rse.rds'), nthreads = 10)
 ```
 
-## Filters
+## Filtering for high confidence sites
 
-### threshold 
+From the intial set of \~50 million sites from the pileup, we filter
+based on several criteria:
+
+1.  filter on `nVar`, requiring at least 3 reads for every sample among
+    replicates
+
+2.  remove clustered variants and variants near splice sites, as these
+    tend to be lower confidence due to mapping artifacts
+
+3.  after `calc_edit_frequency()`, filter on `depth` and `edit_freq`,
+    requiring a minimum of 3 reads and an editing frequency of at least
+    5%.
+
+4.  annotate the remaining variants based on overlap with reference
+    databases of repeats and SNPs, and remove variants based on ad hoc
+    criteria
+
+### Filtering sites by treshold
+
+This is a helper function to filter samples within each replicate.
 
 ```{r filter_fxn}
-# helper function to filter samples within each replicate
-filter_replicates <- function(x, thresh = 0, n_rep = 3) {
+filter_replicates <- function(rse, assay_type = NULL, thresh = 0, n_rep = 3) {
+ 
+  x <- assay(rse, assay_type)[, 1:6]
   
   mocks <- c('M1', 'M2', 'M3')
   virus <- c('A1', 'A2', 'A3')
 
-  keep_mocks <- rowSums(x[, mocks] >= thresh) == n_rep
-  keep_virus <- rowSums(x[, virus] >= thresh) == n_rep 
+  keep_mocks <- rowSums(x[, mocks] >= thresh) >= n_rep
+  keep_virus <- rowSums(x[, virus] >= thresh) >= n_rep 
 
+  # keep anything that passes the filter in either mock or virus samples
   keep_all <- keep_mocks | keep_virus
   
-  x[keep_all, ]
+  rse[keep_all, ]
 }
 ```
 
-The order here is important, the first `nVar` filter removes a large chunk of the data, so we only compute the next step on ~10% of the sites.
+The order of filtering here is important: the first `nVar` filter
+removes a large chunk of the data, so we only compute the next steps on
+\~10% of the sites.
 
 ```{r filter_mm}
 # filter for at least 3 reads at each site every sample in the replicates.
-# this removes a large chunk of the data that is low coverage, ~90% or so 
-mm_rse_filt <- filter_replicates(
-  assay(mm_rse, "nVar")[, 1:6],
-  thresh = 3,
-  n_rep = 3
-)
+# this removes a large chunk of the data that is low coverage, ~90% or so
+# n = 861939 
+mm_rse_filt <- filter_replicates(mm_rse, "nVar")
 
 # Next, remove sites based on gene annotations
 tx_db <- GenomicFeatures::makeTxDbFromGRanges(
   rtracklayer::import(fns$gtf)
 )
 
+# n = 325352
 mm_rse_filt <- remove_clustered_variants(
   mm_rse_filt, tx_db, variant_dist = 100
   ) |>
   remove_splice_variants(tx_db)
 
-# calculate edit frequencies and depth
+# calculate `edit_freq` and `depth`
 mm_rse_filt <- calc_edit_frequency(mm_rse_filt)
 
 # filter on site depth >= 3 for all samples within replicates 
-mm_rse_filt <- filter_replicates(
-  assay(mm_rse_filt, "depth")[, 1:6],
-  thresh = 3,
-  n_rep = 3
-)
+mm_rse_filt <- filter_replicates(mm_rse_filt, "depth", thresh = 3)
 
 # filter for edit_freq >= 0.05 for at least 3 samples
-mm_rse_filt <- filter_replicates(
-  assay(mm_rse_filt, "edit_freq")[, 1:6],
-  thresh = 0.05,
-  n_rep = 3
-)
+# n = 266645
+mm_rse_filt <- filter_replicates(mm_rse_filt, "edit_freq", thresh = 0.05)
 
 mm_rse_filt
 ```
 
-Now do the same for chikv data — these may be a bit harsh for the virus coverage we have.
+Now do the same for viral data --- these may be a bit harsh for the
+virus coverage we have.
 
 ```{r filter_chikv}
-chikv_rse_filt <- filter_replicates(
-  assay(chikv_rse, "nVar")[, 1:6],
-  thresh = 3,
-  n_rep = 3
-)
+# n = 4.25
+chikv_rse_filt <- filter_replicates(chikv_rse, "nVar")
 
 # calculate edit frequencies and depth
 chikv_rse_filt <- calc_edit_frequency(chikv_rse_filt)
 
 # filter on site depth >= 3 for all samples within replicates 
-chikv_rse_filt <- filter_replicates(
-  assay(chikv_rse_filt, "depth")[, 1:6],
-  thresh = 3,
-  n_rep = 3
-)
+chikv_rse_filt <- filter_replicates(chikv_rse_filt, "depth", thresh = 3)
 
-# filter for edit_freq >= 0.05 for at least 3 samples
-chikv_rse_filt <- filter_replicates(
-  assay(chikv_rse_filt, "edit_freq")[, 1:6],
-  thresh = 0.05,
-  n_rep = 3
-)
+# filter for edit_freq >= 0.05 for all replicates
+# n = 42
+chikv_rse_filt <- filter_replicates(chikv_rse_filt, "edit_freq", thresh = 0.05)
 
 chikv_rse_filt
 ```
 
-### annotation
+### Filtering by annotation
 
-Filter mm data by annotation, comparing to reference SNP and repeat databases.
+Filter the mouse data by annotation, comparing to reference SNP and
+repeat databases.
 
 ```{r annotate_rse}
-bed_to_gr <- function(x, name_col = 'name') {
-  read_tsv(x, col_names = c('seqnames', 'start', 'end', name_col, 'score', 'strand')) |>
-    plyranges::as_granges()
-}
+# load external annotations
+rmsk_db <-  read_tsv(
+  fns$rmsk_db,
+  col_names = c('seqnames', 'start', 'end', 'strand', 'repName', 'repClass', 'repFamily')
+) |>
+  plyranges::as_granges()
 
-rmsk_db <- bed_to_gr(fns$rmsk_db, name_col = 'repName')
-snp_db  <- bed_to_gr(fns$snp_db, name_col = 'snpId')
+snp_db  <- read_tsv(
+  fns$snp_db,
+  col_names = c('seqnames', 'start', 'end', 'snpId', 'score', 'strand')
+) |>
+  plyranges::as_granges()
 
+# annotate the filtered sites
 mm_rse_filt <- annot_from_gr(
   mm_rse_filt,
   rmsk_db,
-  cols_to_map = "repName"
+  cols_to_map = c("repName", "repFamily")
 )
 
 mm_rse_filt <- annot_from_gr(
@@ -211,17 +252,12 @@ mm_rse_filt <- annot_from_gr(
   cols_to_map = "snpId"
 )
 
-# filter out simple repeats (having a '(' in the name) and anything with 'rich' in it. The rest
-# seem to be high complexity repeats of specific classes.
-keep_reps <- rowData(mm_rse_filt)[, 'repName'] |>
-  str_detect(
-    paste(c('\\(', 'rich'), collapse = '|'),
-    negate = TRUE
-  )
-keep_reps[is.na(keep_reps)] <- TRUE
+# filter out specific repeat classes
+# n = 244246
+mm_rse_filt <- mm_rse_filt[!rowData(mm_rse_filt)$repFamily %in% c("Simple_repeat", "Low_Complexity")]
 
-# filter out simple repeats and common variants (i.e., already a snpId)
-mm_rse_filt <- mm_rse_filt[keep_reps, ]
+# filter out common variants (i.e., already have a snpId)
+# n = 226446
 mm_rse_filt <- mm_rse_filt[is.na(rowData(mm_rse_filt)$snpId)] 
 
 mm_rse_filt
@@ -229,112 +265,91 @@ mm_rse_filt
 
 ## Save filtered data
 
-```{r eval=FALSE}
-saveRDS(mm_rse_filt, path(ext_path, '/rds/mm_rse_filt.rds', compress = 'xz'))
-saveRDS(chikv_rse_filt, path(ext_path, '/rds/chikv_rse_filt.rds', compress = 'xz'))
+```{r save_filt_data, eval=FALSE}
+qs::qsave(mm_rse_filt, fs::path(ext_path, '/rds/mm_rse_filt.rds'), nthreads = 10)
+qs::qsave(chikv_rse_filt, fs::path(ext_path, '/rds/chikv_rse_filt.rds'), nthreads = 10)
 
-mm_rse_filt <- readRDS(path(ext_path, '/rds/mm_rse_filt.rds'))
-chikv_rse_filt <- readRDS(path(ext_path, '/rds/chikv_rse_filt.rds'))
+mm_rse_filt <- qs::qread(fs::path(ext_path, '/rds/mm_rse_filt.rds'), nthreads = 10)
+chikv_rse_filt <- qs::qread(fs::path(ext_path, '/rds/chikv_rse_filt.rds'), nthreads = 10)
 ```
 
 ## Exploratory analysis
 
-### Data tidying
+### Tidy and examine the variants
 
 ```{r tidy_data}
-var_raw_tbl <- assay(mm_rse, "Var") |>
+tidy_mm_filt_vars <- assay(mm_rse_filt, "Var") |>
   as.data.frame() |>
-  rownames_to_column('site') |>
-  as_tibble()
-
-tidy_raw_var_tbl <- var_raw_tbl |>
-  separate(site, into = c('chrom', 'pos', 'strand'), sep = '_') |>
-  pivot_longer(-c(chrom, pos, strand)) |>
+  rownames_to_column("site") |>
+  as_tibble() |>
+  pivot_longer(-site) |>
+  # filter out ambiguous Vars
+  filter(value != '-' & !str_detect(value, '^N')) |>
+  # polish columns in variables
   separate(name, into = c('treat', 'rep'), sep = 1) |>
-  filter(value != '-') |>
-  filter(!str_detect(value, '^N'))
-
-var_filt_tbl <- assay(mm_rse_filt, "Var") |>
-  as.data.frame() |>
-  rownames_to_column('site') |>
-  as_tibble()
-
-tidy_var_filt_tbl <- var_filt_tbl |>
-  separate(site, into = c('chrom', 'pos', 'strand'), sep = '_') |>
-  pivot_longer(-c(chrom, pos, strand)) |>
-  separate(name, into = c('treat', 'rep'), sep = 1) |>
-  filter(value != '-') |>
-  filter(!str_detect(value, '^N'))
-
-saveRDS(tidy_raw_var_tbl, path(ext_path, '/rds/tidy_raw_var_tbl.rds'))
-saveRDS(tidy_filt_var_tbl, path(ext_path, '/rds/tidy_raw_var_tbl.rds'))
+  mutate(treat = case_when(
+    treat == 'A' ~ 'virus',
+    treat == 'M' ~ 'mock'
+  )) |>
+  separate(site, into = c('chrom', 'pos', 'strand'), sep = '_')
 ```
 
-### Frequency calculations
-
-```{r calc_freq}
-# sum total number of edit sites in filtered data
-filt_tot_valCounts <- tidy_var_tbl |>
-  group_by(treat) |>
-  dplyr::count(value)
-  
-tot_valCounts <- sum(filt_tot_valCounts$n) # total edit sites
-
-#create tidy table of filtered data with frequencies calculated
-filt_tbl <- filt_tot_valCounts |>
-  mutate(freq = n/tot_valCounts, step = 'filtered') 
-
-# raw data
-
-raw_var_tbl <- assay(mm_rse, "Var") |>
-  as.data.frame() |>
-  rownames_to_column('site') |>
-  as_tibble()
-
-raw_tidy_var_tbl <- raw_var_tbl |>
-  separate(site, into = c('chrom', 'pos', 'strand'), sep = '_') |>
-  pivot_longer(-c(chrom, pos, strand)) |>
-  separate(name, into = c('treat', 'rep'), sep = 1) |>
-  filter(!str_detect(value, ',')) |>
-  filter(value != '-') |>
-  filter(!str_detect(value, '^N'))
-
-# sum total number of edit sites in raw data
-raw_tot_valCounts <- raw_tidy_var_tbl |>
-  group_by(treat) |>
-  dplyr::count(value)
-  
-tot_RawValCounts <- sum(raw_tot_valCounts$n) #total edit sites
-
-raw_tbl <- raw_tot_valCounts |>
-  filter(!str_detect(value, ',')) |>
-  mutate(freq = n/tot_RawValCounts, step = 'raw') 
-raw_tbl <- head(raw_tbl, -1) # removes non-categorized data
-
-# combine
-all_tbl <- bind_rows(filt_tbl, raw_tbl)
-
-#calculate norm_freq
-x1 <- pivot_wider(all_tbl, names_from = step, values_from = value) |>
-  mutate(norm_freq = filtered / raw)
-  
-#plot number of edits by treatment  
-tidy_var_tbl |>
-  group_by(treat) |>
+```{r count_and_plot}
+# inspect the counts
+filt_var_counts <- tidy_mm_filt_vars |>
+  group_by(treat, rep) |>
   dplyr::count(value) |>
-  ggplot(aes(value, n)) + geom_col() + facet_grid(~treat)
+  # make variants more intutive, i.e. `AT` -> `A>T`
+  separate(value, into = c('ref', 'alt'), sep = 1) |>
+  unite(var, ref:alt, sep = '>') 
+
+ggplot(filt_var_counts, aes(var, n, fill = rep)) +
+  geom_col() +
+  facet_grid(~treat) +
+  scale_fill_brewer(palette = 'Reds') +
+  theme_cowplot() +
+  labs(
+    x = 'variant',
+    y = 'count'
+  ) + 
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
 ```
- 
- 
-#compare raw to filtered frequencies
 
-# add column to each table for type of data (raw or filtered)
-# calculate edit frequencies (freq) for each data (raw or filtered)
-# merge tables
-# pivot_wide (columns -> raw filt)
-# calculate across rows normalized freq into a new column called normalized freq
+The plot of counts above shows us a few things:
 
+-   The most abundant variants are anything to A (`C>A`, `G>A`, `T>A`).
+    I'm honestly not sure where that signal comes from, and Kent is
+    stumped too.
 
- 
+    I considered calculating a normalized frequency comparing to the raw data,
+    but (a) that's an expensive calculation and (b) most of those raw sites are
+    low coverage anyway (see the `nVar` step at the beginning), so are going to
+    be largely uninformative.
+
+    I think the thing to do is to figure out how the remaining filters
+    behave for that subset of sites. It's possible these `X>A` sites are
+    generally lower coverage relative to the signal (`A>G`), and so
+    improved thresholds for the filtering steps may eliminate them.
+
+-   The next most abundant variant is the signal of adenosine editing
+    and the one we're after (`A>G`). so all good there. There are about
+    1e4 `A>G` sites per replicate:
+
+        # A tibble: 6 × 4
+        # Groups:   treat, rep [6]
+        treat rep   value     n
+        <chr> <chr> <chr> <int>
+        1 A     1     AG    12323
+        2 A     2     AG    12192
+        3 A     3     AG    12289
+        4 M     1     AG    11923
+        5 M     2     AG    12236
+        6 M     3     AG    12143
+
+-   There's a small signal for `T>C` (not sure what that is), and the
+    remaining are at much lower levels.
+
 
