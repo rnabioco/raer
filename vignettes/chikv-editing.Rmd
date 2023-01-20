@@ -43,6 +43,7 @@ library(tidyverse)
 library(cowplot)
 library(fs)
 library(qs)
+library(janitor)
 
 library(BiocParallel)
 library(SummarizedExperiment)
@@ -120,7 +121,7 @@ qs::qsave(chikv_rse, fs::path(ext_path, '/rds/chikv_rse.rds'), nthreads = 10)
 If rds files have already been created, you can start from here.
 
 ```{r load_rds, eval = FALSE}
-all_rse <- qs::qread(fs::path(ext_path, '/rds/all_rse.rds'), nthreads = 10)
+# all_rse <- qs::qread(fs::path(ext_path, '/rds/all_rse.rds'), nthreads = 10)
 mm_rse <- qs::qread(fs::path(ext_path, '/rds/mm_rse.rds'), nthreads = 10)
 chikv_rse <- qs::qread(fs::path(ext_path, '/rds/chikv_rse.rds'), nthreads = 10)
 ```
@@ -290,17 +291,18 @@ prep_tibble <- function(rse, assay_name) {
 }
 
 tidy_var <- prep_tibble(mm_rse_filt, "Var") |>
-  pivot_longer(-site) |> rename(var = value)
+  pivot_longer(-site) |> dplyr::rename(var = value)
 tidy_depth <- prep_tibble(mm_rse_filt, "depth") |>
-  pivot_longer(-site) |> rename(depth = value)
+  pivot_longer(-site) |> dplyr::rename(depth = value)
 tidy_edit_freq <- prep_tibble(mm_rse_filt, "edit_freq") |>
-  pivot_longer(-site) |> rename(edit_freq = value)
+  pivot_longer(-site) |> dplyr::rename(edit_freq = value)
 
 tidy_annots <- rowData(mm_rse_filt) |>
   as.data.frame() |>
   rownames_to_column("site") |>
   as_tibble() |>
-  dplyr::select(-Ref, -Var, -snpId)
+  dplyr::select(-Ref, -Var, -snpId) |>
+  janitor::clean_names()
   
 # combine the above
 tidy_all <- left_join(tidy_var, tidy_depth, by = c('site', 'name')) |>
@@ -326,7 +328,6 @@ tidy_all <- tidy_all |>
     rep = as.factor(rep),
     var = as.factor(var)
   )
-    
     
 ```
 
@@ -378,11 +379,10 @@ The plot of counts above shows us a few things:
 -   There's a small signal for `T>C` (not sure what that is), and the
     remaining are at much lower levels.
 
-
 ```{r plot_depth_edit_freq}
 plot_tbl <- tidy_all |>
   mutate(log_depth = log10(depth)) |>
-  dplyr::select(-(chrom:strand), -depth, -repName, -repFamily) |>
+  dplyr::select(-(chrom:strand), -depth, -starts_with('rep_')) |>
   pivot_longer(edit_freq:log_depth)
 
 ggplot(plot_tbl, aes(var, value, fill = rep)) +
@@ -397,7 +397,7 @@ ggplot(plot_tbl, aes(var, value, fill = rep)) +
 
 OK, now it seems like we're getting somewhere. The plot above shows that:
 
-- `A>G` has the *lowest* editing frequencing. I'm not entirely sure how to think
+- `A>G` has the *lowest* editing frequency. I'm not entirely sure how to think
   about this; I think we expect true editing events to be well under 100%
   modified; the remaining sites with higher editing frequencies could just be
   somewhat common variants that aren't filtered? At a minimum this gives us a
@@ -408,15 +408,15 @@ OK, now it seems like we're getting somewhere. The plot above shows that:
 
 ```{r rep_families}
 rep_counts <- tidy_all |>
-  dplyr::select(treat, var, repName, repFamily) |>
-  filter(!is.na(repName)) |>
-  pivot_longer(-c(treat, var), names_to = 'repeat_class', values_to = 'rep_name') |>
-  group_by(treat, var, repeat_class) |>
-  count(rep_name)
+  dplyr::select(treat, var, rep_name, rep_family) |>
+  filter(!is.na(rep_name)) |>
+  pivot_longer(-c(treat, var), names_to = 'rep_class', values_to = 'rep_name') |>
+  group_by(treat, var, rep_class) |>
+  dplyr::count(rep_name)
 
 filter(
   rep_counts,
-  repeat_class == 'repFamily' & n >= 20, 
+  rep_class == 'rep_family' & n >= 20, 
   var %in% c('A>G', 'G>A', 'C>A', 'T>A')
 ) |>
   ggplot(aes(fct_reorder(rep_name, n), log10(n), fill = treat)) +
@@ -429,6 +429,6 @@ filter(
     x = '',
     y = 'n variants in repeats (log10)'
   )
-  
 ```
+Doesn't appear to be a strong enrichment for a variant type among repeat classes.
 
