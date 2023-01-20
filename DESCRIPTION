@@ -85,5 +85,3 @@ Config/Needs/website:
     pkgdown,
     rnabioco/rbitemplate
 Config/testthat/edition: 3
-Remotes:
-    Bioconductor/Rsamtools
