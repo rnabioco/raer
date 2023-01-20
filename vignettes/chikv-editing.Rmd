@@ -290,6 +290,8 @@ prep_tibble <- function(rse, assay_name) {
     as_tibble()
 }
 
+tidy_nvar <- prep_tibble(mm_rse_filt, "nVar") |>
+  pivot_longer(-site) |> dplyr::rename(n_var = value)
 tidy_var <- prep_tibble(mm_rse_filt, "Var") |>
   pivot_longer(-site) |> dplyr::rename(var = value)
 tidy_depth <- prep_tibble(mm_rse_filt, "depth") |>
@@ -301,11 +303,11 @@ tidy_annots <- rowData(mm_rse_filt) |>
   as.data.frame() |>
   rownames_to_column("site") |>
   as_tibble() |>
-  dplyr::select(-Ref, -Var, -snpId) |>
-  janitor::clean_names()
+  dplyr::select(-Ref, -Var, -snpId)
   
 # combine the above
-tidy_all <- left_join(tidy_var, tidy_depth, by = c('site', 'name')) |>
+tidy_all <- left_join(tidy_var, tidy_nvar, by = c('site', 'name')) |>
+  left_join(tidy_depth, by = c('site', 'name')) |>
   left_join(tidy_edit_freq, by = c('site', 'name')) |>
   left_join(tidy_annots, by = c('site'))
  
@@ -327,7 +329,8 @@ tidy_all <- tidy_all |>
     treat = as.factor(treat),
     rep = as.factor(rep),
     var = as.factor(var)
-  )
+  ) |>
+  janitor::clean_names()
     
 ```
 
@@ -430,5 +433,6 @@ filter(
     y = 'n variants in repeats (log10)'
   )
 ```
+
 Doesn't appear to be a strong enrichment for a variant type among repeat classes.
 
