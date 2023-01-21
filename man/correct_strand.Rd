@@ -10,29 +10,27 @@ correct_strand(gr, genes_gr)
 \item{gr}{GRanges object containing editing sites processed with
 "genomic-unstranded" setting}
 
-\item{genes_gr}{GRanges object containing reference features to
-annotate the strand of the editing sites.}
+\item{genes_gr}{GRanges object containing reference features to annotate the
+strand of the editing sites.}
 }
 \value{
-GenomicRanges onbject containing pileup counts, with strand corrected based
-on supplied genomic intervals.
+GenomicRanges onbject containing pileup counts, with strand corrected
+based on supplied genomic intervals.
 }
 \description{
-Gene annotations are used to infer the
-likely strand of editing sites. This function will operate
-on unstranded datasets which have been processed using "genomic-unstranded"
-library type which reports variants with respect to the
-\itemize{
-\item strand for all sites. The strand of the editing site will be
-assigned the strand of overlapping features in the \code{genes_gr}
-object. Sites with no-overlap, or overlapping features
-with conflicting strands (+ and -) will be removed.
-}
+Gene annotations are used to infer the likely strand of editing
+sites. This function will operate on unstranded datasets which have been
+processed using "genomic-unstranded" library type which reports variants
+with respect to the + strand for all sites. The strand of the editing site
+will be assigned the strand of overlapping features in the \code{genes_gr}
+object. Sites with no-overlap, or overlapping features with conflicting
+strands (+ and -) will be removed.
 }
 \examples{
 suppressPackageStartupMessages(library("GenomicRanges"))
-bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
-fafn <- system.file("extdata", "human.fasta", package = "raer")
+
+bamfn <- raer_example("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam")
+fafn <- raer_example("extdata", "human.fasta")
 fp <- FilterParam(library_type = "genomic-unstranded")
 plp <- get_pileup(bamfn, fafn, filterParam = fp)
 
@@ -43,4 +41,5 @@ genes <- GRanges(c(
   "SSR3:6-12:+"
 ))
 correct_strand(plp, genes)
+
 }

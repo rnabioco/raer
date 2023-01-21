@@ -11,19 +11,17 @@ get_overlapping_snps(gr, snpDb, output_file = NULL)
 
 \item{snpDb}{A reference ot a SNPlocs database}
 
-\item{output_file}{A path to an output file. If supplied
-the file can be optionally compressed by including a ".gz"
-suffix. If not supplied, SNPS will be returned as a \link[GenomicRanges:GPos-class]{GenomicRanges::GPos}
-object}
+\item{output_file}{A path to an output file. If supplied the file can be
+optionally compressed by including a ".gz" suffix. If not supplied, SNPS
+will be returned as a \link[GenomicRanges:GPos-class]{GenomicRanges::GPos} object}
 }
 \value{
 GPos object containing SNPs overlapping supplied genomic intervals
 }
 \description{
-This function will find SNPs overlapping
-supplied intervals using a SNPlocs package. The SNPs
-can be returned in memory (as GPos objects) or written
-to disk as a bed-file (optionally compressed).
+This function will find SNPs overlapping supplied intervals
+using a SNPlocs package. The SNPs can be returned in memory (as GPos
+objects) or written to disk as a bed-file (optionally compressed).
 }
 \examples{
 if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {

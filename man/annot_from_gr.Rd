@@ -11,9 +11,8 @@ annot_from_gr(obj, gr, cols_to_map, ...)
 
 \item{gr}{GRanges with annotations to map to obj}
 
-\item{cols_to_map}{character vector of columns from gr to map
-to obj. If the vector has names, the names will be the
-column names in the output obj}
+\item{cols_to_map}{character vector of columns from gr to map to obj. If the
+vector has names, the names will be the column names in the output obj}
 
 \item{...}{additional arguments to pass to \code{\link[GenomicRanges:findOverlaps-methods]{GenomicRanges::findOverlaps()}}}
 }
@@ -22,9 +21,9 @@ Either a SummarizedExperiment or GRanges object with additional
 annotations provided by the supplied GRanges object.
 }
 \description{
-Utility function to map annotations from GRanges
-to rowData of SummarizedExperiment or GRanges object . If multiple features
-overlap then they will be concatenated as comma separated values.
+Utility function to map annotations from GRanges to rowData of
+SummarizedExperiment or GRanges object. If multiple features overlap then
+they will be concatenated as comma separated values.
 }
 \examples{
 example(create_se, echo = FALSE)

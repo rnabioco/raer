@@ -73,19 +73,17 @@ annot_snps.SummarizedExperiment <- function(obj,
 
 #' Annotate a RangedSummarizedExperiment using Granges objects
 #'
-#' @description Utility function to map annotations from GRanges
-#' to rowData of SummarizedExperiment or GRanges object . If multiple features
-#' overlap then they will be concatenated as comma separated values.
+#' @description Utility function to map annotations from GRanges to rowData of
+#'   SummarizedExperiment or GRanges object. If multiple features overlap then
+#'   they will be concatenated as comma separated values.
 #'
 #' @param obj RangedSummarizedExperiment or GRanges object
 #' @param gr GRanges with annotations to map to obj
-#' @param cols_to_map character vector of columns from gr to map
-#' to obj. If the vector has names, the names will be the
-#' column names in the output obj
+#' @param cols_to_map character vector of columns from gr to map to obj. If the
+#'   vector has names, the names will be the column names in the output obj
 #' @param ... additional arguments to pass to [GenomicRanges::findOverlaps()]
 #'
-#' @return
-#' Either a SummarizedExperiment or GRanges object with additional
+#' @return Either a SummarizedExperiment or GRanges object with additional
 #' annotations provided by the supplied GRanges object.
 #' @examples
 #' example(create_se, echo = FALSE)
