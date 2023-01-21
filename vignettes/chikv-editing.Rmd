@@ -288,6 +288,8 @@ prep_tibble <- function(rse, assay_name) {
     as_tibble()
 }
 
+tidy_nref <- prep_tibble(mm_rse_filt, "nRef") |>
+  pivot_longer(-site) |> dplyr::rename(n_ref = value)
 tidy_nvar <- prep_tibble(mm_rse_filt, "nVar") |>
   pivot_longer(-site) |> dplyr::rename(n_var = value)
 tidy_var <- prep_tibble(mm_rse_filt, "Var") |>
@@ -305,6 +307,7 @@ tidy_annots <- rowData(mm_rse_filt) |>
   
 # combine the above
 tidy_all <- left_join(tidy_var, tidy_nvar, by = c('site', 'name')) |>
+  left_join(tidy_nref, by = c('site', 'name')) |>
   left_join(tidy_depth, by = c('site', 'name')) |>
   left_join(tidy_edit_freq, by = c('site', 'name')) |>
   left_join(tidy_annots, by = c('site'))
@@ -325,6 +328,7 @@ tidy_all <- tidy_all |>
     )
   ) |>
   separate(site, into = c('chrom', 'pos', 'strand'), sep = '_') |>
+  arrange(var) |>
   mutate(across(c(treat, rep, var), as_factor)) |>
   janitor::clean_names()
 
