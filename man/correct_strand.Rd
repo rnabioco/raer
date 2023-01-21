@@ -31,8 +31,10 @@ with conflicting strands (+ and -) will be removed.
 }
 \examples{
 suppressPackageStartupMessages(library("GenomicRanges"))
-bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
-fafn <- system.file("extdata", "human.fasta", package = "raer")
+
+bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+fafn <- raer_example("human.fasta")
+
 fp <- FilterParam(library_type = "genomic-unstranded")
 plp <- get_pileup(bamfn, fafn, filterParam = fp)
 
@@ -42,5 +44,7 @@ genes <- GRanges(c(
   "SSR3:3-10:-",
   "SSR3:6-12:+"
 ))
+
 correct_strand(plp, genes)
+
 }

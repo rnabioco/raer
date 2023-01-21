@@ -1,42 +1,49 @@
 #' Calculate the Adenosine Editing Index (AEI)
 #'
-#' @description The Adenosine Editing Index describes the magnitude of A-to-I editing
-#' in a sample. The index is a weighted average of editing events (G bases) observed
-#' at A positions. The vast majority A-to-I editing occurs in ALU elements in the human
-#' genome, and these regions have a high A-to-I editing signal compared to other regions
-#' such as coding exons. This function will perform pileup at specified repeat regions and
-#' return a summary AEI metric.
+#' @description The Adenosine Editing Index describes the magnitude of A-to-I
+#'   editing in a sample. The index is a weighted average of editing events (G
+#'   bases) observed at A positions. The vast majority A-to-I editing occurs in
+#'   ALU elements in the human genome, and these regions have a high A-to-I
+#'   editing signal compared to other regions such as coding exons. This
+#'   function will perform pileup at specified repeat regions and return a
+#'   summary AEI metric.
 #'
-#' @references
-#' Roth, S.H., Levanon, E.Y. & Eisenberg, E. Genome-wide quantification of ADAR adenosine-to-inosine RNA editing activity. Nat Methods 16, 1131–1138 (2019). https://doi.org/10.1038/s41592-019-0610-9
-#'
+#' @references Roth, S.H., Levanon, E.Y. & Eisenberg, E. Genome-wide
+#' quantification of ADAR adenosine-to-inosine RNA editing activity. Nat Methods
+#' 16, 1131–1138 (2019). https://doi.org/10.1038/s41592-019-0610-9
 #'
 #' @param bam_fn bam file
 #' @param fasta_fn fasta
-#' @param alu_ranges GRanges or the name of a BEDfile with regions to query for calculating the AEI,
-#' typically ALU repeats. If a BED file is supplied it will not be filtered by the txdb option.
-#' @param txdb A txdb object, if supplied, will be used to subset the alu_ranges to
-#' those found overlapping genes. Alternatively a GRanges object with gene coordinates.
+#' @param alu_ranges GRanges or the name of a BEDfile with regions to query for
+#'   calculating the AEI, typically ALU repeats. If a BED file is supplied it
+#'   will not be filtered by the txdb option.
+#' @param txdb A txdb object, if supplied, will be used to subset the alu_ranges
+#'   to those found overlapping genes. Alternatively a GRanges object with gene
+#'   coordinates.
 #' @param snp_db either a SNPlocs package, GPos, or GRanges object. If supplied,
-#' will be used to exclude polymorphic positions prior to calculating the AEI. If
-#' `calc_AEI()` will be used many times, one could save some time by first identifying
-#' SNPs that overlap the supplied alu_ranges, and passing these as a GRanges to snp_db
-#' rather than supplying all known SNPs (see [get_overlapping_snps()]).
-#'  Combined with using a bedfile for alu_ranges can also will save time.
+#'   will be used to exclude polymorphic positions prior to calculating the AEI.
+#'   If `calc_AEI()` will be used many times, one could save some time by first
+#'   identifying SNPs that overlap the supplied alu_ranges, and passing these as
+#'   a GRanges to snp_db rather than supplying all known SNPs (see
+#'   [get_overlapping_snps()]). Combined with using a bedfile for alu_ranges can
+#'   also will save time.
 #' @param filterParam object of class [FilterParam()] which specify various
-#' filters to apply to reads and sites during pileup.
-#' @param BPPARAM A [BiocParallelParam] object for specifying parallel options for
-#' operating over chromosomes.
+#'   filters to apply to reads and sites during pileup.
+#' @param BPPARAM A [BiocParallelParam] object for specifying parallel options
+#'   for operating over chromosomes.
 #' @param verbose report progress on each chromosome?
 #'
-#' @returns A named list with the AEI index computed for all allelic combinations.
-#' If correctly computed the signal from the A_G index should be higher than other
-#' alleles (T_C), which are most likely derived from noise or polymorphisms.
+#' @returns A named list with the AEI index computed for all allelic
+#'   combinations. If correctly computed the signal from the A_G index should be
+#'   higher than other alleles (T_C), which are most likely derived from noise
+#'   or polymorphisms.
 #'
 #' @examples
 #' suppressPackageStartupMessages(library(Rsamtools))
-#' bamfn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", package = "raer")
-#' fafn <- system.file("extdata", "human.fasta", package = "raer")
+#'
+#' bamfn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
+#' fafn <- raer_example("human.fasta")
+#'
 #' dummy_alu_ranges <- scanFaIndex(fafn)
 #' calc_AEI(bamfn, fafn, dummy_alu_ranges)
 #'
@@ -47,6 +54,7 @@
 #' @importFrom IRanges subsetByOverlaps
 #' @import S4Vectors
 #' @import GenomicRanges
+#'
 #' @export
 calc_AEI <- function(bam_fn,
                      fasta_fn,
@@ -328,8 +336,10 @@ get_overlapping_snps <- function(gr,
 #'
 #' @examples
 #' suppressPackageStartupMessages(library("GenomicRanges"))
-#' bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
-#' fafn <- system.file("extdata", "human.fasta", package = "raer")
+#'
+#' bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+#' fafn <- raer_example("human.fasta")
+#'
 #' fp <- FilterParam(library_type = "genomic-unstranded")
 #' plp <- get_pileup(bamfn, fafn, filterParam = fp)
 #'
@@ -339,7 +349,9 @@ get_overlapping_snps <- function(gr,
 #'   "SSR3:3-10:-",
 #'   "SSR3:6-12:+"
 #' ))
+#'
 #' correct_strand(plp, genes)
+#'
 #' @importFrom stringr str_count
 #' @export
 correct_strand <- function(gr, genes_gr) {
