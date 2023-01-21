@@ -17,29 +17,33 @@ knitr::opts_chunk$set(
 )
 ```
 
-This is an analysis of RNA editing during a Chikungunya (CHIKV)
-infection of mouse lymph node tissue, described in:
+## Overview
+
+This is an analysis of RNA editing during a Chikungunya (CHIKV) infection of
+mouse lymph node tissue, described in:
 
 Carpentier KS, Sheridan RM, Lucas CJ, Davenport BJ, Li FS, Lucas ED,
 McCarthy MK, Reynoso GV, May NA, Tamburini BAJ, Hesselberth JR, Hickman
 HD, Morrison TE. MARCO+ lymphatic endothelial cells sequester
 arthritogenic alphaviruses to limit viremia and viral dissemination.
 EMBO J. 2021 Nov 15;40(22):e108966. doi: 10.15252/embj.2021108966. Epub
-2021 Oct 7. PMID: 34618370; PMCID: PMC8591538.
+2021 Oct 7. [PMID: 34618370; PMCID: PMC8591538](https://pubmed.ncbi.nlm.nih.gov/34618370/).
 
-Mice were infected with an attenuated strain of CHIKV and lymph nodes
+In this study, mice were infected with an attenuated strain of CHIKV and lymph nodes
 were harvested after 24 hours and analyzed by 10x Genomics 3'
 single-cell RNA sequencing, focusing on CD45- stromal cells.
 
 Data from triplicate infection and mock samples were analyzed by the
 CellRanger pipeline, and output BAM files serve as the input data below.
 
--   Add quality control metrics here (cell numbers, levels of viral
-    RNA?)
+### Samples
+
+* Todo: Create table of samples, 10x summary
 
 ```{r libs, message=FALSE}
 library(raer)
 library(tidyverse)
+library(ggtext)
 library(cowplot)
 library(fs)
 library(qs)
@@ -50,6 +54,7 @@ library(SummarizedExperiment)
 library(plyranges)
 library(rtracklayer)
 library(GenomicFeatures)
+library(VariantAnnotation)
 ```
 
 ```{r setup_common_data}
@@ -118,10 +123,8 @@ qs::qsave(mm_rse, fs::path(ext_path, '/rds/mm_rse.rds'), nthreads = 10)
 qs::qsave(chikv_rse, fs::path(ext_path, '/rds/chikv_rse.rds'), nthreads = 10)
 ```
 
-If rds files have already been created, you can start from here.
-
 ```{r load_rds, eval = FALSE}
-# all_rse <- qs::qread(fs::path(ext_path, '/rds/all_rse.rds'), nthreads = 10)
+all_rse <- qs::qread(fs::path(ext_path, '/rds/all_rse.rds'), nthreads = 10)
 mm_rse <- qs::qread(fs::path(ext_path, '/rds/mm_rse.rds'), nthreads = 10)
 chikv_rse <- qs::qread(fs::path(ext_path, '/rds/chikv_rse.rds'), nthreads = 10)
 ```
@@ -171,7 +174,7 @@ The order of filtering here is important: the first `nVar` filter
 removes a large chunk of the data, so we only compute the next steps on
 \~10% of the sites.
 
-```{r filter_mm}
+```{r filter_mm, eval = FALSE}
 # filter for at least 3 reads at each site every sample in the replicates.
 # this removes a large chunk of the data that is low coverage, ~90% or so
 # n = 861939 after this step
@@ -205,9 +208,9 @@ mm_rse_filt
 Now do the same for viral data --- these may be a bit harsh for the
 virus coverage we have.
 
-```{r filter_chikv}
+```{r filter_chikv, eval = FALSE}
 # n = 4.25
-chikv_rse_filt <- filter_replicates(chikv_rse, "nVar")
+chikv_rse_filt <- filter_replicates(chikv_rse, "nVar", thresh = 3)
 
 # calculate edit frequencies and depth
 chikv_rse_filt <- calc_edit_frequency(chikv_rse_filt)
@@ -227,7 +230,7 @@ chikv_rse_filt
 Filter the mouse data by annotation, comparing to reference SNP and
 repeat databases.
 
-```{r annotate_rse}
+```{r annotate_rse, eval = FALSE}
 # load external annotations
 rmsk_db <-  read_tsv(
   fns$rmsk_db,
@@ -275,14 +278,13 @@ mm_rse_filt
 ```{r save_filt_data, eval=FALSE}
 qs::qsave(mm_rse_filt, fs::path(ext_path, '/rds/mm_rse_filt.rds'), nthreads = 10)
 qs::qsave(chikv_rse_filt, fs::path(ext_path, '/rds/chikv_rse_filt.rds'), nthreads = 10)
-
-mm_rse_filt <- qs::qread(fs::path(ext_path, '/rds/mm_rse_filt.rds'), nthreads = 10)
-chikv_rse_filt <- qs::qread(fs::path(ext_path, '/rds/chikv_rse_filt.rds'), nthreads = 10)
 ```
 
 ## Exploratory analysis
 
-```{r tidy_data}
+### Data tidying
+
+```{r tidy_data, eval=FALSE}
 prep_tibble <- function(rse, assay_name) {
   assay(rse, assay_name) |>
     as.data.frame() |>
@@ -331,33 +333,58 @@ tidy_all <- tidy_all |>
     var = as.factor(var)
   ) |>
   janitor::clean_names()
-    
+
+qs::qsave(tidy_all, file = fs::path(ext_path, '/rds/tidy_all.rds'), nthreads = 8)    
 ```
 
-```{r plot_counts}
-# inspect the var counts
-var_counts <- tidy_all |>
-  group_by(treat, rep) |>
-  dplyr::count(var)
+### **Start here!!!!**
 
-ggplot(var_counts, aes(var, n, fill = rep)) +
-  geom_col() +
-  facet_grid(~treat) +
-  scale_fill_brewer(palette = 'Reds') +
-  theme_cowplot() +
-  labs(
-    x = 'variant',
-    y = 'count'
-  ) + 
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1)
+```{r load_rds}
+mm_rse_filt <- qs::qread(fs::path(ext_path, '/rds/mm_rse_filt.rds'), nthreads = 10)
+chikv_rse_filt <- qs::qread(fs::path(ext_path, '/rds/chikv_rse_filt.rds'), nthreads = 10)
+tidy_all <- qs::qread(fs::path(ext_path, '/rds/tidy_all.rds'), nthreads = 10)    
+```
+
+### Variants discovered by the pileup
+
+```{r plot_counts}
+var_counts <-
+  tidy_all |>
+  group_by(treat, rep) |>
+  dplyr::count(var) |>
+  # add a name column that highlights `A>G` in bold, red text
+  mutate(
+    plt_name = case_when(
+      var == 'A>G' ~ "<b style='color:red'>A>G</b>",
+      .default = var
+    ),
+    plt_name = fct_relevel(
+      as_factor(plt_name),
+      "<b style='color:red'>A>G</b>",
+      after = 1
+    )
   )
 
+ggplot(
+  var_counts,
+  aes(x = plt_name, y = n / 1e5, fill = rep)
+  ) +
+  geom_col() +
+  facet_grid(~treat) +
+  scale_fill_brewer(palette = 'Greys') +
+  labs(
+    x = '',
+    y = 'n (x 1e5)'
+  ) + 
+  theme_cowplot() +
+  theme(
+    axis.text.x = element_markdown(angle = 45, hjust = 1)
+  )
 ```
 
 The plot of counts above shows us a few things:
 
--   The most abundant variants are anything to A (`C>A`, `G>A`, `T>A`).
+*   The most abundant variants are anything to A (`C>A`, `G>A`, `T>A`).
     I'm honestly not sure where that signal comes from, and Kent is
     stumped too.
 
@@ -371,7 +398,7 @@ The plot of counts above shows us a few things:
     generally lower coverage relative to the signal (`A>G`), and so
     improved thresholds for the filtering steps may eliminate them.
 
--   The next most abundant variant is the signal of adenosine editing
+*   The next most abundant variant is the signal of adenosine editing
     and the one we're after (`A>G`). so all good there. There are about
     1e4 `A>G` sites per replicate:
 
@@ -379,23 +406,45 @@ The plot of counts above shows us a few things:
     filter(var_counts, var == 'A>G')
     ```
     
--   There's a small signal for `T>C` (not sure what that is), and the
-    remaining are at much lower levels.
+*   There's a small signal for `T>C` (not sure what that is), and the
+    remaining variants are at much lower levels.
+
+### Editing frequency and depth
 
 ```{r plot_depth_edit_freq}
-plot_tbl <- tidy_all |>
-  mutate(log_depth = log10(depth)) |>
-  dplyr::select(-(chrom:strand), -depth, -starts_with('rep_')) |>
-  pivot_longer(edit_freq:log_depth)
-
-ggplot(plot_tbl, aes(var, value, fill = rep)) +
- geom_boxplot(outlier.shape = NA) +
- facet_grid(name ~ treat, scales = 'free_y') +
- theme_cowplot() +
- scale_fill_brewer(palette = 'Reds') +
- theme(
-  axis.text.x = element_text(angle = 45, hjust = 1)
-)
+plot_tbl <-
+  tidy_all |>
+    mutate(log_depth = log10(depth)) |>
+    dplyr::select(-(chrom:strand), -depth, -starts_with('rep_')) |>
+    pivot_longer(edit_freq:log_depth) |>
+    # add a name column that highlights `A>G` in bold, red text
+    mutate(
+      plt_name = case_when(
+        var == 'A>G' ~ "<b style='color:red'>A>G</b>",
+        .default = var
+      ),
+      plt_name = fct_relevel(
+        as_factor(plt_name),
+        "<b style='color:red'>A>G</b>",
+        after = 1
+      )
+    )
+  
+ggplot(
+  plot_tbl,
+  aes(x = plt_name, value, fill = rep)
+  ) +
+  geom_boxplot(outlier.shape = NA) +
+  facet_grid(name ~ treat, scales = 'free_y') +
+  theme_cowplot() +
+  scale_fill_brewer(palette = 'Greys') +
+  theme(
+    axis.text.x = element_markdown(angle = 45, hjust = 1)
+  ) + 
+  labs(
+    x = ''
+  )
+  
 ```
 
 OK, now it seems like we're getting somewhere. The plot above shows that:
@@ -409,6 +458,8 @@ OK, now it seems like we're getting somewhere. The plot above shows that:
 - `A>G` has the *highest* log_depth, by ~0.5 log, which is great,
   and I think a good indication that we're enriching for interesting sites.
 
+### Variants among repeat classes
+
 ```{r rep_families}
 rep_counts <- tidy_all |>
   dplyr::select(treat, var, rep_name, rep_family) |>
@@ -419,7 +470,8 @@ rep_counts <- tidy_all |>
 
 filter(
   rep_counts,
-  rep_class == 'rep_family' & n >= 20, 
+  rep_class == 'rep_family' & n >= 20,
+  # examine the most abundant / interesting variants
   var %in% c('A>G', 'G>A', 'C>A', 'T>A')
 ) |>
   ggplot(aes(fct_reorder(rep_name, n), log10(n), fill = treat)) +
@@ -435,4 +487,7 @@ filter(
 ```
 
 Doesn't appear to be a strong enrichment for a variant type among repeat classes.
+
+### Variants in genic regions
+
 
