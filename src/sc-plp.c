@@ -197,14 +197,14 @@ static int count_record(bam1_t *b, sc_mplp_conf_t *conf, payload_t *pld,
   cb_t *cbdat;
   int cret, uret;
   cb = get_aux_ztag(b, conf->cb_tag);
-  cb_cpy = strdup(cb);
   if(cb == NULL) return(0);
+  cb_cpy = strdup(cb);
 
   k = kh_get(str2intmap, conf->cbidx, cb_cpy);
-  if(k == kh_end(conf->cbidx)) return(0);
+  if(k == kh_end(conf->cbidx)) {free(cb_cpy); return(0);}
 
   k = kh_put(cbumimap, conf->cbmap, cb_cpy, &cret);
-  if(cret < 0) return(-1);
+  if(cret < 0) {free(cb_cpy); return(-1);}
   if(cret == 0) free(cb_cpy); // CB in hash already
   if(cret == 1) kh_value(conf->cbmap, k) = init_umihash();
   cbdat = kh_value(conf->cbmap, k);
@@ -217,6 +217,7 @@ static int count_record(bam1_t *b, sc_mplp_conf_t *conf, payload_t *pld,
     free(umi_val);
     return(1);
   } else if (uret < 0) {
+    free(umi_val);
     return(-1);
   }
 
@@ -554,7 +555,7 @@ static int set_sc_mplp_conf(sc_mplp_conf_t *conf, int n_bams, char** bamfns,
 
   if(qregion) conf->qregion = qregion;
   if(idx) {
-    conf->reg_idx = idx;
+    conf->reg_idx = (regidx_t *)idx;
     conf->reg_itr = regitr_init(conf->reg_idx);
   };
 
@@ -636,7 +637,7 @@ static int write_all_sites(sc_mplp_conf_t *conf){
 }
 
 
-static void check_sc_plp_args(SEXP bampaths, SEXP qregion, SEXP region_idx,
+static void check_sc_plp_args(SEXP bampaths, SEXP qregion, SEXP lst,
                               SEXP barcodes, SEXP cbtag, SEXP event_filters,
                               SEXP min_mapQ, SEXP max_depth, SEXP min_baseQ,
                               SEXP read_bqual_filter, SEXP libtype, SEXP b_flags,
@@ -651,8 +652,8 @@ static void check_sc_plp_args(SEXP bampaths, SEXP qregion, SEXP region_idx,
     Rf_error("'qregion' must be character of length 0 or 1");
   }
 
-  if(Rf_isNull(region_idx)){
-    Rf_error("'region_idx' must be non-null");
+  if(Rf_isNull(lst)){
+    Rf_error("'lst' must be non-null");
   }
 
   if(!IS_CHARACTER(barcodes) || (LENGTH(barcodes) < 1)){
@@ -716,13 +717,13 @@ static void check_sc_plp_args(SEXP bampaths, SEXP qregion, SEXP region_idx,
 
 
 
-SEXP do_run_scpileup(SEXP bampaths, SEXP query_region, SEXP region_idx,
+SEXP do_run_scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
                    SEXP barcodes, SEXP cbtag, SEXP event_filters, SEXP min_mapQ,
                    SEXP max_depth, SEXP min_baseQ, SEXP read_bqual_filter,
                    SEXP libtype, SEXP b_flags, SEXP outfns, SEXP umi,
                    SEXP index_skip, SEXP pe, SEXP min_counts) {
 
-  check_sc_plp_args(bampaths, query_region, region_idx,
+  check_sc_plp_args(bampaths, query_region, lst,
                     barcodes, cbtag, event_filters, min_mapQ, max_depth,
                     min_baseQ, read_bqual_filter, libtype,
                     b_flags, outfns, umi, index_skip, pe, min_counts);
@@ -760,16 +761,21 @@ SEXP do_run_scpileup(SEXP bampaths, SEXP query_region, SEXP region_idx,
   sc_mplp_conf_t ga;
   memset(&ga, 0, sizeof(sc_mplp_conf_t));
 
-  if(Rf_isNull(region_idx)) Rf_error("Failed to load region index");
-  _REG_IDX *ridx = REGIDX(region_idx) ;
-  if (ridx->index == NULL){
-    Rf_error("Failed to load region index");
+  regidx_t *idx = regidx_build(lst);
+  if (!idx){
+    Rf_error("Failed to build region index");
   }
+  //
+  // if(!R_ExternalPtrAddr(region_idx)) Rf_error("Failed to load region index");
+  // _REG_IDX *ridx = REGIDX(region_idx) ;
+  // if (ridx == NULL || ridx->index == NULL){
+  //   Rf_error("Failed to load region index");
+  // }
 
   int ret, res;
 
   ret = set_sc_mplp_conf(&ga, nbams, cbampaths, nout, coutfns,
-                         cq_region, ridx->index, INTEGER(min_mapQ)[0],
+                         cq_region, idx, INTEGER(min_mapQ)[0],
                          INTEGER(min_baseQ)[0], REAL(read_bqual_filter),
                          INTEGER(max_depth)[0], INTEGER(b_flags),
                          INTEGER(event_filters), INTEGER(libtype)[0],

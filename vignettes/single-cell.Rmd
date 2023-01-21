@@ -48,8 +48,8 @@ fns
 ```{r}
 bam_fn <- fns$bams
 # positionally sort and index bam file
-bf <- Rsamtools::sortBam(bam_fn, sub(".bam", "", bam_fn))
-bfi <- Rsamtools::indexBam(bam_fn)
+bf <- Rsamtools::sortBam(bam_fn, sub(".bam", "_sorted", bam_fn))
+bfi <- Rsamtools::indexBam(bf)
 
 bed_fn <- fns$edit_sites
 ```
@@ -58,7 +58,6 @@ Next we'll load in a `SingleCellExperiment` with cell-type annotations.
 
 ```{r}
 sce <- readRDS(fns$sce)
-
 plotUMAP(sce, colour_by = "celltype")
 ```
 
@@ -89,11 +88,11 @@ Note that `bam_flags` is set to **include** duplicate reads by default. If the b
 
 Processing time can be reduced by operating in parallel across chromosomes, by supplying a BiocParallel backend to the `BPPARAM` argument (e.g. `MultiCoreParam()`).
 
-```{r}
+```{r pileup_cells}
 outdir <- file.path(tempdir(), "sc_edits")
 cbs <- colnames(sce)
 e_sce <- pileup_cells(
-  bamfile = bam_fn,
+  bamfile = bf,
   sites = gr,
   cell_barcodes = cbs,
   output_directory = outdir,

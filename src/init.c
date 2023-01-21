@@ -19,9 +19,6 @@ extern SEXP _raer_list_tabix_chroms(SEXP);
 extern SEXP _raer_c_show_index(SEXP, SEXP);
 extern SEXP bedfile_open(SEXP);
 extern SEXP bedfile_close(SEXP);
-extern SEXP regidx_build(SEXP);
-extern SEXP regidx_close(SEXP);
-extern SEXP print_regidx(SEXP);
 extern SEXP do_run_pileup(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP do_run_scpileup(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
@@ -36,9 +33,6 @@ static const R_CallMethodDef CallEntries[] = {
   {"_raer_c_show_index", (DL_FUNC) &_raer_c_show_index,     2},
   {".bedfile_open", (DL_FUNC) &bedfile_open, 1},
   {".bedfile_close", (DL_FUNC) &bedfile_close, 1},
-  {".regidx_build", (DL_FUNC) &regidx_build, 1},
-  {".regidx_close", (DL_FUNC) &regidx_close, 1},
-  {".print_regidx", (DL_FUNC) &print_regidx, 1},
   {".isnull", (DL_FUNC) &isnull, 1},
   {".do_run_pileup",(DL_FUNC) &do_run_pileup, 21},
   {".do_run_scpileup",(DL_FUNC) &do_run_scpileup, 17},

@@ -2,53 +2,19 @@
 #include <htslib/regidx.h>
 #include "regfile.h"
 
-// Largely templated on approaches used in Rsamtools
-// to load, protect, and reuse indexes built in C from R
 
 static inline void free_regidx(void *payload){
-  payload_t **dat = (payload_t**) payload;
-  free(*dat);
-}
-
-SEXP print_regidx(SEXP ext){
-  if(R_ExternalPtrAddr(ext) == NULL){
-    Rf_error("[raer internal] extptr has no address");
-  }
-  if (REGIDX(ext) == NULL) {
-    Rf_error("[raer internal] corrupt extptr");
-    Rf_PrintValue(ext);
-  }
-
-  _REG_IDX *ridx = REGIDX(ext) ;
-  if (ridx->index == NULL)
-    Rf_error("[raer internal] corrupt index");
-
-  regidx_t *idx = (regidx_t *)ridx->index;
-  regitr_t *itr = regitr_init(idx);
-  payload_t *pld;
-  REprintf("total regions=%d\n", regidx_nregs(idx));
-
-  while ( regitr_loop(itr)){
-    pld = regitr_payload(itr, payload_t*);
-
-    REprintf("chr=%s  beg=%d  end=%d payload=%d,%s,%s,%d\n",
-             itr->seq,
-             itr->beg+1,
-             itr->end+1,
-             pld->strand,
-             pld->ref,
-             pld->alt,
-             pld->idx);
-  }
-  regitr_destroy(itr);
-  return ScalarLogical(TRUE);
+  payload_t *pld = *((payload_t**)payload);
+  if(pld->alt) free(pld->alt);
+  if(pld->ref) free(pld->ref);
+  free(pld);
 }
 
 void load_payload(payload_t *pld, int strand, char* ref,
                   char* alt, int rowidx){
   pld->strand = strand;
-  pld->alt = alt;
-  pld->ref = ref;
+  pld->alt = strdup(alt);
+  pld->ref = strdup(ref);
   pld->idx = rowidx;
 }
 
@@ -56,7 +22,7 @@ regidx_t *regidx_load(char** chroms, int* pos, int* strand,
                       char** ref, char** alt, int* rowidx,
                       int n_sites){
 
-  regidx_t *idx = regidx_init(NULL,NULL,free_regidx,sizeof(payload_t),NULL);
+  regidx_t *idx = regidx_init(NULL,NULL,free_regidx,sizeof(payload_t*),NULL);
   if (!idx) Rf_error("[raer interal] init regidx failed\n");
 
   char *chr_beg;
@@ -74,31 +40,7 @@ regidx_t *regidx_load(char** chroms, int* pos, int* strand,
   return idx;
 }
 
-static void _regidx_close(SEXP ext)
-{
-  _REG_IDX *ridx = REGIDX(ext);
-  if (ridx->index != NULL)
-    regidx_destroy(ridx->index);
-  ridx->index = NULL;
-}
-
-SEXP regidx_close(SEXP ext)
-{
-  _regidx_close(ext);
-  return ext;
-}
-
-static void _regfile_finalizer(SEXP ext)
-{
-  if (R_ExternalPtrAddr(ext) == NULL)
-    return;
-  _regidx_close(ext);
-  _REG_IDX *ridx = REGIDX(ext);
-  R_Free(ridx);
-  R_SetExternalPtrAddr(ext, NULL);
-}
-
-SEXP regidx_build(SEXP lst)
+regidx_t *regidx_build(SEXP lst)
 {
   if(Rf_length(lst) != 6){
     Rf_error("'lst' must contain seqnames, pos, strand, ref, alt, and rowidx");
@@ -124,11 +66,6 @@ SEXP regidx_build(SEXP lst)
   if (!IS_INTEGER(rowidx) || LENGTH(rowidx) != n)
     Rf_error("'rowidx' must be integer of length ", n);
 
-  _REG_IDX* ridx = (_REG_IDX*) R_Calloc(1, _REG_IDX);
-  SEXP ext = PROTECT(R_MakeExternalPtr(ridx, R_NilValue, lst));
-  R_RegisterCFinalizerEx(ext, _regfile_finalizer, TRUE);
-  UNPROTECT(1);
-
   char **seqnms, **r, **a;
   int i;
   seqnms = (char **) R_alloc(sizeof(const char *), n);
@@ -141,18 +78,17 @@ SEXP regidx_build(SEXP lst)
     a[i] = (char *) translateChar(STRING_ELT(alt, i));
   }
 
-  ridx->index = regidx_load(seqnms, INTEGER(pos), INTEGER(strand),
-                            r, a, INTEGER(rowidx), n);
+  regidx_t* idx = regidx_load(seqnms, INTEGER(pos), INTEGER(strand),
+                 r, a, INTEGER(rowidx), n);
 
-  if (ridx->index == NULL) {
-    R_Free(ridx);
-    Rf_error("'regidx_build' indexing failed");
+  if (!idx){
+    Rf_error("'regidx_build_internal' indexing failed");
   }
-
-  return ext;
+  return idx;
 }
 
-//////////
+// Largely templated on approaches used in Rsamtools
+// to load, protect, and reuse indexes built in C from R
 
 static void _bed_close(void * bed)
 {
@@ -204,69 +140,3 @@ SEXP bedfile_close(SEXP ext)
   return ext;
 }
 
-
-
-
-// debug function to check loading of bed index
-
-//typedef struct {
-//  int n, m;
-//  uint64_t *a;
-//  int *idx;
-//  int filter;
-//} bed_reglist_t;
-//
-//
-//#include "htslib/khash.h"
-//KHASH_MAP_INIT_STR(reg, bed_reglist_t)
-//
-//typedef kh_reg_t reghash_t;
-//
-//SEXP print_bed(SEXP ext){
-//  Rprintf("hello");
-//  Rprintf("%d", Rf_isNull(ext));
-//  if(R_ExternalPtrAddr(ext) == NULL){
-//    Rf_error("ptr no addre");
-//  }
-//  if (BEDFILE(ext) == NULL) {
-//    Rf_error("corrupt ext");
-//    Rf_PrintValue(ext);
-//  }
-//
-// _BED_FILE *ffile = BEDFILE(ext) ;
-//  if (ffile->index == NULL)
-//    Rf_error("corrupt index");
-// Rprintf("bed_read output %p:", ffile );
-//
-// reghash_t *h = (reghash_t *)ffile->index;
-// bed_reglist_t *p;
-// khint_t k;
-// int i;
-// const char *reg;
-// uint32_t beg, end;
-//
-// if (!h) {
-//   Rprintf("Hash table is empty!\n");
-//   return ScalarLogical(FALSE);
-// }
-// for (k = kh_begin(h); k < kh_end(h); k++) {
-//   if (kh_exist(h,k)) {
-//     reg = kh_key(h,k);
-//     Rprintf("Region: '%s'\n", reg);
-//     if ((p = &kh_val(h,k)) != NULL && p->n > 0) {
-//       Rprintf("Filter: %d\n", p->filter);
-//       for (i=0; i<p->n; i++) {
-//         beg = (uint32_t)(p->a[i]>>32);
-//         end = (uint32_t)(p->a[i]);
-//
-//         Rprintf("\tinterval[%d]: %d-%d\n",i,beg,end);
-//       }
-//     } else {
-//       Rprintf("Region '%s' has no intervals!\n", reg);
-//       return ScalarLogical(FALSE);
-//     }
-//   }
-// }
-//
-//  return ScalarLogical(TRUE);
-//}

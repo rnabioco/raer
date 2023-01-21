@@ -185,16 +185,18 @@ get_sc_pileup <- function(bamfn, sites, barcodes,
                           event_filters, fp, verbose){
   sites <- sites[seqnames(sites) %in% chrom, ]
   if(length(sites) == 0) return(character())
-  idx <- indexRegions(sites)
 
   outfns <- c("counts.mtx", "sites.txt", "bcs.txt")
   chr_outfns <- file.path(outfile_prefix, paste0(chrom, "_", outfns))
   chr_outfns <- path.expand(chr_outfns)
+
   if(verbose) message("working on ", chrom)
+  lst <- gr_to_regions(sites)
   res <- .Call(".do_run_scpileup",
                bamfn, #bamfile
                chrom, #qregion
-               idx$.extptr, #idx
+               lst,
+               #idx$.extptr, #idx
                barcodes,
                cb_tag,
                event_filters,
@@ -211,8 +213,34 @@ get_sc_pileup <- function(bamfn, sites, barcodes,
                fp$min_variant_reads)
 
   if(res < 0) stop("pileup failed")
-  close(idx)
   chr_outfns
+}
+
+gr_to_regions <- function(gr){
+  stopifnot(all(width(gr) == 1))
+
+  nr <- length(gr);
+  if(nr == 0) stop("No entries in GRanges")
+
+  gr_nms <- c("ref", "alt")
+  if(!all(gr_nms %in% names(mcols(gr)))){
+    stop("GRanges must have a ref and alt columns")
+  }
+
+  if(any(strand(gr) == "*")){
+    warning("missing strand not found in input, coercing strand to '+'")
+    strand(gr) <- "+"
+  }
+  gr$idx <- seq(0, nr - 1) # is zero-based index
+
+
+  list(as.character(seqnames(gr)),
+       as.integer(start(gr)),
+       as.integer(strand(gr)),
+       as.character(mcols(gr)$ref),
+       as.character(mcols(gr)$alt),
+       as.integer(mcols(gr)$idx))
+
 }
 
 #' Read tables produced by pileup_cells()
@@ -235,7 +263,7 @@ get_sc_pileup <- function(bamfn, sites, barcodes,
 #' @returns a list of sparseMatrices, of NULL if mtx_fn is empty
 #' @importFrom data.table fread
 #' @export
-read_sparray <- function(mtx_fn, sites_fn, bc_fn, ...){
+read_sparray <- function(mtx_fn, sites_fn, bc_fn){
   if(!file.size(mtx_fn) > 0){
     return(NULL)
   }

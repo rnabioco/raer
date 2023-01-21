@@ -11,20 +11,12 @@ typedef struct {
 } payload_t;
 
 typedef struct {
-  regidx_t *index;
-} _REG_IDX;
-
-typedef struct {
   void *index;
 } _BED_FILE;
 
-
-#define REGIDX(f) ((_REG_IDX *) R_ExternalPtrAddr(f))
 #define BEDFILE(f) ((_BED_FILE *) R_ExternalPtrAddr(f))
 
-SEXP regidx_build(SEXP lst);
-SEXP regidx_close(SEXP ext);
-SEXP print_regidx(SEXP ext);
+regidx_t *regidx_build(SEXP lst);
 
 SEXP bedfile_open(SEXP);
 SEXP bedfile_close(SEXP);

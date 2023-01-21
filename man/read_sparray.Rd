@@ -4,7 +4,7 @@
 \alias{read_sparray}
 \title{Read tables produced by pileup_cells()}
 \usage{
-read_sparray(mtx_fn, sites_fn, bc_fn, ...)
+read_sparray(mtx_fn, sites_fn, bc_fn)
 }
 \arguments{
 \item{mtx_fn}{.mtx.gz file path}

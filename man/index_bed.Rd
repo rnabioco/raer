@@ -5,8 +5,6 @@
 \name{BedFile-class}
 \alias{BedFile-class}
 \alias{.BedFile}
-\alias{RegionIndex-class}
-\alias{.RegionIndex}
 \alias{indexBed}
 \alias{indexRegions}
 \alias{indexBed,character-method}
@@ -35,9 +33,6 @@ to the bed file index.
 \description{
 Class to store information about a bedfile used
 for indicating regions for pileup
-
-Class to store information about regions used
-for indicating regions for pileup
 }
 \section{Fields}{
 
@@ -45,12 +40,6 @@ for indicating regions for pileup
 \item{\code{.extptr}}{an externalptr to c-level samtools bedindex}
 
 \item{\code{path}}{filepath to bed file}
-
-\item{\code{open}}{logical indicating if the index is open}
-
-\item{\code{.extptr}}{an externalptr to c-level samtools regidx}
-
-\item{\code{gr}}{GRanges containing regions}
 
 \item{\code{open}}{logical indicating if the index is open}
 }}

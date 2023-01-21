@@ -14,20 +14,3 @@
     open = "logical"
   )
 )
-
-#' A reference class for generating and storing region index
-#'
-#' @description Class to store information about regions used
-#' for indicating regions for pileup
-#'
-#' @field .extptr an externalptr to c-level samtools regidx
-#' @field gr GRanges containing regions
-#' @field open logical indicating if the index is open
-#' @rdname index_bed
-.RegionIndex <- setRefClass("RegionIndex",
-                        fields = list(
-                          .extptr = "externalptr",
-                          gr = "GRanges",
-                          open = "logical"
-                        )
-)
