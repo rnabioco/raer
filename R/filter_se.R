@@ -21,7 +21,7 @@ remove_multiallelic <- function(se) {
     if (length(x) == 0 | length(x) >= 2) {
       return(NA)
     }
-    stringr::str_count(x, ",") == 0
+    !grepl(',', x)
   })
   se <- se[which(is_not_multiallelic), ]
   rowData(se)$Var <- apply(assay(se, "Var"), 1, function(x) unique(x[x != "-"]))
