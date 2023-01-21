@@ -22,19 +22,19 @@ knitr::opts_chunk$set(
 This is an analysis of RNA editing during a Chikungunya (CHIKV) infection of
 mouse lymph node tissue, described in:
 
-Carpentier KS, Sheridan RM, Lucas CJ, Davenport BJ, Li FS, Lucas ED,
-McCarthy MK, Reynoso GV, May NA, Tamburini BAJ, Hesselberth JR, Hickman
-HD, Morrison TE. MARCO+ lymphatic endothelial cells sequester
-arthritogenic alphaviruses to limit viremia and viral dissemination.
-EMBO J. 2021 Nov 15;40(22):e108966. doi: 10.15252/embj.2021108966. Epub
-2021 Oct 7. [PMID: 34618370; PMCID: PMC8591538](https://pubmed.ncbi.nlm.nih.gov/34618370/).
+Carpentier KS, Sheridan RM, Lucas CJ, Davenport BJ, Li FS, Lucas ED, McCarthy
+MK, Reynoso GV, May NA, Tamburini BAJ, Hesselberth JR, Hickman HD, Morrison TE.
+MARCO+ lymphatic endothelial cells sequester arthritogenic alphaviruses to limit
+viremia and viral dissemination. EMBO J. 2021 Nov 15;40(22):e108966. doi:
+10.15252/embj.2021108966. Epub 2021 Oct 7. [PMID: 34618370; PMCID:
+PMC8591538](https://pubmed.ncbi.nlm.nih.gov/34618370/).
 
-In this study, mice were infected with an attenuated strain of CHIKV and lymph nodes
-were harvested after 24 hours and analyzed by 10x Genomics 3'
-single-cell RNA sequencing, focusing on CD45- stromal cells.
+In this study, mice were infected with an attenuated strain of CHIKV and lymph
+nodes were harvested after 24 hours and analyzed by 10x Genomics 3' single-cell
+RNA sequencing, focusing on CD45- stromal cells.
 
-Data from triplicate infection and mock samples were analyzed by the
-CellRanger pipeline, and output BAM files serve as the input data below.
+Data from triplicate infection and mock samples were analyzed by the CellRanger
+pipeline, and output BAM files serve as the input data below.
 
 ### Samples
 
@@ -322,22 +322,20 @@ tidy_all <- tidy_all |>
   separate(var, into = c('ref', 'alt'), sep = 1) |>
   unite(var, ref:alt, sep = '>') |>
   # use intuitive treatment names
-  mutate(treat = case_when(
-    treat == 'A' ~ 'virus',
-    treat == 'M' ~ 'mock'
-  )) |>
-  separate(site, into = c('chrom', 'pos', 'strand'), sep = '_') |>
   mutate(
-    treat = as.factor(treat),
-    rep = as.factor(rep),
-    var = as.factor(var)
+    treat = case_when(
+      treat == 'A' ~ 'virus',
+      treat == 'M' ~ 'mock'
+    )
   ) |>
+  separate(site, into = c('chrom', 'pos', 'strand'), sep = '_') |>
+  mutate(across(c(treat, rep, var), as_factor)) |>
   janitor::clean_names()
 
 qs::qsave(tidy_all, file = fs::path(ext_path, '/rds/tidy_all.rds'), nthreads = 8)    
 ```
 
-### **Start here!!!!**
+### **YO Start here!!!!**
 
 ```{r load_rds}
 mm_rse_filt <- qs::qread(fs::path(ext_path, '/rds/mm_rse_filt.rds'), nthreads = 10)
@@ -345,15 +343,19 @@ chikv_rse_filt <- qs::qread(fs::path(ext_path, '/rds/chikv_rse_filt.rds'), nthre
 tidy_all <- qs::qread(fs::path(ext_path, '/rds/tidy_all.rds'), nthreads = 10)    
 ```
 
-### Variants discovered by the pileup
+### Variants identified by the pileup
 
 ```{r plot_counts}
 var_counts <-
   tidy_all |>
   group_by(treat, rep) |>
   dplyr::count(var) |>
+  arrange(var)
+
+ggplot(
   # add a name column that highlights `A>G` in bold, red text
   mutate(
+    var_counts,
     plt_name = case_when(
       var == 'A>G' ~ "<b style='color:red'>A>G</b>",
       .default = var
@@ -363,10 +365,7 @@ var_counts <-
       "<b style='color:red'>A>G</b>",
       after = 1
     )
-  )
-
-ggplot(
-  var_counts,
+  ),
   aes(x = plt_name, y = n / 1e5, fill = rep)
   ) +
   geom_col() +
@@ -403,7 +402,7 @@ The plot of counts above shows us a few things:
     1e4 `A>G` sites per replicate:
 
     ```{r}
-    filter(var_counts, var == 'A>G')
+    filter(var_counts, var == 'A>G') 
     ```
     
 *   There's a small signal for `T>C` (not sure what that is), and the
@@ -417,21 +416,22 @@ plot_tbl <-
     mutate(log_depth = log10(depth)) |>
     dplyr::select(-(chrom:strand), -depth, -starts_with('rep_')) |>
     pivot_longer(edit_freq:log_depth) |>
-    # add a name column that highlights `A>G` in bold, red text
-    mutate(
-      plt_name = case_when(
-        var == 'A>G' ~ "<b style='color:red'>A>G</b>",
-        .default = var
-      ),
-      plt_name = fct_relevel(
-        as_factor(plt_name),
-        "<b style='color:red'>A>G</b>",
-        after = 1
-      )
-    )
+    arrange(var)
   
 ggplot(
-  plot_tbl,
+  # add a name column that highlights `A>G` in bold, red text
+  mutate(
+    plot_tbl,
+    plt_name = case_when(
+      var == 'A>G' ~ "<b style='color:red'>A>G</b>",
+      .default = var
+    ),
+    plt_name = fct_relevel(
+      as_factor(plt_name),
+      "<b style='color:red'>A>G</b>",
+      after = 1
+    )
+  ),
   aes(x = plt_name, value, fill = rep)
   ) +
   geom_boxplot(outlier.shape = NA) +
@@ -480,6 +480,7 @@ filter(
     facet_grid(~ var) +
     theme_cowplot() + 
     scale_fill_manual(values = c('black', 'red')) +
+  theme(axis.text.y = element_text(size = 8)) +
   labs(
     x = '',
     y = 'n variants in repeats (log10)'
@@ -490,4 +491,11 @@ Doesn't appear to be a strong enrichment for a variant type among repeat classes
 
 ### Variants in genic regions
 
+```{r annotate_variants, eval=FALSE}
+rse_ranges <- rowRanges(mm_rse_filt)
+db_levels <- seqlevels(tx_db)
+rse_ranges <- rse_ranges[seqnames(rse_ranges) %in% db_levels]
+
+VariantAnnotation::locateVariants(rse_ranges, tx_db, AllVariants())
+```
 
