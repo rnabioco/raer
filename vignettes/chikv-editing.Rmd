@@ -36,7 +36,7 @@ RNA sequencing, focusing on CD45- stromal cells.
 Data from triplicate infection and mock samples were analyzed by the CellRanger
 pipeline, and output BAM files serve as the input data below.
 
-### Samples
+### Sample information
 
 * Todo: Create table of samples, 10x summary
 
@@ -79,16 +79,16 @@ with \~48 million sites.
 fp <- FilterParam(
   # min depth of 3 for each replicate
   min_nucleotide_depth = 3,
-  min_base_quality = 30,
-  min_mapq = rep(255, 6),
-  library_type = rep("fr-second-strand", 6),
-  trim_5p = 5,
-  trim_3p = 5,
-  indel_dist = 4,
-  homopolymer_len = 6,
-  max_mismatch_type = c(3, 3),
-  min_read_bqual = c(0.25, 20),
-  only_keep_variants = rep(TRUE, 6)
+  min_base_quality     = 30,
+  min_mapq             = rep(255, 6),
+  library_type         = rep("fr-second-strand", 6),
+  trim_5p              = 5,
+  trim_3p              = 5,
+  indel_dist           = 4,
+  homopolymer_len      = 6,
+  max_mismatch_type    = c(3, 3),
+  min_read_bqual       = c(0.25, 20),
+  only_keep_variants  = rep(TRUE, 6)
 )
 
 bpp <- SnowParam(workers = 24)
