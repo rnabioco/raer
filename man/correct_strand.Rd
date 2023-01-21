@@ -29,8 +29,8 @@ strands (+ and -) will be removed.
 \examples{
 suppressPackageStartupMessages(library("GenomicRanges"))
 
-bamfn <- raer_example("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam")
-fafn <- raer_example("extdata", "human.fasta")
+bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+fafn <- raer_example("human.fasta")
 fp <- FilterParam(library_type = "genomic-unstranded")
 plp <- get_pileup(bamfn, fafn, filterParam = fp)
 

@@ -85,13 +85,17 @@ annot_snps.SummarizedExperiment <- function(obj,
 #'
 #' @return Either a SummarizedExperiment or GRanges object with additional
 #' annotations provided by the supplied GRanges object.
+#'
 #' @examples
 #' example(create_se, echo = FALSE)
+#'
 #' library(SummarizedExperiment)
+#'
 #' gr <- GRanges(rep(c("SSR3", "SPCS3"), c(5, 15)),
 #'   IRanges(seq(1, 500, by = 25), width = 50),
 #'   strand = "+"
 #' )
+#'
 #' gr$feature <- sample(1:100, size = 20)
 #' gr$id <- sample(LETTERS, size = 20)
 #'
@@ -100,6 +104,7 @@ annot_snps.SummarizedExperiment <- function(obj,
 #'
 #' @importFrom S4Vectors aggregate unstrsplit
 #' @importFrom GenomeInfoDb seqlevelsStyle seqlevelsStyle<- seqlevels
+#'
 #' @export
 annot_from_gr <- function(obj, gr, cols_to_map, ...) {
   if (is(obj, "RangedSummarizedExperiment")) {

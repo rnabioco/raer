@@ -1,35 +1,36 @@
 #' Create RangedSummarizedExperiment
 #'
-#' This function will take either a single result from running get_pileup() or a list of
-#' results (ie for different samples) from running pileup_res and will return a summarized
-#' experiment object that contains assays for specified columns in the get_pileup() output.
+#' This function will take either a single result from running get_pileup() or a
+#' list of results (ie for different samples) from running pileup_res and will
+#' return a summarized experiment object that contains assays for specified
+#' columns in the `get_pileup()` output.
 #'
-#'
-#' @param plps results from running [get_pileup()], can be one result, a list
-#' of results, or a named list of results. If a named list is given, the colData
-#' will be named using the names in the list.
+#' @param plps results from running [get_pileup()], can be one result, a list of
+#'   results, or a named list of results. If a named list is given, the colData
+#'   will be named using the names in the list.
 #' @param assay_cols character vector of columns to store as assays
-#' @param sample_names A list of names to be added to the SE object.
-#' If no sample names are given and plps is not a named list, then
-#' default names (ie sample_1, sample_2, ..., sample_n) will be given and
-#' a warning will be printed.
+#' @param sample_names A list of names to be added to the SE object. If no
+#'   sample names are given and plps is not a named list, then default names (ie
+#'   sample_1, sample_2, ..., sample_n) will be given and a warning will be
+#'   printed.
 #' @param sparse If TRUE, numeric matrices will be stored as sparseMatrices. All
-#' missing values will be coerced to 0 in the sparseMatrices.
-#' @param fill_na Numeric value to replace NAs in numeric matrices Should only be
-#'  used when plps were computed independently with a min_nucleotide_count = 1,
-#'  otherwise sites may be set to 0, although they may have coverage > 0 but less
-#'  than the min_nucleotide_count parameter. Not applied when sparse = TRUE, which
-#'  coerces missing values to 0.
+#'   missing values will be coerced to 0 in the sparseMatrices.
+#' @param fill_na Numeric value to replace NAs in numeric matrices Should only
+#'   be used when plps were computed independently with a min_nucleotide_count =
+#'   1, otherwise sites may be set to 0, although they may have coverage > 0 but
+#'   less than the min_nucleotide_count parameter. Not applied when sparse =
+#'   TRUE, which coerces missing values to 0.
 #' @param verbose print information on progress
 #'
-#' @return
-#' `RangedSummarizedExperiment` object populated with assays for each of the listed
-#' `assay_cols`.
+#' @return `RangedSummarizedExperiment` object populated with assays for each of
+#' the listed `assay_cols`.
+#'
 #' @examples
 #' library(SummarizedExperiment)
-#' bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
-#' bam2fn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", package = "raer")
-#' fafn <- system.file("extdata", "human.fasta", package = "raer")
+#'
+#' bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+#' bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
+#' fafn <- raer_example("human.fasta")
 #'
 #' bams <- rep(c(bamfn, bam2fn), each = 3)
 #' sample_ids <- paste0(rep(c("KO", "WT"), each = 3), 1:3)
@@ -48,6 +49,7 @@
 #' @import SummarizedExperiment
 #' @importFrom IRanges extractList
 #' @importFrom Matrix sparseMatrix
+#'
 #' @export
 create_se <- function(plps,
                       assay_cols = c("Var", "nRef", "nVar", "nA", "nT", "nC", "nG"),
