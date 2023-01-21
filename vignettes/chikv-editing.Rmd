@@ -52,9 +52,8 @@ library(janitor)
 library(BiocParallel)
 library(SummarizedExperiment)
 library(plyranges)
-library(rtracklayer)
-library(GenomicFeatures)
 library(VariantAnnotation)
+library(TxDb.Mmusculus.UCSC.mm10.knownGene)
 ```
 
 ```{r setup_common_data}
@@ -66,8 +65,7 @@ fns = list(
   bais    = fs::path(ext_path, 'bam', str_c(samples, '.bam.bai')),
   fasta   = fs::path(ext_path, 'ref', 'mm10_CHIKV_AF15561.fa.gz'),
   rmsk_db = fs::path(ext_path, 'ref', 'rmsk.mm10.tsv.gz'),
-  snp_db  = fs::path(ext_path, 'ref', 'snp142.mm10.bed.gz'),
-  gtf     = fs::path(ext_path, 'ref', 'gencode.knownGene.mm10.gtf.gz')
+  snp_db  = fs::path(ext_path, 'ref', 'snp142.mm10.bed.gz')
 )
 ```
 
@@ -88,7 +86,7 @@ fp <- FilterParam(
   homopolymer_len      = 6,
   max_mismatch_type    = c(3, 3),
   min_read_bqual       = c(0.25, 20),
-  only_keep_variants  = rep(TRUE, 6)
+  only_keep_variants   = rep(TRUE, 6)
 )
 
 bpp <- SnowParam(workers = 24)
@@ -181,15 +179,13 @@ removes a large chunk of the data, so we only compute the next steps on
 mm_rse_filt <- filter_replicates(mm_rse, "nVar", thresh = 3)
 
 # Next, remove sites based on gene annotations
-tx_db <- GenomicFeatures::makeTxDbFromGRanges(
-  rtracklayer::import(fns$gtf)
-)
+txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
 
 # n = 325352 after this step
 mm_rse_filt <- remove_clustered_variants(
-  mm_rse_filt, tx_db, variant_dist = 100
+  mm_rse_filt, txdb, variant_dist = 100
   ) |>
-  remove_splice_variants(tx_db)
+  remove_splice_variants(txdb)
 
 # calculate `edit_freq` and `depth`
 mm_rse_filt <- calc_edit_frequency(mm_rse_filt)
@@ -492,10 +488,10 @@ Doesn't appear to be a strong enrichment for a variant type among repeat classes
 ### Variants in genic regions
 
 ```{r annotate_variants, eval=FALSE}
-rse_ranges <- rowRanges(mm_rse_filt)
-db_levels <- seqlevels(tx_db)
-rse_ranges <- rse_ranges[seqnames(rse_ranges) %in% db_levels]
-
-VariantAnnotation::locateVariants(rse_ranges, tx_db, AllVariants())
+# this won't run until set get the seqlevels to match
+intersect(seqlevels(txdb), seqlevels(rowRanges(mm_rse_filt)))
+setdiff(seqlevels(txdb), seqlevels(rowRanges(mm_rse_filt)))
+          
+VariantAnnotation::locateVariants(rowRanges(mm_rse_filt), txdb, AllVariants())
 ```
 
