@@ -13,7 +13,6 @@
 #'
 #' @rdname filter_se
 #'
-#' @importFrom stringr str_count
 #' @export
 remove_multiallelic <- function(se) {
   is_not_multiallelic <- apply(assay(se, "Var"), 1, function(x) {
