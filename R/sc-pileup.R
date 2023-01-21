@@ -192,11 +192,10 @@ get_sc_pileup <- function(bamfn, sites, barcodes,
 
   if(verbose) message("working on ", chrom)
   lst <- gr_to_regions(sites)
-  res <- .Call(".do_run_scpileup",
-               bamfn, #bamfile
-               chrom, #qregion
+  res <- .Call(".scpileup",
+               bamfn,
+               chrom,
                lst,
-               #idx$.extptr, #idx
                barcodes,
                cb_tag,
                event_filters,

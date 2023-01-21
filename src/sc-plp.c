@@ -344,7 +344,7 @@ static void set_event_filters(efilter* ef, int* event_filters){
   ef->min_var_reads = event_filters[8];
 }
 
-static int run_sc_pileup(sc_mplp_conf_t *conf) {
+static int run_scpileup(sc_mplp_conf_t *conf) {
 
   hts_set_log_level(HTS_LOG_ERROR);
 
@@ -717,11 +717,11 @@ static void check_sc_plp_args(SEXP bampaths, SEXP qregion, SEXP lst,
 
 
 
-SEXP do_run_scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
-                   SEXP barcodes, SEXP cbtag, SEXP event_filters, SEXP min_mapQ,
-                   SEXP max_depth, SEXP min_baseQ, SEXP read_bqual_filter,
-                   SEXP libtype, SEXP b_flags, SEXP outfns, SEXP umi,
-                   SEXP index_skip, SEXP pe, SEXP min_counts) {
+SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
+              SEXP barcodes, SEXP cbtag, SEXP event_filters, SEXP min_mapQ,
+              SEXP max_depth, SEXP min_baseQ, SEXP read_bqual_filter,
+              SEXP libtype, SEXP b_flags, SEXP outfns, SEXP umi,
+              SEXP index_skip, SEXP pe, SEXP min_counts) {
 
   check_sc_plp_args(bampaths, query_region, lst,
                     barcodes, cbtag, event_filters, min_mapQ, max_depth,
@@ -787,7 +787,7 @@ SEXP do_run_scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
   // write sites, if all sites requested, otherwise write during pileup
   if(ga.min_counts == 0) write_all_sites(&ga);
   res = 1;
-  res = run_sc_pileup(&ga);
+  res = run_scpileup(&ga);
 
   for(int i = 0; i < nout; ++i) {
     if(ga.fps[i]) fclose(ga.fps[i]);

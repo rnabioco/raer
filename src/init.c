@@ -19,8 +19,8 @@ extern SEXP _raer_list_tabix_chroms(SEXP);
 extern SEXP _raer_c_show_index(SEXP, SEXP);
 extern SEXP bedfile_open(SEXP);
 extern SEXP bedfile_close(SEXP);
-extern SEXP do_run_pileup(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
-extern SEXP do_run_scpileup(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP pileup(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP scpileup(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
 
 static const R_CallMethodDef CallEntries[] = {
@@ -34,8 +34,8 @@ static const R_CallMethodDef CallEntries[] = {
   {".bedfile_open", (DL_FUNC) &bedfile_open, 1},
   {".bedfile_close", (DL_FUNC) &bedfile_close, 1},
   {".isnull", (DL_FUNC) &isnull, 1},
-  {".do_run_pileup",(DL_FUNC) &do_run_pileup, 21},
-  {".do_run_scpileup",(DL_FUNC) &do_run_scpileup, 17},
+  {".pileup",(DL_FUNC) &pileup, 21},
+  {".scpileup",(DL_FUNC) &scpileup, 17},
   {NULL, NULL, 0}
 };
 

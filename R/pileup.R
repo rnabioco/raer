@@ -262,7 +262,7 @@ get_pileup <- function(bamfiles,
     if (is.null(bedfile)) bedfile <- character()
 
     res <- .Call(
-      ".do_run_pileup",
+      ".pileup",
       bamfiles,
       as.integer(n_files),
       fafile,
@@ -311,7 +311,7 @@ get_pileup <- function(bamfiles,
         if (is.null(ctig)) ctig <- character()
         if (is.null(bedfile)) bedfile <- character()
         res <- .Call(
-          ".do_run_pileup",
+          ".pileup",
           bamfiles,
           as.integer(n_files),
           fafile,

@@ -857,7 +857,7 @@ static int check_umi(const bam_pileup1_t *p, mplp_conf_t *conf,
   return(1);
 }
 
-SEXP run_cpileup(char** cbampaths,
+SEXP run_pileup(char** cbampaths,
                 int n,
                 char* cfapath,
                 char* cregion,
@@ -1396,27 +1396,27 @@ static void check_plp_args(SEXP bampaths,
   }
 }
 
-SEXP do_run_pileup(SEXP bampaths,
-              SEXP n,
-              SEXP fapath,
-              SEXP region,
-              SEXP bedfn,
-              SEXP min_reads,
-              SEXP event_filters,
-              SEXP min_mapQ,
-              SEXP max_depth,
-              SEXP min_baseQ,
-              SEXP read_bqual_filter,
-              SEXP libtype,
-              SEXP b_flags,
-              SEXP only_keep_variants,
-              SEXP in_mem,
-              SEXP multi_region_itr,
-              SEXP outfns,
-              SEXP reads_fn,
-              SEXP mismatches_fn,
-              SEXP ext,
-              SEXP umi) {
+SEXP pileup(SEXP bampaths,
+            SEXP n,
+            SEXP fapath,
+            SEXP region,
+            SEXP bedfn,
+            SEXP min_reads,
+            SEXP event_filters,
+            SEXP min_mapQ,
+            SEXP max_depth,
+            SEXP min_baseQ,
+            SEXP read_bqual_filter,
+            SEXP libtype,
+            SEXP b_flags,
+            SEXP only_keep_variants,
+            SEXP in_mem,
+            SEXP multi_region_itr,
+            SEXP outfns,
+            SEXP reads_fn,
+            SEXP mismatches_fn,
+            SEXP ext,
+            SEXP umi) {
 
   check_plp_args(bampaths,
                  n,
@@ -1473,7 +1473,7 @@ SEXP do_run_pileup(SEXP bampaths,
   }
 
   SEXP res;
-  res = run_cpileup(cbampaths,
+  res = run_pileup(cbampaths,
                     INTEGER(n)[0],
                     (char *) translateChar(STRING_ELT(fapath, 0)), // already checked for length 1 and required arg
                     cregion,
