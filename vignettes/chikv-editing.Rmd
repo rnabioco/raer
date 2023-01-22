@@ -66,9 +66,25 @@ fns = list(
   fasta   = fs::path(ext_path, 'ref', 'mm10_CHIKV_AF15561.fa.gz'),
   rmsk_db = fs::path(ext_path, 'ref', 'rmsk.mm10.tsv.gz'),
   snp_db  = fs::path(ext_path, 'ref', 'snp142.mm10.bed.gz'),
-  redi_db = fs::path(ext_path, "ref", 'rediportal.mm10.txt.gz')
+  redi_db = fs::path(ext_path, "ref", 'rediportal.mm10.cleaned.tsv.gz')
 )
 ```
+
+### External data sources
+
+* `mm10_CHIKV_AF15561.fa.gz` is a combined FASTA of mouse mm10 (XXX: source?) and the
+  CHIKV genome. It's the reference that was used during the upstream CellRanger step.
+
+* `rmsk.mm10.tsv.gz` is the RepeatMasker table downloaded from UCSC.
+
+* `snp142.mm10.bed.gz` is a SNP table downloaded from UCSC.
+
+* `rediportal.small.mm10.tsv.gz` are sites from the [REDIportal database](http://srv00.recas.ba.infn.it/atlas/index.html). The full
+  table is poorly formatted, having 25 column headers and 22 data columns, so
+  these data are the first 22 columns, and anything after the first ~10 may
+  not be useful.
+  
+## Pileup
 
 This is the main raer pileup routine. On this data set, this step takes about 4
 hours (parallelized) and generates a large `RangedSummarizedExperiment` (`rse`)
@@ -191,9 +207,9 @@ mm_rse_filt <- remove_clustered_variants(
 # calculate `edit_freq` and `depth`
 mm_rse_filt <- calc_edit_frequency(mm_rse_filt)
 
-# filter on site depth >= 3 for all samples within replicates 
-# n = 325352, so no effect, maybe increase threhold
-mm_rse_filt <- filter_replicates(mm_rse_filt, "depth", thresh = 3)
+# filter on site depth >= 3 for all samples within replicates (nVar + nRef)
+# n = XXX 
+mm_rse_filt <- filter_replicates(mm_rse_filt, "depth", thresh = 6)
 
 # filter for edit_freq >= 0.05 for at least 3 samples
 # n = 266645
@@ -229,17 +245,6 @@ repeat databases.
 
 ```{r annotate_rse, eval = FALSE}
 # load external annotations
-redi_db <- read_tsv(
-  fns$redi_db,
-  col_names = TRUE
-) |>
-  janitor::clean_names() |>
-  rename(
-    seqnames = region,
-    start = position,
-    end = start + 1
-  ) |>
-  select(-position)
 
 rmsk_db <-  read_tsv(
   fns$rmsk_db,
@@ -511,4 +516,81 @@ setdiff(seqlevels(txdb), seqlevels(rowRanges(mm_rse_filt)))
           
 VariantAnnotation::locateVariants(rowRanges(mm_rse_filt), txdb, AllVariants())
 ```
+### Cross-referencing with REDIportal
+
+```{r rediportal_xref, message==FALSE}
+redi_db <- read_tsv(
+  fns$redi_db,
+  col_names = TRUE
+) |>
+  janitor::clean_names() |>
+  setNames(
+    names(xx) |>
+    str_replace('_wg_encode_gencode_basic_vm16', '_gencode') |>
+    str_replace('_ref_gene', '_refgene') |>
+    str_replace('repeat', 'repeat_class')
+  ) |>
+  dplyr::rename(
+    seqnames = region,
+    start = position
+  ) |>
+  mutate(
+    end = start + 1
+  ) |>
+  relocate(end, .after = 2) |>
+  relocate(strand, .after = 3) |>
+  # we'll only keep gencode annotations, through `exonic_func`
+  dplyr::select(seqnames:exonic_func_gencode) |>
+  rename_with(~ str_c('redi_', .x), .cols = ref:exonic_func_gencode) |>
+  plyranges::as_granges()
+
+mm_rse_filt_redi <- annot_from_gr(
+  mm_rse_filt,
+  redi_db,
+  cols_to_map = c(
+    'redi_ref',
+    'redi_ed',
+    'redi_func_gencode',
+    'redi_gene_gencode'
+  )
+)
+
+redi_plot_tbl <- 
+  rowData(mm_rse_filt_redi) |>
+    as.data.frame() |>
+    rownames_to_column('site') |>
+    as_tibble() |>
+    pivot_longer(-c(site, Ref, Var)) |>
+    filter(!is.na(value)) |>
+    # group_by(Ref, Var, name) |>
+    group_by(name) |>
+    dplyr::count(value, sort = TRUE) |>
+    filter(str_detect(name, '^redi_'))
+
+redi_plot_tbl |>
+  filter(
+    name == 'redi_func_gencode',
+    str_detect(value, ',', negate = TRUE)
+  ) |>
+  ggplot(aes(fct_reorder(value, -n), n)) +
+  geom_col() +
+  theme_cowplot() +
+  labs(
+    x = '',
+    y = 'count',
+    title = 'Sites in mm10 cross-referenced with REDIportal annotations'
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+```
+
+## TODO
+
+- [ ] Remove contigs and `_random` chromosomes from all objects early on,
+  and relevel the GRanges objects.
+  
+  This will likely eliminate warnings from `annot_from_gr()` like `Each of the 2
+  combined objects has sequence levels not in the other`, and may also enable
+  `VariantAnnotation::locateVariants()` to work correctly.
 
