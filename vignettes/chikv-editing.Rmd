@@ -93,13 +93,12 @@ with \~48 million sites.
 
 ```{r run_pileup, eval=FALSE}
 fp <- FilterParam(
-  # min depth of 3 for each replicate
   min_nucleotide_depth = 3,
   min_base_quality     = 30,
   min_mapq             = rep(255, 6),
   library_type         = rep("fr-second-strand", 6),
   trim_5p              = 5,
-  trim_3p              = 5,
+  trim_3p              = 30,
   indel_dist           = 4,
   homopolymer_len      = 6,
   max_mismatch_type    = c(3, 3),
@@ -107,7 +106,7 @@ fp <- FilterParam(
   only_keep_variants   = rep(TRUE, 6)
 )
 
-bpp <- SnowParam(workers = 24)
+bpp <- SnowParam(workers = 8)
 plps <- get_pileup(
   fns$bams,
   fafile = fns$fasta,
