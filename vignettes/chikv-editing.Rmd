@@ -46,6 +46,7 @@ library(tidyverse)
 library(ggtext)
 library(cowplot)
 library(fs)
+library(glue)
 library(qs)
 library(janitor)
 
@@ -518,7 +519,7 @@ VariantAnnotation::locateVariants(rowRanges(mm_rse_filt), txdb, AllVariants())
 ```
 ### Cross-referencing with REDIportal
 
-```{r rediportal_xref, message==FALSE}
+```{r rediportal_xref, message=FALSE}
 redi_db <- read_tsv(
   fns$redi_db,
   col_names = TRUE
@@ -555,37 +556,85 @@ mm_rse_filt_redi <- annot_from_gr(
   )
 )
 
-redi_plot_tbl <- 
+# tidy code for analysis
+tidy_redi_tbl <- 
   rowData(mm_rse_filt_redi) |>
     as.data.frame() |>
     rownames_to_column('site') |>
     as_tibble() |>
-    pivot_longer(-c(site, Ref, Var)) |>
-    filter(!is.na(value)) |>
-    # group_by(Ref, Var, name) |>
-    group_by(name) |>
-    dplyr::count(value, sort = TRUE) |>
-    filter(str_detect(name, '^redi_'))
+    janitor::clean_names() |>
+    pivot_longer(-c(site, ref, var)) |>
+    filter(!is.na(value)) |> 
+    separate(site, into = c('chrom', 'pos', 'strand'), sep = '_') |>
+    dplyr::select(-ref, -strand) |>
+    separate(var, into = c('ref','ed'), sep = 1) |>
+    unite(var, ref:ed, sep = '>') |>
+    pivot_wider() |>
+    filter(!is.na(redi_ref)) |>
+    dplyr::select(-redi_ref, -redi_ed) |>
+    rowwise() |>
+    mutate(
+      redi_func_gencode = str_split_1(redi_func_gencode, ',')[[1]],
+      redi_gene_gencode = str_split_1(redi_gene_gencode, ',')[[1]]
+    ) |>
+    ungroup() |>
+    mutate(
+      rep_family_collapse = case_when(
+        rep_family == 'Alu' ~ 'Alu',
+        rep_family == 'L1' ~ 'L1',
+        str_detect(rep_family, '^B') ~ 'B family (B2, B4)',
+        str_detect(rep_family, '^ERV') ~ 'ERV family',
+        is.na(rep_family) ~ 'None',
+        .default = 'Other repeat'
+      )
+    )
+```
 
-redi_plot_tbl |>
-  filter(
-    name == 'redi_func_gencode',
-    str_detect(value, ',', negate = TRUE)
-  ) |>
-  ggplot(aes(fct_reorder(value, -n), n)) +
+```{r redi_plots}
+total_sites <- nrow(tidy_redi_tbl)
+n_rep_family <- length(unique(tidy_redi_tbl$rep_family_collapse))
+
+# functional annotations
+func_counts <- tidy_redi_tbl |>
+  dplyr::count(redi_func_gencode) |>
+  dplyr::rename(func_n = n)
+
+tidy_redi_tbl |>
+  dplyr::count(
+    redi_func_gencode,
+    rep_family_collapse,
+    sort = TRUE) |>
+  left_join(func_counts) |>
+  ggplot(
+    aes(
+      x = fct_reorder(redi_func_gencode, -func_n),
+      y = n,
+      fill = fct_relevel(rep_family_collapse, 'None', after = Inf)
+    )
+  ) +
   geom_col() +
   theme_cowplot() +
   labs(
     x = '',
     y = 'count',
-    title = 'Sites in mm10 cross-referenced with REDIportal annotations'
+    title = 'REDIportal annotation of mouse A>G sites',
+    subtitle = glue('n = {scales::comma(total_sites)} total sites'),
+    fill = 'Repeat class'
   ) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  scale_fill_manual(
+    values = c(
+      scales::brewer_pal(palette = "Dark2")(n_rep_family - 1),
+      'grey40'
+    )
   )
 ```
 
 ## TODO
+
+- Examine edit_freq within REDIportal xref data.
 
 - [ ] Remove contigs and `_random` chromosomes from all objects early on,
   and relevel the GRanges objects.
