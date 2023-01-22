@@ -40,6 +40,7 @@ genes <- GRanges(c(
   "SSR3:3-10:-",
   "SSR3:6-12:+"
 ))
+
 correct_strand(plp, genes)
 
 }

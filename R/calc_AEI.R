@@ -12,7 +12,6 @@
 #' quantification of ADAR adenosine-to-inosine RNA editing activity. Nat Methods
 #' 16, 1131–1138 (2019). https://doi.org/10.1038/s41592-019-0610-9
 #'
-#'
 #' @param bam_fn bam file
 #' @param fasta_fn fasta
 #' @param alu_ranges GRanges or the name of a BEDfile with regions to query for
@@ -53,6 +52,7 @@
 #' @importFrom IRanges subsetByOverlaps
 #' @import S4Vectors
 #' @import GenomicRanges
+#'
 #' @export
 calc_AEI <- function(bam_fn,
                      fasta_fn,
@@ -342,6 +342,7 @@ get_overlapping_snps <- function(gr,
 #'   "SSR3:3-10:-",
 #'   "SSR3:6-12:+"
 #' ))
+#'
 #' correct_strand(plp, genes)
 #'
 #' @importFrom stringr str_count
