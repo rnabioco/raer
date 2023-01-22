@@ -369,7 +369,10 @@ var_counts <-
   tidy_all |>
   group_by(treat, rep) |>
   dplyr::count(var) |>
-  arrange(var)
+  arrange(var) |>
+  mutate(
+    treat = fct_relevel(treat, c('mock', 'virus'))
+  )
 
 ggplot(
   # add a name column that highlights `A>G` in bold, red text
@@ -388,7 +391,7 @@ ggplot(
   aes(x = plt_name, y = n / 1e5, fill = rep)
   ) +
   geom_col() +
-  facet_grid(~treat) +
+  facet_grid(~ treat) +
   scale_fill_brewer(palette = 'Greys') +
   labs(
     x = '',
