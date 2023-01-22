@@ -527,9 +527,9 @@ redi_db <- read_tsv(
   janitor::clean_names() |>
   setNames(
     names(xx) |>
-    str_replace('_wg_encode_gencode_basic_vm16', '_gencode') |>
-    str_replace('_ref_gene', '_refgene') |>
-    str_replace('repeat', 'repeat_class')
+      str_replace('_wg_encode_gencode_basic_vm16', '_gencode') |>
+      str_replace('_ref_gene', '_refgene') |>
+      str_replace('repeat', 'repeat_class')
   ) |>
   dplyr::rename(
     seqnames = region,
@@ -582,9 +582,10 @@ tidy_redi_tbl <-
       rep_family_collapse = case_when(
         rep_family == 'Alu' ~ 'Alu',
         rep_family == 'L1' ~ 'L1',
-        str_detect(rep_family, '^B') ~ 'B family (B2, B4)',
+        rep_family == 'B2' ~ 'B2',
+        rep_family == 'B4' ~ 'B4',
         str_detect(rep_family, '^ERV') ~ 'ERV family',
-        is.na(rep_family) ~ 'None',
+        is.na(rep_family) ~ 'Not in repeat',
         .default = 'Other repeat'
       )
     )
@@ -609,7 +610,7 @@ tidy_redi_tbl |>
     aes(
       x = fct_reorder(redi_func_gencode, -func_n),
       y = n,
-      fill = fct_relevel(rep_family_collapse, 'None', after = Inf)
+      fill = fct_relevel(rep_family_collapse, 'Not in repeat', after = Inf)
     )
   ) +
   geom_col() +
