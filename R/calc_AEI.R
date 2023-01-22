@@ -40,10 +40,8 @@
 #'
 #' @examples
 #' suppressPackageStartupMessages(library(Rsamtools))
-#'
 #' bamfn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
 #' fafn <- raer_example("human.fasta")
-#'
 #' dummy_alu_ranges <- scanFaIndex(fafn)
 #' calc_AEI(bamfn, fafn, dummy_alu_ranges)
 #'
@@ -263,20 +261,17 @@ calc_AEI <- function(bam_fn,
 
 #' Retrieve SNPs overlapping intervals
 #'
-#' @description This function will find SNPs overlapping
-#' supplied intervals using a SNPlocs package. The SNPs
-#' can be returned in memory (as GPos objects) or written
-#' to disk as a bed-file (optionally compressed).
+#' @description This function will find SNPs overlapping supplied intervals
+#'   using a SNPlocs package. The SNPs can be returned in memory (as GPos
+#'   objects) or written to disk as a bed-file (optionally compressed).
 #'
 #' @param gr Intervals to query
 #' @param snpDb A reference ot a SNPlocs database
-#' @param output_file A path to an output file. If supplied
-#' the file can be optionally compressed by including a ".gz"
-#' suffix. If not supplied, SNPS will be returned as a [GenomicRanges::GPos]
-#' object
+#' @param output_file A path to an output file. If supplied the file can be
+#'   optionally compressed by including a ".gz" suffix. If not supplied, SNPS
+#'   will be returned as a [GenomicRanges::GPos] object
 #'
-#' @return
-#' GPos object containing SNPs overlapping supplied genomic intervals
+#' @return GPos object containing SNPs overlapping supplied genomic intervals
 #' @examples
 #' if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
 #'   gr <- GRanges(rep("22", 10),
@@ -287,6 +282,7 @@ calc_AEI <- function(bam_fn,
 #' }
 #' @importFrom rtracklayer export
 #' @importFrom BSgenome snpsByOverlaps
+#'
 #' @export
 get_overlapping_snps <- function(gr,
                                  snpDb,
@@ -316,30 +312,27 @@ get_overlapping_snps <- function(gr,
 
 #' Apply strand correction using gene annotations
 #'
-#' @description Gene annotations are used to infer the
-#' likely strand of editing sites. This function will operate
-#' on unstranded datasets which have been processed using "genomic-unstranded"
-#' library type which reports variants with respect to the
-#' + strand for all sites. The strand of the editing site will be
-#' assigned the strand of overlapping features in the `genes_gr`
-#' object. Sites with no-overlap, or overlapping features
-#' with conflicting strands (+ and -) will be removed.
+#' @description Gene annotations are used to infer the likely strand of editing
+#'   sites. This function will operate on unstranded datasets which have been
+#'   processed using "genomic-unstranded" library type which reports variants
+#'   with respect to the + strand for all sites. The strand of the editing site
+#'   will be assigned the strand of overlapping features in the `genes_gr`
+#'   object. Sites with no-overlap, or overlapping features with conflicting
+#'   strands (+ and -) will be removed.
 #'
 #' @param gr GRanges object containing editing sites processed with
-#' "genomic-unstranded" setting
-#' @param genes_gr GRanges object containing reference features to
-#' annotate the strand of the editing sites.
+#'   "genomic-unstranded" setting
+#' @param genes_gr GRanges object containing reference features to annotate the
+#'   strand of the editing sites.
 #'
-#' @return
-#' GenomicRanges onbject containing pileup counts, with strand corrected based
-#' on supplied genomic intervals.
+#' @return GenomicRanges onbject containing pileup counts, with strand corrected
+#' based on supplied genomic intervals.
 #'
 #' @examples
 #' suppressPackageStartupMessages(library("GenomicRanges"))
 #'
 #' bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 #' fafn <- raer_example("human.fasta")
-#'
 #' fp <- FilterParam(library_type = "genomic-unstranded")
 #' plp <- get_pileup(bamfn, fafn, filterParam = fp)
 #'
@@ -353,6 +346,7 @@ get_overlapping_snps <- function(gr,
 #' correct_strand(plp, genes)
 #'
 #' @importFrom stringr str_count
+#'
 #' @export
 correct_strand <- function(gr, genes_gr) {
   if (length(gr) == 0) {

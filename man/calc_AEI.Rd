@@ -61,10 +61,8 @@ summary AEI metric.
 }
 \examples{
 suppressPackageStartupMessages(library(Rsamtools))
-
 bamfn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")
-
 dummy_alu_ranges <- scanFaIndex(fafn)
 calc_AEI(bamfn, fafn, dummy_alu_ranges)
 
