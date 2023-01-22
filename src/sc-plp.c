@@ -761,16 +761,8 @@ SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
   sc_mplp_conf_t ga;
   memset(&ga, 0, sizeof(sc_mplp_conf_t));
 
-  regidx_t *idx = regidx_build(lst);
-  if (!idx){
-    Rf_error("Failed to build region index");
-  }
-  //
-  // if(!R_ExternalPtrAddr(region_idx)) Rf_error("Failed to load region index");
-  // _REG_IDX *ridx = REGIDX(region_idx) ;
-  // if (ridx == NULL || ridx->index == NULL){
-  //   Rf_error("Failed to load region index");
-  // }
+  regidx_t *idx = regidx_build(lst, 1);
+  if (!idx) Rf_error("Failed to build region index");
 
   int ret, res;
 

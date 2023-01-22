@@ -25,7 +25,7 @@
 #' @param cell_barcodes A character vector of single cell barcodes to process.
 #' @param bam_flags bam flags to filter or keep, use [Rsamtools::scanBamFlag()]
 #'  to generate
-#' @param filterParam object of class [FilterParam()] which specify various
+#' @param fp object of class [FilterParam()] which specify various
 #' filters to apply to reads and sites during pileup. Note that the `min_variant_reads`
 #' parameter, if set > 0, specifies the number of variant reads at a site required in
 #' order to report a site. E.g. if set to 2, then at least 2 reads (from any cell) must
@@ -43,6 +43,26 @@
 #'
 #' @returns Returns either a SingleCellExperiment, or character vector of paths
 #' to the files produced.
+#'
+#' @examples
+#' library(Rsamtools)
+#' library(GenomicRanges)
+#' bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
+#'
+#' gr <- GRanges(c("2:579:-", "2:625:-", "2:645:-","2:589:-", "2:601:-"))
+#' gr$ref <- c(rep("A", 4), "T")
+#' gr$alt <- c(rep("G", 4), "C")
+#'
+#' cbs <- unique(scanBam(bam_fn, param = ScanBamParam(tag = "CB"))[[1]]$tag$CB)
+#' cbs <- na.omit(cbs)
+#'
+#' outdir <- tempdir()
+#' bai <- indexBam(bam_fn)
+#' on.exit(unlink(outdir, bai))
+#'
+#' fp <- FilterParam(library_type = "fr-second-strand")
+#' sce <- pileup_cells(bam_fn, gr, cbs, outdir, fp = fp)
+#' sce
 #' @importFrom GenomeInfoDb  seqinfo seqlengths
 #' @importFrom Rsamtools ScanBamParam scanBamFlag
 #' @export
@@ -63,6 +83,8 @@ pileup_cells <- function(bamfile,
     stop("bamfile(s) not found: ", bamfile[!file.exists(bamfile)], call. = FALSE)
   }
   bamfile <- path.expand(bamfile)
+  seq_info <- GenomeInfoDb::seqinfo(Rsamtools::BamFile(bamfile))
+
   if (!dir.exists(output_directory)) {
     dir.create(output_directory, recursive = TRUE)
   }
@@ -173,6 +195,7 @@ pileup_cells <- function(bamfile,
   if(return_sce){
     res <- SingleCellExperiment::SingleCellExperiment(sp_assays)
     res$id <- colnames(res)
+    rowRanges(res) <- id_to_gr(rownames(res), seq_info)
   } else {
     res <- outfns
   }
@@ -242,6 +265,18 @@ gr_to_regions <- function(gr){
 
 }
 
+id_to_gr <- function(x, seq_info){
+  xx <- str_split(x, "_", simplify = TRUE)
+  gr <- GRanges(xx[, 1],
+                IRanges(start = as.integer(xx[, 2]),
+                        width = 1L),
+                strand = c("+", "-")[as.integer(xx[, 3])],
+                ref = xx[, 4],
+                alt = xx[, 5],
+                seqinfo = seq_info)
+  names(gr) <- x
+  gr
+}
 #' Read tables produced by pileup_cells()
 #'
 #' @description This function willl read in tables produced by pileup_cells().

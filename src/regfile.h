@@ -16,7 +16,7 @@ typedef struct {
 
 #define BEDFILE(f) ((_BED_FILE *) R_ExternalPtrAddr(f))
 
-regidx_t *regidx_build(SEXP lst);
+regidx_t *regidx_build(SEXP lst, int tbl);
 
 SEXP bedfile_open(SEXP);
 SEXP bedfile_close(SEXP);

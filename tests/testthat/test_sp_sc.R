@@ -46,3 +46,14 @@ test_that("basic functionality works", {
                             1:10, outdir, fp = fp))
 })
 
+test_that("ranges are correct", {
+  fp <- FilterParam(library_type = "fr-second-strand")
+  sce <- pileup_cells(bam_fn, gr, cbs, outdir, fp = fp)
+  expect_true(all(gr == rowRanges(sce)))
+
+  # should drop 1 site with 0 reads
+  fp <- FilterParam(library_type = "fr-second-strand",
+                    min_variant_reads = 1)
+  sce <- pileup_cells(bam_fn, gr, cbs, outdir, fp = fp)
+  expect_equal(nrow(sce), 4)
+})

@@ -52,7 +52,7 @@
 #' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges
 #' @importFrom GenomeInfoDb seqlevels seqinfo seqlengths
-#' @importFrom BiocParallel SerialParam bpstop bplapply ipcid ipclock ipcunlock
+#' @importFrom BiocParallel SerialParam bpstop bplapply
 #' @rdname get_pileup
 #' @export
 get_pileup <- function(bamfiles,

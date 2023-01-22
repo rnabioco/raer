@@ -40,6 +40,13 @@ only sites present in the listed chromosomes will be processed}
 
 \item{cb_tag}{tag in bam containing the cell barcode sequence}
 
+\item{fp}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
+filters to apply to reads and sites during pileup. Note that the \code{min_variant_reads}
+parameter, if set > 0, specifies the number of variant reads at a site required in
+order to report a site. E.g. if set to 2, then at least 2 reads (from any cell) must
+have a variant in order to report the site. The default of 0 reports all sites present
+in the \code{sites} object.}
+
 \item{BPPARAM}{BiocParallel instance. Parallel computation occurs across
 chromosomes.}
 
@@ -48,13 +55,6 @@ if \code{FALSE} a character vector of the output files, specified by \code{outfi
 will be returned.}
 
 \item{verbose}{Display messages}
-
-\item{filterParam}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
-filters to apply to reads and sites during pileup. Note that the \code{min_variant_reads}
-parameter, if set > 0, specifies the number of variant reads at a site required in
-order to report a site. E.g. if set to 2, then at least 2 reads (from any cell) must
-have a variant in order to report the site. The default of 0 reports all sites present
-in the \code{sites} object.}
 }
 \value{
 Returns either a SingleCellExperiment, or character vector of paths
@@ -74,4 +74,24 @@ examples for an example format.
 At each site, bases from overlapped reads will be examined, and counts of each ref
 and alt base enumerated for each cell barcode present. A single base will be
 counted once for each UMI sequence present in each cell.
+}
+\examples{
+library(Rsamtools)
+library(GenomicRanges)
+bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
+
+gr <- GRanges(c("2:579:-", "2:625:-", "2:645:-","2:589:-", "2:601:-"))
+gr$ref <- c(rep("A", 4), "T")
+gr$alt <- c(rep("G", 4), "C")
+
+cbs <- unique(scanBam(bam_fn, param = ScanBamParam(tag = "CB"))[[1]]$tag$CB)
+cbs <- na.omit(cbs)
+
+outdir <- tempdir()
+bai <- indexBam(bam_fn)
+on.exit(unlink(outdir, bai))
+
+fp <- FilterParam(library_type = "fr-second-strand")
+sce <- pileup_cells(bam_fn, gr, cbs, outdir, fp = fp)
+sce
 }

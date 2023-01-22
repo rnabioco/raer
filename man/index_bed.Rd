@@ -6,14 +6,11 @@
 \alias{BedFile-class}
 \alias{.BedFile}
 \alias{indexBed}
-\alias{indexRegions}
 \alias{indexBed,character-method}
 \alias{close.BedFile}
 \title{A reference class for generating and storing index of BedFile}
 \usage{
 indexBed(file, ...)
-
-indexRegions(gr, ...)
 
 \S4method{indexBed}{character}(file)
 
