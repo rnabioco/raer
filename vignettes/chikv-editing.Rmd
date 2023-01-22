@@ -65,7 +65,8 @@ fns = list(
   bais    = fs::path(ext_path, 'bam', str_c(samples, '.bam.bai')),
   fasta   = fs::path(ext_path, 'ref', 'mm10_CHIKV_AF15561.fa.gz'),
   rmsk_db = fs::path(ext_path, 'ref', 'rmsk.mm10.tsv.gz'),
-  snp_db  = fs::path(ext_path, 'ref', 'snp142.mm10.bed.gz')
+  snp_db  = fs::path(ext_path, 'ref', 'snp142.mm10.bed.gz'),
+  redi_db = fs::path(ext_path, "ref", 'rediportal.mm10.txt.gz')
 )
 ```
 
@@ -228,6 +229,18 @@ repeat databases.
 
 ```{r annotate_rse, eval = FALSE}
 # load external annotations
+redi_db <- read_tsv(
+  fns$redi_db,
+  col_names = TRUE
+) |>
+  janitor::clean_names() |>
+  rename(
+    seqnames = region,
+    start = position,
+    end = start + 1
+  ) |>
+  select(-position)
+
 rmsk_db <-  read_tsv(
   fns$rmsk_db,
   col_names = c('seqnames', 'start', 'end', 'strand', 'repName', 'repClass', 'repFamily')
