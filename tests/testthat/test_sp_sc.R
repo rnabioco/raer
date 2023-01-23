@@ -1,5 +1,6 @@
 library(GenomicRanges)
 library(Rsamtools)
+library(SingleCellExperiment)
 
 bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
 
@@ -17,9 +18,6 @@ cbs <- na.omit(cbs)
 
 outdir <- tempdir()
 on.exit(unlink(outdir))
-
-bai <- Rsamtools::indexBam(bam_fn)
-on.exit(unlink(bai))
 
 test_that("basic functionality works", {
   fp <- FilterParam(library_type = "fr-second-strand")
@@ -57,3 +55,4 @@ test_that("ranges are correct", {
   sce <- pileup_cells(bam_fn, gr, cbs, outdir, fp = fp)
   expect_equal(nrow(sce), 4)
 })
+

@@ -128,7 +128,7 @@ typedef struct {
   int idx_skip;
   int pe; // 1 if paired end, 0 if not
   int min_counts; // if 0 report all sites in sparseMatrix
-  int site_idx; // counter of sites writen, used for row index if report_all is FALSE
+  int site_idx; // counter of sites written, used for row index if report_all is FALSE
 } sc_mplp_conf_t;
 
 typedef struct {
@@ -209,16 +209,18 @@ static int count_record(bam1_t *b, sc_mplp_conf_t *conf, payload_t *pld,
   if(cret == 1) kh_value(conf->cbmap, k) = init_umihash();
   cbdat = kh_value(conf->cbmap, k);
 
-  umi = get_aux_ztag(b, conf->umi_tag);
-  if(umi == NULL) return(0);
-  umi_val = strdup(umi);
-  kh_put(str, cbdat->umi, umi_val, &uret);
-  if (uret == 0) {
-    free(umi_val);
-    return(1);
-  } else if (uret < 0) {
-    free(umi_val);
-    return(-1);
+  if(conf->has_umi){
+    umi = get_aux_ztag(b, conf->umi_tag);
+    if(umi == NULL) return(0);
+    umi_val = strdup(umi);
+    kh_put(str, cbdat->umi, umi_val, &uret);
+    if (uret == 0) {
+      free(umi_val);
+      return(1);
+    } else if (uret < 0) {
+      free(umi_val);
+      return(-1);
+    }
   }
 
   if(pld->strand != strand) return(1);

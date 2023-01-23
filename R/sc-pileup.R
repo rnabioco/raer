@@ -103,8 +103,12 @@ pileup_cells <- function(bamfile,
   }
 
   cell_barcodes <- cell_barcodes[!is.na(cell_barcodes)]
-  check_tag(umi_tag)
   check_tag(cb_tag)
+  if(is.null(umi_tag)){
+    umi_tag = character()
+  } else {
+    check_tag(umi_tag)
+  }
 
   contigs <- GenomeInfoDb::seqinfo(Rsamtools::BamFile(bamfile[1]))
   contig_info <- GenomeInfoDb::seqlengths(contigs)
