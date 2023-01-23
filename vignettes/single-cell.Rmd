@@ -36,21 +36,17 @@ For this example analysis we will use a single cell dataset containing human PBM
 
 ## Single cell editing analysis
 
-A subset of the human PBMC scRNA-seq dataset from 10x Genomics, along with other
+A subset of a human PBMC scRNA-seq dataset from 10x Genomics, along with other
 needed files can be downloaded using `download_human_pbmc()`.   
 
 ```{r}
-data_dir <- tempdir()
+data_dir <- tempdir() 
 fns <- download_human_pbmc(data_dir)
 fns
 ```
 
 ```{r}
-bam_fn <- fns$bams
-# positionally sort and index bam file
-bf <- Rsamtools::sortBam(bam_fn, sub(".bam", "_sorted", bam_fn))
-bfi <- Rsamtools::indexBam(bf)
-
+bam_fn <- fns$bam
 bed_fn <- fns$edit_sites
 ```
 
@@ -58,13 +54,16 @@ Next we'll load in a `SingleCellExperiment` with cell-type annotations.
 
 ```{r}
 sce <- readRDS(fns$sce)
+sce
+```
+
+```{r}
 plotUMAP(sce, colour_by = "celltype")
 ```
 
-Next we'll select editing sites to query. For this analysis we will use sites from the Rediportal database. To minimize processing time it can be useful to first identify sites with read coverage. `filter_by_coverage()` will exclude sites that do not have sufficient coverage. 
+Next we'll select editing sites to query. For this analysis we will use sites from the Rediportal database.
 
-If the editing sites of interest are not known, one option is to perform a two pass operation. First, identify editing sites by treating the data as a bulk-RNA-seq experiment, using for example `get_pileup()`. Then filter these sites to establish 
-a set of high confidence sites to query in single cell mode. 
+If the editing sites of interest are not known, one option is to perform a two pass operation. First, identify editing sites by treating the data as a bulk-RNA-seq experiment, using for example `get_pileup()`. Then filter these sites to establish a set of high confidence sites to query in single cell mode. 
 
 `raer` provides a function, `pileup_cells()`, which will quantify edited and non-edited UMI counts per cell barcode, then collect the site counts into a SingleCellExperiment. 
 
@@ -92,7 +91,7 @@ Processing time can be reduced by operating in parallel across chromosomes, by s
 outdir <- file.path(tempdir(), "sc_edits")
 cbs <- colnames(sce)
 e_sce <- pileup_cells(
-  bamfile = bf,
+  bamfile = bam_fn,
   sites = gr,
   cell_barcodes = cbs,
   output_directory = outdir,
@@ -126,10 +125,13 @@ With the editing sites added to the gene expression SingleCellExperiment we can 
 ```{r}
 to_plot <- rownames(altExp(sce))[order(rowSums(assay(altExp(sce), "nVar")), decreasing = TRUE)]
 
-lapply(to_plot[1:10], function(x) {
+lapply(to_plot[1:5], function(x) {
   plotUMAP(sce, colour_by = x, by_exprs_values = "nVar")
 })
 ```
+
+Alternatively we can view these top edited sites as a Heatmap, showing the average
+number of edited reads per site in each cell type. 
 
 ```{r}
 altExp(sce)$cell_type <- sce$celltype
@@ -141,8 +143,7 @@ plotGroupedHeatmap(altExp(sce),
 )
 ```
 
-Various tools in Bioconductor can be used to provide additional annotation information about each RNA editing site.  The `VariantAnnotation` package provides powerful functionality to annotate the location of each editing site, and provide information about alterations in codons or splice site. 
-
+Various tools in Bioconductor can be used to provide additional annotation information about each RNA editing site.  The `VariantAnnotation` package provides powerful functionality to annotate the location of each editing site, and provide information about alterations in codons or splice sites. 
 
 <details style="margin-bottom:10px;">
 <summary>

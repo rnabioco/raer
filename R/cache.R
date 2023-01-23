@@ -126,11 +126,10 @@ download_human_pbmc <- function(path) {
 
   baseURL <- "https://raer-test-data.s3.us-west-2.amazonaws.com/10x_human_pbmc/"
 
-  bam_fn <- c("10k_PBMC_3p_nextgem_Chromium_X_intron_cbsorted_genome_rediportal_xf25_chr16.bam")
   pbmc_files <- list(
-    bams = bam_fn,
-    fasta = "hg38_chr16.fasta.bgz",
-    edit_sites = "rediportal_sites.bed.gz",
+    bam = "10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam",
+    bai = "10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam.bai",
+    edit_sites = "rediportal_chr16.bed.gz",
     sce = "sce.rds"
   )
 
@@ -143,7 +142,7 @@ download_human_pbmc <- function(path) {
     out_fns <- unlist(lapply(fns, function(x) {
       fn <- file.path(path, x)
       if (!file.exists(fn)) {
-        # wbnecessary to avoid windows mangling line endings...
+        # wb necessary to avoid windows mangling line endings...
         download.file(paste0(baseURL, x), fn, mode = "wb")
       }
       fn
