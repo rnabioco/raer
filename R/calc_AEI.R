@@ -1,42 +1,47 @@
 #' Calculate the Adenosine Editing Index (AEI)
 #'
-#' @description The Adenosine Editing Index describes the magnitude of A-to-I editing
-#' in a sample. The index is a weighted average of editing events (G bases) observed
-#' at A positions. The vast majority A-to-I editing occurs in ALU elements in the human
-#' genome, and these regions have a high A-to-I editing signal compared to other regions
-#' such as coding exons. This function will perform pileup at specified repeat regions and
-#' return a summary AEI metric.
+#' @description The Adenosine Editing Index describes the magnitude of A-to-I
+#'   editing in a sample. The index is a weighted average of editing events (G
+#'   bases) observed at A positions. The vast majority A-to-I editing occurs in
+#'   ALU elements in the human genome, and these regions have a high A-to-I
+#'   editing signal compared to other regions such as coding exons. This
+#'   function will perform pileup at specified repeat regions and return a
+#'   summary AEI metric.
 #'
-#' @references
-#' Roth, S.H., Levanon, E.Y. & Eisenberg, E. Genome-wide quantification of ADAR adenosine-to-inosine RNA editing activity. Nat Methods 16, 1131–1138 (2019). https://doi.org/10.1038/s41592-019-0610-9
-#'
+#' @references Roth, S.H., Levanon, E.Y. & Eisenberg, E. Genome-wide
+#' quantification of ADAR adenosine-to-inosine RNA editing activity. Nat Methods
+#' 16, 1131–1138 (2019). https://doi.org/10.1038/s41592-019-0610-9
 #'
 #' @param bam_fn bam file
 #' @param fasta_fn fasta
-#' @param alu_ranges GRanges or the name of a BEDfile with regions to query for calculating the AEI,
-#' typically ALU repeats. If a BED file is supplied it will not be filtered by the txdb option.
-#' @param txdb A txdb object, if supplied, will be used to subset the alu_ranges to
-#' those found overlapping genes. Alternatively a GRanges object with gene coordinates.
+#' @param alu_ranges GRanges or the name of a BEDfile with regions to query for
+#'   calculating the AEI, typically ALU repeats. If a BED file is supplied it
+#'   will not be filtered by the txdb option.
+#' @param txdb A txdb object, if supplied, will be used to subset the alu_ranges
+#'   to those found overlapping genes. Alternatively a GRanges object with gene
+#'   coordinates.
 #' @param snp_db either a SNPlocs package, GPos, or GRanges object. If supplied,
-#' will be used to exclude polymorphic positions prior to calculating the AEI. If
-#' `calc_AEI()` will be used many times, one could save some time by first identifying
-#' SNPs that overlap the supplied alu_ranges, and passing these as a GRanges to snp_db
-#' rather than supplying all known SNPs (see [get_overlapping_snps()]).
-#'  Combined with using a bedfile for alu_ranges can also will save time.
+#'   will be used to exclude polymorphic positions prior to calculating the AEI.
+#'   If `calc_AEI()` will be used many times, one could save some time by first
+#'   identifying SNPs that overlap the supplied alu_ranges, and passing these as
+#'   a GRanges to snp_db rather than supplying all known SNPs (see
+#'   [get_overlapping_snps()]). Combined with using a bedfile for alu_ranges can
+#'   also will save time.
 #' @param filterParam object of class [FilterParam()] which specify various
-#' filters to apply to reads and sites during pileup.
-#' @param BPPARAM A [BiocParallelParam] object for specifying parallel options for
-#' operating over chromosomes.
+#'   filters to apply to reads and sites during pileup.
+#' @param BPPARAM A [BiocParallelParam] object for specifying parallel options
+#'   for operating over chromosomes.
 #' @param verbose report progress on each chromosome?
 #'
-#' @returns A named list with the AEI index computed for all allelic combinations.
-#' If correctly computed the signal from the A_G index should be higher than other
-#' alleles (T_C), which are most likely derived from noise or polymorphisms.
+#' @returns A named list with the AEI index computed for all allelic
+#'   combinations. If correctly computed the signal from the A_G index should be
+#'   higher than other alleles (T_C), which are most likely derived from noise
+#'   or polymorphisms.
 #'
 #' @examples
 #' suppressPackageStartupMessages(library(Rsamtools))
-#' bamfn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", package = "raer")
-#' fafn <- system.file("extdata", "human.fasta", package = "raer")
+#' bamfn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
+#' fafn <- raer_example("human.fasta")
 #' dummy_alu_ranges <- scanFaIndex(fafn)
 #' calc_AEI(bamfn, fafn, dummy_alu_ranges)
 #'
@@ -47,6 +52,7 @@
 #' @importFrom IRanges subsetByOverlaps
 #' @import S4Vectors
 #' @import GenomicRanges
+#'
 #' @export
 calc_AEI <- function(bam_fn,
                      fasta_fn,
@@ -255,20 +261,17 @@ calc_AEI <- function(bam_fn,
 
 #' Retrieve SNPs overlapping intervals
 #'
-#' @description This function will find SNPs overlapping
-#' supplied intervals using a SNPlocs package. The SNPs
-#' can be returned in memory (as GPos objects) or written
-#' to disk as a bed-file (optionally compressed).
+#' @description This function will find SNPs overlapping supplied intervals
+#'   using a SNPlocs package. The SNPs can be returned in memory (as GPos
+#'   objects) or written to disk as a bed-file (optionally compressed).
 #'
 #' @param gr Intervals to query
 #' @param snpDb A reference ot a SNPlocs database
-#' @param output_file A path to an output file. If supplied
-#' the file can be optionally compressed by including a ".gz"
-#' suffix. If not supplied, SNPS will be returned as a [GenomicRanges::GPos]
-#' object
+#' @param output_file A path to an output file. If supplied the file can be
+#'   optionally compressed by including a ".gz" suffix. If not supplied, SNPS
+#'   will be returned as a [GenomicRanges::GPos] object
 #'
-#' @return
-#' GPos object containing SNPs overlapping supplied genomic intervals
+#' @return GPos object containing SNPs overlapping supplied genomic intervals
 #' @examples
 #' if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
 #'   gr <- GRanges(rep("22", 10),
@@ -279,6 +282,7 @@ calc_AEI <- function(bam_fn,
 #' }
 #' @importFrom rtracklayer export
 #' @importFrom BSgenome snpsByOverlaps
+#'
 #' @export
 get_overlapping_snps <- function(gr,
                                  snpDb,
@@ -308,28 +312,27 @@ get_overlapping_snps <- function(gr,
 
 #' Apply strand correction using gene annotations
 #'
-#' @description Gene annotations are used to infer the
-#' likely strand of editing sites. This function will operate
-#' on unstranded datasets which have been processed using "genomic-unstranded"
-#' library type which reports variants with respect to the
-#' + strand for all sites. The strand of the editing site will be
-#' assigned the strand of overlapping features in the `genes_gr`
-#' object. Sites with no-overlap, or overlapping features
-#' with conflicting strands (+ and -) will be removed.
+#' @description Gene annotations are used to infer the likely strand of editing
+#'   sites. This function will operate on unstranded datasets which have been
+#'   processed using "genomic-unstranded" library type which reports variants
+#'   with respect to the + strand for all sites. The strand of the editing site
+#'   will be assigned the strand of overlapping features in the `genes_gr`
+#'   object. Sites with no-overlap, or overlapping features with conflicting
+#'   strands (+ and -) will be removed.
 #'
 #' @param gr GRanges object containing editing sites processed with
-#' "genomic-unstranded" setting
-#' @param genes_gr GRanges object containing reference features to
-#' annotate the strand of the editing sites.
+#'   "genomic-unstranded" setting
+#' @param genes_gr GRanges object containing reference features to annotate the
+#'   strand of the editing sites.
 #'
-#' @return
-#' GenomicRanges onbject containing pileup counts, with strand corrected based
-#' on supplied genomic intervals.
+#' @return GenomicRanges onbject containing pileup counts, with strand corrected
+#' based on supplied genomic intervals.
 #'
 #' @examples
 #' suppressPackageStartupMessages(library("GenomicRanges"))
-#' bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
-#' fafn <- system.file("extdata", "human.fasta", package = "raer")
+#'
+#' bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+#' fafn <- raer_example("human.fasta")
 #' fp <- FilterParam(library_type = "genomic-unstranded")
 #' plp <- get_pileup(bamfn, fafn, filterParam = fp)
 #'
@@ -339,8 +342,11 @@ get_overlapping_snps <- function(gr,
 #'   "SSR3:3-10:-",
 #'   "SSR3:6-12:+"
 #' ))
+#'
 #' correct_strand(plp, genes)
+#'
 #' @importFrom stringr str_count
+#'
 #' @export
 correct_strand <- function(gr, genes_gr) {
   if (length(gr) == 0) {

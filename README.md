@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# raer
+# raer <a href="https://rnabioco.github.io/raer"><img src="man/figures/logo.png" align="right" height="138" /></a>
 
 <!-- badges: start -->
 
@@ -182,7 +182,7 @@ create_se(plps)
 #> dim: 74 2 
 #> metadata(0):
 #> assays(7): Var nRef ... nC nG
-#> rownames(74): SSR3_102_2 SSR3_125_2 ... DHFR_430_2 DHFR_513_2
+#> rownames(74): SSR3_102_- SSR3_125_- ... DHFR_430_- DHFR_513_-
 #> rowData names(1): Ref
 #> colnames(2): sample_1 sample_2
 #> colData names(1): sample

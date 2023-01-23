@@ -3,3 +3,42 @@ template:
   package: rbitemplate
   bootstrap: 5
 
+reference:
+- title: Pileup
+  contents:
+  - '`get_pileup`'
+- title: Calculations
+  contents:
+  - '`calc_AEI`'
+  - '`calc_edit_frequency`'
+  - '`count_edits`'
+- title: Filtering
+  contents:
+  - '`filter_by_coverage`'
+  - '`remove_multiallelic`'
+  - '`getCoverageAtPositions`'
+- title: Annotation
+  contents:
+  - '`annot_from_gr`'
+  - '`annot_snps`'
+  - '`get_overlapping_snps`'
+  - '`get_splice_sites`'
+- title: Bulk and single-cell editing analysis
+  contents:
+  - '`perform_de`'
+  - '`prep_for_de`'
+  - '`sc_editing`'
+- title: Data
+  contents:
+  - '`download_GSE99249`'
+- title: Utilities
+  contents:
+  - '`build_tag_index`'
+  - '`create_se`'
+  - '`correct_strand`'
+  - '`raer_example`'
+  - '`read_tabix`'
+  - '`read_pileup`'
+- title: Classes
+  contents:
+  - '`BedFile-class`'
