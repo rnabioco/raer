@@ -138,9 +138,9 @@ alignments from chromosome 18.</p>
 <code class="sourceCode R"><span><span class="va">bam_files</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bams</span></span>
 <span><span class="va">bam_files</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   SRR5564260_dedup_sorted.bam </span></span>
-<span><span class="co">## "/tmp/RtmpDplDJZ/SRR5564260_dedup_sorted.bam" </span></span>
+<span><span class="co">## "/tmp/RtmpGUOOAf/SRR5564260_dedup_sorted.bam" </span></span>
 <span><span class="co">##                   SRR5564261_dedup_sorted.bam </span></span>
-<span><span class="co">## "/tmp/RtmpDplDJZ/SRR5564261_dedup_sorted.bam"</span></span></code></pre>
+<span><span class="co">## "/tmp/RtmpGUOOAf/SRR5564261_dedup_sorted.bam"</span></span></code></pre>
 <p>Next we’ll need a FASTA file to quantify the editing sites. We’ll use
 a FASTA file only containing chromosome 18 for this demo. The fasta can
 be compressed.</p>
@@ -148,7 +148,7 @@ be compressed.</p>
 <code class="sourceCode R"><span><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">fasta</span></span>
 <span><span class="va">fafn</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   chr18.fasta.bgz </span></span>
-<span><span class="co">## "/tmp/RtmpDplDJZ/chr18.fasta.bgz"</span></span></code></pre>
+<span><span class="co">## "/tmp/RtmpGUOOAf/chr18.fasta.bgz"</span></span></code></pre>
 <p>Lastly, we’ll use a BED file containing the coordinates of known
 human editing sites from the REDIPortal database. This file can also be
 optionally compressed.</p>
@@ -156,7 +156,7 @@ optionally compressed.</p>
 <code class="sourceCode R"><span><span class="va">bedfn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bed</span></span>
 <span><span class="va">bedfn</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   rediportal_hg38_chr18.bed.gz </span></span>
-<span><span class="co">## "/tmp/RtmpDplDJZ/rediportal_hg38_chr18.bed.gz"</span></span></code></pre>
+<span><span class="co">## "/tmp/RtmpGUOOAf/rediportal_hg38_chr18.bed.gz"</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="generate-editing-site-read-counts">Generate editing site read counts<a class="anchor" aria-label="anchor" href="#generate-editing-site-read-counts"></a>
@@ -169,10 +169,9 @@ reads and bases based on commonly used filters for detecting RNA-editing
 events. Specific regions can be queried using the <code>region</code>
 argument, or specific positions can be queried by providing
 <code>bedfile</code> a path to a BED-file.</p>
-<p>Internally, <code><a href="../reference/get_pileup.html">get_pileup()</a></code> will write the pileups to
-temporary files. However, these files can also be stored in a
-tabix-indexed format, for later retrieval, or for querying specific
-regions.</p>
+<p>Internally, <code><a href="../reference/get_pileup.html">get_pileup()</a></code> will generate pileups in
+memory. However, these files can also be stored in a tabix-indexed
+format, for later retrieval, or for querying specific regions.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_pileup.html">FilterParam</a></span><span class="op">(</span></span>
 <span>  only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -180,7 +179,10 @@ regions.</p>
 <span>  trim_3p <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  min_base_quality <span class="op">=</span> <span class="fl">30L</span>,</span>
 <span>  min_mapq <span class="op">=</span> <span class="fl">255L</span>,</span>
-<span>  library_type <span class="op">=</span> <span class="st">"fr-first-strand"</span></span>
+<span>  library_type <span class="op">=</span> <span class="st">"fr-first-strand"</span>,</span>
+<span>  min_splice_overhang <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  indel_dist <span class="op">=</span> <span class="fl">4</span>, </span>
+<span>  max_mismatch_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>, </span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">plps</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_pileup.html">get_pileup</a></span><span class="op">(</span><span class="va">bam_files</span>,</span>
@@ -191,46 +193,46 @@ regions.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">plps</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
-<pre><code><span><span class="co">## GRanges object with 6330 ranges and 10 metadata columns:</span></span>
+<pre><code><span><span class="co">## GRanges object with 4817 ranges and 10 metadata columns:</span></span>
 <span><span class="co">##          seqnames    ranges strand |         Ref         Var      nRef</span></span>
 <span><span class="co">##             &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt; &lt;integer&gt;</span></span>
-<span><span class="co">##      [1]    chr18    168574      + |           A           -         0</span></span>
-<span><span class="co">##      [2]    chr18    168577      + |           A           -         0</span></span>
-<span><span class="co">##      [3]    chr18    168578      + |           A           -         0</span></span>
-<span><span class="co">##      [4]    chr18    171983      + |           A           -         0</span></span>
-<span><span class="co">##      [5]    chr18    171986      + |           A           -         0</span></span>
+<span><span class="co">##      [1]    chr18    171983      + |           A           -         0</span></span>
+<span><span class="co">##      [2]    chr18    171986      + |           A           -         0</span></span>
+<span><span class="co">##      [3]    chr18    178188      + |           A           -         1</span></span>
+<span><span class="co">##      [4]    chr18    184747      + |           A           -         0</span></span>
+<span><span class="co">##      [5]    chr18    185191      + |           A           -         1</span></span>
 <span><span class="co">##      ...      ...       ...    ... .         ...         ...       ...</span></span>
-<span><span class="co">##   [6326]    chr18  80159249      + |           A           -         2</span></span>
-<span><span class="co">##   [6327]    chr18  80159250      + |           A           -         3</span></span>
-<span><span class="co">##   [6328]    chr18  80159262      + |           A           -         2</span></span>
-<span><span class="co">##   [6329]    chr18  80172518      - |           A           -         0</span></span>
-<span><span class="co">##   [6330]    chr18  80174441      - |           A           -         0</span></span>
+<span><span class="co">##   [4813]    chr18  80159225      - |           A           -         1</span></span>
+<span><span class="co">##   [4814]    chr18  80159230      + |           A           -         2</span></span>
+<span><span class="co">##   [4815]    chr18  80159249      + |           A           -         2</span></span>
+<span><span class="co">##   [4816]    chr18  80159250      + |           A           -         3</span></span>
+<span><span class="co">##   [4817]    chr18  80159262      + |           A           -         2</span></span>
 <span><span class="co">##               nVar        nA        nT        nC        nG        nN</span></span>
 <span><span class="co">##          &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
 <span><span class="co">##      [1]         0         0         0         0         0         0</span></span>
 <span><span class="co">##      [2]         0         0         0         0         0         0</span></span>
-<span><span class="co">##      [3]         0         0         0         0         0         0</span></span>
+<span><span class="co">##      [3]         0         1         0         0         0         0</span></span>
 <span><span class="co">##      [4]         0         0         0         0         0         0</span></span>
-<span><span class="co">##      [5]         0         0         0         0         0         0</span></span>
+<span><span class="co">##      [5]         0         1         0         0         0         0</span></span>
 <span><span class="co">##      ...       ...       ...       ...       ...       ...       ...</span></span>
-<span><span class="co">##   [6326]         0         2         0         0         0         0</span></span>
-<span><span class="co">##   [6327]         0         3         0         0         0         0</span></span>
-<span><span class="co">##   [6328]         0         2         0         0         0         0</span></span>
-<span><span class="co">##   [6329]         0         0         0         0         0         0</span></span>
-<span><span class="co">##   [6330]         0         0         0         0         0         0</span></span>
+<span><span class="co">##   [4813]         0         1         0         0         0         0</span></span>
+<span><span class="co">##   [4814]         0         2         0         0         0         0</span></span>
+<span><span class="co">##   [4815]         0         2         0         0         0         0</span></span>
+<span><span class="co">##   [4816]         0         3         0         0         0         0</span></span>
+<span><span class="co">##   [4817]         0         2         0         0         0         0</span></span>
 <span><span class="co">##                 nX</span></span>
 <span><span class="co">##          &lt;integer&gt;</span></span>
 <span><span class="co">##      [1]         0</span></span>
 <span><span class="co">##      [2]         0</span></span>
 <span><span class="co">##      [3]         0</span></span>
-<span><span class="co">##      [4]         0</span></span>
+<span><span class="co">##      [4]         1</span></span>
 <span><span class="co">##      [5]         0</span></span>
 <span><span class="co">##      ...       ...</span></span>
-<span><span class="co">##   [6326]         1</span></span>
-<span><span class="co">##   [6327]         0</span></span>
-<span><span class="co">##   [6328]         1</span></span>
-<span><span class="co">##   [6329]         0</span></span>
-<span><span class="co">##   [6330]         0</span></span>
+<span><span class="co">##   [4813]         1</span></span>
+<span><span class="co">##   [4814]         0</span></span>
+<span><span class="co">##   [4815]         1</span></span>
+<span><span class="co">##   [4816]         0</span></span>
+<span><span class="co">##   [4817]         1</span></span>
 <span><span class="co">##   -------</span></span>
 <span><span class="co">##   seqinfo: 194 sequences from an unspecified genome</span></span></code></pre>
 <p>The base counts are returned in a stand specific fashion depending on
@@ -252,11 +254,11 @@ specified by the <code>assay_cols</code> parameter</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">se</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: RangedSummarizedExperiment </span></span>
-<span><span class="co">## dim: 6330 6 </span></span>
+<span><span class="co">## dim: 4817 6 </span></span>
 <span><span class="co">## metadata(0):</span></span>
 <span><span class="co">## assays(7): Var nRef ... nC nG</span></span>
-<span><span class="co">## rownames(6330): chr18_168574_+ chr18_168577_+ ...</span></span>
-<span><span class="co">##   chr18_80172518_- chr18_80174441_-</span></span>
+<span><span class="co">## rownames(4817): chr18_171983_+ chr18_171986_+ ...</span></span>
+<span><span class="co">##   chr18_80159250_+ chr18_80159262_+</span></span>
 <span><span class="co">## rowData names(1): Ref</span></span>
 <span><span class="co">## colnames(6): SRR5564260_dedup_sorted.bam</span></span>
 <span><span class="co">##   SRR5564261_dedup_sorted.bam ... SRR5564271_dedup_sorted.bam</span></span>
@@ -316,9 +318,9 @@ these are useful for filtering and visualization.</p>
 <span>  drop <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>We can next subset the <code>summarizedExperiment</code> object to
-low frequency editing events. For this analysis we will require than an
-editing site shows editing in at least 1 sample, and have at least 5
-counts in each sample.</p>
+exclude low frequency editing events. For this analysis we will require
+that an editing site shows editing in at least 1 sample, and have at
+least 5 counts in each sample.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">has_editing</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se_filtered</span>, <span class="st">"edit_freq"</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">1</span></span>
 <span><span class="va">has_depth</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="op">(</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se_filtered</span>, <span class="st">"nRef"</span><span class="op">)</span> <span class="op">+</span></span>
@@ -327,11 +329,11 @@ counts in each sample.</p>
 <span><span class="va">se_filtered</span> <span class="op">&lt;-</span> <span class="va">se_filtered</span><span class="op">[</span><span class="va">has_editing</span> <span class="op">&amp;</span> <span class="va">has_depth</span>, <span class="op">]</span></span>
 <span><span class="va">se_filtered</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: RangedSummarizedExperiment </span></span>
-<span><span class="co">## dim: 611 6 </span></span>
+<span><span class="co">## dim: 462 6 </span></span>
 <span><span class="co">## metadata(0):</span></span>
 <span><span class="co">## assays(9): Var nRef ... depth edit_freq</span></span>
-<span><span class="co">## rownames(611): chr18_204625_+ chr18_204626_+ ... chr18_80158602_-</span></span>
-<span><span class="co">##   chr18_80158603_-</span></span>
+<span><span class="co">## rownames(462): chr18_204625_+ chr18_204626_+ ... chr18_79984359_-</span></span>
+<span><span class="co">##   chr18_80039299_+</span></span>
 <span><span class="co">## rowData names(1): Ref</span></span>
 <span><span class="co">## colnames(6): SRR5564260_dedup_sorted.bam</span></span>
 <span><span class="co">##   SRR5564261_dedup_sorted.bam ... SRR5564271_dedup_sorted.bam</span></span>
@@ -350,53 +352,53 @@ both the alt and ref alleles in a single matrix.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">deobj</span>, <span class="st">"counts"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">##                  SRR5564260_dedup_sorted.bam_ref</span></span>
-<span><span class="co">## chr18_692390_-                                 6</span></span>
-<span><span class="co">## chr18_692402_-                                 5</span></span>
+<span><span class="co">## chr18_692390_-                                 5</span></span>
 <span><span class="co">## chr18_21631169_+                               8</span></span>
+<span><span class="co">## chr18_21631204_+                              14</span></span>
 <span><span class="co">##                  SRR5564261_dedup_sorted.bam_ref</span></span>
-<span><span class="co">## chr18_692390_-                                12</span></span>
-<span><span class="co">## chr18_692402_-                                10</span></span>
+<span><span class="co">## chr18_692390_-                                11</span></span>
 <span><span class="co">## chr18_21631169_+                              10</span></span>
+<span><span class="co">## chr18_21631204_+                              12</span></span>
 <span><span class="co">##                  SRR5564269_dedup_sorted.bam_ref</span></span>
-<span><span class="co">## chr18_692390_-                                13</span></span>
-<span><span class="co">## chr18_692402_-                                13</span></span>
+<span><span class="co">## chr18_692390_-                                11</span></span>
 <span><span class="co">## chr18_21631169_+                              15</span></span>
+<span><span class="co">## chr18_21631204_+                              17</span></span>
 <span><span class="co">##                  SRR5564270_dedup_sorted.bam_ref</span></span>
-<span><span class="co">## chr18_692390_-                                18</span></span>
-<span><span class="co">## chr18_692402_-                                14</span></span>
+<span><span class="co">## chr18_692390_-                                16</span></span>
 <span><span class="co">## chr18_21631169_+                              10</span></span>
+<span><span class="co">## chr18_21631204_+                               6</span></span>
 <span><span class="co">##                  SRR5564271_dedup_sorted.bam_ref</span></span>
-<span><span class="co">## chr18_692390_-                                13</span></span>
-<span><span class="co">## chr18_692402_-                                10</span></span>
+<span><span class="co">## chr18_692390_-                                 9</span></span>
 <span><span class="co">## chr18_21631169_+                               3</span></span>
+<span><span class="co">## chr18_21631204_+                               6</span></span>
 <span><span class="co">##                  SRR5564277_dedup_sorted.bam_ref</span></span>
-<span><span class="co">## chr18_692390_-                                 8</span></span>
-<span><span class="co">## chr18_692402_-                                 3</span></span>
+<span><span class="co">## chr18_692390_-                                 6</span></span>
 <span><span class="co">## chr18_21631169_+                               4</span></span>
+<span><span class="co">## chr18_21631204_+                              11</span></span>
 <span><span class="co">##                  SRR5564260_dedup_sorted.bam_alt</span></span>
 <span><span class="co">## chr18_692390_-                                 0</span></span>
-<span><span class="co">## chr18_692402_-                                 0</span></span>
 <span><span class="co">## chr18_21631169_+                               0</span></span>
+<span><span class="co">## chr18_21631204_+                               0</span></span>
 <span><span class="co">##                  SRR5564261_dedup_sorted.bam_alt</span></span>
 <span><span class="co">## chr18_692390_-                                 0</span></span>
-<span><span class="co">## chr18_692402_-                                 0</span></span>
 <span><span class="co">## chr18_21631169_+                               0</span></span>
+<span><span class="co">## chr18_21631204_+                               0</span></span>
 <span><span class="co">##                  SRR5564269_dedup_sorted.bam_alt</span></span>
 <span><span class="co">## chr18_692390_-                                 0</span></span>
-<span><span class="co">## chr18_692402_-                                 0</span></span>
 <span><span class="co">## chr18_21631169_+                               0</span></span>
+<span><span class="co">## chr18_21631204_+                               0</span></span>
 <span><span class="co">##                  SRR5564270_dedup_sorted.bam_alt</span></span>
-<span><span class="co">## chr18_692390_-                                 5</span></span>
-<span><span class="co">## chr18_692402_-                                 7</span></span>
+<span><span class="co">## chr18_692390_-                                 4</span></span>
 <span><span class="co">## chr18_21631169_+                               4</span></span>
+<span><span class="co">## chr18_21631204_+                               8</span></span>
 <span><span class="co">##                  SRR5564271_dedup_sorted.bam_alt</span></span>
-<span><span class="co">## chr18_692390_-                                 2</span></span>
-<span><span class="co">## chr18_692402_-                                 4</span></span>
+<span><span class="co">## chr18_692390_-                                 1</span></span>
 <span><span class="co">## chr18_21631169_+                               3</span></span>
+<span><span class="co">## chr18_21631204_+                               3</span></span>
 <span><span class="co">##                  SRR5564277_dedup_sorted.bam_alt</span></span>
-<span><span class="co">## chr18_692390_-                                 2</span></span>
-<span><span class="co">## chr18_692402_-                                 5</span></span>
-<span><span class="co">## chr18_21631169_+                               4</span></span></code></pre>
+<span><span class="co">## chr18_692390_-                                 1</span></span>
+<span><span class="co">## chr18_21631169_+                               4</span></span>
+<span><span class="co">## chr18_21631204_+                               3</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="run-differential-editing-deseq2">Run differential editing (DESeq2)<a class="anchor" aria-label="anchor" href="#run-differential-editing-deseq2"></a>
@@ -428,17 +430,17 @@ significant results, and the model matrix.</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">de_results</span><span class="op">$</span><span class="va">sig_results</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   baseMean log2FoldChange     lfcSE      stat</span></span>
-<span><span class="co">## chr18_32070144_+  6.750000      -2.455124 0.9657692 -2.542143</span></span>
-<span><span class="co">## chr18_35247800_+  8.333333      -2.843321 1.0202664 -2.786841</span></span>
-<span><span class="co">## chr18_23296417_- 14.583333      -3.055300 0.7775433 -3.929427</span></span>
-<span><span class="co">## chr18_32120079_+  7.916667      -3.296187 1.3657932 -2.413387</span></span>
-<span><span class="co">## chr18_36022846_-  4.333333      -3.347566 1.2099414 -2.766718</span></span>
-<span><span class="co">##                        pvalue         padj</span></span>
-<span><span class="co">## chr18_32070144_+ 1.101751e-02 0.0148902513</span></span>
-<span><span class="co">## chr18_35247800_+ 5.322451e-03 0.0087342790</span></span>
-<span><span class="co">## chr18_23296417_- 8.514836e-05 0.0003405934</span></span>
-<span><span class="co">## chr18_32120079_+ 1.580504e-02 0.0198337786</span></span>
-<span><span class="co">## chr18_36022846_- 5.662375e-03 0.0090597999</span></span></code></pre>
+<span><span class="co">## chr18_35247800_+  7.750000      -2.833822 1.2164628 -2.329559</span></span>
+<span><span class="co">## chr18_23296417_- 12.500000      -2.987656 0.8909907 -3.353185</span></span>
+<span><span class="co">## chr18_35263158_-  8.583333      -3.020011 1.2542482 -2.407825</span></span>
+<span><span class="co">## chr18_692390_-    5.333333      -3.127496 1.4533676 -2.151896</span></span>
+<span><span class="co">## chr18_23296402_- 11.666667      -3.183141 1.3364582 -2.381774</span></span>
+<span><span class="co">##                        pvalue        padj</span></span>
+<span><span class="co">## chr18_35247800_+ 0.0198294511 0.023434806</span></span>
+<span><span class="co">## chr18_23296417_- 0.0007988734 0.001730892</span></span>
+<span><span class="co">## chr18_35263158_- 0.0160478565 0.020862213</span></span>
+<span><span class="co">## chr18_692390_-   0.0314055488 0.034994754</span></span>
+<span><span class="co">## chr18_23296402_- 0.0172294773 0.020998425</span></span></code></pre>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">top_sites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">de_results</span><span class="op">$</span><span class="va">sig_results</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">20</span><span class="op">]</span></span>
 <span></span>
@@ -493,7 +495,7 @@ Session info
 <span><span class="co">##   [7] clue_0.3-63              GetoptLong_1.0.5        </span></span>
 <span><span class="co">##   [9] compiler_4.3.0           RSQLite_2.2.20          </span></span>
 <span><span class="co">##  [11] GenomicFeatures_1.51.2   png_0.1-8               </span></span>
-<span><span class="co">##  [13] systemfonts_1.0.4        vctrs_0.5.1             </span></span>
+<span><span class="co">##  [13] systemfonts_1.0.4        vctrs_0.5.2             </span></span>
 <span><span class="co">##  [15] shape_1.4.6              pkgconfig_2.0.3         </span></span>
 <span><span class="co">##  [17] crayon_1.5.2             fastmap_1.1.0           </span></span>
 <span><span class="co">##  [19] dbplyr_2.3.0             XVector_0.39.0          </span></span>
@@ -529,9 +531,9 @@ Session info
 <span><span class="co">##  [79] tools_4.3.0              BiocIO_1.9.2            </span></span>
 <span><span class="co">##  [81] data.table_1.14.6        locfit_1.5-9.7          </span></span>
 <span><span class="co">##  [83] BSgenome_1.67.3          GenomicAlignments_1.35.0</span></span>
-<span><span class="co">##  [85] fs_1.5.2                 XML_3.99-0.13           </span></span>
+<span><span class="co">##  [85] fs_1.6.0                 XML_3.99-0.13           </span></span>
 <span><span class="co">##  [87] Cairo_1.6-0              AnnotationDbi_1.61.0    </span></span>
-<span><span class="co">##  [89] colorspace_2.0-3         GenomeInfoDbData_1.2.9  </span></span>
+<span><span class="co">##  [89] colorspace_2.1-0         GenomeInfoDbData_1.2.9  </span></span>
 <span><span class="co">##  [91] restfulr_0.0.15          cli_3.6.0               </span></span>
 <span><span class="co">##  [93] rappdirs_0.3.3           textshaping_0.3.6       </span></span>
 <span><span class="co">##  [95] fansi_1.0.4              dplyr_1.0.10            </span></span>

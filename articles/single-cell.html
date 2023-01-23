@@ -101,8 +101,7 @@ Riemondy</h4>
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rnabioco.github.io/raer">raer</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://bioconductor.org/packages/scater/" class="external-link">scater</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/GenomicFeatures" class="external-link">GenomicFeatures</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/Rsamtools" class="external-link">Rsamtools</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">rtracklayer</span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="characterizing-rna-editing-sites-in-single-cell-data">Characterizing RNA editing sites in single cell data<a class="anchor" aria-label="anchor" href="#characterizing-rna-editing-sites-in-single-cell-data"></a>
@@ -119,176 +118,168 @@ Genomics</a>. The single cell data was processed using the cellranger
 pipeline. The BAM file contains a tag (<code>CB</code>) which indicates
 the cell-barcode associated with each alignment, as well as a tag
 containing the inferred UMI sequence (<code>UB</code>).</p>
-<p>To begin <code>raer</code> the bam will be sorted by the
-<code>CB</code> tag. This sorting strategy will enable rapid extraction
-of alignments from individual (or sets of) cell-barcodes. This sorting
-can be completed using samtools on the command-line, or in R using
-Rsamtools.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> sort <span class="at">-t</span> CB possorted_genome_bam.bam <span class="dt">\</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;</span> cbsorted_genome_bam.bam</span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># requires version &gt;= 2.15.1 </span></span>
-<span><span class="fu">Rsamtools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/scanBam.html" class="external-link">sortBam</a></span><span class="op">(</span><span class="st">"possorted_genome_bam.bam"</span>, <span class="st">"cbsorted_genome_bam"</span>, byTag <span class="op">=</span> <span class="st">"CB"</span><span class="op">)</span></span></code></pre></div>
-<p><code>raer</code> contains functionality to build a simple index that
-stores the file position for each cell-barcode, enabling rapid
-extraction of alignments for defined cell-barcodes. The method is based
-on an approach from <code>Jared Thompson</code> in the <code>bri</code>
-command line tool. The index file will have the <code>.bri</code> index
-file name.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">idx_filename</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tag_index.html">build_tag_index</a></span><span class="op">(</span><span class="st">"cbsorted_genome_bam.bam"</span>, tag <span class="op">=</span> <span class="st">"CB"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="single-cell-editing-analysis">Single cell editing analysis<a class="anchor" aria-label="anchor" href="#single-cell-editing-analysis"></a>
 </h3>
-<p>A subset of the human PBMC scRNA-seq dataset from 10x Genomics, along
+<p>A subset of a human PBMC scRNA-seq dataset from 10x Genomics, along
 with other needed files can be downloaded using
 <code><a href="../reference/download_data.html">download_human_pbmc()</a></code>.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span> </span>
 <span><span class="va">fns</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_data.html">download_human_pbmc</a></span><span class="op">(</span><span class="va">data_dir</span><span class="op">)</span></span>
 <span><span class="va">fns</span></span></code></pre></div>
-<pre><code><span><span class="co">## $bams</span></span>
-<span><span class="co">##                   10k_PBMC_3p_nextgem_Chromium_X_intron_cbsorted_genome_rediportal_xf25_chr16.bam </span></span>
-<span><span class="co">## "/tmp/RtmpEBUVpj/10k_PBMC_3p_nextgem_Chromium_X_intron_cbsorted_genome_rediportal_xf25_chr16.bam" </span></span>
+<pre><code><span><span class="co">## $bam</span></span>
+<span><span class="co">##                   10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam </span></span>
+<span><span class="co">## "/tmp/Rtmpl4HF3C/10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam" </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## $fasta</span></span>
-<span><span class="co">##                   hg38_chr16.fasta.bgz </span></span>
-<span><span class="co">## "/tmp/RtmpEBUVpj/hg38_chr16.fasta.bgz" </span></span>
+<span><span class="co">## $bai</span></span>
+<span><span class="co">##                   10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam.bai </span></span>
+<span><span class="co">## "/tmp/Rtmpl4HF3C/10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam.bai" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $edit_sites</span></span>
-<span><span class="co">##                   rediportal_sites.bed.gz </span></span>
-<span><span class="co">## "/tmp/RtmpEBUVpj/rediportal_sites.bed.gz" </span></span>
+<span><span class="co">##                   rediportal_chr16.bed.gz </span></span>
+<span><span class="co">## "/tmp/Rtmpl4HF3C/rediportal_chr16.bed.gz" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $sce</span></span>
 <span><span class="co">##                   sce.rds </span></span>
-<span><span class="co">## "/tmp/RtmpEBUVpj/sce.rds"</span></span></code></pre>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">bam_fn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bams</span></span>
-<span><span class="va">fa_fn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">fasta</span></span>
+<span><span class="co">## "/tmp/Rtmpl4HF3C/sce.rds"</span></span></code></pre>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">bam_fn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bam</span></span>
 <span><span class="va">bed_fn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">edit_sites</span></span></code></pre></div>
-<p>We’ll first index the bam file using
-<code>build_tag_index</code>.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/tag_index.html">build_tag_index</a></span><span class="op">(</span><span class="va">bam_fn</span>, tag <span class="op">=</span> <span class="st">"CB"</span>, overwrite <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] "/tmp/RtmpEBUVpj/10k_PBMC_3p_nextgem_Chromium_X_intron_cbsorted_genome_rediportal_xf25_chr16.bam.bri"</span></span></code></pre>
-<p>We can query the index to see the cell-barcodes are present in the
-bam file using <code><a href="../reference/tag_index.html">show_tag_index()</a></code>, which will return a
-data.frame containing each <code>tag</code> value and the number of
-alignments associated with each tag.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">tag_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tag_index.html">show_tag_index</a></span><span class="op">(</span><span class="va">bam_fn</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">tag_df</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##                  tag n</span></span>
-<span><span class="co">## 1 AAACCCAAGAAGCCAC-1 1</span></span>
-<span><span class="co">## 2 AAACCCAAGAAGGATG-1 1</span></span>
-<span><span class="co">## 3 AAACCCAAGACCATAA-1 2</span></span>
-<span><span class="co">## 4 AAACCCAAGACGTCGA-1 1</span></span>
-<span><span class="co">## 5 AAACCCAAGATACGAT-1 2</span></span>
-<span><span class="co">## 6 AAACCCAAGATGTAGT-1 1</span></span></code></pre>
 <p>Next we’ll load in a <code>SingleCellExperiment</code> with cell-type
 annotations.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">fns</span><span class="op">$</span><span class="va">sce</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/scater/man/plot_reddim.html" class="external-link">plotUMAP</a></span><span class="op">(</span><span class="va">sce</span>, colour_by <span class="op">=</span> <span class="st">"celltype"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="single-cell_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
+<span><span class="va">sce</span></span></code></pre></div>
+<pre><code><span><span class="co">## class: SingleCellExperiment </span></span>
+<span><span class="co">## dim: 36601 500 </span></span>
+<span><span class="co">## metadata(2): Samples mkrs</span></span>
+<span><span class="co">## assays(2): counts logcounts</span></span>
+<span><span class="co">## rownames(36601): MIR1302-2HG FAM138A ... AC007325.4 AC007325.2</span></span>
+<span><span class="co">## rowData names(3): ID Symbol Type</span></span>
+<span><span class="co">## colnames(500): TGTTTGTCAGTTAGGG-1 ATCTCTACAAGCTACT-1 ...</span></span>
+<span><span class="co">##   GGGCGTTTCAGGACGA-1 CTATAGGAGATTGTGA-1</span></span>
+<span><span class="co">## colData names(8): Sample Barcode ... r celltype</span></span>
+<span><span class="co">## reducedDimNames(2): PCA UMAP</span></span>
+<span><span class="co">## mainExpName: NULL</span></span>
+<span><span class="co">## altExpNames(0):</span></span></code></pre>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/scater/man/plot_reddim.html" class="external-link">plotUMAP</a></span><span class="op">(</span><span class="va">sce</span>, colour_by <span class="op">=</span> <span class="st">"celltype"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="single-cell_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
 <p>Next we’ll select editing sites to query. For this analysis we will
-use sites from the Rediportal database. To minimize processing time it
-can be useful to first identify sites with read coverage.
-<code><a href="../reference/filter_by_coverage.html">filter_by_coverage()</a></code> will exclude sites that do not have
-sufficient coverage.</p>
+use sites from the Rediportal database.</p>
 <p>If the editing sites of interest are not known, one option is to
 perform a two pass operation. First, identify editing sites by treating
 the data as a bulk-RNA-seq experiment, using for example
 <code><a href="../reference/get_pileup.html">get_pileup()</a></code>. Then filter these sites to establish a set of
 high confidence sites to query in single cell mode.</p>
-<p>When analyzing single cell data we have the option to quantify
-editing sites for each cell or we can quantify sites by pooling
-alignments across similar cells, such as cells in the same cluster.</p>
-<p><code>raer</code> provides a wrapper function,
-<code><a href="../reference/sc_editing.html">sc_editing()</a></code>, which will extract alignments per cell (or
-cluster) using <code><a href="../reference/tag_index.html">get_tag_bam()</a></code>, generate editing site counts
-(<code><a href="../reference/get_pileup.html">get_pileup()</a></code>), then collect the site counts into a
-SummarizedExperiment (<code><a href="../reference/create_se.html">create_se()</a></code>).</p>
+<p><code>raer</code> provides a function, <code><a href="../reference/pileup_cells.html">pileup_cells()</a></code>,
+which will quantify edited and non-edited UMI counts per cell barcode,
+then collect the site counts into a SingleCellExperiment.</p>
+<p>The sites to quantified are specified using a custom formatted
+GRanges object with 1 base intervals, a strand (+ or -), and
+supplemented with metadata columns named <code>ref</code> and
+<code>alt</code> containing the reference and alternate base to query.
+In this case we are only interested in A-&gt;I editing, so we set the
+ref and alt to <code>A</code> and <code>G</code>. Note that the
+<code>ref</code> and <code>alt</code> bases are in reference to strand.
+For a <code>-</code> strand interval the bases should be the complement
+of the <code>+</code> strand bases.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">gr</span> <span class="op">&lt;-</span> <span class="fu">import</span><span class="op">(</span><span class="va">bed_fn</span><span class="op">)</span></span>
+<span><span class="va">gr</span><span class="op">$</span><span class="va">name</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
+<span><span class="va">gr</span><span class="op">$</span><span class="va">score</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
+<span><span class="va">gr</span><span class="op">$</span><span class="va">ref</span> <span class="op">&lt;-</span> <span class="st">"A"</span></span>
+<span><span class="va">gr</span><span class="op">$</span><span class="va">alt</span> <span class="op">&lt;-</span> <span class="st">"G"</span></span>
+<span><span class="va">gr</span></span></code></pre></div>
+<pre><code><span><span class="co">## GRanges object with 785208 ranges and 2 metadata columns:</span></span>
+<span><span class="co">##            seqnames    ranges strand |         ref         alt</span></span>
+<span><span class="co">##               &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt;</span></span>
+<span><span class="co">##        [1]    chr16     22083      - |           A           G</span></span>
+<span><span class="co">##        [2]    chr16     22101      - |           A           G</span></span>
+<span><span class="co">##        [3]    chr16     22107      - |           A           G</span></span>
+<span><span class="co">##        [4]    chr16     22113      - |           A           G</span></span>
+<span><span class="co">##        [5]    chr16     22114      - |           A           G</span></span>
+<span><span class="co">##        ...      ...       ...    ... .         ...         ...</span></span>
+<span><span class="co">##   [785204]    chr16  90219996      + |           A           G</span></span>
+<span><span class="co">##   [785205]    chr16  90220035      + |           A           G</span></span>
+<span><span class="co">##   [785206]    chr16  90220081      + |           A           G</span></span>
+<span><span class="co">##   [785207]    chr16  90220095      + |           A           G</span></span>
+<span><span class="co">##   [785208]    chr16  90220135      + |           A           G</span></span>
+<span><span class="co">##   -------</span></span>
+<span><span class="co">##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</span></span></code></pre>
 <p>The <code>cell_barcodes</code> argument specifies which cell-barcodes
-will be queried. If a character vector of cell-barcodes is supplied,
-editing sites will be quantified per cell-barcode. Alternatively a list
-containing cell-barcodes per cluster or group can be supplied, in which
-case editing sites will be quantified by pooling alignments per
-group.<br>
-Additional arguments for <code><a href="../reference/get_pileup.html">get_pileup()</a></code> can be passed to
-<code><a href="../reference/sc_editing.html">sc_editing()</a></code>. Note that <code>bam_flags</code> is set to
-<strong>include</strong> duplicate reads by default. If the bamfile has
-a tag with a UMI sequence, this can be supplied to the
-<code>umi_tag</code> argument to only count 1 read for each UMI at each
-position. This strategy allows for reads with the same UMI to be counted
-at multiple independent sites enabling recovery of more sequence
-variants than counting only 1 read per UMI.</p>
-<p>Processing time can be reduced by operating in parallel across groups
-of cells (or clusters), by supplying a BiocParallel backend to the
+will be quantified. This is typically set to the filtered set of
+barcodes corresponding to cell-containing droplets.</p>
+<p><code><a href="../reference/pileup_cells.html">pileup_cells()</a></code> accepts a <code><a href="../reference/get_pileup.html">FilterParam()</a></code>
+class to specifying how to performing read and site filtering. Note that
+<code><a href="../reference/pileup_cells.html">pileup_cells()</a></code> is strand sensitive by default, so it is
+important to ensure that the strand of the input sites is correctly
+annotated, and that the library type is correct for the type of data of
+interest. For 10x Genomics data, the library type is set to
+<code>fr-second-strand</code>, indicating that the strand of the
+alignments matches the strand of the RNA.</p>
+<p>Note that <code>bam_flags</code> is set to <strong>include</strong>
+duplicate reads by default. If the bamfile has a tag with a UMI
+sequence, this can be supplied to the <code>umi_tag</code> argument to
+only count 1 read for each UMI at each position. This strategy allows
+for reads with the same UMI to be counted at multiple independent sites
+enabling recovery of more sequence variants than counting only 1 read
+per UMI.</p>
+<p>Processing time can be reduced by operating in parallel across
+chromosomes, by supplying a BiocParallel backend to the
 <code>BPPARAM</code> argument (e.g. <code>MultiCoreParam()</code>).</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cbs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span>
-<span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sc_editing.html">sc_editing</a></span><span class="op">(</span></span>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"sc_edits"</span><span class="op">)</span></span>
+<span><span class="va">cbs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span>
+<span><span class="va">e_sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pileup_cells.html">pileup_cells</a></span><span class="op">(</span></span>
 <span>  bamfile <span class="op">=</span> <span class="va">bam_fn</span>,</span>
-<span>  fafile <span class="op">=</span> <span class="va">fa_fn</span>,</span>
-<span>  bedfile <span class="op">=</span> <span class="va">bed_fn</span>,</span>
+<span>  sites <span class="op">=</span> <span class="va">gr</span>,</span>
 <span>  cell_barcodes <span class="op">=</span> <span class="va">cbs</span>,</span>
-<span>  assay_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"nA"</span>, <span class="st">"nG"</span><span class="op">)</span>,</span>
-<span>  filterParam <span class="op">=</span> <span class="fu"><a href="../reference/get_pileup.html">FilterParam</a></span><span class="op">(</span></span>
+<span>  output_directory <span class="op">=</span> <span class="va">outdir</span>,</span>
+<span>  cb_tag <span class="op">=</span> <span class="st">"CB"</span>,</span>
+<span>  umi_tag <span class="op">=</span> <span class="st">"UB"</span>,</span>
+<span>  fp <span class="op">=</span> <span class="fu"><a href="../reference/get_pileup.html">FilterParam</a></span><span class="op">(</span></span>
 <span>    min_base_quality <span class="op">=</span> <span class="fl">30L</span>,</span>
 <span>    library_type <span class="op">=</span> <span class="st">"fr-second-strand"</span>,</span>
-<span>    min_nucleotide_depth <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>    min_variant_reads <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>    trim_5p <span class="op">=</span> <span class="fl">5L</span>,</span>
-<span>    trim_3p <span class="op">=</span> <span class="fl">5L</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  umi_tag <span class="op">=</span> <span class="st">"UB"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## beginning pileup</span></span></code></pre>
-<pre><code><span><span class="co">## working on: batch 1 (cells 1-50)</span></span></code></pre>
-<pre><code><span><span class="co">## working on: batch 2 (cells 51-100)</span></span></code></pre>
-<pre><code><span><span class="co">## working on: batch 3 (cells 101-150)</span></span></code></pre>
-<pre><code><span><span class="co">## working on: batch 4 (cells 151-200)</span></span></code></pre>
-<pre><code><span><span class="co">## working on: batch 5 (cells 201-250)</span></span></code></pre>
-<pre><code><span><span class="co">## working on: batch 6 (cells 251-300)</span></span></code></pre>
-<pre><code><span><span class="co">## working on: batch 7 (cells 301-350)</span></span></code></pre>
-<pre><code><span><span class="co">## working on: batch 8 (cells 351-400)</span></span></code></pre>
-<pre><code><span><span class="co">## working on: batch 9 (cells 401-450)</span></span></code></pre>
-<pre><code><span><span class="co">## working on: batch 10 (cells 451-500)</span></span></code></pre>
-<pre><code><span><span class="co">## pileup completing, binding summarizedExperiments</span></span></code></pre>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">se</span></span></code></pre></div>
-<pre><code><span><span class="co">## class: RangedSummarizedExperiment </span></span>
-<span><span class="co">## dim: 58802 500 </span></span>
+<span>    trim_3p <span class="op">=</span> <span class="fl">5L</span><span class="op">)</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">e_sce</span></span></code></pre></div>
+<pre><code><span><span class="co">## class: SingleCellExperiment </span></span>
+<span><span class="co">## dim: 4451 500 </span></span>
 <span><span class="co">## metadata(0):</span></span>
-<span><span class="co">## assays(2): nA nG</span></span>
-<span><span class="co">## rownames(58802): chr16_83477_+ chr16_83486_+ ... chr16_90172755_+</span></span>
-<span><span class="co">##   chr16_90172757_+</span></span>
-<span><span class="co">## rowData names(1): Ref</span></span>
+<span><span class="co">## assays(2): nRef nVar</span></span>
+<span><span class="co">## rownames(4451): chr16_83540_1_A_G chr16_83621_1_A_G ...</span></span>
+<span><span class="co">##   chr16_31453268_2_A_G chr16_31454303_2_A_G</span></span>
+<span><span class="co">## rowData names(2): ref alt</span></span>
 <span><span class="co">## colnames(500): TGTTTGTCAGTTAGGG-1 ATCTCTACAAGCTACT-1 ...</span></span>
 <span><span class="co">##   GGGCGTTTCAGGACGA-1 CTATAGGAGATTGTGA-1</span></span>
-<span><span class="co">## colData names(1): sample</span></span></code></pre>
+<span><span class="co">## colData names(1): id</span></span>
+<span><span class="co">## reducedDimNames(0):</span></span>
+<span><span class="co">## mainExpName: NULL</span></span>
+<span><span class="co">## altExpNames(0):</span></span></code></pre>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">dir</a></span><span class="op">(</span><span class="va">outdir</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] "barcodes.txt.gz" "counts.mtx.gz"   "sites.txt.gz"</span></span></code></pre>
 <p>Next we’ll filter the pileups to find sites with at least 5 cells
 with an editing event, and add the editing information to the
 SingleCellExperiment as an <code><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp()</a></code>.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">se</span> <span class="op">&lt;-</span> <span class="va">se</span><span class="op">[</span><span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span>, <span class="st">"nA"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span>, <span class="st">"nG"</span><span class="op">)</span><span class="op">)</span> <span class="op">!=</span> <span class="fl">0</span>, <span class="op">]</span></span>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">e_sce</span> <span class="op">&lt;-</span> <span class="va">e_sce</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">e_sce</span><span class="op">)</span><span class="op">$</span><span class="va">nVar</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">5</span>, <span class="op">]</span></span>
+<span><span class="va">e_sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">e_sce</span>, replace_na <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">e_sce</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
+<p>With the editing sites added to the gene expression
+SingleCellExperiment we can use plotting and other methods previously
+developed for single cell analysis. Here we’ll visualize editing sites
+with the highest edited read counts.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">to_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/order.html" class="external-link">order</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span>, <span class="st">"nVar"</span><span class="op">)</span><span class="op">)</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
-<span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">se</span>, edit_from <span class="op">=</span> <span class="st">"A"</span>, edit_to <span class="op">=</span> <span class="st">"G"</span>, replace_na <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">se</span> <span class="op">&lt;-</span> <span class="va">se</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">]</span></span>
-<span></span>
-<span><span class="va">small_se</span> <span class="op">&lt;-</span> <span class="va">se</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">se</span>, <span class="st">"nG"</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">5</span>, <span class="op">]</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span>, <span class="st">"edits"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">small_se</span></span></code></pre></div>
-<p>With the editing sites added to the SingleCellExperiment we can use
-plotting and other methods previously developed for single cell
-analysis. Here we’ll visualize editing sites with the highest edited
-read counts.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">to_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/order.html" class="external-link">order</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span>, <span class="st">"nG"</span><span class="op">)</span><span class="op">)</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">]</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">to_plot</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/scater/man/plot_reddim.html" class="external-link">plotUMAP</a></span><span class="op">(</span><span class="va">sce</span>, colour_by <span class="op">=</span> <span class="va">x</span>, by_exprs_values <span class="op">=</span> <span class="st">"nG"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">to_plot</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/scater/man/plot_reddim.html" class="external-link">plotUMAP</a></span><span class="op">(</span><span class="va">sce</span>, colour_by <span class="op">=</span> <span class="va">x</span>, by_exprs_values <span class="op">=</span> <span class="st">"nVar"</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [[1]]</span></span></code></pre>
 <p><img src="single-cell_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
@@ -304,38 +295,26 @@ read counts.</p>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## [[5]]</span></span></code></pre>
 <p><img src="single-cell_files/figure-html/unnamed-chunk-9-5.png" width="700"></p>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## [[6]]</span></span></code></pre>
-<p><img src="single-cell_files/figure-html/unnamed-chunk-9-6.png" width="700"></p>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## [[7]]</span></span></code></pre>
-<p><img src="single-cell_files/figure-html/unnamed-chunk-9-7.png" width="700"></p>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## [[8]]</span></span></code></pre>
-<p><img src="single-cell_files/figure-html/unnamed-chunk-9-8.png" width="700"></p>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## [[9]]</span></span></code></pre>
-<p><img src="single-cell_files/figure-html/unnamed-chunk-9-9.png" width="700"></p>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## [[10]]</span></span></code></pre>
-<p><img src="single-cell_files/figure-html/unnamed-chunk-9-10.png" width="700"></p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<p>Alternatively we can view these top edited sites as a Heatmap,
+showing the average number of edited reads per site in each cell
+type.</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">cell_type</span> <span class="op">&lt;-</span> <span class="va">sce</span><span class="op">$</span><span class="va">celltype</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/scater/man/plotGroupedHeatmap.html" class="external-link">plotGroupedHeatmap</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span>,</span>
 <span>  features <span class="op">=</span> <span class="va">to_plot</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">25</span><span class="op">]</span>,</span>
 <span>  group <span class="op">=</span> <span class="st">"cell_type"</span>,</span>
-<span>  exprs_values <span class="op">=</span> <span class="st">"nG"</span></span>
+<span>  exprs_values <span class="op">=</span> <span class="st">"nVar"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="single-cell_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
 <p>Various tools in Bioconductor can be used to provide additional
 annotation information about each RNA editing site. The
 <code>VariantAnnotation</code> package provides powerful functionality
 to annotate the location of each editing site, and provide information
-about alterations in codons or splice site.</p>
+about alterations in codons or splice sites.</p>
 <details style="margin-bottom:10px;"><summary>
 Session info
-</summary><div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+</summary><div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R Under development (unstable) (2023-01-18 r83635)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu (64-bit)</span></span>
@@ -361,24 +340,25 @@ Session info
 <span><span class="co">## [8] base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] rtracklayer_1.59.1          GenomicFeatures_1.51.2     </span></span>
-<span><span class="co">##  [3] AnnotationDbi_1.61.0        scater_1.27.2              </span></span>
-<span><span class="co">##  [5] ggplot2_3.4.0               scuttle_1.9.3              </span></span>
-<span><span class="co">##  [7] SingleCellExperiment_1.21.0 SummarizedExperiment_1.29.1</span></span>
-<span><span class="co">##  [9] Biobase_2.59.0              GenomicRanges_1.51.4       </span></span>
-<span><span class="co">## [11] GenomeInfoDb_1.35.13        IRanges_2.33.0             </span></span>
-<span><span class="co">## [13] S4Vectors_0.37.3            BiocGenerics_0.45.0        </span></span>
-<span><span class="co">## [15] MatrixGenerics_1.11.0       matrixStats_0.63.0         </span></span>
-<span><span class="co">## [17] raer_0.99.0                 BiocStyle_2.27.1           </span></span>
+<span><span class="co">##  [1] rtracklayer_1.59.1          Rsamtools_2.15.1           </span></span>
+<span><span class="co">##  [3] Biostrings_2.67.0           XVector_0.39.0             </span></span>
+<span><span class="co">##  [5] scater_1.27.2               ggplot2_3.4.0              </span></span>
+<span><span class="co">##  [7] scuttle_1.9.3               SingleCellExperiment_1.21.0</span></span>
+<span><span class="co">##  [9] SummarizedExperiment_1.29.1 Biobase_2.59.0             </span></span>
+<span><span class="co">## [11] GenomicRanges_1.51.4        GenomeInfoDb_1.35.13       </span></span>
+<span><span class="co">## [13] IRanges_2.33.0              S4Vectors_0.37.3           </span></span>
+<span><span class="co">## [15] BiocGenerics_0.45.0         MatrixGenerics_1.11.0      </span></span>
+<span><span class="co">## [17] matrixStats_0.63.0          raer_0.99.0                </span></span>
+<span><span class="co">## [19] BiocStyle_2.27.1           </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##   [1] RColorBrewer_1.1-3        jsonlite_1.8.4           </span></span>
 <span><span class="co">##   [3] magrittr_2.0.3            ggbeeswarm_0.7.1         </span></span>
-<span><span class="co">##   [5] farver_2.1.1              rmarkdown_2.20           </span></span>
-<span><span class="co">##   [7] fs_1.5.2                  BiocIO_1.9.2             </span></span>
-<span><span class="co">##   [9] zlibbioc_1.45.0           ragg_1.2.5               </span></span>
-<span><span class="co">##  [11] vctrs_0.5.1               memoise_2.0.1            </span></span>
-<span><span class="co">##  [13] Rsamtools_2.15.1          DelayedMatrixStats_1.21.0</span></span>
+<span><span class="co">##   [5] GenomicFeatures_1.51.2    farver_2.1.1             </span></span>
+<span><span class="co">##   [7] rmarkdown_2.20            fs_1.6.0                 </span></span>
+<span><span class="co">##   [9] BiocIO_1.9.2              zlibbioc_1.45.0          </span></span>
+<span><span class="co">##  [11] ragg_1.2.5                vctrs_0.5.2              </span></span>
+<span><span class="co">##  [13] memoise_2.0.1             DelayedMatrixStats_1.21.0</span></span>
 <span><span class="co">##  [15] RCurl_1.98-1.9            htmltools_0.5.4          </span></span>
 <span><span class="co">##  [17] progress_1.2.2            curl_5.0.0               </span></span>
 <span><span class="co">##  [19] BiocNeighbors_1.17.1      sass_0.4.4               </span></span>
@@ -388,47 +368,47 @@ Session info
 <span><span class="co">##  [27] rsvd_1.0.5                Matrix_1.5-3             </span></span>
 <span><span class="co">##  [29] R6_2.5.1                  fastmap_1.1.0            </span></span>
 <span><span class="co">##  [31] GenomeInfoDbData_1.2.9    digest_0.6.31            </span></span>
-<span><span class="co">##  [33] colorspace_2.0-3          rprojroot_2.0.3          </span></span>
-<span><span class="co">##  [35] irlba_2.3.5.1             textshaping_0.3.6        </span></span>
-<span><span class="co">##  [37] RSQLite_2.2.20            beachmat_2.15.0          </span></span>
-<span><span class="co">##  [39] filelock_1.0.2            labeling_0.4.2           </span></span>
-<span><span class="co">##  [41] fansi_1.0.4               httr_1.4.4               </span></span>
-<span><span class="co">##  [43] compiler_4.3.0            bit64_4.0.5              </span></span>
-<span><span class="co">##  [45] withr_2.5.0               BiocParallel_1.33.9      </span></span>
-<span><span class="co">##  [47] viridis_0.6.2             DBI_1.1.3                </span></span>
-<span><span class="co">##  [49] highr_0.10                R.utils_2.12.2           </span></span>
-<span><span class="co">##  [51] biomaRt_2.55.0            rappdirs_0.3.3           </span></span>
-<span><span class="co">##  [53] DelayedArray_0.25.0       rjson_0.2.21             </span></span>
-<span><span class="co">##  [55] tools_4.3.0               vipor_0.4.5              </span></span>
-<span><span class="co">##  [57] beeswarm_0.4.0            R.oo_1.25.0              </span></span>
-<span><span class="co">##  [59] glue_1.6.2                restfulr_0.0.15          </span></span>
-<span><span class="co">##  [61] grid_4.3.0                generics_0.1.3           </span></span>
-<span><span class="co">##  [63] gtable_0.3.1              BSgenome_1.67.3          </span></span>
-<span><span class="co">##  [65] R.methodsS3_1.8.2         data.table_1.14.6        </span></span>
-<span><span class="co">##  [67] hms_1.1.2                 BiocSingular_1.15.0      </span></span>
-<span><span class="co">##  [69] ScaledMatrix_1.7.0        xml2_1.3.3               </span></span>
-<span><span class="co">##  [71] utf8_1.2.2                XVector_0.39.0           </span></span>
+<span><span class="co">##  [33] colorspace_2.1-0          AnnotationDbi_1.61.0     </span></span>
+<span><span class="co">##  [35] rprojroot_2.0.3           irlba_2.3.5.1            </span></span>
+<span><span class="co">##  [37] textshaping_0.3.6         RSQLite_2.2.20           </span></span>
+<span><span class="co">##  [39] beachmat_2.15.0           filelock_1.0.2           </span></span>
+<span><span class="co">##  [41] labeling_0.4.2            fansi_1.0.4              </span></span>
+<span><span class="co">##  [43] httr_1.4.4                compiler_4.3.0           </span></span>
+<span><span class="co">##  [45] bit64_4.0.5               withr_2.5.0              </span></span>
+<span><span class="co">##  [47] BiocParallel_1.33.9       viridis_0.6.2            </span></span>
+<span><span class="co">##  [49] DBI_1.1.3                 highr_0.10               </span></span>
+<span><span class="co">##  [51] R.utils_2.12.2            biomaRt_2.55.0           </span></span>
+<span><span class="co">##  [53] rappdirs_0.3.3            DelayedArray_0.25.0      </span></span>
+<span><span class="co">##  [55] rjson_0.2.21              tools_4.3.0              </span></span>
+<span><span class="co">##  [57] vipor_0.4.5               beeswarm_0.4.0           </span></span>
+<span><span class="co">##  [59] R.oo_1.25.0               glue_1.6.2               </span></span>
+<span><span class="co">##  [61] restfulr_0.0.15           grid_4.3.0               </span></span>
+<span><span class="co">##  [63] generics_0.1.3            gtable_0.3.1             </span></span>
+<span><span class="co">##  [65] BSgenome_1.67.3           R.methodsS3_1.8.2        </span></span>
+<span><span class="co">##  [67] data.table_1.14.6         hms_1.1.2                </span></span>
+<span><span class="co">##  [69] BiocSingular_1.15.0       ScaledMatrix_1.7.0       </span></span>
+<span><span class="co">##  [71] xml2_1.3.3                utf8_1.2.2               </span></span>
 <span><span class="co">##  [73] ggrepel_0.9.2             pillar_1.8.1             </span></span>
 <span><span class="co">##  [75] stringr_1.5.0             dplyr_1.0.10             </span></span>
 <span><span class="co">##  [77] BiocFileCache_2.7.1       lattice_0.20-45          </span></span>
 <span><span class="co">##  [79] bit_4.0.5                 tidyselect_1.2.0         </span></span>
-<span><span class="co">##  [81] Biostrings_2.67.0         knitr_1.41               </span></span>
-<span><span class="co">##  [83] gridExtra_2.3             bookdown_0.32            </span></span>
-<span><span class="co">##  [85] xfun_0.36                 pheatmap_1.0.12          </span></span>
-<span><span class="co">##  [87] stringi_1.7.12            yaml_2.3.6               </span></span>
-<span><span class="co">##  [89] evaluate_0.20             codetools_0.2-18         </span></span>
-<span><span class="co">##  [91] tibble_3.1.8              BiocManager_1.30.19      </span></span>
-<span><span class="co">##  [93] cli_3.6.0                 systemfonts_1.0.4        </span></span>
-<span><span class="co">##  [95] munsell_0.5.0             jquerylib_0.1.4          </span></span>
-<span><span class="co">##  [97] Rcpp_1.0.10               dbplyr_2.3.0             </span></span>
-<span><span class="co">##  [99] png_0.1-8                 XML_3.99-0.13            </span></span>
-<span><span class="co">## [101] parallel_4.3.0            ellipsis_0.3.2           </span></span>
-<span><span class="co">## [103] pkgdown_2.0.7             assertthat_0.2.1         </span></span>
-<span><span class="co">## [105] blob_1.2.3                prettyunits_1.1.1        </span></span>
-<span><span class="co">## [107] sparseMatrixStats_1.11.1  bitops_1.0-7             </span></span>
-<span><span class="co">## [109] viridisLite_0.4.1         scales_1.2.1             </span></span>
-<span><span class="co">## [111] purrr_1.0.1               crayon_1.5.2             </span></span>
-<span><span class="co">## [113] rlang_1.0.6               KEGGREST_1.39.0</span></span></code></pre>
+<span><span class="co">##  [81] knitr_1.41                gridExtra_2.3            </span></span>
+<span><span class="co">##  [83] bookdown_0.32             xfun_0.36                </span></span>
+<span><span class="co">##  [85] pheatmap_1.0.12           stringi_1.7.12           </span></span>
+<span><span class="co">##  [87] yaml_2.3.6                evaluate_0.20            </span></span>
+<span><span class="co">##  [89] codetools_0.2-18          tibble_3.1.8             </span></span>
+<span><span class="co">##  [91] BiocManager_1.30.19       cli_3.6.0                </span></span>
+<span><span class="co">##  [93] systemfonts_1.0.4         munsell_0.5.0            </span></span>
+<span><span class="co">##  [95] jquerylib_0.1.4           Rcpp_1.0.10              </span></span>
+<span><span class="co">##  [97] dbplyr_2.3.0              png_0.1-8                </span></span>
+<span><span class="co">##  [99] XML_3.99-0.13             parallel_4.3.0           </span></span>
+<span><span class="co">## [101] ellipsis_0.3.2            pkgdown_2.0.7            </span></span>
+<span><span class="co">## [103] assertthat_0.2.1          blob_1.2.3               </span></span>
+<span><span class="co">## [105] prettyunits_1.1.1         sparseMatrixStats_1.11.1 </span></span>
+<span><span class="co">## [107] bitops_1.0-7              viridisLite_0.4.1        </span></span>
+<span><span class="co">## [109] scales_1.2.1              purrr_1.0.1              </span></span>
+<span><span class="co">## [111] crayon_1.5.2              rlang_1.0.6              </span></span>
+<span><span class="co">## [113] KEGGREST_1.39.0</span></span></code></pre>
 </details>
 </div>
 </div>
