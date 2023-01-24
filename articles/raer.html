@@ -15,8 +15,8 @@
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><link href="../deps/Source_Sans_Pro-0.4.4/font.css" rel="stylesheet">
-<link href="../deps/Source_Code_Pro-0.4.4/font.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><link href="../deps/Source_Sans_Pro-0.4.5/font.css" rel="stylesheet">
+<link href="../deps/Source_Code_Pro-0.4.5/font.css" rel="stylesheet">
 <!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Introducing the raer package">
@@ -92,7 +92,7 @@ Riemondy</h4>
 Medicine<br><h4 data-toc-skip class="author">Kristen
 Wells-Wrasman</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-01-23</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-01-24</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/raer.Rmd" class="external-link"><code>vignettes/raer.Rmd</code></a></small>
       <div class="d-none name"><code>raer.Rmd</code></div>
@@ -138,9 +138,9 @@ alignments from chromosome 18.</p>
 <code class="sourceCode R"><span><span class="va">bam_files</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bams</span></span>
 <span><span class="va">bam_files</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   SRR5564260_dedup_sorted.bam </span></span>
-<span><span class="co">## "/tmp/RtmpGUOOAf/SRR5564260_dedup_sorted.bam" </span></span>
+<span><span class="co">## "/tmp/Rtmp0YQlly/SRR5564260_dedup_sorted.bam" </span></span>
 <span><span class="co">##                   SRR5564261_dedup_sorted.bam </span></span>
-<span><span class="co">## "/tmp/RtmpGUOOAf/SRR5564261_dedup_sorted.bam"</span></span></code></pre>
+<span><span class="co">## "/tmp/Rtmp0YQlly/SRR5564261_dedup_sorted.bam"</span></span></code></pre>
 <p>Next we’ll need a FASTA file to quantify the editing sites. We’ll use
 a FASTA file only containing chromosome 18 for this demo. The fasta can
 be compressed.</p>
@@ -148,7 +148,7 @@ be compressed.</p>
 <code class="sourceCode R"><span><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">fasta</span></span>
 <span><span class="va">fafn</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   chr18.fasta.bgz </span></span>
-<span><span class="co">## "/tmp/RtmpGUOOAf/chr18.fasta.bgz"</span></span></code></pre>
+<span><span class="co">## "/tmp/Rtmp0YQlly/chr18.fasta.bgz"</span></span></code></pre>
 <p>Lastly, we’ll use a BED file containing the coordinates of known
 human editing sites from the REDIPortal database. This file can also be
 optionally compressed.</p>
@@ -156,7 +156,7 @@ optionally compressed.</p>
 <code class="sourceCode R"><span><span class="va">bedfn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bed</span></span>
 <span><span class="va">bedfn</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   rediportal_hg38_chr18.bed.gz </span></span>
-<span><span class="co">## "/tmp/RtmpGUOOAf/rediportal_hg38_chr18.bed.gz"</span></span></code></pre>
+<span><span class="co">## "/tmp/Rtmp0YQlly/rediportal_hg38_chr18.bed.gz"</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="generate-editing-site-read-counts">Generate editing site read counts<a class="anchor" aria-label="anchor" href="#generate-editing-site-read-counts"></a>
@@ -515,7 +515,7 @@ Session info
 <span><span class="co">##  [47] Rcpp_1.0.10              bookdown_0.32           </span></span>
 <span><span class="co">##  [49] assertthat_0.2.1         knitr_1.41              </span></span>
 <span><span class="co">##  [51] R.utils_2.12.2           Matrix_1.5-3            </span></span>
-<span><span class="co">##  [53] tidyselect_1.2.0         yaml_2.3.6              </span></span>
+<span><span class="co">##  [53] tidyselect_1.2.0         yaml_2.3.7              </span></span>
 <span><span class="co">##  [55] doParallel_1.0.17        codetools_0.2-18        </span></span>
 <span><span class="co">##  [57] curl_5.0.0               lattice_0.20-45         </span></span>
 <span><span class="co">##  [59] tibble_3.1.8             KEGGREST_1.39.0         </span></span>
@@ -538,7 +538,7 @@ Session info
 <span><span class="co">##  [93] rappdirs_0.3.3           textshaping_0.3.6       </span></span>
 <span><span class="co">##  [95] fansi_1.0.4              dplyr_1.0.10            </span></span>
 <span><span class="co">##  [97] gtable_0.3.1             R.methodsS3_1.8.2       </span></span>
-<span><span class="co">##  [99] sass_0.4.4               digest_0.6.31           </span></span>
+<span><span class="co">##  [99] sass_0.4.5               digest_0.6.31           </span></span>
 <span><span class="co">## [101] rjson_0.2.21             memoise_2.0.1           </span></span>
 <span><span class="co">## [103] htmltools_0.5.4          pkgdown_2.0.7           </span></span>
 <span><span class="co">## [105] R.oo_1.25.0              lifecycle_1.0.3         </span></span>
