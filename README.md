@@ -6,6 +6,8 @@
 <!-- badges: start -->
 
 [![R-CMD-check-bioc](https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml/badge.svg)](https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml)
+[![Codecov test
+coverage](https://codecov.io/gh/rnabioco/raer/branch/main/graph/badge.svg)](https://app.codecov.io/gh/rnabioco/raer?branch=main)
 <!-- badges: end -->
 
 raer is an R package that facilitates rapid interactive analysis of RNA
