@@ -19,24 +19,24 @@ knitr::opts_chunk$set(
 [![R-CMD-check-bioc](https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml/badge.svg)](https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml)
 <!-- badges: end -->
 
-raer is an R package that facilitates rapid interactive analysis of RNA editing in R in the bioconductor ecosystem. 
-
-**raer is under active development and functionality may change** 
+raer facilitates analysis of RNA adenosine editing in the
+[Bioconductor](https://bioconductor.org/) ecosystem.
 
 ## Installation
 
 You can install the development version of raer from [GitHub](https://github.com/) with:
 
 ``` r
-# install.packages("devtools")
-devtools::install_github("rnabioco/raer")
+# install.packages("pak")
+pak::pkg_install("rnabioco/raer")
 ```
 
 ## Quick start
 
-The raer package provides methods to compute per site read count summaries from bam files, either for known sites, or for all detected sites.
+raer provides methods to compute per site read count summaries from BAM
+alignment files, either for known sites, or for all detected sites.
 
-```{r}
+```{r get_pileup}
 library(raer)
 bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
@@ -47,45 +47,36 @@ res <- get_pileup(bamfn, fafn, bedfile = bedfn)
 res[1:5, ]
 ```
 
+Multiple BAM files can be processed, enabling rapid comparisons of RNA-Seq vs.
+WGS or WXS data, or RNA-Seq vs RNA-seq (e.g., ADAR WT VS ADAR KO).
+
 The `FilterParam()` class holds multiple options for customizing the output of 
 `get_pileup()`.
 
-```{r params}
-fp <- FilterParam(only_keep_variants = TRUE)
-res <- get_pileup(bamfn, fafn, filterParam = fp)
-res
-```
+To facilitate comparisons across groups, pileups can be combined in a 
+`RangedSummarizedExperiment`. 
 
-Multiple bam files can be processed, which enables rapid comparisons of RNA-Seq vs. WGS or WXS data, or RNA-Seq vs RNA-seq (ADAR WT VS ADAR KO).
-
-```{r}
+```{r create_se}
 fp <- FilterParam(
   only_keep_variants = TRUE,
   library_type = "fr-first-strand",
   min_nucleotide_depth = 2
 )
 
-plps <- get_pileup(c(bam2fn, bamfn),
+plps <- get_pileup(
+  c(bam2fn, bamfn),
   fafn,
   filterParam = fp
 )
-plps
-```
 
-To facilitate comparisons across groups, the pileups can be stored in a 
-`RangedSummarizedExperiment`. 
-
-```{r}
 create_se(plps)
 ```
 
 ## Related work
 
-The functionality in `raer` builds off of previously published methods and software:  
+raer functionality builds off of previous work:  
 
  - Python package: [REDItools](https://github.com/BioinfoUNIBA/REDItools) from [Picardi E, Pesole G](https://doi.org/10.1093/bioinformatics/btt287)   
  - Java tool: [JACUSA2](https://github.com/dieterich-lab/JACUSA2)  from [Piechotta M et al ](https://doi.org/10.1186/s12859-016-1432-8)    
  - Python-based pipeline: [deNovo-Detect](https://github.com/a2iEditing/deNovo-Detect) from [Gabey O et al ](https://doi.org/10.1038/s41467-022-28841-4)   
  - Java-based tool: [RNAEditingIndexer](https://github.com/a2iEditing/RNAEditingIndexer) from [Roth SH et al](https://doi.org/10.1038/s41592-019-0610-9)  
-
-
