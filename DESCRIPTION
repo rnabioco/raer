@@ -57,7 +57,8 @@ Suggests:
     SNPlocs.Hsapiens.dbSNP144.GRCh38,
     scater,
     SingleCellExperiment,
-    AnnotationHub
+    AnnotationHub,
+    covr
 LinkingTo: 
     Rcpp,
     Rhtslib (>= 2.0.0)
