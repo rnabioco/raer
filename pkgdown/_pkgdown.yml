@@ -6,7 +6,7 @@ template:
 reference:
 - title: Pileup
   contents:
-  - '`get_pileup`'
+  - has_concept('pileup')
 - title: Calculations
   contents:
   - '`calc_AEI`'

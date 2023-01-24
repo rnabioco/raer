@@ -97,7 +97,7 @@ plps
 
 
 ```{r}
-se <- create_se(plps)
+se <- merge_pileups(plps)
 se
 ```
 

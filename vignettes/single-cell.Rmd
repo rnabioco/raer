@@ -99,10 +99,10 @@ a set of high confidence sites to query in single cell mode.
 
 When analyzing single cell data we have the option to quantify editing sites for each cell or we can quantify sites by pooling alignments across similar cells, such as cells in the same cluster. 
 
-`raer` provides a wrapper function, `sc_editing()`, which will extract alignments per cell (or cluster) using `get_tag_bam()`, generate editing site counts (`get_pileup()`), then collect the site counts into a SummarizedExperiment (`create_se()`). 
+`raer` provides a wrapper function, `sc_editing()`, which will extract alignments per cell (or cluster) using `get_tag_bam()`, generate editing site counts (`get_pileup()`), then collect the site counts into a `RangedSummarizedExperiment` (`merge_pileups()`). 
 
 The `cell_barcodes` argument specifies which cell-barcodes will be queried. If a character vector of cell-barcodes is supplied, editing sites will be quantified per cell-barcode. Alternatively a list containing cell-barcodes per cluster or group can be supplied, in which case editing sites will be quantified by pooling alignments per group.  
-Additional arguments for `get_pileup()` can be passed to `sc_editing()`. Note that      `bam_flags` is set to **include** duplicate reads by default. If the bamfile has a tag with a UMI sequence, this can be supplied to the `umi_tag` argument to only count 1 read for each UMI at each position. This strategy allows for reads with the same UMI to be counted at multiple independent sites enabling recovery of more sequence variants than counting only 1 read per UMI.  
+Additional arguments for `get_pileup()` can be passed to `sc_editing()`. Note that `bam_flags` is set to **include** duplicate reads by default. If the bamfile has a tag with a UMI sequence, this can be supplied to the `umi_tag` argument to only count 1 read for each UMI at each position. This strategy allows for reads with the same UMI to be counted at multiple independent sites enabling recovery of more sequence variants than counting only 1 read per UMI.  
 
 Processing time can be reduced by operating in parallel across groups of cells (or clusters), by supplying a BiocParallel backend to the `BPPARAM` argument (e.g. `MultiCoreParam()`).
 

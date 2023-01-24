@@ -76,7 +76,7 @@ To facilitate comparisons across groups, the pileups can be stored in a
 `RangedSummarizedExperiment`. 
 
 ```{r}
-create_se(plps)
+merge_pileups(plps)
 ```
 
 ## Related work

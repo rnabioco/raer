@@ -58,7 +58,8 @@
 #' @importFrom GenomeInfoDb seqlevels seqinfo seqlengths
 #' @importFrom BiocParallel SerialParam bpstop bplapply ipcid ipclock ipcunlock
 #'
-#' @rdname get_pileup
+#' @family pileup
+#'
 #' @export
 get_pileup <- function(bamfiles,
                        fafile,

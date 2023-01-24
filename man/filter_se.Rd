@@ -49,7 +49,7 @@ variants if multiple allele types are present within a given distance
 in genomic coordinate space or transcriptome coordinate space.
 }
 \examples{
-example(create_se, echo = FALSE)
+example(merge_pileups, echo = FALSE)
 remove_multiallelic(se)
 
 if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {

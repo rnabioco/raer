@@ -164,3 +164,8 @@ fp <- FilterParam(only_keep_variants = TRUE, min_nucleotide_depth = 55)
 get_pileup(bamfn, fafn, filterParam = fp)
 
 }
+\seealso{
+Other pileup: 
+\code{\link{merge_pileups}()}
+}
+\concept{pileup}

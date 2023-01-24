@@ -8,7 +8,7 @@
 #' @param se SummarizedExperiment
 #'
 #' @examples
-#' example(create_se, echo = FALSE)
+#' example(merge_pileups, echo = FALSE)
 #' remove_multiallelic(se)
 #'
 #' @rdname filter_se
