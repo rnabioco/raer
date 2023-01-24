@@ -6,6 +6,8 @@
 \alias{raer-package}
 \title{raer: RNA editing tools in R}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 Toolkit for identification and statistical testing of RNA editing signals from within R. Provides support for identifying sites from bulk-RNA-seq, single cell RNA-seq datasets, and general methods for extraction of allelic read counts from alignment files.
 }
 \seealso{

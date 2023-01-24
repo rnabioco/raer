@@ -14,8 +14,8 @@ reference:
   - '`count_edits`'
 - title: Filtering
   contents:
+  - has_concept('se-filters')
   - '`filter_by_coverage`'
-  - '`remove_multiallelic`'
   - '`getCoverageAtPositions`'
 - title: Annotation
   contents:
