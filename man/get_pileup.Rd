@@ -166,6 +166,7 @@ get_pileup(bamfn, fafn, filterParam = fp)
 }
 \seealso{
 Other pileup: 
-\code{\link{merge_pileups}()}
+\code{\link{merge_pileups}()},
+\code{\link{pileup_cells}()}
 }
 \concept{pileup}

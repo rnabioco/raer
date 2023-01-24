@@ -14,12 +14,12 @@ read_sparray(mtx_fn, sites_fn, bc_fn)
 \item{bc_fn}{bcs.txt.gz file path}
 }
 \value{
-a list of sparseMatrices, of NULL if mtx_fn is empty
+a list of \code{sparseMatrix}, of \code{NULL} if mtx_fn is empty
 }
 \description{
-This function willl read in tables produced by pileup_cells().
-These tables are an extension of the matrixMarket sparse matrix format to
-store values for more than 1 matrix.
+Read in tables produced by \code{pileup_cells()}, which are an
+extension of the matrixMarket sparse matrix format to store values for more
+than 1 matrix.
 
 The .mtx.gz files are formatted with columns:
 \enumerate{

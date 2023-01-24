@@ -70,6 +70,7 @@ rowRanges(se)
 }
 \seealso{
 Other pileup: 
-\code{\link{get_pileup}()}
+\code{\link{get_pileup}()},
+\code{\link{pileup_cells}()}
 }
 \concept{pileup}
