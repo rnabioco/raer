@@ -3,7 +3,7 @@
 #include <htslib/khash.h>
 #include <htslib/hts_log.h>
 #include <bedidx.h>
-#include "bedfile.h"
+#include "regfile.h"
 #include "plp_utils.h"
 #include "plp_data.h"
 
@@ -48,27 +48,6 @@ typedef khash_t(varhash) *varhash_t;
 
 KHASH_SET_INIT_STR(umihash)
 typedef khash_t(umihash) *umihash_t;
-
-
-
-static unsigned char comp_base[256] = {
-  0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,
-  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,
-  32, '!', '"', '#', '$', '%', '&', '\'','(', ')', '*', '+', ',', '-', '.', '/',
-  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?',
-  '@', 'T', 'V', 'G', 'H', 'E', 'F', 'C', 'D', 'I', 'J', 'M', 'L', 'K', 'N', 'O',
-  'P', 'Q', 'Y', 'S', 'A', 'A', 'B', 'W', 'X', 'R', 'Z', '[', '\\',']', '^', '_',
-  '`', 't', 'v', 'g', 'h', 'e', 'f', 'c', 'd', 'i', 'j', 'm', 'l', 'k', 'n', 'o',
-  'p', 'q', 'y', 's', 'a', 'a', 'b', 'w', 'x', 'r', 'z', '{', '|', '}', '~', 127,
-  128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143,
-  144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
-  160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175,
-  176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
-  192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207,
-  208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223,
-  224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239,
-  240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
-};
 
 typedef struct {
   int minq;
@@ -878,7 +857,7 @@ static int check_umi(const bam_pileup1_t *p, mplp_conf_t *conf,
   return(1);
 }
 
-SEXP run_cpileup(char** cbampaths,
+SEXP run_pileup(char** cbampaths,
                 int n,
                 char* cfapath,
                 char* cregion,
@@ -1417,27 +1396,27 @@ static void check_plp_args(SEXP bampaths,
   }
 }
 
-SEXP do_run_pileup(SEXP bampaths,
-              SEXP n,
-              SEXP fapath,
-              SEXP region,
-              SEXP bedfn,
-              SEXP min_reads,
-              SEXP event_filters,
-              SEXP min_mapQ,
-              SEXP max_depth,
-              SEXP min_baseQ,
-              SEXP read_bqual_filter,
-              SEXP libtype,
-              SEXP b_flags,
-              SEXP only_keep_variants,
-              SEXP in_mem,
-              SEXP multi_region_itr,
-              SEXP outfns,
-              SEXP reads_fn,
-              SEXP mismatches_fn,
-              SEXP ext,
-              SEXP umi) {
+SEXP pileup(SEXP bampaths,
+            SEXP n,
+            SEXP fapath,
+            SEXP region,
+            SEXP bedfn,
+            SEXP min_reads,
+            SEXP event_filters,
+            SEXP min_mapQ,
+            SEXP max_depth,
+            SEXP min_baseQ,
+            SEXP read_bqual_filter,
+            SEXP libtype,
+            SEXP b_flags,
+            SEXP only_keep_variants,
+            SEXP in_mem,
+            SEXP multi_region_itr,
+            SEXP outfns,
+            SEXP reads_fn,
+            SEXP mismatches_fn,
+            SEXP ext,
+            SEXP umi) {
 
   check_plp_args(bampaths,
                  n,
@@ -1494,7 +1473,7 @@ SEXP do_run_pileup(SEXP bampaths,
   }
 
   SEXP res;
-  res = run_cpileup(cbampaths,
+  res = run_pileup(cbampaths,
                     INTEGER(n)[0],
                     (char *) translateChar(STRING_ELT(fapath, 0)), // already checked for length 1 and required arg
                     cregion,

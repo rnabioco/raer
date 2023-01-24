@@ -69,7 +69,7 @@ bedfn
 
 The `get_pileup()` function will calculate base counts across multiple BAM files. The base counts will be returned as a list of `GRanges` objects for each bam file. The `FilterParam()` function provides numerous filters to exclude reads and bases based on commonly used filters for detecting RNA-editing events. Specific regions can be queried using the `region` argument, or specific positions can be queried by providing `bedfile` a path to a BED-file. 
 
-Internally, `get_pileup()` will write the pileups to temporary files. However, these files can also be stored in a tabix-indexed format, for later retrieval, or for querying specific regions.
+Internally, `get_pileup()` will generate pileups in memory. However, these files can also be stored in a tabix-indexed format, for later retrieval, or for querying specific regions.
 
 ```{r}
 fp <- FilterParam(
@@ -78,7 +78,10 @@ fp <- FilterParam(
   trim_3p = 5,
   min_base_quality = 30L,
   min_mapq = 255L,
-  library_type = "fr-first-strand"
+  library_type = "fr-first-strand",
+  min_splice_overhang = 10,
+  indel_dist = 4, 
+  max_mismatch_type = c(3, 3), 
 )
 
 plps <- get_pileup(bam_files,
@@ -141,7 +144,7 @@ se_filtered <- calc_edit_frequency(se,
 )
 ```
 
-We can next subset the `summarizedExperiment` object to low frequency editing events. For this analysis we will require than an editing site shows editing in at least 1 sample, and have at least 5 counts in each sample. 
+We can next subset the `summarizedExperiment` object to exclude low frequency editing events. For this analysis we will require that an editing site shows editing in at least 1 sample, and have at least 5 counts in each sample. 
 
 ```{r}
 has_editing <- rowSums(assay(se_filtered, "edit_freq") > 0) >= 1

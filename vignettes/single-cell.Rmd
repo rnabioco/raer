@@ -22,8 +22,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(raer)
 library(scater)
 library(SingleCellExperiment)
-library(GenomicFeatures)
-library(SummarizedExperiment)
+library(Rsamtools)
 library(rtracklayer)
 ```
 
@@ -35,118 +34,106 @@ This vignette will demonstrate how to use the `raer` package to examine RNA edit
 
 For this example analysis we will use a single cell dataset containing human PBMC cells from [10x Genomics](https://www.10xgenomics.com/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-x-with-intronic-reads-3-1-high). The single cell data was processed using the cellranger pipeline. The BAM file contains a tag (`CB`) which indicates the cell-barcode associated with each alignment, as well as a tag containing the inferred UMI sequence (`UB`).  
 
-To begin `raer` the bam will be sorted by the `CB` tag. This sorting strategy will enable rapid extraction of alignments from individual (or sets of) cell-barcodes. This sorting can be completed using samtools on the command-line, or in R using Rsamtools.
-
-```bash
-samtools sort -t CB possorted_genome_bam.bam \
-  > cbsorted_genome_bam.bam
-```
-
-```R
-# requires version >= 2.15.1 
-Rsamtools::sortBam("possorted_genome_bam.bam", "cbsorted_genome_bam", byTag = "CB")
-```
-
-`raer` contains functionality to build a simple index that stores the file position for each cell-barcode, enabling rapid extraction of alignments for defined cell-barcodes. The method is based on an approach from `Jared Thompson` in the `bri` command line tool. The index file will have the `.bri` index file name. 
-
-```r
-idx_filename <- build_tag_index("cbsorted_genome_bam.bam", tag = "CB")
-```
-
 ## Single cell editing analysis
 
-A subset of the human PBMC scRNA-seq dataset from 10x Genomics, along with other
+A subset of a human PBMC scRNA-seq dataset from 10x Genomics, along with other
 needed files can be downloaded using `download_human_pbmc()`.   
 
 ```{r}
-data_dir <- tempdir()
+data_dir <- tempdir() 
 fns <- download_human_pbmc(data_dir)
 fns
 ```
 
 ```{r}
-bam_fn <- fns$bams
-fa_fn <- fns$fasta
+bam_fn <- fns$bam
 bed_fn <- fns$edit_sites
-```
-
-We'll first index the bam file using `build_tag_index`.
-
-```{r}
-build_tag_index(bam_fn, tag = "CB", overwrite = FALSE)
-```
-
-We can query the index to see the cell-barcodes are present in the bam file using `show_tag_index()`, which will return a data.frame containing each `tag` value and the number of alignments associated with each tag. 
-
-```{r}
-tag_df <- show_tag_index(bam_fn)
-head(tag_df)
 ```
 
 Next we'll load in a `SingleCellExperiment` with cell-type annotations.
 
 ```{r}
 sce <- readRDS(fns$sce)
+sce
+```
 
+```{r}
 plotUMAP(sce, colour_by = "celltype")
 ```
 
-Next we'll select editing sites to query. For this analysis we will use sites from the Rediportal database. To minimize processing time it can be useful to first identify sites with read coverage. `filter_by_coverage()` will exclude sites that do not have sufficient
-coverage. 
+Next we'll select editing sites to query. For this analysis we will use sites from the Rediportal database.
 
-If the editing sites of interest are not known, one option is to perform a two pass operation. First, identify editing sites by treating the data as a bulk-RNA-seq experiment, using for example `get_pileup()`. Then filter these sites to establish 
-a set of high confidence sites to query in single cell mode. 
+If the editing sites of interest are not known, one option is to perform a two pass operation. First, identify editing sites by treating the data as a bulk-RNA-seq experiment, using for example `get_pileup()`. Then filter these sites to establish a set of high confidence sites to query in single cell mode. 
 
-When analyzing single cell data we have the option to quantify editing sites for each cell or we can quantify sites by pooling alignments across similar cells, such as cells in the same cluster. 
+`raer` provides a function, `pileup_cells()`, which will quantify edited and non-edited UMI counts per cell barcode, then collect the site counts into a SingleCellExperiment. 
+
+The sites to quantified are specified using a custom formatted GRanges object with 1 base intervals, a strand (+ or -), and supplemented with metadata columns named `ref` and `alt` containing the reference and alternate base to query. In this case we are
+only interested in A->I editing, so we set the ref and alt to `A` and `G`. Note that the `ref` and `alt` bases are in reference to strand. For a `-` strand interval the bases should be the complement of the `+` strand bases.  
+
+```{r}
+gr <- import(bed_fn)
+gr$name <- NULL
+gr$score <- NULL
+gr$ref <- "A"
+gr$alt <- "G"
+gr
+```
 
 `raer` provides a wrapper function, `sc_editing()`, which will extract alignments per cell (or cluster) using `get_tag_bam()`, generate editing site counts (`get_pileup()`), then collect the site counts into a `RangedSummarizedExperiment` (`merge_pileups()`). 
 
 The `cell_barcodes` argument specifies which cell-barcodes will be queried. If a character vector of cell-barcodes is supplied, editing sites will be quantified per cell-barcode. Alternatively a list containing cell-barcodes per cluster or group can be supplied, in which case editing sites will be quantified by pooling alignments per group.  
 Additional arguments for `get_pileup()` can be passed to `sc_editing()`. Note that `bam_flags` is set to **include** duplicate reads by default. If the bamfile has a tag with a UMI sequence, this can be supplied to the `umi_tag` argument to only count 1 read for each UMI at each position. This strategy allows for reads with the same UMI to be counted at multiple independent sites enabling recovery of more sequence variants than counting only 1 read per UMI.  
+`pileup_cells()` accepts a `FilterParam()` class to specifying how to performing read and site filtering. Note that `pileup_cells()` is strand sensitive by default, so it is important to ensure that the strand of the input sites is correctly annotated, and that the library type is correct for the type of data of interest. For 10x Genomics data, the library type is set to `fr-second-strand`, indicating that the strand of the alignments matches the strand of the RNA. 
 
-Processing time can be reduced by operating in parallel across groups of cells (or clusters), by supplying a BiocParallel backend to the `BPPARAM` argument (e.g. `MultiCoreParam()`).
+Note that `bam_flags` is set to **include** duplicate reads by default. If the bamfile has a tag with a UMI sequence, this can be supplied to the `umi_tag` argument to only count 1 read for each UMI at each position. This strategy allows for reads with the same UMI to be counted at multiple independent sites enabling recovery of more sequence variants than counting only 1 read per UMI.  
 
-```{r}
+Processing time can be reduced by operating in parallel across chromosomes, by supplying a BiocParallel backend to the `BPPARAM` argument (e.g. `MultiCoreParam()`).
+
+```{r pileup_cells}
+outdir <- file.path(tempdir(), "sc_edits")
 cbs <- colnames(sce)
-se <- sc_editing(
+e_sce <- pileup_cells(
   bamfile = bam_fn,
-  fafile = fa_fn,
-  bedfile = bed_fn,
+  sites = gr,
   cell_barcodes = cbs,
-  assay_cols = c("nA", "nG"),
-  filterParam = FilterParam(
+  output_directory = outdir,
+  cb_tag = "CB",
+  umi_tag = "UB",
+  fp = FilterParam(
     min_base_quality = 30L,
     library_type = "fr-second-strand",
-    min_nucleotide_depth = 1L,
+    min_variant_reads = 1L,
     trim_5p = 5L,
-    trim_3p = 5L
-  ),
-  umi_tag = "UB"
-)
-se
+    trim_3p = 5L),
+  verbose = FALSE)
+e_sce
 ```
+
+```{r}
+dir(outdir)
+```
+
 
 Next we'll filter the pileups to find sites with at least 5 cells with an editing event, and add the editing information to the SingleCellExperiment as an `altExp()`. 
 
 ```{r}
-se <- se[Matrix::rowSums(assay(se, "nA") + assay(se, "nG")) != 0, ]
-
-se <- calc_edit_frequency(se, edit_from = "A", edit_to = "G", replace_na = FALSE)
-se <- se[, colnames(sce)]
-
-small_se <- se[rowSums(assay(se, "nG") > 0) >= 5, ]
-altExp(sce, "edits") <- small_se
+e_sce <- e_sce[rowSums(assays(e_sce)$nVar > 0) >= 5, ]
+e_sce <- calc_edit_frequency(e_sce, replace_na = FALSE)
+altExp(sce) <- e_sce[, colnames(sce)]
 ```
 
-With the editing sites added to the SingleCellExperiment we can use plotting and other methods previously developed for single cell analysis. Here we'll visualize editing sites with the highest edited read counts.
+With the editing sites added to the gene expression SingleCellExperiment we can use plotting and other methods previously developed for single cell analysis. Here we'll visualize editing sites with the highest edited read counts.
 
 ```{r}
-to_plot <- rownames(altExp(sce))[order(rowSums(assay(altExp(sce), "nG")), decreasing = TRUE)]
+to_plot <- rownames(altExp(sce))[order(rowSums(assay(altExp(sce), "nVar")), decreasing = TRUE)]
 
-lapply(to_plot[1:10], function(x) {
-  plotUMAP(sce, colour_by = x, by_exprs_values = "nG")
+lapply(to_plot[1:5], function(x) {
+  plotUMAP(sce, colour_by = x, by_exprs_values = "nVar")
 })
 ```
+
+Alternatively we can view these top edited sites as a Heatmap, showing the average
+number of edited reads per site in each cell type. 
 
 ```{r}
 altExp(sce)$cell_type <- sce$celltype
@@ -154,12 +141,11 @@ altExp(sce)$cell_type <- sce$celltype
 plotGroupedHeatmap(altExp(sce),
   features = to_plot[1:25],
   group = "cell_type",
-  exprs_values = "nG"
+  exprs_values = "nVar"
 )
 ```
 
-Various tools in Bioconductor can be used to provide additional annotation information about each RNA editing site.  The `VariantAnnotation` package provides powerful functionality to annotate the location of each editing site, and provide information about alterations in codons or splice site. 
-
+Various tools in Bioconductor can be used to provide additional annotation information about each RNA editing site.  The `VariantAnnotation` package provides powerful functionality to annotate the location of each editing site, and provide information about alterations in codons or splice sites. 
 
 <details style="margin-bottom:10px;">
 <summary>
