@@ -2,34 +2,31 @@
 % Please edit documentation in R/sc-utils.R
 \name{filter_by_coverage}
 \alias{filter_by_coverage}
-\title{Identify sites with read coverage}
+\title{Filter sites by read coverage}
 \usage{
 filter_by_coverage(bamfile, gr, min_counts, param = NULL, verbose = FALSE, ...)
 }
 \arguments{
-\item{bamfile}{Bam file name}
+\item{bamfile}{BAM file name}
 
-\item{gr}{GRanges, or file name of BED file, containing site to
-examine}
+\item{gr}{\code{GenomicRanges::GRanges} or BED file name}
 
 \item{min_counts}{minimum reads counts to require}
 
-\item{param}{A ScanBamParam object specifying how reads should be filtered.
-If not supplied the default behavior will ignore alignments marked
-as secondary, supplementary, or QC-fail.}
+\item{param}{\code{Rsamtools::ScanBamParam} specifying how reads should be filtered.
+If not supplied, the filter will ignore alignments marked as
+secondary, supplementary, or QC-fail.}
 
-\item{verbose}{If TRUE, print messages}
+\item{verbose}{Print messages if \code{TRUE}.}
 
 \item{...}{Additional arguments to supply to \code{\link[GenomicAlignments:coverage-methods]{GenomicAlignments::coverage()}}}
 }
 \description{
-This function will compute read coverage at sites
-listed in either a GRanges or BED file. Sites passing with at least
-\code{min_counts} read depth will be returned. This function will
-compute coverage across all alignments and positions,
-ignoring any cell-barcodes. Generally it is faster to compute coverage
-across all positions, then filter to those in the GRanges object, rather
-than only querying the supplied sites.
+Compute read coverage at sites listed in a \code{GRanges} or BED file
+and return sites with at least \code{min_counts} read depth. Computes coverage
+across all alignments and positions, ignoring any cell barcodes. Generally
+it is faster to compute coverage across all positions than to filter those
+in the GRanges object, rather than only querying the supplied sites.
 }
 \examples{
 library(rtracklayer)
@@ -38,5 +35,8 @@ sites <- GRanges(
   rep("SSR3", 101),
   IRanges(100:200, width = 1)
 )
+
 filter_by_coverage(bam_fn, sites, min_counts = 24)
+
 }
+\concept{filter}

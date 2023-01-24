@@ -19,6 +19,7 @@
 #' @importFrom Rsamtools scanBamHeader scanBam isOpen BamFile yieldSize<-
 #'   ScanBamParam
 #' @importFrom GenomicAlignments readGAlignments
+#'
 #' @export
 build_tag_index <- function(bamfile, tag = "CB", n_records_to_check = 1e6,
                             overwrite = TRUE) {
@@ -175,24 +176,21 @@ check_missing_barcodes <- function(cbs, bamfile) {
   sum(!cbs %in% tags$tag)
 }
 
-#' Identify sites with read coverage
+#' Filter sites by read coverage
 #'
-#' @description This function will compute read coverage at sites
-#' listed in either a GRanges or BED file. Sites passing with at least
-#' `min_counts` read depth will be returned. This function will
-#' compute coverage across all alignments and positions,
-#' ignoring any cell-barcodes. Generally it is faster to compute coverage
-#' across all positions, then filter to those in the GRanges object, rather
-#' than only querying the supplied sites.
+#' @description Compute read coverage at sites listed in a `GRanges` or BED file
+#'   and return sites with at least `min_counts` read depth. Computes coverage
+#'   across all alignments and positions, ignoring any cell barcodes. Generally
+#'   it is faster to compute coverage across all positions than to filter those
+#'   in the GRanges object, rather than only querying the supplied sites.
 #'
-#' @param bamfile Bam file name
-#' @param gr GRanges, or file name of BED file, containing site to
-#' examine
+#' @param bamfile BAM file name
+#' @param gr `GenomicRanges::GRanges` or BED file name
 #' @param min_counts minimum reads counts to require
-#' @param param A ScanBamParam object specifying how reads should be filtered.
-#' If not supplied the default behavior will ignore alignments marked
-#' as secondary, supplementary, or QC-fail.
-#' @param verbose If TRUE, print messages
+#' @param param `Rsamtools::ScanBamParam` specifying how reads should be filtered.
+#'   If not supplied, the filter will ignore alignments marked as
+#'   secondary, supplementary, or QC-fail.
+#' @param verbose Print messages if `TRUE`.
 #' @param ... Additional arguments to supply to [GenomicAlignments::coverage()]
 #'
 #' @examples
@@ -202,8 +200,13 @@ check_missing_barcodes <- function(cbs, bamfile) {
 #'   rep("SSR3", 101),
 #'   IRanges(100:200, width = 1)
 #' )
+#'
 #' filter_by_coverage(bam_fn, sites, min_counts = 24)
+#'
 #' @importFrom GenomicAlignments coverage
+#'
+#' @family filter
+#'
 #' @export
 filter_by_coverage <- function(bamfile, gr, min_counts,
                                param = NULL, verbose = FALSE,
