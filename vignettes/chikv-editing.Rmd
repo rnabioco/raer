@@ -527,9 +527,12 @@ redi_db <- read_tsv(
   fns$redi_db,
   col_names = TRUE
 ) |>
-  janitor::clean_names() |>
+  janitor::clean_names()
+
+redi_db <- 
   setNames(
-    names(xx) |>
+    redi_db,
+    names(redi_db) |>
       str_replace('_wg_encode_gencode_basic_vm16', '_gencode') |>
       str_replace('_ref_gene', '_refgene') |>
       str_replace('repeat', 'repeat_class')
@@ -638,7 +641,11 @@ tidy_redi_tbl |>
 
 ## TODO
 
-- Examine edit_freq within REDIportal xref data.
+- [ ] Count number of A>G in our data vs rediportal (common and unique to either)
+
+- [ ] Examine edit_freq within REDIportal xref data.
+
+- [ ] Examine how mouse edits track with mock or virus. 
 
 - [ ] Remove contigs and `_random` chromosomes from all objects early on,
   and relevel the GRanges objects.
