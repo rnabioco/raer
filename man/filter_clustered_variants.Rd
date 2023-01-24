@@ -52,7 +52,7 @@ if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
     rowRanges = rowRanges, colData = colData
   )
 
-  se <- remove_clustered_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
+  se <- filter_clustered_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
   se
 }
 

@@ -156,7 +156,7 @@ filter_splice_variants <- function(se, txdb,
 #'     rowRanges = rowRanges, colData = colData
 #'   )
 #'
-#'   se <- remove_clustered_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
+#'   se <- filter_clustered_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
 #'   se
 #' }
 #'
