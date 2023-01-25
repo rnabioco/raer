@@ -93,20 +93,20 @@
 </div>
 <!-- badges: start -->
 
-<p>raer is an R package that facilitates rapid interactive analysis of RNA editing in R in the bioconductor ecosystem.</p>
-<p><strong>raer is under active development and functionality may change</strong></p>
+<p>raer facilitates analysis of RNA adenosine editing in the <a href="https://bioconductor.org/" class="external-link">Bioconductor</a> ecosystem.</p>
+<p>🚧 <strong>raer is under active development and functionality may change</strong> 🚧</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <p>You can install the development version of raer from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"rnabioco/raer"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># install.packages("BiocManager")</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"rnabioco/raer"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
-<p>The raer package provides methods to compute per site read count summaries from bam files, either for known sites, or for all detected sites.</p>
+<p>raer provides methods to compute per site read count summaries from BAM alignment files, either for known sites, or for all detected sites.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rnabioco.github.io/raer">raer</a></span><span class="op">)</span></span>
 <span><span class="va">bamfn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"SRR5564269_Aligned.sortedByCoord.out.md.bam"</span><span class="op">)</span></span>
@@ -133,117 +133,23 @@
 <span><span class="co">#&gt;   [5]         0        16         0         0         0         0</span></span>
 <span><span class="co">#&gt;   -------</span></span>
 <span><span class="co">#&gt;   seqinfo: 3 sequences from an unspecified genome</span></span></code></pre></div>
+<p>Multiple BAM files can be processed, enabling rapid comparisons of RNA-Seq vs. WGS or WXS data, or RNA-Seq vs RNA-seq (e.g., ADAR WT VS ADAR KO).</p>
 <p>The <code><a href="reference/get_pileup.html">FilterParam()</a></code> class holds multiple options for customizing the output of <code><a href="reference/get_pileup.html">get_pileup()</a></code>.</p>
+<p>To facilitate comparisons across groups, pileups can be combined in a <code>RangedSummarizedExperiment</code>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_pileup.html">FilterParam</a></span><span class="op">(</span>only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_pileup.html">get_pileup</a></span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">fafn</span>, filterParam <span class="op">=</span> <span class="va">fp</span><span class="op">)</span></span>
-<span><span class="va">res</span></span>
-<span><span class="co">#&gt; GRanges object with 31 ranges and 10 metadata columns:</span></span>
-<span><span class="co">#&gt;        seqnames    ranges strand |         Ref         Var      nRef      nVar</span></span>
-<span><span class="co">#&gt;           &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
-<span><span class="co">#&gt;    [1]     SSR3       102      - |           T          TG        12         1</span></span>
-<span><span class="co">#&gt;    [2]     SSR3       228      - |           A          AG        13         1</span></span>
-<span><span class="co">#&gt;    [3]     SSR3       244      - |           A          AG        18         1</span></span>
-<span><span class="co">#&gt;    [4]     SSR3       254      - |           A          AG        18         1</span></span>
-<span><span class="co">#&gt;    [5]     SSR3       258      - |           G          GA         8        10</span></span>
-<span><span class="co">#&gt;    ...      ...       ...    ... .         ...         ...       ...       ...</span></span>
-<span><span class="co">#&gt;   [27]     DHFR       300      - |           A          AG        56         1</span></span>
-<span><span class="co">#&gt;   [28]     DHFR       332      - |           A          AG        55         1</span></span>
-<span><span class="co">#&gt;   [29]     DHFR       336      - |           G          GT        51         1</span></span>
-<span><span class="co">#&gt;   [30]     DHFR       430      - |           A          AT        37         1</span></span>
-<span><span class="co">#&gt;   [31]     DHFR       513      - |           T          TC        35         1</span></span>
-<span><span class="co">#&gt;               nA        nT        nC        nG        nN        nX</span></span>
-<span><span class="co">#&gt;        &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
-<span><span class="co">#&gt;    [1]         0        12         0         1         0         6</span></span>
-<span><span class="co">#&gt;    [2]        13         0         0         1         0         4</span></span>
-<span><span class="co">#&gt;    [3]        18         0         0         1         0         1</span></span>
-<span><span class="co">#&gt;    [4]        18         0         0         1         0         1</span></span>
-<span><span class="co">#&gt;    [5]        10         0         0         8         0         2</span></span>
-<span><span class="co">#&gt;    ...       ...       ...       ...       ...       ...       ...</span></span>
-<span><span class="co">#&gt;   [27]        56         0         0         1         0         4</span></span>
-<span><span class="co">#&gt;   [28]        55         0         0         1         0         2</span></span>
-<span><span class="co">#&gt;   [29]         0         1         0        51         0         5</span></span>
-<span><span class="co">#&gt;   [30]        37         1         0         0         0         5</span></span>
-<span><span class="co">#&gt;   [31]         0        35         1         0         0         0</span></span>
-<span><span class="co">#&gt;   -------</span></span>
-<span><span class="co">#&gt;   seqinfo: 3 sequences from an unspecified genome</span></span></code></pre></div>
-<p>Multiple bam files can be processed, which enables rapid comparisons of RNA-Seq vs. WGS or WXS data, or RNA-Seq vs RNA-seq (ADAR WT VS ADAR KO).</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_pileup.html">FilterParam</a></span><span class="op">(</span></span>
 <span>  only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  library_type <span class="op">=</span> <span class="st">"fr-first-strand"</span>,</span>
 <span>  min_nucleotide_depth <span class="op">=</span> <span class="fl">2</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">plps</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_pileup.html">get_pileup</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">bam2fn</span>, <span class="va">bamfn</span><span class="op">)</span>,</span>
+<span><span class="va">plps</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_pileup.html">get_pileup</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">bam2fn</span>, <span class="va">bamfn</span><span class="op">)</span>,</span>
 <span>  <span class="va">fafn</span>,</span>
 <span>  filterParam <span class="op">=</span> <span class="va">fp</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">plps</span></span>
-<span><span class="co">#&gt; [[1]]</span></span>
-<span><span class="co">#&gt; GRanges object with 74 ranges and 10 metadata columns:</span></span>
-<span><span class="co">#&gt;        seqnames    ranges strand |         Ref         Var      nRef      nVar</span></span>
-<span><span class="co">#&gt;           &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
-<span><span class="co">#&gt;    [1]     SSR3       102      - |           T           -        15         0</span></span>
-<span><span class="co">#&gt;    [2]     SSR3       125      - |           C          CG        21         1</span></span>
-<span><span class="co">#&gt;    [3]     SSR3       156      - |           C          CA        25         1</span></span>
-<span><span class="co">#&gt;    [4]     SSR3       176      - |           A          AG         8        16</span></span>
-<span><span class="co">#&gt;    [5]     SSR3       198      - |           A          AG        24         1</span></span>
-<span><span class="co">#&gt;    ...      ...       ...    ... .         ...         ...       ...       ...</span></span>
-<span><span class="co">#&gt;   [70]     DHFR       397      - |           A          AT        31         1</span></span>
-<span><span class="co">#&gt;   [71]     DHFR       399      - |           G          GA        28         1</span></span>
-<span><span class="co">#&gt;   [72]     DHFR       423      - |           T          TC        31         1</span></span>
-<span><span class="co">#&gt;   [73]     DHFR       430      - |           A           -        33         0</span></span>
-<span><span class="co">#&gt;   [74]     DHFR       513      - |           T           -        21         0</span></span>
-<span><span class="co">#&gt;               nA        nT        nC        nG        nN        nX</span></span>
-<span><span class="co">#&gt;        &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
-<span><span class="co">#&gt;    [1]         0        15         0         0         0         7</span></span>
-<span><span class="co">#&gt;    [2]         0         0        21         1         0         0</span></span>
-<span><span class="co">#&gt;    [3]         1         0        25         0         0         0</span></span>
-<span><span class="co">#&gt;    [4]         8         0         0        16         0         0</span></span>
-<span><span class="co">#&gt;    [5]        24         0         0         1         0         1</span></span>
-<span><span class="co">#&gt;    ...       ...       ...       ...       ...       ...       ...</span></span>
-<span><span class="co">#&gt;   [70]        31         1         0         0         0         2</span></span>
-<span><span class="co">#&gt;   [71]         1         0         0        28         0         6</span></span>
-<span><span class="co">#&gt;   [72]         0        31         1         0         0         2</span></span>
-<span><span class="co">#&gt;   [73]        33         0         0         0         0         2</span></span>
-<span><span class="co">#&gt;   [74]         0        21         0         0         0         0</span></span>
-<span><span class="co">#&gt;   -------</span></span>
-<span><span class="co">#&gt;   seqinfo: 3 sequences from an unspecified genome</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[2]]</span></span>
-<span><span class="co">#&gt; GRanges object with 74 ranges and 10 metadata columns:</span></span>
-<span><span class="co">#&gt;        seqnames    ranges strand |         Ref         Var      nRef      nVar</span></span>
-<span><span class="co">#&gt;           &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
-<span><span class="co">#&gt;    [1]     SSR3       102      - |           T          TG        12         1</span></span>
-<span><span class="co">#&gt;    [2]     SSR3       125      - |           C           -        17         0</span></span>
-<span><span class="co">#&gt;    [3]     SSR3       156      - |           C           -        16         0</span></span>
-<span><span class="co">#&gt;    [4]     SSR3       176      - |           A           -        16         0</span></span>
-<span><span class="co">#&gt;    [5]     SSR3       198      - |           A           -        15         0</span></span>
-<span><span class="co">#&gt;    ...      ...       ...    ... .         ...         ...       ...       ...</span></span>
-<span><span class="co">#&gt;   [70]     DHFR       397      - |           A           -        43         0</span></span>
-<span><span class="co">#&gt;   [71]     DHFR       399      - |           G           -        43         0</span></span>
-<span><span class="co">#&gt;   [72]     DHFR       423      - |           T           -        42         0</span></span>
-<span><span class="co">#&gt;   [73]     DHFR       430      - |           A          AT        37         1</span></span>
-<span><span class="co">#&gt;   [74]     DHFR       513      - |           T          TC        35         1</span></span>
-<span><span class="co">#&gt;               nA        nT        nC        nG        nN        nX</span></span>
-<span><span class="co">#&gt;        &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;</span></span>
-<span><span class="co">#&gt;    [1]         0        12         0         1         0         6</span></span>
-<span><span class="co">#&gt;    [2]         0         0        17         0         0         1</span></span>
-<span><span class="co">#&gt;    [3]         0         0        16         0         0         1</span></span>
-<span><span class="co">#&gt;    [4]        16         0         0         0         0         0</span></span>
-<span><span class="co">#&gt;    [5]        15         0         0         0         0         2</span></span>
-<span><span class="co">#&gt;    ...       ...       ...       ...       ...       ...       ...</span></span>
-<span><span class="co">#&gt;   [70]        43         0         0         0         0         2</span></span>
-<span><span class="co">#&gt;   [71]         0         0         0        43         0         3</span></span>
-<span><span class="co">#&gt;   [72]         0        42         0         0         0         1</span></span>
-<span><span class="co">#&gt;   [73]        37         1         0         0         0         5</span></span>
-<span><span class="co">#&gt;   [74]         0        35         1         0         0         0</span></span>
-<span><span class="co">#&gt;   -------</span></span>
-<span><span class="co">#&gt;   seqinfo: 3 sequences from an unspecified genome</span></span></code></pre></div>
-<p>To facilitate comparisons across groups, the pileups can be stored in a <code>RangedSummarizedExperiment</code>.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/create_se.html">create_se</a></span><span class="op">(</span><span class="va">plps</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/create_se.html">create_se</a></span><span class="op">(</span><span class="va">plps</span><span class="op">)</span></span>
 <span><span class="co">#&gt; class: RangedSummarizedExperiment </span></span>
 <span><span class="co">#&gt; dim: 74 2 </span></span>
 <span><span class="co">#&gt; metadata(0):</span></span>
@@ -256,7 +162,7 @@
 <div class="section level2">
 <h2 id="related-work">Related work<a class="anchor" aria-label="anchor" href="#related-work"></a>
 </h2>
-<p>The functionality in <code>raer</code> builds off of previously published methods and software:</p>
+<p>raer functionality builds off of previous work:</p>
 <ul>
 <li>Python package: <a href="https://github.com/BioinfoUNIBA/REDItools" class="external-link">REDItools</a> from <a href="https://doi.org/10.1093/bioinformatics/btt287" class="external-link">Picardi E, Pesole G</a><br>
 </li>
