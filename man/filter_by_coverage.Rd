@@ -39,4 +39,3 @@ sites <- GRanges(
 filter_by_coverage(bam_fn, sites, min_counts = 24)
 
 }
-\concept{filter}
