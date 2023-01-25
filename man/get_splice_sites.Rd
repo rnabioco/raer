@@ -7,16 +7,18 @@
 get_splice_sites(txdb, slop = 4)
 }
 \arguments{
-\item{txdb}{A TxDb object}
+\item{txdb}{\code{GenomicFeatures::TxDb}}
 
-\item{slop}{The number of bases upstream and downstream of splice site to extract}
+\item{slop}{The number of bases upstream and downstream of splice site to
+extract}
 }
 \value{
-GenomicRanges object containing positions of splice sites, with flanking bases.
+\code{GenomicRanges::GRanges} containing positions of splice sites, with
+flanking bases.
 }
 \description{
-This function will return intervals containing splice sites and
-adjacent regions.
+Find intervals containing splice sites and their adjacent
+regions.
 }
 \examples{
 if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
@@ -24,4 +26,5 @@ if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
   res <- get_splice_sites(txdb)
   res[1:5]
 }
+
 }
