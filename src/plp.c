@@ -58,6 +58,13 @@ typedef struct {
 } read_qual_t;
 
 typedef struct {
+  double f5p;
+  double f3p;
+  int i5p;
+  int i3p;
+} trim_t;
+
+typedef struct {
   int min_mq, flag, min_baseQ, max_depth, all, multi, output_reads;
   read_qual_t read_qual;
   uint32_t keep_flag[2];
@@ -69,9 +76,9 @@ typedef struct {
   FILE *reads_fp;
   int umi;
   char *umi_tag;
-  int argc;
-  char **argv;
-  char sep, empty;
+  trim_t trim;
+  int nmer, splice_dist, indel_dist, trim_5p_dist, trim_3p_dist;
+  int n_mm_type, n_mm, min_overhang, min_var_reads;
 } mplp_conf_t;
 
 typedef struct {
@@ -457,12 +464,6 @@ static void clear_pcounts(pcounts *p){
   clear_counts(p->pc);
   p->pos = 0;
 }
-
-// struct for event filter params
-typedef struct  {
-  int nmer, splice_dist, indel_dist, trim_5p_dist, trim_3p_dist;
-  int n_mm_type, n_mm, min_overhang, min_var_reads;
-} efilter;
 
 static void get_var_string(varhash_t *vhash, char *out){
   const char *reg;
@@ -874,7 +875,7 @@ static int count_one_record(const bam_pileup1_t *p, pcounts *pc, mplp_conf_t *co
  * 1 = read fails filter should be counted as bad read
  * 2 = read fails do no count as bad read
  */
-static int check_read_filters(const bam_pileup1_t *p, efilter *ef, int baq, int maq){
+static int check_read_filters(const bam_pileup1_t *p, mplp_conf_t *conf, int baq, int maq){
 
  // skip indel and ref skip ;
   if(p->is_del || p->is_refskip) return(2) ;
@@ -895,16 +896,22 @@ static int check_read_filters(const bam_pileup1_t *p, efilter *ef, int baq, int 
   }
 
   // check if pos is within x dist from 5' end of read, qpos is 0-based
-  if(trim_pos(p->b, p->qpos, ef->trim_5p_dist, ef->trim_3p_dist)) return(1);
+  if(conf->trim.f5p > 0 || conf->trim.f3p > 0){
+    if(check_variant_fpos(p->b, p->qpos, conf->trim.f5p, conf->trim.f3p)) return(1);
+  }
+
+  if(conf->trim.i5p > 0 || conf->trim.i3p > 0){
+    if(check_variant_pos(p->b, p->qpos, conf->trim.i5p, conf->trim.i3p)) return(1);
+  }
 
   // check for splice in alignment nearby
-  if(ef->splice_dist && dist_to_splice(p->b, p->qpos, ef->splice_dist) >= 0) return(1);
+  if(conf->splice_dist && dist_to_splice(p->b, p->qpos, conf->splice_dist) >= 0) return(1);
 
   // check if site in splice overhang and > min_overhang
-  if(ef->min_overhang && check_splice_overhang(p->b, p->qpos, ef->min_overhang) > 0) return(1);
+  if(conf->min_overhang && check_splice_overhang(p->b, p->qpos, conf->min_overhang) > 0) return(1);
 
   // check if indel event nearby
-  if(ef->indel_dist && dist_to_indel(p->b, p->qpos, ef->indel_dist) >= 0) return(1);
+  if(conf->indel_dist && dist_to_indel(p->b, p->qpos, conf->indel_dist) >= 0) return(1);
 
   return 0;
 }
@@ -954,13 +961,14 @@ SEXP run_pileup(char** cbampaths,
                 int* min_mapQ,
                 int* libtype,
                 int* b_flags,
-                int* event_filters,
+                int* int_filters,
                 int* only_keep_variants,
                 const char* reads_fn,
                 char* mismatches,
                 double* read_bqual_filter,
                 SEXP ext,
-                char* umi_tag) {
+                char* umi_tag,
+                double* fraction_trim) {
 
   hts_set_log_level(HTS_LOG_ERROR);
 
@@ -1047,21 +1055,23 @@ SEXP run_pileup(char** cbampaths,
     conf->keep_flag[1] = b_flags[1];
   }
 
-  efilter *ef;
-  ef = R_Calloc(1, efilter);
-  ef->trim_5p_dist = event_filters[0];
-  ef->trim_3p_dist = event_filters[1];
-  ef->splice_dist = event_filters[2];
-  ef->indel_dist = event_filters[3];
-  ef->nmer = event_filters[4];
-  ef->n_mm_type = event_filters[5];
-  ef->n_mm = event_filters[6];
-  ef->min_overhang = event_filters[7];
-  ef->min_var_reads = event_filters[8];
+  conf->trim.i5p = int_filters[0];
+  conf->trim.i3p = int_filters[1];
+  conf->splice_dist = int_filters[2];
+  conf->indel_dist = int_filters[3];
+  conf->nmer = int_filters[4];
+  conf->n_mm_type = int_filters[5];
+  conf->n_mm = int_filters[6];
+  conf->min_overhang = int_filters[7];
+  conf->min_var_reads = int_filters[8];
 
   if(read_bqual_filter){
     conf->read_qual.pct = read_bqual_filter[0];
     conf->read_qual.minq = (int)read_bqual_filter[1];
+  }
+  if(fraction_trim){
+    conf->trim.f5p = fraction_trim[0];
+    conf->trim.f3p = fraction_trim[1];
   }
 
   if(umi_tag){
@@ -1210,6 +1220,7 @@ SEXP run_pileup(char** cbampaths,
   pall->m_alt_pos = R_Calloc(NBASE_POS, int);
   pall->p_has_var = pall->m_has_var = 0;
 
+  double *stats = R_Calloc(4, double);
 
   int last_tid = -1;
   int n_iter = 0;
@@ -1244,12 +1255,13 @@ SEXP run_pileup(char** cbampaths,
 
     // reset count structure
     clear_pall_counts(pall);
+    memset(stats, 0, sizeof(double) * 4);
     for(i = 0; i < n; ++i){
       clear_pcounts(&plpc[i]);
     }
 
     // check if site is in a homopolymer
-    if(ef->nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, ef->nmer)) continue;
+    if(conf->nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, conf->nmer)) continue;
 
     // check if read count less than min_reads
     int pass_reads = 0;
@@ -1282,7 +1294,7 @@ SEXP run_pileup(char** cbampaths,
         }
 
         // remove bad reads
-        int rret = check_read_filters(p, ef, min_baseQ, min_mapQ[i]);
+        int rret = check_read_filters(p, conf, min_baseQ, min_mapQ[i]);
 
         // only keep first read with a UMI tag per position
         if(conf->umi){
@@ -1304,9 +1316,9 @@ SEXP run_pileup(char** cbampaths,
         if(invert) c = (char)comp_base[(unsigned char)c];
 
         // check read for >= mismatch different types and at least n_mm mismatches
-        if(ef->n_mm_type > 0 || ef->n_mm > 0) {
+        if(conf->n_mm_type > 0 || conf->n_mm > 0) {
           if((invert && mref_b != c) || pref_b != c){
-            int m = parse_mismatches(p->b, pos, ef->n_mm_type, ef->n_mm);
+            int m = parse_mismatches(p->b, pos, conf->n_mm_type, conf->n_mm);
               if(m > 0) continue;
             }
         }
@@ -1323,15 +1335,14 @@ SEXP run_pileup(char** cbampaths,
 
       }
     }
-    double stats[] = {0.0, 0.0, 0.0, 0.0};
-    int sres = calc_biases(pall, &stats[0]);
-    if(sres < 0) {ret = -1; goto fail;}
 
-    //Rf_error("%d, %d, %d, %d", stats[0], stats[1], stats[2], stats[3]);
+   int sres = calc_biases(pall, stats);
+   if(sres < 0) {ret = -1; goto fail;}
+
     // write or store records if pass depth criteria
     store_counts(pd, plpc, only_keep_variants, n, min_reads, sam_hdr_tid2name(h, tid),
                  pos, pref_b, mref_b,
-                 in_mem, ef->min_var_reads, stats);
+                 in_mem, conf->min_var_reads, stats);
   }
 
 fail:
@@ -1367,7 +1378,7 @@ fail:
   R_Free(pall->m_alt_pos);  R_Free(pall->m_alt_pos);
   R_Free(pall);
 
-  R_Free(plpc); R_Free(ef);
+  R_Free(plpc);
   if(pd->fps) R_Free(pd->fps);
   R_Free(pd->pdat);
   if (conf->fai) fai_destroy(conf->fai);
@@ -1387,6 +1398,7 @@ fail:
     }
     kh_destroy(str, conf->brhash);
   }
+  if(stats) R_Free(stats);
 
   UNPROTECT(1);
 
@@ -1420,7 +1432,8 @@ static void check_plp_args(SEXP bampaths,
               SEXP mismatches_fn,
               SEXP read_bqual_filter,
               SEXP ext,
-              SEXP umi) {
+              SEXP umi,
+              SEXP fraction_trim) {
 
   if(!IS_INTEGER(n) || (LENGTH(n) != 1)){
     Rf_error("'n' must be integer(1)");
@@ -1502,6 +1515,10 @@ static void check_plp_args(SEXP bampaths,
   if(!IS_CHARACTER(umi) || (LENGTH(umi) > 1)){
     Rf_error("'umi' must be character of length 0 or 1");
   }
+
+  if(!IS_NUMERIC(fraction_trim) || (LENGTH(fraction_trim) != 2)){
+    Rf_error("'fraction_trim' must be numeric of length 2");
+  }
 }
 
 SEXP pileup(SEXP bampaths,
@@ -1524,7 +1541,8 @@ SEXP pileup(SEXP bampaths,
             SEXP reads_fn,
             SEXP mismatches_fn,
             SEXP ext,
-            SEXP umi) {
+            SEXP umi,
+            SEXP fraction_trim) {
 
   check_plp_args(bampaths,
                  n,
@@ -1546,7 +1564,8 @@ SEXP pileup(SEXP bampaths,
                  mismatches_fn,
                  read_bqual_filter,
                  ext,
-                 umi);
+                 umi,
+                 fraction_trim);
 
   int i;
   char ** cbampaths = (char **) R_alloc(sizeof(const char *), Rf_length(bampaths));
@@ -1601,7 +1620,8 @@ SEXP pileup(SEXP bampaths,
                     cmismatches_fn,
                     REAL(read_bqual_filter),
                     ext,
-                    umi_tag);
+                    umi_tag,
+                    REAL(fraction_trim));
 
   return res ;
 }

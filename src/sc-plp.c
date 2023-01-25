@@ -157,7 +157,7 @@ static int check_read_filters(const bam_pileup1_t *p, sc_mplp_conf_t *conf){
   }
 
   // check if pos is within x dist from 5' end of read, qpos is 0-based
-  if(trim_pos(p->b, p->qpos, conf->ef.trim_5p_dist, conf->ef.trim_3p_dist)) return(1);
+  if(check_variant_pos(p->b, p->qpos, conf->ef.trim_5p_dist, conf->ef.trim_3p_dist)) return(1);
 
   // check for splice in alignment nearby
   if(conf->ef.splice_dist && dist_to_splice(p->b, p->qpos, conf->ef.splice_dist) >= 0) return(1);

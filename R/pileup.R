@@ -325,7 +325,8 @@ pileup_sites <- function(bamfiles,
       reads,
       bad_reads,
       idx_ptr,
-      umi_tag
+      umi_tag,
+      c(fp$ftrim_5p, fp$ftrim_3p)
     )
 
     if (!in_memory) {
@@ -387,7 +388,8 @@ pileup_sites <- function(bamfiles,
           reads,
           bad_reads,
           idx_ptr,
-          umi_tag
+          umi_tag,
+          c(fp$ftrim_5p, fp$ftrim_3p)
         )
 
         if (!in_memory) {
@@ -631,7 +633,9 @@ empty_plp_record <- function() {
     max_mismatch_type = "integer", # length 2
     min_read_bqual = "numeric", # length 2
     min_splice_overhang = "integer",
-    min_variant_reads = "integer"
+    min_variant_reads = "integer",
+    ftrim_5p = "numeric",
+    ftrim_3p = "numeric"
   )
 )
 
@@ -660,8 +664,10 @@ setMethod(show, "FilterParam", function(object) {
 #' genomic-unstranded will report all variants w.r.t the + strand.
 #' @param only_keep_variants if TRUE, then only variant sites will be reported
 #' (FALSE by default), can be a vector for each input bamfile
-#' @param trim_5p Bases to trim from 5' ends of read alignments
-#' @param trim_3p Bases to trim from 3' ends of read alignments
+#' @param trim_5p Bases to trim from 5' end of read alignments
+#' @param trim_3p Bases to trim from 3' end of read alignments
+#' @param ftrim_5p Fraction of bases to trim from 5' end of read alignments
+#' @param ftrim_3p Fraction of bases to trim from 3' end of read alignments
 #' @param splice_dist Exclude read if site occurs within given
 #' distance from splicing event in the read
 #' @param indel_dist Exclude read if site occurs within given
@@ -689,7 +695,9 @@ FilterParam <-
            min_mapq = 0L, min_nucleotide_depth = 1L,
            library_type = "fr-first-strand",
            only_keep_variants = FALSE,
-           trim_5p = 0L, trim_3p = 0L, indel_dist = 0L,
+           trim_5p = 0L, trim_3p = 0L,
+           ftrim_5p = 0, ftrim_3p = 0,
+           indel_dist = 0L,
            splice_dist = 0L, homopolymer_len = 0L,
            max_mismatch_type = c(0L, 0L), min_read_bqual = c(0.0, 0.0),
            min_splice_overhang = 0L,
@@ -705,6 +713,8 @@ FilterParam <-
     stopifnot(isSingleNumber(homopolymer_len))
     stopifnot(isSingleNumber(min_splice_overhang))
     stopifnot(isSingleNumber(min_variant_reads))
+    stopifnot(isSingleNumber(ftrim_5p))
+    stopifnot(isSingleNumber(ftrim_3p))
 
     max_depth <- as.integer(max_depth)
     min_base_quality <- as.integer(min_base_quality)
@@ -720,6 +730,11 @@ FilterParam <-
     min_read_bqual <- as.numeric(min_read_bqual)
     min_splice_overhang <- as.integer(min_splice_overhang)
     min_variant_reads <- as.integer(min_variant_reads)
+    ftrim_5p <- as.numeric(ftrim_5p)
+    ftrim_3p <- as.numeric(ftrim_3p)
+
+    stopifnot(ftrim_5p >= 0 && ftrim_5p <= 1)
+    stopifnot(ftrim_3p >= 0 && ftrim_3p <= 1)
 
     stopifnot(length(max_mismatch_type) == 2 && !any(is.na(max_mismatch_type)))
     stopifnot(length(min_read_bqual) == 2 && !any(is.na(min_read_bqual)))
@@ -745,8 +760,8 @@ FilterParam <-
       trim_5p = trim_5p, trim_3p = trim_3p, indel_dist = indel_dist,
       splice_dist = splice_dist, homopolymer_len = homopolymer_len,
       max_mismatch_type = max_mismatch_type, min_read_bqual = min_read_bqual,
-      min_splice_overhang = min_splice_overhang, min_variant_reads = min_variant_reads
-    )
+      min_splice_overhang = min_splice_overhang, min_variant_reads = min_variant_reads,
+      ftrim_5p = ftrim_5p, ftrim_3p = ftrim_3p)
   }
 
 PILEUP_COLS <- c(

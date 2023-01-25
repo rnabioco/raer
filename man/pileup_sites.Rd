@@ -33,6 +33,8 @@ FilterParam(
   only_keep_variants = FALSE,
   trim_5p = 0L,
   trim_3p = 0L,
+  ftrim_5p = 0,
+  ftrim_3p = 0,
   indel_dist = 0L,
   splice_dist = 0L,
   homopolymer_len = 0L,
@@ -115,6 +117,10 @@ genomic-unstranded will report all variants w.r.t the + strand.}
 \item{trim_5p}{Bases to trim from 5' ends of read alignments}
 
 \item{trim_3p}{Bases to trim from 3' ends of read alignments}
+
+\item{ftrim_5p}{Fraction of bases to trim from 5' ends of read alignments}
+
+\item{ftrim_3p}{Fraction of bases to trim from 5' ends of read alignments}
 
 \item{indel_dist}{Exclude read if site occurs within given
 distance from indel event in the read}

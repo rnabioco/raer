@@ -265,6 +265,30 @@ test_that("pileup read trimming filter works", {
   expect_equal(vec(a, "nRef") - vec(e, "nRef"), ex2)
 })
 
+test_that("pileup fractional read trimming filter works", {
+  vec <- function(rse, assay, col = 1) unname(assays(rse)[[assay]][, col])
+  test_plp_fxn <- function(...) {
+    get_pileup(bamfn, fafn, region = "SSR3:440-450",
+               filterParam = FilterParam(min_base_quality = 0,
+                                         ...))}
+
+  a <- test_plp_fxn()
+  b <- test_plp_fxn(ftrim_5p = 0.10)
+  d <- test_plp_fxn(ftrim_5p = 0.10, ftrim_3p = 0.10)
+  e <- test_plp_fxn(ftrim_3p = 0.10)
+  ex1 <- c(0L, 0L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 1L, 1L)
+  ex2 <- c(1L, 1L, 1L, 1L, 0L, 1L, 0L, 0L, 0L, 0L, 0L)
+
+  expect_equal(vec(a, "nRef") -  vec(b, "nRef"), ex1)
+  expect_equal(vec(b, "nRef") - vec(d, "nRef"), ex2)
+  expect_equal(vec(a, "nRef") - vec(e, "nRef"), ex2)
+
+  f <- test_plp_fxn(ftrim_5p = 0.99, ftrim_3p = 0.99)
+  expect_equal(length(f), 0)
+  expect_error(test_plp_fxn(ftrim_3p = 1.10))
+  expect_error(test_plp_fxn(ftrim_5p = -0.10))
+})
+
 fa <- scanFa(fafn)
 hp_matches <- vmatchPattern(strrep("A", 6), fa) |> as("GRanges")
 
