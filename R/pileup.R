@@ -56,8 +56,7 @@
 #' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges
 #' @importFrom GenomeInfoDb seqlevels seqinfo seqlengths
-#' @importFrom BiocParallel SerialParam bpstop bplapply ipcid ipclock ipcunlock
-#'
+#' @importFrom BiocParallel SerialParam bpstop bplapply
 #' @rdname get_pileup
 #' @export
 get_pileup <- function(bamfiles,
@@ -267,7 +266,7 @@ get_pileup <- function(bamfiles,
     if (is.null(bedfile)) bedfile <- character()
 
     res <- .Call(
-      ".do_run_pileup",
+      ".pileup",
       bamfiles,
       as.integer(n_files),
       fafile,
@@ -316,7 +315,7 @@ get_pileup <- function(bamfiles,
         if (is.null(ctig)) ctig <- character()
         if (is.null(bedfile)) bedfile <- character()
         res <- .Call(
-          ".do_run_pileup",
+          ".pileup",
           bamfiles,
           as.integer(n_files),
           fafile,

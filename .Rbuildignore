@@ -10,3 +10,4 @@
 ^docker$
 ^.vscode$
 ^tools$
+^codecov\.yml$
