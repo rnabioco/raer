@@ -18,7 +18,7 @@ raer facilitates analysis of RNA adenosine editing in the
 ## Installation
 
 You can install the development version of raer from
-[GitHub](https://github.com/) with:
+[GitHub](https://github.com/rnabioco/raer) with:
 
 ``` r
 # install.packages("BiocManager")
