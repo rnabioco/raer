@@ -115,10 +115,10 @@ nrow(se)
 
 Next we filter to remove any multi-allelic sites. These sites are stored as comma-separated
 strings in the `Var` assay (e.g. `AG,AC`). Non-variant sites are stored as `-`. 
-`remove_multiallelic()` will remove any sites that have multiple variants in the samples present in the `summarizedExperiment` object. It will add a new column to the `rowData()` to indicate the variant for each site, and will calculate an `allele_freq` assay with variant allele frequencies for each sample. 
+`filter_multiallelic()` will remove any sites that have multiple variants in the samples present in the `summarizedExperiment` object. It will add a new column to the `rowData()` to indicate the variant for each site, and will calculate an `allele_freq` assay with variant allele frequencies for each sample. 
 
 ```{r}
-se <- remove_multiallelic(se)
+se <- filter_multiallelic(se)
 se <- calc_edit_frequency(se)
 rowData(se)
 ```
@@ -140,14 +140,14 @@ se <- se[!rowData(se)$repFamily %in% c("Simple_repeat", "Low Complexity")]
 Next we'll remove sites adjacent to other sites with different variant types. For example if an A->G variant is located proximal to a C->T variant then the variants will be removed.  
 
 ```{r}
-se <- remove_clustered_variants(se, txdb, variant_dist = 100)
+se <- filter_clustered_variants(se, txdb, variant_dist = 100)
 se
 ```
 
 Next, sites with 4bp of known splicing events will be excluded. These variants are low-confidence due to the possibility of mis-alignments. 
 
 ```{r}
-se <- remove_splice_variants(se, txdb)
+se <- filter_splice_variants(se, txdb)
 se
 ```
 Next, we'll annotate if the site is a known SNP and remove any known SNPs. If using a SNPlocs package you can use the `annot_snp()` function. However we will use the `annot_from_gr()` function to annotate using the prebuilt `chr4snps` object.

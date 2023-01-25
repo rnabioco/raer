@@ -1,20 +1,19 @@
-
-#' Remove multiallelic sites
+#' Filter out multi-allelic sites
 #'
-#' @description Sites with multiple variant bases will be removed from the
-#' SummarizedExperiment. The rowData() will be updated to include a new column,
-#' "Var", containing the variant allele detected at each site.
+#' @description Remove sites with multiple variant bases from a
+#'   `SummarizedExperiment`. `rowData()` gains a new column, `Var`, that
+#'   contains the variant allele detected at each site.
 #'
-#' @param se SummarizedExperiment
+#' @param se `SummarizedExperiment::SummarizedExperiment`
 #'
 #' @examples
-#' example(merge_pileups, echo = FALSE)
-#' remove_multiallelic(se)
+#' example(create_se, echo = FALSE)
+#' filter_multiallelic(se)
 #'
-#' @rdname filter_se
+#' @family se-filters
 #'
 #' @export
-remove_multiallelic <- function(se) {
+filter_multiallelic <- function(se) {
   is_not_multiallelic <- apply(assay(se, "Var"), 1, function(x) {
     x <- unique(x[x != "-"])
     if (length(x) == 0 | length(x) >= 2) {
@@ -27,23 +26,26 @@ remove_multiallelic <- function(se) {
   se
 }
 
-
 #' Extract regions surrounding splice sites
 #'
-#' @description This function will return intervals containing splice sites and
-#' adjacent regions.
+#' @description Find intervals containing splice sites and their adjacent
+#'   regions.
 #'
-#' @param txdb A TxDb object
-#' @param slop The number of bases upstream and downstream of splice site to extract
-#' @return
-#' GenomicRanges object containing positions of splice sites, with flanking bases.
+#' @param txdb `GenomicFeatures::TxDb`
+#' @param slop The number of bases upstream and downstream of splice site to
+#'   extract
+#' @return `GenomicRanges::GRanges` containing positions of splice sites, with
+#' flanking bases.
+#'
 #' @examples
 #' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
 #'   txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 #'   res <- get_splice_sites(txdb)
 #'   res[1:5]
 #' }
+#'
 #' @importFrom GenomicFeatures intronsByTranscript
+#'
 #' @export
 get_splice_sites <- function(txdb, slop = 4) {
   if (!is(txdb, "TxDb")) {
@@ -71,18 +73,19 @@ get_splice_sites <- function(txdb, slop = 4) {
   sort(int_pos)
 }
 
-#' Remove sites near splice sites
+#' Filter out sites near splice sites
 #'
-#' @description This function will remove editing sites found in regions proximal
-#' to annotated splice junctions.
+#' @description Remove editing sites found in regions proximal to annotated
+#'   splice junctions.
 #'
-#' @param se SummarizedExperiment with editing sites
-#' @param txdb A TxDb object
+#' @param se `SummarizedExperiment::SummarizedExperiment` with editing sites
+#' @param txdb `GenomicFeatures::TxDb`
 #' @param splice_site_dist distance to splice site
-#' @param ignore.strand if TRUE do not consider strand when comparing editing sites to
-#' splice sites
+#' @param ignore.strand if `TRUE`, ignore strand when comparing editing sites to
+#'   splice sites
 #'
-#' @rdname filter_se
+#' @family se-filters
+#'
 #' @examples
 #' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
 #'   library(SummarizedExperiment)
@@ -102,12 +105,14 @@ get_splice_sites <- function(txdb, slop = 4) {
 #'     rowRanges = rowRanges, colData = colData
 #'   )
 #'
-#'   se <- remove_splice_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
+#'   se <- filter_splice_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
 #'   se
 #' }
+#'
 #' @importFrom GenomicFeatures intronsByTranscript
+#'
 #' @export
-remove_splice_variants <- function(se, txdb,
+filter_splice_variants <- function(se, txdb,
                                    splice_site_dist = 4,
                                    ignore.strand = FALSE) {
   ss <- get_splice_sites(txdb, splice_site_dist)
@@ -117,18 +122,19 @@ remove_splice_variants <- function(se, txdb,
   se[to_keep, ]
 }
 
-#' Remove clustered sequence variants
+#' Filter out clustered sequence variants
 #'
-#' @description Sequence variants of multiple allele types (e.g. A->G, C->T)
-#' in nearby regions can be due to misalignments. This function will remove
-#' variants if multiple allele types are present within a given distance
-#' in genomic coordinate space or transcriptome coordinate space.
+#' @description Sequence variants of multiple allele types (e.g., `A>G`, `A>C`)
+#'   in nearby regions can be due to mis-alignment. Remove variants if multiple
+#'   allele types are present within a given distance in genomic or
+#'   transcriptome coordinate space.
 #'
-#' @param se SummarizedExperiment containing editing sites
-#' @param txdb A TxDb object
-#' @param regions One of "transcript" and/or "genome", coordinate space to use
-#' to examine distances between variants.
-#' @param variant_dist distance in nucleotides for determining clustered variants
+#' @param se `SummarizedExperiment::SummarizedExperiment` containing editing sites
+#' @param txdb `GenomicFeatures::TxDb`
+#' @param regions One of `transcript` or `genome`, specifying the coordinate
+#'   system for calculating distances between variants.
+#' @param variant_dist distance in nucleotides for determining clustered
+#'   variants
 #'
 #' @examples
 #' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
@@ -150,16 +156,18 @@ remove_splice_variants <- function(se, txdb,
 #'     rowRanges = rowRanges, colData = colData
 #'   )
 #'
-#'   se <- remove_clustered_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
+#'   se <- filter_clustered_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
 #'   se
 #' }
-#' @rdname filter_se
-#' @return
-#' SummarizedExperiment with sites removed from object dependent on filtering applied.
+#'
+#' @family se-filters
+#'
+#' @return `SummarizedExperiment::SummarizedExperiment` with sites removed from
+#'   object dependent on filtering applied.
 #'
 #' @importFrom GenomicFeatures mapToTranscripts
 #' @export
-remove_clustered_variants <- function(se, txdb,
+filter_clustered_variants <- function(se, txdb,
                                       regions = c("transcript", "genome"),
                                       variant_dist = 100) {
   if (!is(txdb, "TxDb")) {
@@ -171,6 +179,7 @@ remove_clustered_variants <- function(se, txdb,
   }
 
   x <- rowRanges(se)
+
   if ("genome" %in% regions) {
     fo <- findOverlaps(x, x + variant_dist)
     vars <- split(x[subjectHits(fo)]$Var, queryHits(fo))
