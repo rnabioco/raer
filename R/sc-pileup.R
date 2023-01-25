@@ -1,48 +1,47 @@
 #' Pileup sites per cell
 #'
-#' @description This function will perform a pileup operation at specified sites,
-#' returning counts for Reference (e.g. unedited) or Alternate (e.g. editing) bases.
-#' Current functionality will process a 10x genomic's style library, from a aligned
-#' bam file containing a tag with a cell-barcode and a tag with a UMI.
+#' @description This function will perform a pileup operation at specified
+#'   sites, returning counts for Reference (e.g. unedited) or Alternate (e.g.
+#'   editing) bases. Current functionality will process a 10x genomic's style
+#'   library, from a aligned bam file containing a tag with a cell-barcode and a
+#'   tag with a UMI.
 #'
-#' The `sites` parameter specifies sites to pileup. This must be a GRanges object
-#' with 1 base intervals, a strand (+ or -), and supplemented with metadata
-#' columns named `ref` and `alt` containing the reference and alternate base to query. See
-#' examples for an example format.
+#'   The `sites` parameter specifies sites to pileup. This must be a GRanges
+#'   object with 1 base intervals, a strand (+ or -), and supplemented with
+#'   metadata columns named `ref` and `alt` containing the reference and
+#'   alternate base to query. See examples for an example format.
 #'
-#' At each site, bases from overlapped reads will be examined, and counts of each ref
-#' and alt base enumerated for each cell barcode present. A single base will be
-#' counted once for each UMI sequence present in each cell.
-#'
+#'   At each site, bases from overlapped reads will be examined, and counts of
+#'   each ref and alt base enumerated for each cell barcode present. A single
+#'   base will be counted once for each UMI sequence present in each cell.
 #'
 #' @param bamfile BAM file name
 #' @param sites a GRanges object containing sites to process. See examples for
-#' valid formatting.
+#'   valid formatting.
 #' @param output_directory Output directory for output files. Will be generated
-#' if it doesn't exist.
-#' @param chroms A character vector of chromosomes to process, if supplied,
-#' only sites present in the listed chromosomes will be processed
+#'   if it doesn't exist.
+#' @param chroms A character vector of chromosomes to process, if supplied, only
+#'   sites present in the listed chromosomes will be processed
 #' @param cell_barcodes A character vector of single cell barcodes to process.
 #' @param bam_flags bam flags to filter or keep, use [Rsamtools::scanBamFlag()]
-#'  to generate
-#' @param fp object of class [FilterParam()] which specify various
-#' filters to apply to reads and sites during pileup. Note that the `min_variant_reads`
-#' parameter, if set > 0, specifies the number of variant reads at a site required in
-#' order to report a site. E.g. if set to 2, then at least 2 reads (from any cell) must
-#' have a variant in order to report the site. The default of 0 reports all sites present
-#' in the `sites` object.
+#'   to generate
+#' @param fp object of class [FilterParam()] which specify various filters to
+#'   apply to reads and sites during pileup. Note that the `min_variant_reads`
+#'   parameter, if set > 0, specifies the number of variant reads at a site
+#'   required in order to report a site. E.g. if set to 2, then at least 2 reads
+#'   (from any cell) must have a variant in order to report the site. The
+#'   default of 0 reports all sites present in the `sites` object.
 #' @param umi_tag tag in bam containing the UMI sequence
 #' @param cb_tag tag in bam containing the cell barcode sequence
-#' @param return_sce if `TRUE`, data is returned as a SingleCellExperiment,
-#' if `FALSE` a character vector of the output files, specified by `outfile_prefix`,
-#' will be returned.
+#' @param return_sce if `TRUE`, data is returned as a SingleCellExperiment, if
+#'   `FALSE` a character vector of the output files, specified by
+#'   `outfile_prefix`, will be returned.
 #' @param verbose Display messages
-
 #' @param BPPARAM BiocParallel instance. Parallel computation occurs across
-#' chromosomes.
+#'   chromosomes.
 #'
-#' @returns Returns either a SingleCellExperiment, or character vector of paths
-#' to the files produced.
+#' @returns Returns either a `SingleCellExperiment` or character vector of paths
+#'   to the files produced.
 #'
 #' @examples
 #' library(Rsamtools)
@@ -63,8 +62,12 @@
 #' fp <- FilterParam(library_type = "fr-second-strand")
 #' sce <- pileup_cells(bam_fn, gr, cbs, outdir, fp = fp)
 #' sce
+#'
 #' @importFrom GenomeInfoDb  seqinfo seqlengths
 #' @importFrom Rsamtools ScanBamParam scanBamFlag
+#'
+#' @family pileup
+#'
 #' @export
 pileup_cells <- function(bamfile,
                       sites,
@@ -206,6 +209,52 @@ pileup_cells <- function(bamfile,
   res
 }
 
+#' Read tables produced by pileup_cells()
+#'
+#' @description Read in tables produced by `pileup_cells()`, which are an
+#'   extension of the matrixMarket sparse matrix format to store values for more
+#'   than 1 matrix.
+#'
+#' The .mtx.gz files are formatted with columns:
+#' 1) row index (0 based)
+#' 2) column index (0 based)
+#' 3) values for sparseMatrix #1 (nRef)
+#' 4) values for sparseMatrix #2 (nVar)
+#' N) values for sparseMatrix ... (...) ununsed for now
+#'
+#' @param mtx_fn .mtx.gz file path
+#' @param sites_fn sites.txt.gz file path
+#' @param bc_fn bcs.txt.gz file path
+#'
+#' @returns a list of `sparseMatrix`, of `NULL` if mtx_fn is empty
+#'
+#' @importFrom data.table fread
+#'
+#' @export
+read_sparray <- function(mtx_fn, sites_fn, bc_fn){
+  if(!file.size(mtx_fn) > 0){
+    return(NULL)
+  }
+
+  rnames <- readLines(sites_fn)
+  cnames <- readLines(bc_fn)
+  dt <- data.table::fread(mtx_fn, sep = "\t", colClasses = "integer")
+
+  if(ncol(dt) < 3) stop("malformed sparseMatrix")
+
+  sp_idx <- 3:ncol(dt)
+  lapply(sp_idx, function(x) {
+    sparseMatrix(i = dt[[1]],
+                 j = dt[[2]],
+                 x = dt[[x]],
+                 index1 = FALSE,
+                 dims = c(length(rnames), length(cnames)),
+                 dimnames = list(rnames, cnames))
+  })
+}
+
+# Utilities -------------------------------------------------------
+
 get_sc_pileup <- function(bamfn, sites, barcodes,
                           outfile_prefix, bam_flags,
                           chrom, umi_tag, cb_tag, libtype_code,
@@ -280,44 +329,6 @@ id_to_gr <- function(x, seq_info){
                 seqinfo = seq_info)
   names(gr) <- x
   gr
-}
-#' Read tables produced by pileup_cells()
-#'
-#' @description This function willl read in tables produced by pileup_cells().
-#' These tables are an extension of the matrixMarket sparse matrix format to
-#' store values for more than 1 matrix.
-#'
-#' The .mtx.gz files are formatted with columns:
-#' 1) row index (0 based)
-#' 2) column index (0 based)
-#' 3) values for sparseMatrix #1 (nRef)
-#' 4) values for sparseMatrix #2 (nVar)
-#' N) values for sparseMatrix ... (...) ununsed for now
-#'
-#' @param mtx_fn .mtx.gz file path
-#' @param sites_fn sites.txt.gz file path
-#' @param bc_fn bcs.txt.gz file path
-#'
-#' @returns a list of sparseMatrices, of NULL if mtx_fn is empty
-#' @importFrom data.table fread
-#' @export
-read_sparray <- function(mtx_fn, sites_fn, bc_fn){
-  if(!file.size(mtx_fn) > 0){
-    return(NULL)
-  }
-  rnames <- readLines(sites_fn)
-  cnames <- readLines(bc_fn)
-  dt <- data.table::fread(mtx_fn, sep = "\t", colClasses = "integer")
-  if(ncol(dt) < 3) stop("malformed sparseMatrix")
-  sp_idx <- 3:ncol(dt)
-  lapply(sp_idx, function(x) {
-    sparseMatrix(i = dt[[1]],
-                 j = dt[[2]],
-                 x = dt[[x]],
-                 index1 = FALSE,
-                 dims = c(length(rnames), length(cnames)),
-                 dimnames = list(rnames, cnames))
-  })
 }
 
 check_tag <- function(x) {

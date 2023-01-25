@@ -100,7 +100,7 @@ Pileups from multiple BAM files can be stored in a `summarizedExperiment` object
 
 ```{r}
 names(plps) <- names(bam_files)
-se <- create_se(plps)
+se <- merge_pileups(plps)
 ```
 
 Each column from the pileup can be stored as an assay, which can be specified by the `assay_cols` parameter
