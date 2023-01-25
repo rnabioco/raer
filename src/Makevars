@@ -8,7 +8,7 @@ PKG_CPPFLAGS=$(RHTSLIB_CPPFLAGS)
 
 CXX_STD = CXX11
 
-SOURCES = $(wildcard bri/*.c )
+SOURCES = $(wildcard bri/*.c ) $(wildcard bcftools/*.c)
 
 OBJECTS = RcppExports.o regfile.o bedidx.o plp.o plp_data.o plp_utils.o cpp_utils.o init.o sc-plp.o scidx.o $(SOURCES:.c=.o)
 

@@ -104,12 +104,13 @@ get_pileup <- function(bamfiles,
     outfiles <- character()
   } else {
     in_memory <- FALSE
-    outfiles <- paste0(outfile_prefix, "_", seq_len(n_files), ".plp")
+    outfiles <- c(paste0(outfile_prefix, ".sites.txt"),
+                  paste0(outfile_prefix, "_", seq_len(n_files), ".plp"))
     if (!dir.exists(dirname(outfile_prefix))) {
       dir.create(dirname(outfile_prefix), recursive = TRUE)
     }
     outfiles <- path.expand(outfiles)
-    if (length(outfiles) != n_files) {
+    if (length(outfiles) != n_files + 1) {
       stop("# of outfiles does not match # of bam input files: ", outfiles)
     }
     # remove files if exist, to avoid appending to existing files
@@ -297,6 +298,8 @@ get_pileup <- function(bamfiles,
         stop("Error occured during pileup", call. = FALSE)
       }
     } else {
+      rdat <- res[[1]]
+      res <- res[2:length(res)]
       res <- lists_to_grs(res, contigs)
     }
 
@@ -416,7 +419,7 @@ get_pileup <- function(bamfiles,
   if (n_files == 1) {
     res <- res[[1]]
   }
-
+  res <- create_se(res)
   res
 }
 

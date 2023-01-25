@@ -14,7 +14,7 @@ bedfn <- raer_example("regions.bed")
 nts <- c("A", "T", "G", "C")
 nt_clmns <- paste0("n", nts)
 
-res <- get_pileup(bamfn, fafn, bedfn)
+res <- get_pileup(bamfn, fafn, bedfn, outfile_prefix = "temp/a", return_data = FALSE)
 
 test_that("pileup works", {
   expect_equal(length(res$Ref), 182)
