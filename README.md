@@ -11,14 +11,16 @@
 raer facilitates analysis of RNA adenosine editing in the
 [Bioconductor](https://bioconductor.org/) ecosystem.
 
+🚧 **raer is under active development and functionality may change** 🚧
+
 ## Installation
 
 You can install the development version of raer from
 [GitHub](https://github.com/) with:
 
 ``` r
-# install.packages("pak")
-pak::pkg_install("rnabioco/raer")
+# install.packages("BiocManager")
+BiocManager::install("rnabioco/raer")
 ```
 
 ## Quick start
