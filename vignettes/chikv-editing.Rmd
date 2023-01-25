@@ -107,7 +107,11 @@ fp <- FilterParam(
   only_keep_variants   = rep(TRUE, 6)
 )
 
-bpp <- SnowParam(workers = 24)
+bpp <- MulticoreParam(
+  workers = 24,
+  progressbar = TRUE
+)
+
 plps <- get_pileup(
   fns$bams,
   fafile = fns$fasta,
