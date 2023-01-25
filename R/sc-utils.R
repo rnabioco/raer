@@ -205,8 +205,6 @@ check_missing_barcodes <- function(cbs, bamfile) {
 #'
 #' @importFrom GenomicAlignments coverage
 #'
-#' @family filter
-#'
 #' @export
 filter_by_coverage <- function(bamfile, gr, min_counts,
                                param = NULL, verbose = FALSE,
