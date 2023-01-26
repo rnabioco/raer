@@ -118,31 +118,31 @@ are stored in a temporary directory. Change the <code>data_dir</code>
 variable to a valid file path to keep the files for reuse.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">fns</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_data.html">download_NA12878</a></span><span class="op">(</span><span class="va">data_dir</span><span class="op">)</span></span>
+<span><span class="va">fns</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_NA12878.html">download_NA12878</a></span><span class="op">(</span><span class="va">data_dir</span><span class="op">)</span></span>
 <span><span class="va">fns</span></span></code></pre></div>
 <pre><code><span><span class="co">## $bams</span></span>
 <span><span class="co">##                              ERR262996_dedup_chr4_sub.bam </span></span>
-<span><span class="co">##            "/tmp/Rtmpg5ltmc/ERR262996_dedup_chr4_sub.bam" </span></span>
+<span><span class="co">##            "/tmp/RtmpIKcp64/ERR262996_dedup_chr4_sub.bam" </span></span>
 <span><span class="co">##                   SRR1258218_Aligned.sorted.dedup_sub.bam </span></span>
-<span><span class="co">## "/tmp/Rtmpg5ltmc/SRR1258218_Aligned.sorted.dedup_sub.bam" </span></span>
+<span><span class="co">## "/tmp/RtmpIKcp64/SRR1258218_Aligned.sorted.dedup_sub.bam" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $bai</span></span>
 <span><span class="co">##                              ERR262996_dedup_chr4_sub.bam.bai </span></span>
-<span><span class="co">##            "/tmp/Rtmpg5ltmc/ERR262996_dedup_chr4_sub.bam.bai" </span></span>
+<span><span class="co">##            "/tmp/RtmpIKcp64/ERR262996_dedup_chr4_sub.bam.bai" </span></span>
 <span><span class="co">##                   SRR1258218_Aligned.sorted.dedup_sub.bam.bai </span></span>
-<span><span class="co">## "/tmp/Rtmpg5ltmc/SRR1258218_Aligned.sorted.dedup_sub.bam.bai" </span></span>
+<span><span class="co">## "/tmp/RtmpIKcp64/SRR1258218_Aligned.sorted.dedup_sub.bam.bai" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $fasta</span></span>
 <span><span class="co">##                   hg38_chr4.fa.bgz </span></span>
-<span><span class="co">## "/tmp/Rtmpg5ltmc/hg38_chr4.fa.bgz" </span></span>
+<span><span class="co">## "/tmp/RtmpIKcp64/hg38_chr4.fa.bgz" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $snps</span></span>
 <span><span class="co">##                   chr4snps.bed.gz </span></span>
-<span><span class="co">## "/tmp/Rtmpg5ltmc/chr4snps.bed.gz" </span></span>
+<span><span class="co">## "/tmp/RtmpIKcp64/chr4snps.bed.gz" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $rmsk</span></span>
 <span><span class="co">##                   rmsk_hg38.tsv.gz </span></span>
-<span><span class="co">## "/tmp/Rtmpg5ltmc/rmsk_hg38.tsv.gz"</span></span></code></pre>
+<span><span class="co">## "/tmp/RtmpIKcp64/rmsk_hg38.tsv.gz"</span></span></code></pre>
 <p>Additionally we will use the following additional annotation
 resources:</p>
 <ul>

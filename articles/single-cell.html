@@ -124,26 +124,26 @@ containing the inferred UMI sequence (<code>UB</code>).</p>
 </h3>
 <p>A subset of a human PBMC scRNA-seq dataset from 10x Genomics, along
 with other needed files can be downloaded using
-<code><a href="../reference/download_data.html">download_human_pbmc()</a></code>.</p>
+<code><a href="../reference/download_human_pbmc.html">download_human_pbmc()</a></code>.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span> </span>
-<span><span class="va">fns</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_data.html">download_human_pbmc</a></span><span class="op">(</span><span class="va">data_dir</span><span class="op">)</span></span>
+<span><span class="va">fns</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_human_pbmc.html">download_human_pbmc</a></span><span class="op">(</span><span class="va">data_dir</span><span class="op">)</span></span>
 <span><span class="va">fns</span></span></code></pre></div>
 <pre><code><span><span class="co">## $bam</span></span>
 <span><span class="co">##                   10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam </span></span>
-<span><span class="co">## "/tmp/Rtmp66mgPR/10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam" </span></span>
+<span><span class="co">## "/tmp/Rtmpeb15fV/10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $bai</span></span>
 <span><span class="co">##                   10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam.bai </span></span>
-<span><span class="co">## "/tmp/Rtmp66mgPR/10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam.bai" </span></span>
+<span><span class="co">## "/tmp/Rtmpeb15fV/10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam.bai" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $edit_sites</span></span>
 <span><span class="co">##                   rediportal_chr16.bed.gz </span></span>
-<span><span class="co">## "/tmp/Rtmp66mgPR/rediportal_chr16.bed.gz" </span></span>
+<span><span class="co">## "/tmp/Rtmpeb15fV/rediportal_chr16.bed.gz" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $sce</span></span>
 <span><span class="co">##                   sce.rds </span></span>
-<span><span class="co">## "/tmp/Rtmp66mgPR/sce.rds"</span></span></code></pre>
+<span><span class="co">## "/tmp/Rtmpeb15fV/sce.rds"</span></span></code></pre>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bam_fn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bam</span></span>
 <span><span class="va">bed_fn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">edit_sites</span></span></code></pre></div>
