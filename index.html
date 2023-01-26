@@ -109,12 +109,13 @@
 <p>raer provides methods to compute per site read count summaries from BAM alignment files, either for known sites, or for all detected sites.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rnabioco.github.io/raer">raer</a></span><span class="op">)</span></span>
-<span><span class="va">bamfn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"SRR5564269_Aligned.sortedByCoord.out.md.bam"</span><span class="op">)</span></span>
+<span><span class="va">bam1fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"SRR5564269_Aligned.sortedByCoord.out.md.bam"</span><span class="op">)</span></span>
 <span><span class="va">bam2fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"SRR5564277_Aligned.sortedByCoord.out.md.bam"</span><span class="op">)</span></span>
 <span><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"human.fasta"</span><span class="op">)</span></span>
 <span><span class="va">bedfn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"regions.bed"</span><span class="op">)</span></span>
+<span><span class="va">bams</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ko"</span> <span class="op">=</span> <span class="va">bam1fn</span>, <span class="st">"wt"</span> <span class="op">=</span> <span class="va">bam2fn</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu">get_pileup</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">bam2fn</span>, <span class="va">bamfn</span><span class="op">)</span>, <span class="va">fafn</span>, bedfile <span class="op">=</span> <span class="va">bedfn</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pileup_sites.html">pileup_sites</a></span><span class="op">(</span><span class="va">bams</span>, <span class="va">fafn</span>, bedfile <span class="op">=</span> <span class="va">bedfn</span><span class="op">)</span></span></code></pre></div>
 <p>To facilitate comparisons across groups, base count data and genomic coordinates are stored in a <code>RangedSummarizedExperiment</code>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span><span class="op">)</span></span>
@@ -125,52 +126,47 @@
 <span><span class="co">#&gt; assays(7): Var nRef ... nC nG</span></span>
 <span><span class="co">#&gt; rownames(182): SSR3_201_- SSR3_202_- ... DHFR_17_- DHFR_18_-</span></span>
 <span><span class="co">#&gt; rowData names(3): Ref rbpz vpb</span></span>
-<span><span class="co">#&gt; colnames(2): SRR5564277_Aligned.sortedByCoord.out.md.bam</span></span>
-<span><span class="co">#&gt;   SRR5564269_Aligned.sortedByCoord.out.md.bam</span></span>
+<span><span class="co">#&gt; colnames(2): ko wt</span></span>
 <span><span class="co">#&gt; colData names(1): sample</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of length 7</span></span>
 <span><span class="co">#&gt; names(7): Var nRef nVar nA nT nC nG</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span>
 <span><span class="co">#&gt; DataFrame with 2 rows and 1 column</span></span>
-<span><span class="co">#&gt;                                                             sample</span></span>
-<span><span class="co">#&gt;                                                        &lt;character&gt;</span></span>
-<span><span class="co">#&gt; SRR5564277_Aligned.sortedByCoord.out.md.bam SRR5564277_Aligned.s..</span></span>
-<span><span class="co">#&gt; SRR5564269_Aligned.sortedByCoord.out.md.bam SRR5564269_Aligned.s..</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowRanges.html" class="external-link">rowRanges</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span>
-<span><span class="co">#&gt; GRanges object with 182 ranges and 3 metadata columns:</span></span>
-<span><span class="co">#&gt;               seqnames    ranges strand |         Ref      rbpz       vpb</span></span>
-<span><span class="co">#&gt;                  &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;numeric&gt; &lt;numeric&gt;</span></span>
-<span><span class="co">#&gt;    SSR3_201_-     SSR3       201      - |           A -0.515758  0.036923</span></span>
-<span><span class="co">#&gt;    SSR3_202_-     SSR3       202      - |           T  0.000000  0.000000</span></span>
-<span><span class="co">#&gt;    SSR3_203_-     SSR3       203      - |           T  0.000000  0.000000</span></span>
-<span><span class="co">#&gt;    SSR3_204_-     SSR3       204      - |           T  0.000000  0.000000</span></span>
-<span><span class="co">#&gt;    SSR3_205_-     SSR3       205      - |           T  0.000000  0.000000</span></span>
-<span><span class="co">#&gt;           ...      ...       ...    ... .         ...       ...       ...</span></span>
-<span><span class="co">#&gt;   SPCS3_299_+    SPCS3       299      + |           C         0         0</span></span>
-<span><span class="co">#&gt;   SPCS3_300_+    SPCS3       300      + |           T         0         0</span></span>
-<span><span class="co">#&gt;     DHFR_16_-     DHFR        16      - |           G         0         0</span></span>
-<span><span class="co">#&gt;     DHFR_17_-     DHFR        17      - |           G         0         0</span></span>
-<span><span class="co">#&gt;     DHFR_18_-     DHFR        18      - |           A         0         0</span></span>
-<span><span class="co">#&gt;   -------</span></span>
-<span><span class="co">#&gt;   seqinfo: 3 sequences from an unspecified genome</span></span></code></pre></div>
-<p>The <code><a href="reference/pileup_sites.html">FilterParam()</a></code> class holds multiple options for customizing the output of <code>get_pileup()</code>.</p>
+<span><span class="co">#&gt;         sample</span></span>
+<span><span class="co">#&gt;    &lt;character&gt;</span></span>
+<span><span class="co">#&gt; ko          ko</span></span>
+<span><span class="co">#&gt; wt          wt</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">nRef</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="op">]</span></span>
+<span><span class="co">#&gt;            ko wt</span></span>
+<span><span class="co">#&gt; SSR3_201_- 14 19</span></span>
+<span><span class="co">#&gt; SSR3_202_- 14 23</span></span>
+<span><span class="co">#&gt; SSR3_203_- 14 25</span></span>
+<span><span class="co">#&gt; SSR3_204_- 15 24</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">nVar</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="op">]</span></span>
+<span><span class="co">#&gt;            ko wt</span></span>
+<span><span class="co">#&gt; SSR3_201_-  0  3</span></span>
+<span><span class="co">#&gt; SSR3_202_-  0  0</span></span>
+<span><span class="co">#&gt; SSR3_203_-  0  0</span></span>
+<span><span class="co">#&gt; SSR3_204_-  0  0</span></span></code></pre></div>
+<p>The <code><a href="reference/pileup_sites.html">FilterParam()</a></code> class holds multiple options for customizing the output of <code><a href="reference/pileup_sites.html">pileup_sites()</a></code>.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pileup_sites.html">FilterParam</a></span><span class="op">(</span></span>
 <span>  only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  library_type <span class="op">=</span> <span class="st">"fr-first-strand"</span>,</span>
 <span>  min_nucleotide_depth <span class="op">=</span> <span class="fl">2</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">get_pileup</span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">fafn</span>, filterParam <span class="op">=</span> <span class="va">fp</span><span class="op">)</span></span>
-<span><span class="va">res</span></span>
+<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pileup_sites.html">pileup_sites</a></span><span class="op">(</span><span class="va">bams</span>, <span class="va">fafn</span>, filterParam <span class="op">=</span> <span class="va">fp</span><span class="op">)</span></span>
+<span><span class="va">rse</span></span>
 <span><span class="co">#&gt; class: RangedSummarizedExperiment </span></span>
-<span><span class="co">#&gt; dim: 31 1 </span></span>
+<span><span class="co">#&gt; dim: 74 2 </span></span>
 <span><span class="co">#&gt; metadata(0):</span></span>
 <span><span class="co">#&gt; assays(7): Var nRef ... nC nG</span></span>
-<span><span class="co">#&gt; rownames(31): SSR3_102_- SSR3_228_- ... DHFR_430_- DHFR_513_-</span></span>
+<span><span class="co">#&gt; rownames(74): SSR3_102_- SSR3_125_- ... DHFR_430_- DHFR_513_-</span></span>
 <span><span class="co">#&gt; rowData names(3): Ref rbpz vpb</span></span>
-<span><span class="co">#&gt; colnames(1): SRR5564269_Aligned.sortedByCoord.out.md.bam</span></span>
+<span><span class="co">#&gt; colnames(2): ko wt</span></span>
 <span><span class="co">#&gt; colData names(1): sample</span></span></code></pre></div>
 </div>
 <div class="section level2">
