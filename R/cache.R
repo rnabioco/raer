@@ -6,13 +6,14 @@
 #' @returns A named list with paths to BAM files, a FASTA file and a bed
 #' file of known editing sites from hg38 chromosome 18.
 #'
-#' @rdname download_data
+#' @family external-data
 #'
 #' @examples
 #' \dontrun{
 #' td <- tempdir()
 #' download_GSE99249(td)
 #' }
+#'
 #' @export
 download_GSE99249 <- function(path) {
   dir.create(path, recursive = TRUE, showWarnings = FALSE)
@@ -60,12 +61,14 @@ download_GSE99249 <- function(path) {
 #' @returns A named list with paths to an RNA-seq and WGS BAM file, and a FASTA file
 #' from hg38 chromosome 4.
 #'
-#' @rdname download_data
+#' @family external-data
+#'
 #' @examples
 #' \dontrun{
 #' td <- tempdir()
 #' download_NA12878(td)
 #' }
+#'
 #' @export
 download_NA12878 <- function(path) {
   dir.create(path, recursive = TRUE, showWarnings = FALSE)
@@ -104,8 +107,6 @@ download_NA12878 <- function(path) {
   fids
 }
 
-
-
 #' Download 10x PMBC bam file and related data
 #'
 #' @description This function will download < 1 GB of data.
@@ -114,12 +115,15 @@ download_NA12878 <- function(path) {
 #' @returns A named list with paths to bam file, fasta file,
 #' bed file of editing_sites, and an .rds file with a
 #' SingleCellExperiment
-#' @rdname download_data
+#'
+#' @family external-data
+#'
 #' @examples
 #' \dontrun{
 #' td <- tempdir()
 #' download_human_pbmc(td)
 #' }
+#'
 #' @export
 download_human_pbmc <- function(path) {
   dir.create(path, recursive = TRUE, showWarnings = FALSE)

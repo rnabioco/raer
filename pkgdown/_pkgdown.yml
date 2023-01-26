@@ -31,7 +31,7 @@ reference:
   - '`sc_editing`'
 - title: Data
   contents:
-  - '`download_GSE99249`'
+  - has_concept('external-data')
   - rse_adar_ifn
 - title: Utilities
   contents:
