@@ -248,7 +248,7 @@ filter_by_coverage <- function(bamfile, gr, min_counts,
   gr
 }
 
-
+#' @importFrom Matrix Matrix
 get_cell_pileup <- function(bamfn,
                             fafn,
                             cellbarcodes,
@@ -290,29 +290,24 @@ get_cell_pileup <- function(bamfn,
     )
   }
   on.exit(unlink(c(bam, paste0(bam, ".bai"))))
-  out <- get_pileup(bam,
+  out <- pileup_sites(bam,
     fafile = fafn,
     BPPARAM = BiocParallel::SerialParam(),
     ...
   )
+  assays(out) <- assays(out)[assay_cols]
+  numeric_cols <- c("nRef", "nVar", "nA", "nT", "nC", "nG", "nX")
+  sp_cols <- Reduce(intersect,
+                    list(names(assays(out)), assay_cols, numeric_cols))
+  sp <- lapply(sp_cols, function(x) Matrix::Matrix(assay(out, x), sparse = TRUE))
+  assays(out)[sp_cols] <- sp
   if (per_cell) {
-    # figure out numeric assays
-    num_cols <- assay_cols[which(sapply(mcols(out[[1]])[assay_cols], is.numeric))]
-    # remove zero depth (helps with making the sparseMatrices)
-    out <- lapply(out, function(x) {
-      to_keep <- rowSums(as.matrix(mcols(x)[num_cols])) > 0
-      x[to_keep]
-    })
-    names(out) <- cellbarcodes
-    id <- NULL
+    colnames(out) <- cellbarcodes
+    out$sample <- cellbarcodes
+  } else {
+    colnames(out) <- id
+    out$sample <- id
   }
-  out <- merge_pileups(out,
-    assay_cols = assay_cols,
-    sparse = TRUE,
-    fill_na = 0L,
-    sample_names = id,
-    verbose = verbose
-  )
   out
 }
 
@@ -333,14 +328,14 @@ get_cell_pileup <- function(bamfn,
 #'   each entry in the cell_barcodes list, or across batches of single cells specified
 #'   by batch_size.
 #' @param batch_size When processing single cells, the batch_size controls
-#'   how many individual cell bams to process in each invocation of `get_pileup()`.
+#'   how many individual cell bams to process in each invocation of `pileup_sites()`.
 #'   Batching the cells reduces run time by avoiding  loading sequences from the
 #'   fasta file for each cell. Setting values above 50 is unlikely to further improve
 #'   runtime.
-#' @param bam_flags See arguments for `[get_pileup()]`
-#' @param umi_tag See arguments for `[get_pileup()]`
+#' @param bam_flags See arguments for `[pileup_sites()]`
+#' @param umi_tag See arguments for `[pileup_sites()]`
 #' @param verbose Display messages
-#' @param ... additional arguments passed to `[get_pileup()]`.
+#' @param ... additional arguments passed to `[pileup_sites()]`.
 #'
 #' @examples
 #' suppressPackageStartupMessages(library(SummarizedExperiment))
@@ -427,9 +422,9 @@ sc_editing <- function(bamfile,
 
   # fail early if incorrect args passed through ...
   plp_args <- names(list(...))
-  invalid_args <- plp_args[!plp_args %in% formalArgs(get_pileup)]
+  invalid_args <- plp_args[!plp_args %in% formalArgs(pileup_sites)]
   if (length(invalid_args) > 0) {
-    stop(invalid_args, " is not a valid argument for get_pileup()")
+    stop(invalid_args, " is not a valid argument for pileup_sites()")
   }
 
   idx_fn <- paste0(bamfile, ".bri")

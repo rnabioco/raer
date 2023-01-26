@@ -46,33 +46,33 @@ bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")
 bedfn <- raer_example("regions.bed")
 
-res <- get_pileup(bamfn, fafn, bedfile = bedfn)
-res[1:5, ]
+rse <- get_pileup(c(bam2fn, bamfn), fafn, bedfile = bedfn)
 ```
 
-Multiple BAM files can be processed, enabling rapid comparisons of RNA-Seq vs.
-WGS or WXS data, or RNA-Seq vs RNA-seq (e.g., ADAR WT VS ADAR KO).
+
+To facilitate comparisons across groups, base count data and genomic coordinates 
+are stored in a  `RangedSummarizedExperiment`. 
+
+```{r}
+suppressMessages(library(SummarizedExperiment))
+rse
+assays(rse)
+colData(rse)
+rowRanges(rse)
+```
 
 The `FilterParam()` class holds multiple options for customizing the output of 
 `get_pileup()`.
 
-To facilitate comparisons across groups, pileups can be combined in a 
-`RangedSummarizedExperiment`. 
-
-```{r create_se}
+```{r params}
 fp <- FilterParam(
   only_keep_variants = TRUE,
   library_type = "fr-first-strand",
   min_nucleotide_depth = 2
 )
 
-plps <- get_pileup(
-  c(bam2fn, bamfn),
-  fafn,
-  filterParam = fp
-)
-
-create_se(plps)
+res <- get_pileup(bamfn, fafn, filterParam = fp)
+res
 ```
 
 ## Related work

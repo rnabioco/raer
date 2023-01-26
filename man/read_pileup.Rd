@@ -13,13 +13,17 @@ read_pileup(tbx_fn, region = NULL)
 region specifiers are supported.}
 }
 \description{
-Read pileup, indexed by tabix
+This function can read in pileup or site data tables produced by
+pileup_sites().
 }
 \examples{
 bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
 fafn <- system.file("extdata", "human.fasta", package = "raer")
 plp_fn <- tempfile()
-plp <- get_pileup(bamfn, fafn, return_data = FALSE, outfile_prefix = plp_fn)
-read_pileup(plp)
+plp <- pileup_sites(bamfn, fafn, return_data = FALSE, outfile_prefix = plp_fn)
+
+# first table contains site information, second table pileup count
+lapply(plp, function(x) head(read_pileup(x)))
 unlink(c(plp, plp_fn, paste0(plp, ".tbi")))
+
 }

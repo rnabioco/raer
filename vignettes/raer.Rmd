@@ -67,9 +67,9 @@ bedfn
 
 ## Generate editing site read counts 
 
-The `get_pileup()` function will calculate base counts across multiple BAM files. The base counts will be returned as a list of `GRanges` objects for each bam file. The `FilterParam()` function provides numerous filters to exclude reads and bases based on commonly used filters for detecting RNA-editing events. Specific regions can be queried using the `region` argument, or specific positions can be queried by providing `bedfile` a path to a BED-file. 
+The `pileup_sites()` function will calculate base counts across multiple BAM files. The base counts will be returned as a list of `GRanges` objects for each bam file. The `FilterParam()` function provides numerous filters to exclude reads and bases based on commonly used filters for detecting RNA-editing events. Specific regions can be queried using the `region` argument, or specific positions can be queried by providing `bedfile` a path to a BED-file. 
 
-Internally, `get_pileup()` will generate pileups in memory. However, these files can also be stored in a tabix-indexed format, for later retrieval, or for querying specific regions.
+Internally, `pileup_sites()` will generate pileups in memory. However, these files can also be stored in a tabix-indexed format, for later retrieval, or for querying specific regions.
 
 ```{r}
 fp <- FilterParam(
@@ -79,41 +79,31 @@ fp <- FilterParam(
   min_base_quality = 30L,
   min_mapq = 255L,
   library_type = "fr-first-strand",
-  min_splice_overhang = 10,
-  indel_dist = 4, 
-  max_mismatch_type = c(3, 3), 
+  min_splice_overhang = 10
 )
 
-plps <- get_pileup(bam_files,
+rse <- pileup_sites(bam_files,
   fafile = fafn,
   bedfile = bedfn,
   region = "chr18",
   filterParam = fp
 )
-
-plps[[1]]
 ```
 
-The base counts are returned in a stand specific fashion depending on the `library-type` parameter. The `Ref` and `Var` bases are in reference to the strand. 
 
-Pileups from multiple BAM files can be stored in a `summarizedExperiment` object, which permits comparisons across each sample. The `rowData()` and `rowRanges()` slots can be populated with information related to each editing site, and similarly the `colData()` slot can be used to store sample metadata. The summarizedExperiment objectcan also interface with other derivative classes, such as `singleCellExperiment()`. 
+Pileups data is stored in a `summarizedExperiment` object, which permits comparisons across each sample. The `rowData()` and `rowRanges()` slots can be populated with information related to each editing site, and similarly the `colData()` slot can be used to store sample metadata. The summarizedExperiment object can also interface with other derivative classes, such as `singleCellExperiment()`. 
 
-```{r}
-names(plps) <- names(bam_files)
-se <- merge_pileups(plps)
-```
 
-Each column from the pileup can be stored as an assay, which can be specified by the `assay_cols` parameter
+The base counts are counted in a stand specific fashion depending on the `library-type` parameter. The `Ref` and `Var` bases are in reference to the strand. 
 
 ```{r}
-se
+rse
 ```
 
 Next we will add sample metadata to the `summarizedExperiment`, which will be used to conduct differential editing analysis. 
 
-
 ```{r}
-colData(se)$genotype_treatment <- rep(
+colData(rse)$genotype_treatment <- rep(
   c(
     "ADAR1KO Interferon beta",
     "Wildtype Interferon beta"
@@ -121,14 +111,14 @@ colData(se)$genotype_treatment <- rep(
   each = 3
 )
 
-colData(se)$genotype <- rep(
+colData(rse)$genotype <- rep(
   c(
     "ADAR1KO",
     "Wildtype"
   ),
   each = 3
 )
-colData(se)
+colData(rse)
 ```
 
 ## Prepare for differential editing 
@@ -137,7 +127,7 @@ We next use the `calc_edit_frequency` function to identify the percent of edits 
 
 
 ```{r}
-se_filtered <- calc_edit_frequency(se,
+se_filtered <- calc_edit_frequency(rse,
   edit_from = "A",
   edit_to = "G",
   drop = TRUE
@@ -164,7 +154,7 @@ deobj <- prep_for_de(se_filtered,
   min_samples = 3
 )
 
-assay(deobj, "counts")[1:3, ]
+assay(deobj, "counts")[1:3, 1:6]
 ```
 
 ## Run differential editing (DESeq2)
