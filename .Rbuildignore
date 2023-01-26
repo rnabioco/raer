@@ -11,3 +11,4 @@
 ^.vscode$
 ^tools$
 ^codecov\.yml$
+^data-raw$
