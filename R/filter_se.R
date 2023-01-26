@@ -14,6 +14,7 @@
 #'
 #' @export
 filter_multiallelic <- function(se) {
+  n_in <- nrow(se)
   is_not_multiallelic <- apply(assay(se, "Var"), 1, function(x) {
     x <- unique(x[x != "-"])
     if (length(x) == 0 | length(x) >= 2) {
@@ -23,6 +24,15 @@ filter_multiallelic <- function(se) {
   })
   se <- se[which(is_not_multiallelic), ]
   rowData(se)$Var <- apply(assay(se, "Var"), 1, function(x) unique(x[x != "-"]))
+
+  n_filt <- sum(c(is.na(is_not_multiallelic), !is_not_multiallelic), na.rm = TRUE)
+  cli::cli_alert_info(
+    c(
+      "{.fun filter_multiallelic}: removed {.val {n_filt}} sites",
+      " from {.val {n_in}} ({.val {nrow(se)}} remain)"
+    )
+  )
+
   se
 }
 
@@ -115,10 +125,20 @@ get_splice_sites <- function(txdb, slop = 4) {
 filter_splice_variants <- function(se, txdb,
                                    splice_site_dist = 4,
                                    ignore.strand = FALSE) {
+  n_in <- nrow(se)
   ss <- get_splice_sites(txdb, splice_site_dist)
   x <- rowRanges(se)
   fo <- findOverlaps(x, ss, type = "any", ignore.strand = ignore.strand)
   to_keep <- setdiff(1:length(x), unique(queryHits(fo)))
+
+  n_filt <- length(to_keep)
+  cli::cli_alert_info(
+    c(
+      "{.fun filter_splice_variants}: removed {.val {n_in - n_filt}} sites",
+      " from {.val {n_in}} ({.val {n_filt}} remaining)"
+    )
+  )
+
   se[to_keep, ]
 }
 
@@ -178,6 +198,8 @@ filter_clustered_variants <- function(se, txdb,
     stop("only transcript and/or genome are valid arguments for region")
   }
 
+  n_in <- nrow(se)
+
   x <- rowRanges(se)
 
   if ("genome" %in% regions) {
@@ -210,5 +232,15 @@ filter_clustered_variants <- function(se, txdb,
     tx_sites <- tx_sites[as.integer(to_drop)]
     x <- x[setdiff(1:length(x), unique(tx_sites$xHits))]
   }
+
+  n_out <- length(x)
+
+  cli::cli_alert_info(
+    c(
+      "{.fun filter_clustered_variants}: removed {.val {n_in - n_out}} sites",
+      " from {.val {n_in}} ({.val {n_out}} remaining)"
+    )
+  )
+
   se[names(x), ]
 }
