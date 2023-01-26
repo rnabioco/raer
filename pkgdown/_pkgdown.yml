@@ -33,6 +33,7 @@ reference:
 - title: Data
   contents:
   - '`download_GSE99249`'
+  - rse_adar_ifn
 - title: Utilities
   contents:
   - '`build_tag_index`'
