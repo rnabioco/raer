@@ -8,6 +8,7 @@ reference:
   contents:
   - has_concept('pileup')
   - '`pileup_cells`'
+  - 'merge_pileups'
 - title: Calculations
   contents:
   - '`calc_AEI`'
@@ -35,7 +36,6 @@ reference:
 - title: Utilities
   contents:
   - '`build_tag_index`'
-  - '`create_se`'
   - '`correct_strand`'
   - '`raer_example`'
   - '`read_tabix`'
