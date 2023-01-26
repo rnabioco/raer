@@ -39,14 +39,15 @@ BiocManager::install("rnabioco/raer")
 raer provides methods to compute per site read count summaries from BAM
 alignment files, either for known sites, or for all detected sites.
 
-```{r get_pileup}
+```{r pileup_sites}
 library(raer)
-bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+bam1fn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")
 bedfn <- raer_example("regions.bed")
+bams <- c("ko" = bam1fn, "wt" = bam2fn)
 
-rse <- get_pileup(c(bam2fn, bamfn), fafn, bedfile = bedfn)
+rse <- pileup_sites(bams, fafn, bedfile = bedfn)
 ```
 
 
@@ -58,11 +59,16 @@ suppressMessages(library(SummarizedExperiment))
 rse
 assays(rse)
 colData(rse)
-rowRanges(rse)
 ```
 
+```{r}
+assays(rse)$nRef[1:4, ]
+assays(rse)$nVar[1:4, ]
+```
+
+
 The `FilterParam()` class holds multiple options for customizing the output of 
-`get_pileup()`.
+`pileup_sites()`.
 
 ```{r params}
 fp <- FilterParam(
@@ -71,8 +77,8 @@ fp <- FilterParam(
   min_nucleotide_depth = 2
 )
 
-res <- get_pileup(bamfn, fafn, filterParam = fp)
-res
+rse <- pileup_sites(bams, fafn, filterParam = fp)
+rse
 ```
 
 ## Related work

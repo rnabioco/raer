@@ -32,12 +32,13 @@ alignment files, either for known sites, or for all detected sites.
 
 ``` r
 library(raer)
-bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+bam1fn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")
 bedfn <- raer_example("regions.bed")
+bams <- c("ko" = bam1fn, "wt" = bam2fn)
 
-rse <- get_pileup(c(bam2fn, bamfn), fafn, bedfile = bedfn)
+rse <- pileup_sites(bams, fafn, bedfile = bedfn)
 ```
 
 To facilitate comparisons across groups, base count data and genomic
@@ -52,39 +53,36 @@ rse
 #> assays(7): Var nRef ... nC nG
 #> rownames(182): SSR3_201_- SSR3_202_- ... DHFR_17_- DHFR_18_-
 #> rowData names(3): Ref rbpz vpb
-#> colnames(2): SRR5564277_Aligned.sortedByCoord.out.md.bam
-#>   SRR5564269_Aligned.sortedByCoord.out.md.bam
+#> colnames(2): ko wt
 #> colData names(1): sample
 assays(rse)
 #> List of length 7
 #> names(7): Var nRef nVar nA nT nC nG
 colData(rse)
 #> DataFrame with 2 rows and 1 column
-#>                                                             sample
-#>                                                        <character>
-#> SRR5564277_Aligned.sortedByCoord.out.md.bam SRR5564277_Aligned.s..
-#> SRR5564269_Aligned.sortedByCoord.out.md.bam SRR5564269_Aligned.s..
-rowRanges(rse)
-#> GRanges object with 182 ranges and 3 metadata columns:
-#>               seqnames    ranges strand |         Ref      rbpz       vpb
-#>                  <Rle> <IRanges>  <Rle> | <character> <numeric> <numeric>
-#>    SSR3_201_-     SSR3       201      - |           A -0.515758  0.036923
-#>    SSR3_202_-     SSR3       202      - |           T  0.000000  0.000000
-#>    SSR3_203_-     SSR3       203      - |           T  0.000000  0.000000
-#>    SSR3_204_-     SSR3       204      - |           T  0.000000  0.000000
-#>    SSR3_205_-     SSR3       205      - |           T  0.000000  0.000000
-#>           ...      ...       ...    ... .         ...       ...       ...
-#>   SPCS3_299_+    SPCS3       299      + |           C         0         0
-#>   SPCS3_300_+    SPCS3       300      + |           T         0         0
-#>     DHFR_16_-     DHFR        16      - |           G         0         0
-#>     DHFR_17_-     DHFR        17      - |           G         0         0
-#>     DHFR_18_-     DHFR        18      - |           A         0         0
-#>   -------
-#>   seqinfo: 3 sequences from an unspecified genome
+#>         sample
+#>    <character>
+#> ko          ko
+#> wt          wt
+```
+
+``` r
+assays(rse)$nRef[1:4, ]
+#>            ko wt
+#> SSR3_201_- 14 19
+#> SSR3_202_- 14 23
+#> SSR3_203_- 14 25
+#> SSR3_204_- 15 24
+assays(rse)$nVar[1:4, ]
+#>            ko wt
+#> SSR3_201_-  0  3
+#> SSR3_202_-  0  0
+#> SSR3_203_-  0  0
+#> SSR3_204_-  0  0
 ```
 
 The `FilterParam()` class holds multiple options for customizing the
-output of `get_pileup()`.
+output of `pileup_sites()`.
 
 ``` r
 fp <- FilterParam(
@@ -93,15 +91,15 @@ fp <- FilterParam(
   min_nucleotide_depth = 2
 )
 
-res <- get_pileup(bamfn, fafn, filterParam = fp)
-res
+rse <- pileup_sites(bams, fafn, filterParam = fp)
+rse
 #> class: RangedSummarizedExperiment 
-#> dim: 31 1 
+#> dim: 74 2 
 #> metadata(0):
 #> assays(7): Var nRef ... nC nG
-#> rownames(31): SSR3_102_- SSR3_228_- ... DHFR_430_- DHFR_513_-
+#> rownames(74): SSR3_102_- SSR3_125_- ... DHFR_430_- DHFR_513_-
 #> rowData names(3): Ref rbpz vpb
-#> colnames(1): SRR5564269_Aligned.sortedByCoord.out.md.bam
+#> colnames(2): ko wt
 #> colData names(1): sample
 ```
 
