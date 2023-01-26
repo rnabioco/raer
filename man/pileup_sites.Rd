@@ -114,13 +114,13 @@ genomic-unstranded will report all variants w.r.t the + strand.}
 \item{only_keep_variants}{if TRUE, then only variant sites will be reported
 (FALSE by default), can be a vector for each input bamfile}
 
-\item{trim_5p}{Bases to trim from 5' ends of read alignments}
+\item{trim_5p}{Bases to trim from 5' end of read alignments}
 
-\item{trim_3p}{Bases to trim from 3' ends of read alignments}
+\item{trim_3p}{Bases to trim from 3' end of read alignments}
 
-\item{ftrim_5p}{Fraction of bases to trim from 5' ends of read alignments}
+\item{ftrim_5p}{Fraction of bases to trim from 5' end of read alignments}
 
-\item{ftrim_3p}{Fraction of bases to trim from 5' ends of read alignments}
+\item{ftrim_3p}{Fraction of bases to trim from 3' end of read alignments}
 
 \item{indel_dist}{Exclude read if site occurs within given
 distance from indel event in the read}

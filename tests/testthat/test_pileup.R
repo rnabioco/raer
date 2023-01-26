@@ -268,7 +268,7 @@ test_that("pileup read trimming filter works", {
 test_that("pileup fractional read trimming filter works", {
   vec <- function(rse, assay, col = 1) unname(assays(rse)[[assay]][, col])
   test_plp_fxn <- function(...) {
-    get_pileup(bamfn, fafn, region = "SSR3:440-450",
+    pileup_sites(bamfn, fafn, region = "SSR3:440-450",
                filterParam = FilterParam(min_base_quality = 0,
                                          ...))}
 
