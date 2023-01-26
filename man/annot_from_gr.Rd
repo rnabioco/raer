@@ -26,7 +26,7 @@ SummarizedExperiment or GRanges object. If multiple features overlap then
 they will be concatenated as comma separated values.
 }
 \examples{
-example(create_se, echo = FALSE)
+example(merge_pileups, echo = FALSE)
 
 library(SummarizedExperiment)
 

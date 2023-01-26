@@ -13,7 +13,7 @@ count_edits(
 )
 }
 \arguments{
-\item{se}{A SummarizedExperiment object created by \code{create_se} and
+\item{se}{A SummarizedExperiment object created by \code{merge_pileups} and
 processed by \code{calc_edit_frequency}}
 
 \item{edit_frequency}{OPTIONAL the edit frequency used to determine the

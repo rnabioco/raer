@@ -1,14 +1,14 @@
 #' Adds editing frequencies
 #'
 #' @description Adds editing frequencies to an existing
-#' SummarizedExperiment object (created by create_se`). The
+#' SummarizedExperiment object (created by merge_pileups`). The
 #' SummarizedExperiment with a new assay for editing frequencies
 #' for each site (`edit_freq`), depth of coverage computed
 #' using the indicatededited nucleotides (`depth`) and new colData
 #' columns with the number of edited sites (n_sites) and the
 #' fraction of edits (edit_idx) is returned.
 #'
-#' @param se A SummarizedExperiment object created by `create_se`
+#' @param se A SummarizedExperiment object created by `merge_pileups`
 #' @param edit_from This should be a nucleotide (A, C, G, or T)
 #'   corresponding to the nucleotide you expect in the reference. Ex. for A to I
 #'   editing events, this would be "A". If NULL, then editing frequencies will be
@@ -31,7 +31,7 @@
 #' SummarizedExperiment supplemented with `edit_freq` assay.
 #'
 #' @examples
-#' example(create_se, echo = FALSE)
+#' example(merge_pileups, echo = FALSE)
 #' se <- calc_edit_frequency(se)
 #' assay(se, "edit_freq")[1:5, ]
 #'
@@ -113,7 +113,7 @@ calc_edit_frequency <- function(se,
 #'   This function should be called by `calc_edit_frequency` and is not meant to
 #'   be used directly.
 #'
-#' @param se A SummarizedExperiment object created by `create_se` and
+#' @param se A SummarizedExperiment object created by `merge_pileups` and
 #'   processed by `calc_edit_frequency`
 #' @param edit_from OPTIONAL if not using a pre-built type, you can specify your
 #'   own editing. This should be a nucleotide (A, C, G, or T) and should
@@ -179,7 +179,7 @@ count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
 #'
 #' @import SummarizedExperiment
 #' @examples
-#' example(create_se, echo = FALSE)
+#' example(merge_pileups, echo = FALSE)
 #' se <- calc_edit_frequency(se)
 #' dse <- prep_for_de(se)
 #' assay(dse, "counts")
@@ -255,7 +255,7 @@ prep_for_de <- function(se,
 #'   a variable in your condition_col of colData(deobj).
 #'
 #' @examples
-#' example(create_se, echo = FALSE)
+#' example(merge_pileups, echo = FALSE)
 #' se <- calc_edit_frequency(se)
 #' dse <- prep_for_de(se)
 #' res <- perform_de(dse, condition_control = "WT", condition_treatment = "KO")
