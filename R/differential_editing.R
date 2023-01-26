@@ -132,6 +132,8 @@ calc_edit_frequency <- function(se,
 #'
 #' @import SummarizedExperiment
 #' @importFrom Matrix colSums
+#'
+#' @keywords internal
 count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
                         edit_from = NULL, edit_to = NULL) {
   n_pass_filter <- Matrix::colSums((assay(se, "edit_freq") > edit_frequency) &
