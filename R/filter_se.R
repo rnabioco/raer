@@ -7,8 +7,7 @@
 #' @param se `SummarizedExperiment::SummarizedExperiment`
 #'
 #' @examples
-#' example(merge_pileups, echo = FALSE)
-#' filter_multiallelic(se)
+#' filter_multiallelic(rse_adar_ifn)
 #'
 #' @family se-filters
 #'
@@ -98,25 +97,10 @@ get_splice_sites <- function(txdb, slop = 4) {
 #'
 #' @examples
 #' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
-#'   library(SummarizedExperiment)
-#'   nrows <- 5
-#'   ncols <- 6
-#'   counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
-#'   rowRanges <- GRanges(rep("chr1", 5),
-#'     IRanges(c(12055, 12174, 12194, 12719, 12889), width = 1),
-#'     strand = rep("+", 5)
+#'   filter_splice_variants(
+#'     rse_adar_ifn,
+#'     TxDb.Hsapiens.UCSC.hg38.knownGene
 #'   )
-#'   colData <- DataFrame(
-#'     Treatment = rep(c("adar_wt", "adar_ko"), 3),
-#'     row.names = LETTERS[1:6]
-#'   )
-#'   rse <- SummarizedExperiment(
-#'     assays = SimpleList(counts = counts),
-#'     rowRanges = rowRanges, colData = colData
-#'   )
-#'
-#'   se <- filter_splice_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
-#'   se
 #' }
 #'
 #' @importFrom GenomicFeatures intronsByTranscript
@@ -158,26 +142,10 @@ filter_splice_variants <- function(se, txdb,
 #'
 #' @examples
 #' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
-#'   library(SummarizedExperiment)
-#'   nrows <- 5
-#'   ncols <- 6
-#'   counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
-#'   rowRanges <- GRanges(rep("chr1", 5),
-#'     IRanges(c(12055, 12174, 12194, 12719, 12889), width = 1),
-#'     strand = rep("+", 5)
+#'   filter_clustered_variants(
+#'     rse_adar_ifn,
+#'     TxDb.Hsapiens.UCSC.hg38.knownGene
 #'   )
-#'   mcols(rowRanges)$Var <- c("AG", "AT", "AC", "TC", "GC")
-#'   colData <- DataFrame(
-#'     Treatment = rep(c("adar_wt", "adar_ko"), 3),
-#'     row.names = LETTERS[1:6]
-#'   )
-#'   rse <- SummarizedExperiment(
-#'     assays = SimpleList(counts = counts),
-#'     rowRanges = rowRanges, colData = colData
-#'   )
-#'
-#'   se <- filter_clustered_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
-#'   se
 #' }
 #'
 #' @family se-filters
