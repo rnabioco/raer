@@ -56,7 +56,11 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.99.0" id="raer-0990">raer 0.99.0<a class="anchor" aria-label="anchor" href="#raer-0990"></a></h2>
-<ul><li><p>Rename <code>remove_clustered_variants</code>, <code>remove_multiallelic</code>, and <code>remove_splice_variants</code> to <code>filter_*</code> for consistency.</p></li>
+<ul><li><p>Added <code>FilterParam</code> option to trim reads based on fractional distance from 5’ (<code>ftrim_5p</code>) or 3’ end (<code>ftrim_3p</code>).</p></li>
+<li><p>Incorporated RBPZ and VDB statistics from bcftools, now returned as rowData columns when calling <code>pileup_sites</code>.</p></li>
+<li><p>A <code>RangedSummarizedExperiment</code> object is now directly returned from <code>pileup_sites</code>. Using <code>merge_pileups</code> is no longer necessary and is not an exported function.</p></li>
+<li><p>Renamed <code>get_pileup</code> to <code>pileup_sites</code> and <code>create_se</code> to <code>merge_pileups</code></p></li>
+<li><p>Rename <code>remove_clustered_variants</code>, <code>remove_multiallelic</code>, and <code>remove_splice_variants</code> to <code>filter_*</code> for consistency.</p></li>
 <li><p>Rewrote and renamed the single cell editing function <code>sc_editing</code> to <code><a href="../reference/pileup_cells.html">pileup_cells()</a></code>. <code><a href="../reference/pileup_cells.html">pileup_cells()</a></code> does not require sorting and index by cell barcode, uses a new format to specify sites to query and requires providing the reference and alternate alleles of interest, writes to disk in a sparse matrix compatible format to reduce memory usage, and should have more performance as there is no need to query a fasta index.</p></li>
 <li><p>Implemented method to collapse reads with duplicate UMIs.</p></li>
 <li><p>Added option to filter sites in pileup based on number of reads containing a variant (<a href="https://github.com/rnabioco/raer/issues/54" class="external-link">#54</a>)</p></li>

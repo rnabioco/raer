@@ -131,19 +131,19 @@ with other needed files can be downloaded using
 <span><span class="va">fns</span></span></code></pre></div>
 <pre><code><span><span class="co">## $bam</span></span>
 <span><span class="co">##                   10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam </span></span>
-<span><span class="co">## "/tmp/Rtmpeb15fV/10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam" </span></span>
+<span><span class="co">## "/tmp/Rtmpl7kMDN/10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $bai</span></span>
 <span><span class="co">##                   10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam.bai </span></span>
-<span><span class="co">## "/tmp/Rtmpeb15fV/10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam.bai" </span></span>
+<span><span class="co">## "/tmp/Rtmpl7kMDN/10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam.bai" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $edit_sites</span></span>
 <span><span class="co">##                   rediportal_chr16.bed.gz </span></span>
-<span><span class="co">## "/tmp/Rtmpeb15fV/rediportal_chr16.bed.gz" </span></span>
+<span><span class="co">## "/tmp/Rtmpl7kMDN/rediportal_chr16.bed.gz" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $sce</span></span>
 <span><span class="co">##                   sce.rds </span></span>
-<span><span class="co">## "/tmp/Rtmpeb15fV/sce.rds"</span></span></code></pre>
+<span><span class="co">## "/tmp/Rtmpl7kMDN/sce.rds"</span></span></code></pre>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bam_fn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bam</span></span>
 <span><span class="va">bed_fn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">edit_sites</span></span></code></pre></div>
@@ -172,8 +172,8 @@ use sites from the Rediportal database.</p>
 <p>If the editing sites of interest are not known, one option is to
 perform a two pass operation. First, identify editing sites by treating
 the data as a bulk-RNA-seq experiment, using for example
-<code><a href="../reference/get_pileup.html">get_pileup()</a></code>. Then filter these sites to establish a set of
-high confidence sites to query in single cell mode.</p>
+<code><a href="../reference/pileup_sites.html">pileup_sites()</a></code>. Then filter these sites to establish a set
+of high confidence sites to query in single cell mode.</p>
 <p><code>raer</code> provides a function, <code><a href="../reference/pileup_cells.html">pileup_cells()</a></code>,
 which will quantify edited and non-edited UMI counts per cell barcode,
 then collect the site counts into a SingleCellExperiment.</p>
@@ -209,27 +209,8 @@ of the <code>+</code> strand bases.</p>
 <span><span class="co">##   [785208]    chr16  90220135      + |           A           G</span></span>
 <span><span class="co">##   -------</span></span>
 <span><span class="co">##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</span></span></code></pre>
-<p><code>raer</code> provides a wrapper function,
-<code><a href="../reference/sc_editing.html">sc_editing()</a></code>, which will extract alignments per cell (or
-cluster) using <code><a href="../reference/tag_index.html">get_tag_bam()</a></code>, generate editing site counts
-(<code><a href="../reference/get_pileup.html">get_pileup()</a></code>), then collect the site counts into a
-<code>RangedSummarizedExperiment</code>
-(<code><a href="../reference/merge_pileups.html">merge_pileups()</a></code>).</p>
-<p>The <code>cell_barcodes</code> argument specifies which cell-barcodes
-will be queried. If a character vector of cell-barcodes is supplied,
-editing sites will be quantified per cell-barcode. Alternatively a list
-containing cell-barcodes per cluster or group can be supplied, in which
-case editing sites will be quantified by pooling alignments per
-group.<br>
-Additional arguments for <code><a href="../reference/get_pileup.html">get_pileup()</a></code> can be passed to
-<code><a href="../reference/sc_editing.html">sc_editing()</a></code>. Note that <code>bam_flags</code> is set to
-<strong>include</strong> duplicate reads by default. If the bamfile has
-a tag with a UMI sequence, this can be supplied to the
-<code>umi_tag</code> argument to only count 1 read for each UMI at each
-position. This strategy allows for reads with the same UMI to be counted
-at multiple independent sites enabling recovery of more sequence
-variants than counting only 1 read per UMI.<br><code><a href="../reference/pileup_cells.html">pileup_cells()</a></code> accepts a <code><a href="../reference/get_pileup.html">FilterParam()</a></code> class
-to specifying how to performing read and site filtering. Note that
+<p><code><a href="../reference/pileup_cells.html">pileup_cells()</a></code> accepts a <code><a href="../reference/pileup_sites.html">FilterParam()</a></code>
+class to specifying how to performing read and site filtering. Note that
 <code><a href="../reference/pileup_cells.html">pileup_cells()</a></code> is strand sensitive by default, so it is
 important to ensure that the strand of the input sites is correctly
 annotated, and that the library type is correct for the type of data of
@@ -239,10 +220,10 @@ alignments matches the strand of the RNA.</p>
 <p>Note that <code>bam_flags</code> is set to <strong>include</strong>
 duplicate reads by default. If the bamfile has a tag with a UMI
 sequence, this can be supplied to the <code>umi_tag</code> argument to
-only count 1 read for each UMI at each position. This strategy allows
-for reads with the same UMI to be counted at multiple independent sites
-enabling recovery of more sequence variants than counting only 1 read
-per UMI.</p>
+only count 1 read for each CB-UMI pair at each position. This strategy
+allows for reads with the same UMI to be counted at multiple independent
+sites enabling recovery of more sequence variants than counting only 1
+read per UMI.</p>
 <p>Processing time can be reduced by operating in parallel across
 chromosomes, by supplying a BiocParallel backend to the
 <code>BPPARAM</code> argument (e.g. <code>MultiCoreParam()</code>).</p>
@@ -256,7 +237,7 @@ chromosomes, by supplying a BiocParallel backend to the
 <span>  output_directory <span class="op">=</span> <span class="va">outdir</span>,</span>
 <span>  cb_tag <span class="op">=</span> <span class="st">"CB"</span>,</span>
 <span>  umi_tag <span class="op">=</span> <span class="st">"UB"</span>,</span>
-<span>  fp <span class="op">=</span> <span class="fu"><a href="../reference/get_pileup.html">FilterParam</a></span><span class="op">(</span></span>
+<span>  fp <span class="op">=</span> <span class="fu"><a href="../reference/pileup_sites.html">FilterParam</a></span><span class="op">(</span></span>
 <span>    min_base_quality <span class="op">=</span> <span class="fl">30L</span>,</span>
 <span>    library_type <span class="op">=</span> <span class="st">"fr-second-strand"</span>,</span>
 <span>    min_variant_reads <span class="op">=</span> <span class="fl">1L</span>,</span>
@@ -265,10 +246,10 @@ chromosomes, by supplying a BiocParallel backend to the
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">e_sce</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: SingleCellExperiment </span></span>
-<span><span class="co">## dim: 4451 500 </span></span>
+<span><span class="co">## dim: 4427 500 </span></span>
 <span><span class="co">## metadata(0):</span></span>
 <span><span class="co">## assays(2): nRef nVar</span></span>
-<span><span class="co">## rownames(4451): chr16_83540_1_A_G chr16_83621_1_A_G ...</span></span>
+<span><span class="co">## rownames(4427): chr16_83540_1_A_G chr16_83621_1_A_G ...</span></span>
 <span><span class="co">##   chr16_31453268_2_A_G chr16_31454303_2_A_G</span></span>
 <span><span class="co">## rowData names(2): ref alt</span></span>
 <span><span class="co">## colnames(500): TGTTTGTCAGTTAGGG-1 ATCTCTACAAGCTACT-1 ...</span></span>

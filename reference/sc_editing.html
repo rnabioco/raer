@@ -116,18 +116,18 @@ by batch_size.</p></dd>
 
 <dt>batch_size</dt>
 <dd><p>When processing single cells, the batch_size controls
-how many individual cell bams to process in each invocation of <code><a href="get_pileup.html">get_pileup()</a></code>.
+how many individual cell bams to process in each invocation of <code><a href="pileup_sites.html">pileup_sites()</a></code>.
 Batching the cells reduces run time by avoiding  loading sequences from the
 fasta file for each cell. Setting values above 50 is unlikely to further improve
 runtime.</p></dd>
 
 
 <dt>bam_flags</dt>
-<dd><p>See arguments for <code>[get_pileup()]</code></p></dd>
+<dd><p>See arguments for <code>[pileup_sites()]</code></p></dd>
 
 
 <dt>umi_tag</dt>
-<dd><p>See arguments for <code>[get_pileup()]</code></p></dd>
+<dd><p>See arguments for <code>[pileup_sites()]</code></p></dd>
 
 
 <dt>verbose</dt>
@@ -135,7 +135,7 @@ runtime.</p></dd>
 
 
 <dt>...</dt>
-<dd><p>additional arguments passed to <code>[get_pileup()]</code>.</p></dd>
+<dd><p>additional arguments passed to <code>[pileup_sites()]</code>.</p></dd>
 
 </dl></div>
 
@@ -156,7 +156,7 @@ runtime.</p></dd>
 <span class="r-in"><span><span class="co"># process each cell individually</span></span></span>
 <span class="r-in"><span><span class="co"># will be slow with many sites and cells</span></span></span>
 <span class="r-in"><span><span class="co"># bam file will be indexed by build_tag_index() if not already done.</span></span></span>
-<span class="r-in"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="get_pileup.html">FilterParam</a></span><span class="op">(</span>library_type <span class="op">=</span> <span class="st">"fr-second-strand"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="pileup_sites.html">FilterParam</a></span><span class="op">(</span>library_type <span class="op">=</span> <span class="st">"fr-second-strand"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu">sc_editing</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  bamfile <span class="op">=</span> <span class="va">bamfn</span>,</span></span>
 <span class="r-in"><span>  fafile <span class="op">=</span> <span class="fu"><a href="raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"mouse_tiny.fasta"</span><span class="op">)</span>,</span></span>

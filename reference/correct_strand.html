@@ -79,13 +79,13 @@ strands (+ and -) will be removed.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">correct_strand</span><span class="op">(</span><span class="va">gr</span>, <span class="va">genes_gr</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">correct_strand</span><span class="op">(</span><span class="va">rse</span>, <span class="va">genes_gr</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
-    <dl><dt>gr</dt>
-<dd><p>GRanges object containing editing sites processed with
+    <dl><dt>rse</dt>
+<dd><p>RangedSummarizedExperiment object containing editing sites processed with
 "genomic-unstranded" setting</p></dd>
 
 
@@ -98,8 +98,8 @@ strand of the editing sites.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>GenomicRanges onbject containing pileup counts, with strand corrected
-based on supplied genomic intervals.</p>
+<p>RangedSummarizedExperiment object containing pileup assays,
+with strand corrected based on supplied genomic intervals.</p>
     </div>
 
     <div class="section level2">
@@ -108,8 +108,8 @@ based on supplied genomic intervals.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">bamfn</span> <span class="op">&lt;-</span> <span class="fu"><a href="raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"SRR5564269_Aligned.sortedByCoord.out.md.bam"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="fu"><a href="raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"human.fasta"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="get_pileup.html">FilterParam</a></span><span class="op">(</span>library_type <span class="op">=</span> <span class="st">"genomic-unstranded"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">plp</span> <span class="op">&lt;-</span> <span class="fu"><a href="get_pileup.html">get_pileup</a></span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">fafn</span>, filterParam <span class="op">=</span> <span class="va">fp</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="pileup_sites.html">FilterParam</a></span><span class="op">(</span>library_type <span class="op">=</span> <span class="st">"genomic-unstranded"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="pileup_sites.html">pileup_sites</a></span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">fafn</span>, filterParam <span class="op">=</span> <span class="va">fp</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">genes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="st">"DHFR:200-400:+"</span>,</span></span>
@@ -118,49 +118,15 @@ based on supplied genomic intervals.</p>
 <span class="r-in"><span>  <span class="st">"SSR3:6-12:+"</span></span></span>
 <span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu">correct_strand</span><span class="op">(</span><span class="va">plp</span>, <span class="va">genes</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 307 ranges and 10 metadata columns:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         seqnames    ranges strand |         Ref         Var      nRef</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt; &lt;integer&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     [1]     SSR3         3      - |           A           -        14</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     [2]     SSR3         4      - |           A           -        15</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     [3]     SSR3         5      - |           G           -        15</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     [4]     SSR3        11      + |           A           -        15</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     [5]     SSR3        12      + |           T           -        15</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     ...      ...       ...    ... .         ...         ...       ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [303]     DHFR       396      + |           T           -        40</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [304]     DHFR       397      + |           T           -        43</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [305]     DHFR       398      + |           T           -        43</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [306]     DHFR       399      + |           C           -        43</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [307]     DHFR       400      + |           T           -        45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              nVar        nA        nT        nC        nG        nN</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     [1]         0        14         0         0         0         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     [2]         0        15         0         0         0         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     [3]         0         0         0         0        15         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     [4]         0        15         0         0         0         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     [5]         0         0        15         0         0         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     ...       ...       ...       ...       ...       ...       ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [303]         0         0        40         0         0         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [304]         0         0        43         0         0         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [305]         0         0        43         0         0         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [306]         0         0         0        43         0         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [307]         0         0        45         0         0         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                nX</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         &lt;integer&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     [1]         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     [2]         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     [3]         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     [4]         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     [5]         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     ...       ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [303]         6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [304]         2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [305]         2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [306]         3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [307]         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   -------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   seqinfo: 3 sequences from an unspecified genome</span>
+<span class="r-in"><span><span class="fu">correct_strand</span><span class="op">(</span><span class="va">rse</span>, <span class="va">genes</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> class: RangedSummarizedExperiment </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> dim: 307 1 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): Var nRef ... nC nG</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(307): SSR3_3_+ SSR3_4_+ ... DHFR_399_+ DHFR_400_+</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(3): Ref rbpz vpb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colnames(1): SRR5564269_Aligned.sortedByCoord.out.md.bam</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

@@ -124,75 +124,25 @@ to keep a site. Default is 3.</p></dd>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/example.html" class="external-link">example</a></span><span class="op">(</span><span class="va">merge_pileups</span>, echo <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">dse</span> <span class="op">&lt;-</span> <span class="fu">prep_for_de</span><span class="op">(</span><span class="va">se</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">dse</span>, <span class="st">"counts"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             KO1_ref KO2_ref KO3_ref WT1_ref WT2_ref WT3_ref KO1_alt</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_176_-       16      16      16       8       8       8       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_201_-       14      14      14      19      19      19       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_207_-       14      14      14      14      14      14       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_257_-       19      19      19      11      11      11       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_258_-       10      10      10       9       9       9       8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_266_-       17      17      17      12      12      12       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_279_-       17      17      17       6       6       6       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_290_-       14      14      14       3       3       3       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_360_-        6       6       6       3       3       3       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_364_-        3       3       3       2       2       2       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_367_-        0       0       0       0       0       0       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_388_-        0       0       0       0       0       0       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_502_-        5       5       5       4       4       4       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_241_+       2       2       2       3       3       3       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_330_+       0       0       0       1       1       1       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_338_+       0       0       0       2       2       2       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_347_+       4       4       4       5       5       5       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_348_+       0       0       0       0       0       0       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_260_-       60      60      60      21      21      21       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_263_-       58      58      58      27      27      27       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_291_-       54      54      54      30      30      30       2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_292_-       53      53      53      26      26      26       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_309_-       56      56      56      29      29      29       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_328_-       51      51      51      31      31      31       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_354_-       47      47      47      28      28      28       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_355_-       51      51      51      28      28      28       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_361_-       43      43      43       4       4       4       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             KO2_alt KO3_alt WT1_alt WT2_alt WT3_alt</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_176_-        0       0      16      16      16</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_201_-        0       0       3       3       3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_207_-        0       0       4       4       4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_257_-        0       0       4       4       4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_258_-        8       8       6       6       6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_266_-        0       0       5       5       5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_279_-        0       0       4       4       4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_290_-        1       1       7       7       7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_360_-        0       0       3       3       3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_364_-        0       0       4       4       4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_367_-        0       0       1       1       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_388_-        0       0       0       0       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_502_-        0       0       0       0       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_241_+       0       0       1       1       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_330_+       0       0       2       2       2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_338_+       0       0       1       1       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_347_+       0       0       0       0       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SPCS3_348_+       0       0       0       0       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_260_-        0       0      12      12      12</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_263_-        0       0       6       6       6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_291_-        2       2       4       4       4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_292_-        0       0      10      10      10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_309_-        0       0       8       8       8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_328_-        0       0       4       4       4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_354_-        0       0       4       4       4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_355_-        0       0       6       6       6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_361_-        0       0      27      27      27</span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">rse_adar_ifn</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dse</span> <span class="op">&lt;-</span> <span class="fu">prep_for_de</span><span class="op">(</span><span class="va">rse</span>, min_samples <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">dse</span>, <span class="st">"counts"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            wt_ref adar1_ko_ref wt_alt adar1_ko_alt</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_176_-      8           16     16            0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_201_-     19           14      3            0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_207_-     14           14      4            0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_257_-     11           19      4            0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_258_-      9           10      6            8</span>
 <span class="r-in"><span><span class="va">dse</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> class: SummarizedExperiment </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> dim: 27 12 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> dim: 27 4 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assays(1): counts</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> rownames(27): SSR3_176_- SSR3_201_- ... DHFR_355_- DHFR_361_-</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(0):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> colnames(12): KO1_ref KO2_ref ... WT2_alt WT3_alt</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> colData names(5): sample condition n_sites edit_idx count</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colnames(4): wt_ref adar1_ko_ref wt_alt adar1_ko_alt</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colData names(4): sample n_sites edit_idx count</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

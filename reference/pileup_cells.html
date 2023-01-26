@@ -103,7 +103,7 @@ base will be counted once for each UMI sequence present in each cell.</p>
 <span>  chroms <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  umi_tag <span class="op">=</span> <span class="st">"UB"</span>,</span>
 <span>  cb_tag <span class="op">=</span> <span class="st">"CB"</span>,</span>
-<span>  fp <span class="op">=</span> <span class="fu"><a href="get_pileup.html">FilterParam</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  fp <span class="op">=</span> <span class="fu"><a href="pileup_sites.html">FilterParam</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  BPPARAM <span class="op">=</span> <span class="fu">SerialParam</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  return_sce <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -149,7 +149,7 @@ sites present in the listed chromosomes will be processed</p></dd>
 
 
 <dt>fp</dt>
-<dd><p>object of class <code><a href="get_pileup.html">FilterParam()</a></code> which specify various filters to
+<dd><p>object of class <code><a href="pileup_sites.html">FilterParam()</a></code> which specify various filters to
 apply to reads and sites during pileup. Note that the <code>min_variant_reads</code>
 parameter, if set &gt; 0, specifies the number of variant reads at a site
 required in order to report a site. E.g. if set to 2, then at least 2 reads
@@ -182,8 +182,7 @@ to the files produced.</p>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p>Other pileup: 
-<code><a href="get_pileup.html">get_pileup</a>()</code>,
-<code><a href="merge_pileups.html">merge_pileups</a>()</code></p></div>
+<code><a href="pileup_sites.html">pileup_sites</a>()</code></p></div>
     </div>
 
     <div class="section level2">
@@ -204,7 +203,7 @@ to the files produced.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/on.exit.html" class="external-link">on.exit</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="va">bai</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in unlink(outdir, bai):</span> invalid 'recursive' argument</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="get_pileup.html">FilterParam</a></span><span class="op">(</span>library_type <span class="op">=</span> <span class="st">"fr-second-strand"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="pileup_sites.html">FilterParam</a></span><span class="op">(</span>library_type <span class="op">=</span> <span class="st">"fr-second-strand"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu">pileup_cells</span><span class="op">(</span><span class="va">bam_fn</span>, <span class="va">gr</span>, <span class="va">cbs</span>, <span class="va">outdir</span>, fp <span class="op">=</span> <span class="va">fp</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sce</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> class: SingleCellExperiment </span>
