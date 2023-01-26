@@ -119,7 +119,7 @@ filter_splice_variants <- function(se, txdb,
   cli::cli_alert_info(
     c(
       "{.fun filter_splice_variants}: removed {.val {n_in - n_filt}} sites",
-      " from {.val {n_in}} ({.val {n_filt}} remaining)"
+      " from {.val {n_in}} ({.val {n_filt}} remain)"
     )
   )
 
@@ -208,7 +208,7 @@ filter_clustered_variants <- function(se, txdb,
   cli::cli_alert_info(
     c(
       "{.fun filter_clustered_variants}: removed {.val {n_in - n_out}} sites",
-      " from {.val {n_in}} ({.val {n_out}} remaining)"
+      " from {.val {n_in}} ({.val {n_out}} remain)"
     )
   )
 
