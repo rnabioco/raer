@@ -17,4 +17,4 @@ OBJECTS = RcppExports.o regfile.o bedidx.o plp.o plp_data.o plp_utils.o cpp_util
 all: $(SHLIB)
 
 clean:
-	rm -f bri/*.o
+	rm -f bri/*.o bcftools/*.o
