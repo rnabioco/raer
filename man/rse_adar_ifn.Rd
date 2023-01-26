@@ -13,7 +13,7 @@ metadata(0):
 assays(7): Var nRef ... nC nG
 rownames(74): SSR3_102_- SSR3_125_- ... DHFR_430_- DHFR_513_-
 rowData names(1): Ref
-colnames(2): sample_1 sample_2
+colnames(2): wt adar1_ko
 colData names(1): sample
 }\if{html}{\out{</div>}}
 }
