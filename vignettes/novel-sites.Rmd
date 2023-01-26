@@ -60,7 +60,7 @@ rmskhg38 <- makeGRangesFromDataFrame(rmskhg38,
 ```
 
 
-The `get_pileup()` function can accept multiple bam files, here we supply one from RNA-seq, and one from whole genome sequencing.
+The `pileup_sites()` function can accept multiple bam files, here we supply one from RNA-seq, and one from whole genome sequencing.
 
 ```{r}
 wgs_bam <- fns$bams[1]
@@ -68,7 +68,7 @@ rna_bam <- fns$bams[2]
 fafn <- fns$fasta
 ```
 
-Filtering parameters for the `get_pileup()` function can accept multiple arguments matched to the input bam files.
+Filtering parameters for the `pileup_sites()` function can accept multiple arguments matched to the input bam files.
 
 ```{r}
 fp <- FilterParam(
@@ -85,21 +85,17 @@ fp <- FilterParam(
   only_keep_variants = c(TRUE, FALSE)
 )
 
-plps <- get_pileup(c(rna_bam, wgs_bam),
+bams <- c(rna_bam, wgs_bam)
+names(bams) <- c("rna", "dna")
+rse <- pileup_sites(bams,
   fafile = fafn,
   chrom = "chr4",
   filterParam = fp
 )
-names(plps) <- c("rna", "dna")
-plps
+
+rse
 ```
 
-
-
-```{r}
-se <- merge_pileups(plps)
-se
-```
 
 Next we filter to keep those sites with a variant in the RNA-seq, but no variant
 in the DNA-seq, and a minimum of 5 reads in the DNA-seq. The DNA-seq data will 
@@ -108,9 +104,9 @@ strand. We therefore use `subsetByOverlaps(..., ignore.strand = TRUE)` to retain
 passing these DNA-seq based filters independent of strand. 
 
 ```{r}
-to_keep <- (assay(se, "nRef")[, "dna"] >= 5 & assay(se, "Var")[, "dna"] == "-")
-se <- subsetByOverlaps(se, se[to_keep, ], ignore.strand = TRUE)
-nrow(se)
+to_keep <- (assay(rse, "nRef")[, "dna"] >= 5 & assay(rse, "Var")[, "dna"] == "-")
+rse <- subsetByOverlaps(rse, rse[to_keep, ], ignore.strand = TRUE)
+nrow(rse)
 ```
 
 Next we filter to remove any multi-allelic sites. These sites are stored as comma-separated
@@ -118,60 +114,60 @@ strings in the `Var` assay (e.g. `AG,AC`). Non-variant sites are stored as `-`.
 `filter_multiallelic()` will remove any sites that have multiple variants in the samples present in the `summarizedExperiment` object. It will add a new column to the `rowData()` to indicate the variant for each site, and will calculate an `allele_freq` assay with variant allele frequencies for each sample. 
 
 ```{r}
-se <- filter_multiallelic(se)
-se <- calc_edit_frequency(se)
-rowData(se)
+rse <- filter_multiallelic(rse)
+rse <- calc_edit_frequency(rse)
+rowData(rse)
 ```
 
 
 Next we'll remove sites in simple repeat regions. We will add repeat information to the `rowData()` using the `annot_from_gr()` function.
 
 ```{r}
-se <- annot_from_gr(se, rmskhg38, cols_to_map = c(c("repName", "repClass", "repFamily")))
+rse <- annot_from_gr(rse, rmskhg38, cols_to_map = c(c("repName", "repClass", "repFamily")))
 
-rowData(se)[c("repName", "repFamily")]
+rowData(rse)[c("repName", "repFamily")]
 ```
 
 
 ```{r}
-se <- se[!rowData(se)$repFamily %in% c("Simple_repeat", "Low Complexity")]
+rse <- rse[!rowData(rse)$repFamily %in% c("Simple_repeat", "Low Complexity")]
 ```
 
 Next we'll remove sites adjacent to other sites with different variant types. For example if an A->G variant is located proximal to a C->T variant then the variants will be removed.  
 
 ```{r}
-se <- filter_clustered_variants(se, txdb, variant_dist = 100)
-se
+rse <- filter_clustered_variants(rse, txdb, variant_dist = 100)
+rse
 ```
 
 Next, sites with 4bp of known splicing events will be excluded. These variants are low-confidence due to the possibility of mis-alignments. 
 
 ```{r}
-se <- filter_splice_variants(se, txdb)
-se
+rse <- filter_splice_variants(rse, txdb)
+rse
 ```
 Next, we'll annotate if the site is a known SNP and remove any known SNPs. If using a SNPlocs package you can use the `annot_snp()` function. However we will use the `annot_from_gr()` function to annotate using the prebuilt `chr4snps` object.
 
 ```{r}
-se <- annot_from_gr(se, chr4snps, "name")
-rowData(se)[c("name")]
+rse <- annot_from_gr(rse, chr4snps, "name")
+rowData(rse)[c("name")]
 
-se <- se[is.na(rowData(se)$name), ]
-se
+rse <- rse[is.na(rowData(rse)$name), ]
+rse
 ```
 Lastly, we'll further filter the edit sites to require that the editing frequency is > 0.05 and that at least 2 reads support the editing site. 
 
 ```{r}
-to_keep <- assay(se, "edit_freq")[, 1] > 0.05
-se <- se[to_keep, ]
+to_keep <- assay(rse, "edit_freq")[, 1] > 0.05
+rse <- rse[to_keep, ]
 
-se <- se[assay(se, "nVar")[, 1] >= 2]
+rse <- rse[assay(rse, "nVar")[, 1] >= 2]
 ```
 
 
 ```{r}
-stopifnot(all(rowData(se)$Var == "AG"))
-rowRanges(se)
+stopifnot(all(rowData(rse)$Var == "AG"))
+rowRanges(rse)
 ```
 
 

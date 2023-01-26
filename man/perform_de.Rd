@@ -49,9 +49,21 @@ treatment, but it will be pretty straight forward to add other possible
 return values.
 }
 \examples{
-example(merge_pileups, echo = FALSE)
-se <- calc_edit_frequency(se)
-dse <- prep_for_de(se)
+library(SummarizedExperiment)
+bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
+fafn <- raer_example("human.fasta")
+
+bams <- rep(c(bamfn, bam2fn), each = 3)
+sample_ids <- paste0(rep(c("KO", "WT"), each = 3), 1:3)
+names(bams) <- sample_ids
+
+fp <- FilterParam(only_keep_variants = TRUE)
+rse <- pileup_sites(bams, fafn, filterParam = fp)
+rse$condition <- substr(rse$sample, 1, 2)
+
+rse <- calc_edit_frequency(rse)
+dse <- prep_for_de(rse)
 res <- perform_de(dse, condition_control = "WT", condition_treatment = "KO")
 res$sig_results[1:5, ]
 

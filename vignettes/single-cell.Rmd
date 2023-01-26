@@ -63,7 +63,7 @@ plotUMAP(sce, colour_by = "celltype")
 
 Next we'll select editing sites to query. For this analysis we will use sites from the Rediportal database.
 
-If the editing sites of interest are not known, one option is to perform a two pass operation. First, identify editing sites by treating the data as a bulk-RNA-seq experiment, using for example `get_pileup()`. Then filter these sites to establish a set of high confidence sites to query in single cell mode. 
+If the editing sites of interest are not known, one option is to perform a two pass operation. First, identify editing sites by treating the data as a bulk-RNA-seq experiment, using for example `pileup_sites()`. Then filter these sites to establish a set of high confidence sites to query in single cell mode. 
 
 `raer` provides a function, `pileup_cells()`, which will quantify edited and non-edited UMI counts per cell barcode, then collect the site counts into a SingleCellExperiment. 
 
@@ -79,13 +79,9 @@ gr$alt <- "G"
 gr
 ```
 
-`raer` provides a wrapper function, `sc_editing()`, which will extract alignments per cell (or cluster) using `get_tag_bam()`, generate editing site counts (`get_pileup()`), then collect the site counts into a `RangedSummarizedExperiment` (`merge_pileups()`). 
-
-The `cell_barcodes` argument specifies which cell-barcodes will be queried. If a character vector of cell-barcodes is supplied, editing sites will be quantified per cell-barcode. Alternatively a list containing cell-barcodes per cluster or group can be supplied, in which case editing sites will be quantified by pooling alignments per group.  
-Additional arguments for `get_pileup()` can be passed to `sc_editing()`. Note that `bam_flags` is set to **include** duplicate reads by default. If the bamfile has a tag with a UMI sequence, this can be supplied to the `umi_tag` argument to only count 1 read for each UMI at each position. This strategy allows for reads with the same UMI to be counted at multiple independent sites enabling recovery of more sequence variants than counting only 1 read per UMI.  
 `pileup_cells()` accepts a `FilterParam()` class to specifying how to performing read and site filtering. Note that `pileup_cells()` is strand sensitive by default, so it is important to ensure that the strand of the input sites is correctly annotated, and that the library type is correct for the type of data of interest. For 10x Genomics data, the library type is set to `fr-second-strand`, indicating that the strand of the alignments matches the strand of the RNA. 
 
-Note that `bam_flags` is set to **include** duplicate reads by default. If the bamfile has a tag with a UMI sequence, this can be supplied to the `umi_tag` argument to only count 1 read for each UMI at each position. This strategy allows for reads with the same UMI to be counted at multiple independent sites enabling recovery of more sequence variants than counting only 1 read per UMI.  
+Note that `bam_flags` is set to **include** duplicate reads by default. If the bamfile has a tag with a UMI sequence, this can be supplied to the `umi_tag` argument to only count 1 read for each CB-UMI pair at each position. This strategy allows for reads with the same UMI to be counted at multiple independent sites enabling recovery of more sequence variants than counting only 1 read per UMI.  
 
 Processing time can be reduced by operating in parallel across chromosomes, by supplying a BiocParallel backend to the `BPPARAM` argument (e.g. `MultiCoreParam()`).
 

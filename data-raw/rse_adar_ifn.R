@@ -11,14 +11,13 @@ fp <- FilterParam(
   min_nucleotide_depth = 2
 )
 
-plps <- get_pileup(
-  c(wt_bam, ko_bam),
+bams <- c(wt_bam, ko_bam)
+names(bams) <- c('wt', 'adar1_ko')
+
+rse_adar_ifn <- pileup_sites(
+  bams,
   fafn,
   filterParam = fp
 )
-
-names(plps) <- c('wt', 'adar1_ko')
-
-rse_adar_ifn <- create_se(plps)
 
 usethis::use_data(rse_adar_ifn, overwrite = TRUE, compress = 'xz')

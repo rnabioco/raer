@@ -6,7 +6,7 @@
    to store and grow a c-level datastructure with bam/pileup data.
    The main deviation is handling data from multiple bam files, and the fields stored.
    The datastructure grows per position across multiple files, in contrast to
-   growing per region in rsamtools. On finish, the c-level datastucture will 
+   growing per region in rsamtools. On finish, the c-level datastucture will
    be converted to a SEXP, avoiding realloc'ing a SEXP during the pileup.
  */
 
@@ -31,6 +31,10 @@ PLP_DATA init_PLP_DATA(SEXP result, int n) {
     plpd->pdat[i].seqnames = R_Calloc(1, char*);
     plpd->pdat[i].strand = R_Calloc(1, char*);
   }
+  plpd->sdat = R_Calloc(1, _SITE_VECS);
+  plpd->sdat->rpbz = R_Calloc(1, double);
+  plpd->sdat->vdb = R_Calloc(1, double);
+
   plpd->BLOCKSIZE = BAM_INIT_SIZE;
   plpd->result = result;
   plpd->nfiles = n;
@@ -43,8 +47,12 @@ int grow_PLP_DATA(PLP_DATA pd, int len)
   int i,j;
   SEXP r, s;
 
+  pd->sdat->rpbz = _Rs_Realloc(pd->sdat->rpbz, len, double);
+  pd->sdat->vdb = _Rs_Realloc(pd->sdat->vdb, len, double);
+
   for(i = 0; i < pd->nfiles; ++i){
-    r = VECTOR_ELT(pd->result, i);
+    // skip first list element which will be site level data
+    r = VECTOR_ELT(pd->result, i + 1);
     for (j = 0; j < LENGTH(r); ++j) {
       if (R_NilValue == (s = VECTOR_ELT(r, j)))
         continue;
@@ -107,8 +115,25 @@ void finish_PLP_DATA(PLP_DATA pd) {
 
   int f_idx, col_idx, row_idx;
   SEXP r, s;
+
+  r = VECTOR_ELT(pd->result, 0);
+  s = VECTOR_ELT(r, 0);
+  s = Rf_lengthgets(s, pd->icnt);
+  SET_VECTOR_ELT(r, 0, s);
+  // copy pos array into s
+  memcpy(REAL(s), pd->sdat->rpbz, pd->icnt * sizeof(double));
+  R_Free(pd->sdat->rpbz);
+
+  s = VECTOR_ELT(r, 1);
+  s = Rf_lengthgets(s, pd->icnt);
+  SET_VECTOR_ELT(r, 1, s);
+  // copy pos array into s
+  memcpy(REAL(s), pd->sdat->vdb, pd->icnt * sizeof(double));
+  R_Free(pd->sdat->vdb);
+
   for(f_idx = 0; f_idx < pd->nfiles; ++f_idx){
-    r = VECTOR_ELT(pd->result, f_idx);
+    // skip first list element which has site level data
+    r = VECTOR_ELT(pd->result, f_idx + 1);
 
     for (col_idx = 0; col_idx < LENGTH(r); ++col_idx) {
       if (R_NilValue == (s = VECTOR_ELT(r, col_idx)))
@@ -221,7 +246,6 @@ void finish_PLP_DATA(PLP_DATA pd) {
         R_Free(pd->pdat[f_idx].nx);
         break;
 
-
       default:
         Rf_error("[raer internal] unhandled finish_PLP_DATA");
       break;
@@ -237,16 +261,16 @@ void finish_PLP_DATA(PLP_DATA pd) {
    which provides mechanism to select what values should be stored
    For now, storing all specified,
    but could in the future be set in pileup_result_init  */
-SEXP get_or_grow_PLP_DATA(PLP_DATA pd, int len)
+SEXP get_or_grow_PLP_DATA(PLP_DATA pd, int len, int lst)
 {
   if (len < 0) {
     if (pd->icnt < pd->ncnt)
-      return VECTOR_ELT(pd->result, 0);
+      return VECTOR_ELT(pd->result, lst);
     len = pd->ncnt + pd->BLOCKSIZE;
   }
 
   pd->ncnt = grow_PLP_DATA(pd, len);
-  return VECTOR_ELT(pd->result, 0);
+  return VECTOR_ELT(pd->result, lst);
 }
 
 /* names matching enum defined in plp_data.h
@@ -267,14 +291,20 @@ static const int N_TMPL_ELTS = sizeof(TMPL_ELT_NMS) / sizeof(const char *);
    On return to R will be list of lists coerced into list of GRanges
  */
 SEXP pileup_result_init(int n){
-
+  n += 1;
   SEXP result = PROTECT(NEW_LIST(n));
+
+  SEXP sd = PROTECT(sitedata_template());
+  SET_VECTOR_ELT(result, 0, sd);
+  UNPROTECT(1);
+
   int i;
-  for (i = 0; i < n; ++i) {
+  for (i = 1; i < n; ++i) {
     SEXP tmpl = PROTECT(pileup_template());
     SET_VECTOR_ELT(result, i, tmpl);
     UNPROTECT(1);
   }
+
   UNPROTECT(1);
   return result;
 }
@@ -304,6 +334,21 @@ SEXP pileup_template() {
  SET_ATTR(tmpl, R_NamesSymbol, names);
  UNPROTECT(2);
  return tmpl;
+}
+
+/* site data template */
+SEXP sitedata_template() {
+  int nout = 2;
+  SEXP tmpl = PROTECT(NEW_LIST(nout));
+  SET_VECTOR_ELT(tmpl, 0, NEW_NUMERIC(0));
+  SET_VECTOR_ELT(tmpl, 1, NEW_NUMERIC(0));
+
+  SEXP names = PROTECT(NEW_CHARACTER(nout));
+  SET_STRING_ELT(names, 0, mkChar("rbpz"));
+  SET_STRING_ELT(names, 1, mkChar("vpb"));
+  SET_ATTR(tmpl, R_NamesSymbol, names);
+  UNPROTECT(2);
+  return tmpl;
 }
 
 /* from Rsamtools */

@@ -31,9 +31,9 @@
 #' SummarizedExperiment supplemented with `edit_freq` assay.
 #'
 #' @examples
-#' example(merge_pileups, echo = FALSE)
-#' se <- calc_edit_frequency(se)
-#' assay(se, "edit_freq")[1:5, ]
+#' library(SummarizedExperiment)
+#' rse <- calc_edit_frequency(rse_adar_ifn)
+#' assay(rse, "edit_freq")[1:5, ]
 #'
 #' @import SummarizedExperiment
 #' @importFrom Matrix colSums
@@ -181,10 +181,10 @@ count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
 #'
 #' @import SummarizedExperiment
 #' @examples
-#' example(merge_pileups, echo = FALSE)
-#' se <- calc_edit_frequency(se)
-#' dse <- prep_for_de(se)
-#' assay(dse, "counts")
+#' library(SummarizedExperiment)
+#' rse <- calc_edit_frequency(rse_adar_ifn)
+#' dse <- prep_for_de(rse, min_samples = 1)
+#' assay(dse, "counts")[1:5, ]
 #' dse
 #' @export
 prep_for_de <- function(se,
@@ -257,9 +257,21 @@ prep_for_de <- function(se,
 #'   a variable in your condition_col of colData(deobj).
 #'
 #' @examples
-#' example(merge_pileups, echo = FALSE)
-#' se <- calc_edit_frequency(se)
-#' dse <- prep_for_de(se)
+#' library(SummarizedExperiment)
+#' bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+#' bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
+#' fafn <- raer_example("human.fasta")
+#'
+#' bams <- rep(c(bamfn, bam2fn), each = 3)
+#' sample_ids <- paste0(rep(c("KO", "WT"), each = 3), 1:3)
+#' names(bams) <- sample_ids
+#'
+#' fp <- FilterParam(only_keep_variants = TRUE)
+#' rse <- pileup_sites(bams, fafn, filterParam = fp)
+#' rse$condition <- substr(rse$sample, 1, 2)
+#'
+#' rse <- calc_edit_frequency(rse)
+#' dse <- prep_for_de(rse)
 #' res <- perform_de(dse, condition_control = "WT", condition_treatment = "KO")
 #' res$sig_results[1:5, ]
 #'

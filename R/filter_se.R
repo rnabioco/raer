@@ -7,8 +7,7 @@
 #' @param se `SummarizedExperiment::SummarizedExperiment`
 #'
 #' @examples
-#' example(merge_pileups, echo = FALSE)
-#' filter_multiallelic(se)
+#' filter_multiallelic(rse_adar_ifn)
 #'
 #' @family se-filters
 #'
