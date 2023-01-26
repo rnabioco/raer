@@ -48,9 +48,10 @@ DESeq2 will generate a counts assay with a matrix formated with 2 columns
 per sample
 }
 \examples{
-example(merge_pileups, echo = FALSE)
+se <- calc_edit_frequency(rse_adar_ifn)
 se <- calc_edit_frequency(se)
 dse <- prep_for_de(se)
 assay(dse, "counts")
 dse
+
 }

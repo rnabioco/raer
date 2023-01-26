@@ -49,8 +49,7 @@ treatment, but it will be pretty straight forward to add other possible
 return values.
 }
 \examples{
-example(merge_pileups, echo = FALSE)
-se <- calc_edit_frequency(se)
+se <- calc_edit_frequency(rse_adar_ifn)
 dse <- prep_for_de(se)
 res <- perform_de(dse, condition_control = "WT", condition_treatment = "KO")
 res$sig_results[1:5, ]

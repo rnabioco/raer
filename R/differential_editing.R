@@ -31,12 +31,12 @@
 #' SummarizedExperiment supplemented with `edit_freq` assay.
 #'
 #' @examples
-#' example(merge_pileups, echo = FALSE)
-#' se <- calc_edit_frequency(se)
+#' se <- calc_edit_frequency(rse_adar_ifn)
 #' assay(se, "edit_freq")[1:5, ]
 #'
 #' @import SummarizedExperiment
 #' @importFrom Matrix colSums
+#'
 #' @export
 calc_edit_frequency <- function(se,
                                 edit_from = NULL,
@@ -178,12 +178,14 @@ count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
 #'   to keep a site. Default is 3.
 #'
 #' @import SummarizedExperiment
+#'
 #' @examples
-#' example(merge_pileups, echo = FALSE)
+#' se <- calc_edit_frequency(rse_adar_ifn)
 #' se <- calc_edit_frequency(se)
 #' dse <- prep_for_de(se)
 #' assay(dse, "counts")
 #' dse
+#'
 #' @export
 prep_for_de <- function(se,
                         type = "AI",
@@ -255,8 +257,7 @@ prep_for_de <- function(se,
 #'   a variable in your condition_col of colData(deobj).
 #'
 #' @examples
-#' example(merge_pileups, echo = FALSE)
-#' se <- calc_edit_frequency(se)
+#' se <- calc_edit_frequency(rse_adar_ifn)
 #' dse <- prep_for_de(se)
 #' res <- perform_de(dse, condition_control = "WT", condition_treatment = "KO")
 #' res$sig_results[1:5, ]

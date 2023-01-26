@@ -50,8 +50,7 @@ columns with the number of edited sites (n_sites) and the
 fraction of edits (edit_idx) is returned.
 }
 \examples{
-example(merge_pileups, echo = FALSE)
-se <- calc_edit_frequency(se)
+se <- calc_edit_frequency(rse_adar_ifn)
 assay(se, "edit_freq")[1:5, ]
 
 }

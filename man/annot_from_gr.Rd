@@ -26,19 +26,17 @@ SummarizedExperiment or GRanges object. If multiple features overlap then
 they will be concatenated as comma separated values.
 }
 \examples{
-example(merge_pileups, echo = FALSE)
-
 library(SummarizedExperiment)
 
+# make some features
 gr <- GRanges(rep(c("SSR3", "SPCS3"), c(5, 15)),
   IRanges(seq(1, 500, by = 25), width = 50),
   strand = "+"
 )
-
 gr$feature <- sample(1:100, size = 20)
 gr$id <- sample(LETTERS, size = 20)
 
-se <- annot_from_gr(se, gr, c(feature_set = "feature", "id"))
+se <- annot_from_gr(rse_adar_ifn, gr, c(feature_set = "feature", "id"))
 rowData(se)
 
 }
