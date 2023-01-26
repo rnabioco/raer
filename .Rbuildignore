@@ -11,3 +11,4 @@
 ^.vscode$
 ^tools$
 ^codecov\.yml$
+^man/figures/raer-logo\.ai$
