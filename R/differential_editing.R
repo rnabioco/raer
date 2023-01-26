@@ -31,6 +31,7 @@
 #' SummarizedExperiment supplemented with `edit_freq` assay.
 #'
 #' @examples
+#' library(SummarizedExperiment)
 #' se <- calc_edit_frequency(rse_adar_ifn)
 #' assay(se, "edit_freq")[1:5, ]
 #'

@@ -50,6 +50,7 @@ columns with the number of edited sites (n_sites) and the
 fraction of edits (edit_idx) is returned.
 }
 \examples{
+library(SummarizedExperiment)
 se <- calc_edit_frequency(rse_adar_ifn)
 assay(se, "edit_freq")[1:5, ]
 
