@@ -142,8 +142,10 @@ filter_splice_variants <- function(se, txdb,
 #'
 #' @examples
 #' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
+#'   rse <- filter_multiallelic(rse_adar_ifn)
+#'
 #'   filter_clustered_variants(
-#'     rse_adar_ifn,
+#'     rse,
 #'     TxDb.Hsapiens.UCSC.hg38.knownGene
 #'   )
 #' }
