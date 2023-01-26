@@ -306,7 +306,7 @@ get_cell_pileup <- function(bamfn,
     names(out) <- cellbarcodes
     id <- NULL
   }
-  out <- create_se(out,
+  out <- merge_pileups(out,
     assay_cols = assay_cols,
     sparse = TRUE,
     fill_na = 0L,

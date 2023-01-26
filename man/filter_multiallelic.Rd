@@ -15,7 +15,7 @@ Remove sites with multiple variant bases from a
 contains the variant allele detected at each site.
 }
 \examples{
-example(create_se, echo = FALSE)
+example(merge_pileups, echo = FALSE)
 filter_multiallelic(se)
 
 }

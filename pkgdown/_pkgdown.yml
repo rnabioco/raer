@@ -6,7 +6,7 @@ template:
 reference:
 - title: Pileup
   contents:
-  - '`get_pileup`'
+  - has_concept('pileup')
   - '`pileup_cells`'
 - title: Calculations
   contents:

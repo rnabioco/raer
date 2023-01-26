@@ -15,7 +15,7 @@ calc_edit_frequency(
 )
 }
 \arguments{
-\item{se}{A SummarizedExperiment object created by \code{create_se}}
+\item{se}{A SummarizedExperiment object created by \code{merge_pileups}}
 
 \item{edit_from}{This should be a nucleotide (A, C, G, or T)
 corresponding to the nucleotide you expect in the reference. Ex. for A to I
@@ -45,12 +45,12 @@ SummarizedExperiment supplemented with \code{edit_freq} assay.
 }
 \description{
 Adds editing frequencies to an existing
-SummarizedExperiment object (created by create_se\verb{). The SummarizedExperiment with a new assay for editing frequencies for each site (}edit_freq\verb{), depth of coverage computed using the indicatededited nucleotides (}depth`) and new colData
+SummarizedExperiment object (created by merge_pileups\verb{). The SummarizedExperiment with a new assay for editing frequencies for each site (}edit_freq\verb{), depth of coverage computed using the indicatededited nucleotides (}depth`) and new colData
 columns with the number of edited sites (n_sites) and the
 fraction of edits (edit_idx) is returned.
 }
 \examples{
-example(create_se, echo = FALSE)
+example(merge_pileups, echo = FALSE)
 se <- calc_edit_frequency(se)
 assay(se, "edit_freq")[1:5, ]
 
