@@ -49,9 +49,6 @@
     <loc>https://rnabioco.github.io/raer/reference/count_edits.html</loc>
   </url>
   <url>
-    <loc>https://rnabioco.github.io/raer/reference/create_se.html</loc>
-  </url>
-  <url>
     <loc>https://rnabioco.github.io/raer/reference/download_data.html</loc>
   </url>
   <url>
@@ -83,6 +80,9 @@
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/index_bed.html</loc>
+  </url>
+  <url>
+    <loc>https://rnabioco.github.io/raer/reference/merge_pileups.html</loc>
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/perform_de.html</loc>
