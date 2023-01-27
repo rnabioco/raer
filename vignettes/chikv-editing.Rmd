@@ -368,7 +368,7 @@ tidy_all <- tidy_all |>
 qs::qsave(tidy_all, file = fs::path(ext_path, '/rds/tidy_all.rds'), nthreads = 8)    
 ```
 
-### **YO Start here!!!!**
+### Load data 
 
 ```{r load_rds}
 mm_rse_filt <- qs::qread(fs::path(ext_path, '/rds/mm_rse_filt.rds'), nthreads = 10)
@@ -417,6 +417,9 @@ ggplot(
   theme_cowplot() +
   theme(
     axis.text.x = element_markdown(angle = 45, hjust = 1),
+    legend.position='top', 
+    legend.justification='left',
+    legend.direction='horizontal'
   )
 ```
 
