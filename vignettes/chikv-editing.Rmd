@@ -69,6 +69,8 @@ fns = list(
   snp_db  = fs::path(ext_path, 'ref', 'snp142.mm10.bed.gz'),
   redi_db = fs::path(ext_path, "ref", 'rediportal.mm10.cleaned.tsv.gz')
 )
+
+names(fns$bams) <- samples
 ```
 
 ### External data sources
@@ -93,7 +95,6 @@ with \~48 million sites.
 
 ```{r run_pileup, eval=FALSE}
 fp <- FilterParam(
-  # min depth of 3 for each replicate
   min_nucleotide_depth = 3,
   min_base_quality     = 30,
   min_mapq             = rep(255, 6),
@@ -112,17 +113,12 @@ bpp <- MulticoreParam(
   progressbar = TRUE
 )
 
-plps <- get_pileup(
+all_rse <- pileup_sites(
   fns$bams,
   fafile = fns$fasta,
   filterParam = fp,
   BPPARAM = bpp
 )
-
-names(plps) <- samples 
-plps
-
-all_rse <- create_se(plps)
 
 # remove multi-allelics now, they're not much use later.
 # this step removes about 15% (~8 million) of the sites.
