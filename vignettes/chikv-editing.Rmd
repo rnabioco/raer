@@ -407,9 +407,9 @@ ggplot(
   ) +
   geom_bar(stat = 'identity', position = 'dodge') +
   facet_grid(~ treat) +
-  scale_fill_brewer(palette = 'Greys') +
+  scale_fill_manual(values = c('grey60', 'grey40', 'black')) +
   labs(
-    title = 'Variants identified from pileup of CHIKV scRNA-seq data',
+    title = 'Variants identified from pileup of dLN / CHIKV scRNA-seq data',
     x = '',
     y = '',
     fill = 'replicate'
@@ -425,26 +425,10 @@ ggplot(
 
 The plot of counts above shows us a few things:
 
-*   The most abundant variants are anything to A (`C>A`, `G>A`, `T>A`).
-    I'm honestly not sure where that signal comes from, and Kent is
-    stumped too.
-
-    I considered calculating a normalized frequency comparing to the raw data,
-    but (a) that's an expensive calculation and (b) most of those raw sites are
-    low coverage anyway (see the `nVar` step at the beginning), so are going to
-    be largely uninformative.
-
-    I think the thing to do is to figure out how the remaining filters
-    behave for that subset of sites. It's possible these `X>A` sites are
-    generally lower coverage relative to the signal (`A>G`), and so
-    improved thresholds for the filtering steps may eliminate them.
-
-*   The next most abundant variant is the signal of adenosine editing
-    and the one we're after (`A>G`). so all good there. There are about
-    1e4 `A>G` sites per replicate:
-
+*   There are ~4,000 `A>G` sites per replicate.
+    
     ```{r}
-    filter(var_counts, var == 'A>G') 
+    filter(vnt_counts, vnt == 'A>G') 
     ```
     
 *   There's a small signal for `T>C` (not sure what that is), and the
@@ -457,11 +441,13 @@ plot_tbl <-
   tidy_all |>
     mutate(log_depth = log10(depth)) |>
     dplyr::select(
-      -(chrom:strand), -depth, -starts_with('rep_'),
-      -rbpz, -vpb
+      -(chrom:strand), -depth, -starts_with('rep_') # , -rbpz, -vpb
       ) |>
     pivot_longer(edit_freq:log_depth) |>
-    arrange(vnt)
+    arrange(vnt) |>
+    mutate(
+      treat = fct_relevel(treat, c('mock', 'virus'))
+    )
   
 ggplot(
   # add a name column that highlights `A>G` in bold, red text
@@ -492,20 +478,15 @@ ggplot(
   
 ```
 
-OK, now it seems like we're getting somewhere. The plot above shows that:
-
-- `A>G` has the *lowest* editing frequency. I'm not entirely sure how to think
-  about this; I think we expect true editing events to be well under 100%
-  modified; the remaining sites with higher editing frequencies could just be
-  somewhat common variants that aren't filtered? At a minimum this gives us a
-  useful ad hoc filter.
+- `A>G` has one of the *lowest* editing frequency.
   
-- `A>G` has the *highest* log_depth, by ~0.5 log, which is great,
-  and I think a good indication that we're enriching for interesting sites.
+- All variants have have apprxoimately the same `log_depth` and `rbpz`.
+
+- `A>G` has one of hte lowest `vpb` values.
 
 ### Variants among repeat classes
 
-```{r rep_families}
+```{r rep_families, eval = FALSE}
 rep_counts <- tidy_all |>
   dplyr::select(treat, vnt, rep_name, rep_family) |>
   filter(!is.na(rep_name)) |>
@@ -574,7 +555,7 @@ redi_db <-
   rename_with(~ str_c('redi_', .x), .cols = ref:exonic_func_gencode) |>
   plyranges::as_granges()
 
-mm_rse_filt_redi <- annot_from_gr(
+mm_rse_filt <- annot_from_gr(
   mm_rse_filt,
   redi_db,
   cols_to_map = c(
@@ -587,7 +568,7 @@ mm_rse_filt_redi <- annot_from_gr(
 
 # tidy code for analysis
 tidy_redi_tbl <- 
-  rowData(mm_rse_filt_redi) |>
+  rowData(mm_rse_filt) |>
     as.data.frame() |>
     rownames_to_column('site') |>
     as_tibble() |>
@@ -595,7 +576,7 @@ tidy_redi_tbl <-
     pivot_longer(-c(site, ref, var, rbpz, vpb)) |>
     filter(!is.na(value)) |> 
     separate(site, into = c('chrom', 'pos', 'strand'), sep = '_') |>
-    dplyr::select(-ref, -strand) |>
+    dplyr::select(-ref, -strand, -rbpz, -vpb) |>
     separate(var, into = c('ref','ed'), sep = 1) |>
     unite(var, ref:ed, sep = '>') |>
     pivot_wider() |>
