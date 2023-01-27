@@ -40,3 +40,4 @@ number of edited sites (n_sites) and the  fraction of edits (edit_idx).
 This function should be called by \code{calc_edit_frequency} and is not meant to
 be used directly.
 }
+\keyword{internal}

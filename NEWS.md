@@ -1,5 +1,14 @@
 # raer 0.99.0
 
+* Added `FilterParam` option to trim reads based on fractional distance from 5' (`ftrim_5p`) or 3' end (`ftrim_3p`).
+
+* Incorporated RBPZ and VDB statistics from bcftools, now returned as rowData columns 
+when calling `pileup_sites`.
+
+* A `RangedSummarizedExperiment` object is now directly returned from `pileup_sites`. Using `merge_pileups` is no longer necessary and is not an exported function. 
+
+* Renamed `get_pileup` to `pileup_sites` and `create_se` to `merge_pileups`
+
 * Rename `remove_clustered_variants`, `remove_multiallelic`, and `remove_splice_variants` 
   to `filter_*` for consistency.
 

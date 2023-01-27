@@ -36,7 +36,7 @@ gr <- GRanges(rep(c("SSR3", "SPCS3"), c(5, 15)),
 gr$feature <- sample(1:100, size = 20)
 gr$id <- sample(LETTERS, size = 20)
 
-se <- annot_from_gr(rse_adar_ifn, gr, c(feature_set = "feature", "id"))
-rowData(se)
+rse <- annot_from_gr(rse_adar_ifn, gr, c(feature_set = "feature", "id"))
+rowData(rse)
 
 }

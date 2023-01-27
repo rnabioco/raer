@@ -99,7 +99,6 @@ sce
 }
 \seealso{
 Other pileup: 
-\code{\link{get_pileup}()},
-\code{\link{merge_pileups}()}
+\code{\link{pileup_sites}()}
 }
 \concept{pileup}

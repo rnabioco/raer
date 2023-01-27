@@ -17,15 +17,15 @@ test_that("bedindex works", {
 })
 
 test_that("bedindex can be used with pileup", {
-  res <- get_pileup(bamfn, fafn, bedidx = idx)
-  res2 <- get_pileup(bamfn, fafn, bedfile = bedfn)
+  res <- pileup_sites(bamfn, fafn, bedidx = idx)
+  res2 <- pileup_sites(bamfn, fafn, bedfile = bedfn)
   expect_true(identical(res, res2))
 })
 
 test_that("close cleans up index", {
   idx <- close(idx)
   expect_false(idx$open)
-  expect_error(get_pileup(bamfn, fafn, bedidx = idx))
+  expect_error(pileup_sites(bamfn, fafn, bedidx = idx))
 })
 
 test_that("tag index works", {

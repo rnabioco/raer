@@ -32,41 +32,57 @@ alignment files, either for known sites, or for all detected sites.
 
 ``` r
 library(raer)
-bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+bam1fn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")
 bedfn <- raer_example("regions.bed")
+bams <- c("ko" = bam1fn, "wt" = bam2fn)
 
-res <- get_pileup(bamfn, fafn, bedfile = bedfn)
-res[1:5, ]
-#> GRanges object with 5 ranges and 10 metadata columns:
-#>       seqnames    ranges strand |         Ref         Var      nRef      nVar
-#>          <Rle> <IRanges>  <Rle> | <character> <character> <integer> <integer>
-#>   [1]     SSR3       201      - |           A           -        14         0
-#>   [2]     SSR3       202      - |           T           -        14         0
-#>   [3]     SSR3       203      - |           T           -        14         0
-#>   [4]     SSR3       204      - |           T           -        15         0
-#>   [5]     SSR3       205      - |           T           -        16         0
-#>              nA        nT        nC        nG        nN        nX
-#>       <integer> <integer> <integer> <integer> <integer> <integer>
-#>   [1]        14         0         0         0         0         2
-#>   [2]         0        14         0         0         0         2
-#>   [3]         0        14         0         0         0         2
-#>   [4]         0        15         0         0         0         1
-#>   [5]         0        16         0         0         0         0
-#>   -------
-#>   seqinfo: 3 sequences from an unspecified genome
+rse <- pileup_sites(bams, fafn, bedfile = bedfn)
 ```
 
-Multiple BAM files can be processed, enabling rapid comparisons of
-RNA-Seq vs. WGS or WXS data, or RNA-Seq vs RNA-seq (e.g., ADAR WT VS
-ADAR KO).
+To facilitate comparisons across groups, base count data and genomic
+coordinates are stored in a `RangedSummarizedExperiment`.
+
+``` r
+suppressMessages(library(SummarizedExperiment))
+rse
+#> class: RangedSummarizedExperiment 
+#> dim: 182 2 
+#> metadata(0):
+#> assays(7): Var nRef ... nC nG
+#> rownames(182): SSR3_201_- SSR3_202_- ... DHFR_17_- DHFR_18_-
+#> rowData names(3): Ref rbpz vpb
+#> colnames(2): ko wt
+#> colData names(1): sample
+assays(rse)
+#> List of length 7
+#> names(7): Var nRef nVar nA nT nC nG
+colData(rse)
+#> DataFrame with 2 rows and 1 column
+#>         sample
+#>    <character>
+#> ko          ko
+#> wt          wt
+```
+
+``` r
+assays(rse)$nRef[1:4, ]
+#>            ko wt
+#> SSR3_201_- 14 19
+#> SSR3_202_- 14 23
+#> SSR3_203_- 14 25
+#> SSR3_204_- 15 24
+assays(rse)$nVar[1:4, ]
+#>            ko wt
+#> SSR3_201_-  0  3
+#> SSR3_202_-  0  0
+#> SSR3_203_-  0  0
+#> SSR3_204_-  0  0
+```
 
 The `FilterParam()` class holds multiple options for customizing the
-output of `get_pileup()`.
-
-To facilitate comparisons across groups, pileups can be combined in a
-`RangedSummarizedExperiment`.
+output of `pileup_sites()`.
 
 ``` r
 fp <- FilterParam(
@@ -75,20 +91,15 @@ fp <- FilterParam(
   min_nucleotide_depth = 2
 )
 
-plps <- get_pileup(
-  c(bam2fn, bamfn),
-  fafn,
-  filterParam = fp
-)
-
-create_se(plps)
+rse <- pileup_sites(bams, fafn, filterParam = fp)
+rse
 #> class: RangedSummarizedExperiment 
 #> dim: 74 2 
 #> metadata(0):
 #> assays(7): Var nRef ... nC nG
 #> rownames(74): SSR3_102_- SSR3_125_- ... DHFR_430_- DHFR_513_-
-#> rowData names(1): Ref
-#> colnames(2): sample_1 sample_2
+#> rowData names(3): Ref rbpz vpb
+#> colnames(2): ko wt
 #> colData names(1): sample
 ```
 

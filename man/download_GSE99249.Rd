@@ -2,15 +2,9 @@
 % Please edit documentation in R/cache.R
 \name{download_GSE99249}
 \alias{download_GSE99249}
-\alias{download_NA12878}
-\alias{download_human_pbmc}
 \title{Download GSE99249 BAM files and related data}
 \usage{
 download_GSE99249(path)
-
-download_NA12878(path)
-
-download_human_pbmc(path)
 }
 \arguments{
 \item{path}{path to directory to download data}
@@ -18,32 +12,20 @@ download_human_pbmc(path)
 \value{
 A named list with paths to BAM files, a FASTA file and a bed
 file of known editing sites from hg38 chromosome 18.
-
-A named list with paths to an RNA-seq and WGS BAM file, and a FASTA file
-from hg38 chromosome 4.
-
-A named list with paths to bam file, fasta file,
-bed file of editing_sites, and an .rds file with a
-SingleCellExperiment
 }
 \description{
 This function will download ~ 250 MB of data.
-
-This function will download ~ 5 GB of data.
-
-This function will download < 1 GB of data.
 }
 \examples{
 \dontrun{
 td <- tempdir()
 download_GSE99249(td)
 }
-\dontrun{
-td <- tempdir()
-download_NA12878(td)
+
 }
-\dontrun{
-td <- tempdir()
-download_human_pbmc(td)
+\seealso{
+Other external-data: 
+\code{\link{download_NA12878}()},
+\code{\link{download_human_pbmc}()}
 }
-}
+\concept{external-data}

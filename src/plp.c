@@ -6,6 +6,7 @@
 #include "regfile.h"
 #include "plp_utils.h"
 #include "plp_data.h"
+#include "bcftools/bcftools-ext.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -37,6 +38,8 @@ int checkInterrupt() {
   return (R_ToplevelExec(chkIntFn, NULL) == FALSE);
 }
 
+#define NBASE_POS 100
+
 KHASH_SET_INIT_STR(rname)
 typedef khash_t(rname) *rnhash_t;
 
@@ -55,6 +58,13 @@ typedef struct {
 } read_qual_t;
 
 typedef struct {
+  double f5p;
+  double f3p;
+  int i5p;
+  int i3p;
+} trim_t;
+
+typedef struct {
   int min_mq, flag, min_baseQ, max_depth, all, multi, output_reads;
   read_qual_t read_qual;
   uint32_t keep_flag[2];
@@ -66,9 +76,9 @@ typedef struct {
   FILE *reads_fp;
   int umi;
   char *umi_tag;
-  int argc;
-  char **argv;
-  char sep, empty;
+  trim_t trim;
+  int nmer, splice_dist, indel_dist, trim_5p_dist, trim_3p_dist;
+  int n_mm_type, n_mm, min_overhang, min_var_reads;
 } mplp_conf_t;
 
 typedef struct {
@@ -424,6 +434,24 @@ typedef struct  {
   counts *mc;
 } pcounts;
 
+// struct for storing per-site data for all samples
+typedef struct {
+  int* p_ref_pos; // base position within read, (plus strand) scaled to 100 positions
+  int* p_alt_pos; // variant base position within read, (plus strand) scaled to 100 positions
+  int* m_ref_pos;
+  int* m_alt_pos;
+  int p_has_var; // 1 if any sample had a variant
+  int m_has_var; // 1 if any sample had a variant
+} pall_counts;
+
+static void clear_pall_counts(pall_counts *p){
+  if(p->p_ref_pos) memset(p->p_ref_pos, 0, sizeof(int) * NBASE_POS);
+  if(p->p_alt_pos) memset(p->p_alt_pos, 0, sizeof(int) * NBASE_POS);
+  if(p->m_ref_pos) memset(p->m_ref_pos, 0, sizeof(int) * NBASE_POS);
+  if(p->m_alt_pos) memset(p->m_alt_pos, 0, sizeof(int) * NBASE_POS);
+  p->p_has_var = p->m_has_var = 0;
+}
+
 static void clear_counts(counts *p){
   p->na = p->nc = p->ng = p->nn = p->nr = p->nt = p->nv = p->total = p->nx = 0;
   p->ref_b = 0;
@@ -436,12 +464,6 @@ static void clear_pcounts(pcounts *p){
   clear_counts(p->pc);
   p->pos = 0;
 }
-
-// struct for event filter params
-typedef struct  {
-  int nmer, splice_dist, indel_dist, trim_5p_dist, trim_3p_dist;
-  int n_mm_type, n_mm, min_overhang, min_var_reads;
-} efilter;
 
 static void get_var_string(varhash_t *vhash, char *out){
   const char *reg;
@@ -493,7 +515,7 @@ static void add_counts(PLP_DATA pd, int fi, counts *p, const char* ctig, int gpo
     Rf_error("[raer internal] issue with file index %d", fi);
   }
 
-  SEXP r = get_or_grow_PLP_DATA(pd, -1), s;
+  SEXP r = get_or_grow_PLP_DATA(pd, -1, PLP_DATA_LST), s;
   int li;
   int idx = pd->icnt;
   char *buf;
@@ -561,10 +583,43 @@ static void add_counts(PLP_DATA pd, int fi, counts *p, const char* ctig, int gpo
   }
 }
 
+static void print_stats(FILE* fp, double s1, double s2,
+                        const char* ctig, int pos, int ref, int strand){
+  fprintf(fp,
+          "%s\t%i\t%c\t%c\t%g\t%g\n",
+          ctig,
+          pos + 1,
+          strand,
+          ref,
+          s1,
+          s2);
+}
+
+
+static void add_stats(PLP_DATA pd, int idx, double s1, double s2){
+  // check if size is sufficient
+  get_or_grow_PLP_DATA(pd, -1, SITE_DATA_LST);
+  pd->sdat->rpbz[idx] = s1;
+  pd->sdat->vdb[idx] = s2;
+}
+
+// -1 indicates error;
+static int calc_biases(pall_counts *pall, double* res){
+  if(NBASE_POS != 100) return -1;
+  if(pall->p_has_var){
+    res[0] = calc_mwu_biasZ(pall->p_ref_pos, pall->p_alt_pos, NBASE_POS, 0, 1);
+    res[1] = calc_vdb(pall->p_alt_pos, NBASE_POS);
+  }
+  if(pall->m_has_var){
+    res[2] = calc_mwu_biasZ(pall->m_ref_pos, pall->m_alt_pos, NBASE_POS, 0, 1);
+    res[3] = calc_vdb(pall->m_alt_pos, NBASE_POS);
+  }
+  return 0;
+}
 
 static void store_counts(PLP_DATA pd, pcounts *pc, int *only_variants, int n, int min_depth,
                          const char* ctig, const int gpos, int pref, int mref, int in_memory,
-                         int min_var_depth){
+                         int min_var_depth, double* stats){
   int i;
   int pv = 0;
   int mv = 0;
@@ -572,7 +627,6 @@ static void store_counts(PLP_DATA pd, pcounts *pc, int *only_variants, int n, in
   int write_m = 0;
   int write_only_v = 0;
 
-  // todo: move outside of function
   for(i = 0; i < n; ++i){
     if(only_variants[i]){
       write_only_v = 1;
@@ -607,8 +661,13 @@ static void store_counts(PLP_DATA pd, pcounts *pc, int *only_variants, int n, in
       if(in_memory){
         add_counts(pd, i, (pc + i)->pc, ctig, gpos, pref, '+');
       } else {
-        print_counts(pd->fps[i], (pc + i)->pc, ctig, gpos, pref, '+') ;
+        print_counts(pd->fps[i + 1], (pc + i)->pc, ctig, gpos, pref, '+') ;
       }
+    }
+    if(in_memory){
+      add_stats(pd, pd->icnt, stats[0], stats[1]);
+    } else {
+      print_stats(pd->fps[0], stats[0], stats[1], ctig, gpos, pref, '+');
     }
     pd->icnt += 1;
   }
@@ -617,8 +676,13 @@ static void store_counts(PLP_DATA pd, pcounts *pc, int *only_variants, int n, in
       if(in_memory){
         add_counts(pd, i, (pc + i)->mc, ctig, gpos, mref, '-');
       } else {
-        print_counts(pd->fps[i], (pc + i)->mc, ctig, gpos, mref, '-') ;
+        print_counts(pd->fps[i + 1], (pc + i)->mc, ctig, gpos, mref, '-') ;
       }
+    }
+    if(in_memory){
+      add_stats(pd, pd->icnt, stats[2], stats[3]);
+    } else {
+      print_stats(pd->fps[0], stats[2], stats[3], ctig, gpos, mref, '-');
     }
     pd->icnt += 1;
   }
@@ -690,22 +754,37 @@ static int write_reads(bam1_t *b,  mplp_conf_t *conf, const char* ref, const int
   return 0;
 }
 
-static int count_one_record(bam1_t *b, pcounts *pc, mplp_conf_t *conf,
-                            const char* ctig, int pos, int pref_b, int mref_b,
-                            int read_base, int invert, int i){
-  int hret = 0;
+// return -1 on error, otherwise position within 0-99 array.
+static int get_relative_position(const bam_pileup1_t *p){
+  int qs, qe, pos, alen, rpos;
+  qs = query_start(p->b);
+  qe = p->b->core.l_qseq - query_end(p->b);
+  pos = p->qpos + 1 - qs;
+  alen = p->b->core.l_qseq - qs - qe;
+  rpos = (double) pos / (alen+1) * (NBASE_POS - 1);
+  if(rpos < 0 || rpos >= NBASE_POS) return -1;
+  return(rpos);
+}
+
+static int count_one_record(const bam_pileup1_t *p, pcounts *pc, mplp_conf_t *conf,
+                            pall_counts *pall,  const char* ctig, int pos, int pref_b,
+                            int mref_b, int read_base, int invert, int i){
+  int hret = 0, rpos = 0;
 
   char mvar[3];
   char pvar[3];
   mvar[2] = '\0';
   pvar[2] = '\0';
 
+  rpos = get_relative_position(p);
+  if(rpos < 0) return -1;
   if(invert){
     pc->mc->total += 1;
 
     // check if read base == ref base
     if(mref_b == read_base){
       pc->mc->nr += 1;
+      pall->m_ref_pos[rpos] += 1;
     } else {
       mvar[0] = mref_b;
       mvar[1] = read_base;
@@ -716,13 +795,15 @@ static int count_one_record(bam1_t *b, pcounts *pc, mplp_conf_t *conf,
       if (hret == 0) free(var);
 
       if(i == 0 && conf->output_reads){
-        int wret = write_reads(b, conf, ctig, pos);
+        int wret = write_reads(p->b, conf, ctig, pos);
         if(wret != 0){
           REprintf( "writing mismatched reads failed\n");
           return -1;
         }
       }
       pc->mc->nv += 1;
+      pall->m_alt_pos[rpos] += 1;
+      pall->m_has_var = 1;
     }
     switch(read_base) {
     case 'A':
@@ -748,6 +829,7 @@ static int count_one_record(bam1_t *b, pcounts *pc, mplp_conf_t *conf,
 
     if(pref_b == read_base){
       pc->pc->nr += 1;
+      pall->p_ref_pos[rpos] += 1;
     } else {
 
       pvar[0] = pref_b;
@@ -757,13 +839,15 @@ static int count_one_record(bam1_t *b, pcounts *pc, mplp_conf_t *conf,
       kh_put(varhash, pc->pc->var, var, &hret);
       if (hret == 0) free(var);
       if(i == 0 && conf->output_reads){
-        int wret = write_reads(b, conf, ctig, pos);
+        int wret = write_reads(p->b, conf, ctig, pos);
         if(wret != 0){
           REprintf( "writing mismatched reads failed\n");
           return -1;
         }
       }
       pc->pc->nv += 1;
+      pall->p_alt_pos[rpos] += 1;
+      pall->p_has_var = 1;
     }
     switch(read_base) {
     case 'A':
@@ -791,7 +875,7 @@ static int count_one_record(bam1_t *b, pcounts *pc, mplp_conf_t *conf,
  * 1 = read fails filter should be counted as bad read
  * 2 = read fails do no count as bad read
  */
-static int check_read_filters(const bam_pileup1_t *p, efilter *ef, int baq, int maq){
+static int check_read_filters(const bam_pileup1_t *p, mplp_conf_t *conf, int baq, int maq){
 
  // skip indel and ref skip ;
   if(p->is_del || p->is_refskip) return(2) ;
@@ -812,16 +896,22 @@ static int check_read_filters(const bam_pileup1_t *p, efilter *ef, int baq, int 
   }
 
   // check if pos is within x dist from 5' end of read, qpos is 0-based
-  if(trim_pos(p->b, p->qpos, ef->trim_5p_dist, ef->trim_3p_dist)) return(1);
+  if(conf->trim.f5p > 0 || conf->trim.f3p > 0){
+    if(check_variant_fpos(p->b, p->qpos, conf->trim.f5p, conf->trim.f3p)) return(1);
+  }
+
+  if(conf->trim.i5p > 0 || conf->trim.i3p > 0){
+    if(check_variant_pos(p->b, p->qpos, conf->trim.i5p, conf->trim.i3p)) return(1);
+  }
 
   // check for splice in alignment nearby
-  if(ef->splice_dist && dist_to_splice(p->b, p->qpos, ef->splice_dist) >= 0) return(1);
+  if(conf->splice_dist && dist_to_splice(p->b, p->qpos, conf->splice_dist) >= 0) return(1);
 
   // check if site in splice overhang and > min_overhang
-  if(ef->min_overhang && check_splice_overhang(p->b, p->qpos, ef->min_overhang) > 0) return(1);
+  if(conf->min_overhang && check_splice_overhang(p->b, p->qpos, conf->min_overhang) > 0) return(1);
 
   // check if indel event nearby
-  if(ef->indel_dist && dist_to_indel(p->b, p->qpos, ef->indel_dist) >= 0) return(1);
+  if(conf->indel_dist && dist_to_indel(p->b, p->qpos, conf->indel_dist) >= 0) return(1);
 
   return 0;
 }
@@ -871,13 +961,14 @@ SEXP run_pileup(char** cbampaths,
                 int* min_mapQ,
                 int* libtype,
                 int* b_flags,
-                int* event_filters,
+                int* int_filters,
                 int* only_keep_variants,
                 const char* reads_fn,
                 char* mismatches,
                 double* read_bqual_filter,
                 SEXP ext,
-                char* umi_tag) {
+                char* umi_tag,
+                double* fraction_trim) {
 
   hts_set_log_level(HTS_LOG_ERROR);
 
@@ -897,7 +988,7 @@ SEXP run_pileup(char** cbampaths,
   SEXP result = PROTECT(pileup_result_init(n));
   PLP_DATA pd = init_PLP_DATA(result,  n);
 
-  if(!in_mem) pd->fps = R_Calloc(n, FILE*);
+  if(!in_mem) pd->fps = R_Calloc(n + 1, FILE*);
 
   mplp_pileup_t gplp;
 
@@ -964,21 +1055,23 @@ SEXP run_pileup(char** cbampaths,
     conf->keep_flag[1] = b_flags[1];
   }
 
-  efilter *ef;
-  ef = R_Calloc(1, efilter);
-  ef->trim_5p_dist = event_filters[0];
-  ef->trim_3p_dist = event_filters[1];
-  ef->splice_dist = event_filters[2];
-  ef->indel_dist = event_filters[3];
-  ef->nmer = event_filters[4];
-  ef->n_mm_type = event_filters[5];
-  ef->n_mm = event_filters[6];
-  ef->min_overhang = event_filters[7];
-  ef->min_var_reads = event_filters[8];
+  conf->trim.i5p = int_filters[0];
+  conf->trim.i3p = int_filters[1];
+  conf->splice_dist = int_filters[2];
+  conf->indel_dist = int_filters[3];
+  conf->nmer = int_filters[4];
+  conf->n_mm_type = int_filters[5];
+  conf->n_mm = int_filters[6];
+  conf->min_overhang = int_filters[7];
+  conf->min_var_reads = int_filters[8];
 
   if(read_bqual_filter){
     conf->read_qual.pct = read_bqual_filter[0];
     conf->read_qual.minq = (int)read_bqual_filter[1];
+  }
+  if(fraction_trim){
+    conf->trim.f5p = fraction_trim[0];
+    conf->trim.f3p = fraction_trim[1];
   }
 
   if(umi_tag){
@@ -1079,20 +1172,24 @@ SEXP run_pileup(char** cbampaths,
 
   // return type void in rhtslib (htslib v 1.7), current v1.14 htslib returns int
   // enable overlap detection
-  bam_mplp_init_overlaps(iter) ;
+  ret = bam_mplp_init_overlaps(iter) ;
+  if(ret < 0) {
+    REprintf("[raer internal] issue initializing iterator");
+    goto fail;
+  }
 
   // set max depth
   bam_mplp_set_maxcnt(iter, max_depth);
 
   if (!iter) {
-    REprintf("issue with iterator");
+    REprintf("[raer internal] issue setting max depth on iterator");
     ret = -1;
     goto fail;
   }
 
   pcounts *plpc;
   plpc = R_Calloc(n, pcounts);
-  for (i = 0; i < n; ++i) {
+  for (i = 0; i < n + 1; ++i) {
      if(!in_mem){
        // initialize output files
        pd->fps[i] = fopen(R_ExpandFileName(coutfns[i]), "w");
@@ -1102,6 +1199,8 @@ SEXP run_pileup(char** cbampaths,
          goto fail;
        }
      }
+  }
+  for (i = 0; i < n; ++i) {
      plpc[i].pc = R_Calloc(1, counts);
      plpc[i].mc = R_Calloc(1, counts);
 
@@ -1113,6 +1212,15 @@ SEXP run_pileup(char** cbampaths,
      if (plpc[i].pc->umi == NULL) plpc[i].pc->umi = kh_init(umihash);
      if (plpc[i].mc->umi == NULL) plpc[i].mc->umi = kh_init(umihash);
   }
+
+  pall_counts *pall = R_Calloc(1, pall_counts);
+  pall->p_ref_pos = R_Calloc(NBASE_POS, int);
+  pall->p_alt_pos = R_Calloc(NBASE_POS, int);
+  pall->m_ref_pos = R_Calloc(NBASE_POS, int);
+  pall->m_alt_pos = R_Calloc(NBASE_POS, int);
+  pall->p_has_var = pall->m_has_var = 0;
+
+  double *stats = R_Calloc(4, double);
 
   int last_tid = -1;
   int n_iter = 0;
@@ -1146,12 +1254,14 @@ SEXP run_pileup(char** cbampaths,
     mref_b = comp_base[(unsigned char) pref_b];
 
     // reset count structure
+    clear_pall_counts(pall);
+    memset(stats, 0, sizeof(double) * 4);
     for(i = 0; i < n; ++i){
       clear_pcounts(&plpc[i]);
     }
 
     // check if site is in a homopolymer
-    if(ef->nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, ef->nmer)) continue;
+    if(conf->nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, conf->nmer)) continue;
 
     // check if read count less than min_reads
     int pass_reads = 0;
@@ -1184,7 +1294,7 @@ SEXP run_pileup(char** cbampaths,
         }
 
         // remove bad reads
-        int rret = check_read_filters(p, ef, min_baseQ, min_mapQ[i]);
+        int rret = check_read_filters(p, conf, min_baseQ, min_mapQ[i]);
 
         // only keep first read with a UMI tag per position
         if(conf->umi){
@@ -1206,15 +1316,15 @@ SEXP run_pileup(char** cbampaths,
         if(invert) c = (char)comp_base[(unsigned char)c];
 
         // check read for >= mismatch different types and at least n_mm mismatches
-        if(ef->n_mm_type > 0 || ef->n_mm > 0) {
+        if(conf->n_mm_type > 0 || conf->n_mm > 0) {
           if((invert && mref_b != c) || pref_b != c){
-            int m = parse_mismatches(p->b, pos, ef->n_mm_type, ef->n_mm);
+            int m = parse_mismatches(p->b, pos, conf->n_mm_type, conf->n_mm);
               if(m > 0) continue;
             }
         }
 
-        // increment counts
-        int cret = count_one_record(p->b, &plpc[i], conf,
+        // increment counts per sample
+        int cret = count_one_record(p, &plpc[i], conf, pall,
                                     sam_hdr_tid2name(h, tid), pos,
                                     pref_b, mref_b,
                                     c, invert, i);
@@ -1226,10 +1336,13 @@ SEXP run_pileup(char** cbampaths,
       }
     }
 
+   int sres = calc_biases(pall, stats);
+   if(sres < 0) {ret = -1; goto fail;}
+
     // write or store records if pass depth criteria
     store_counts(pd, plpc, only_keep_variants, n, min_reads, sam_hdr_tid2name(h, tid),
                  pos, pref_b, mref_b,
-                 in_mem, ef->min_var_reads);
+                 in_mem, conf->min_var_reads, stats);
   }
 
 fail:
@@ -1252,14 +1365,20 @@ fail:
     kh_destroy(umihash, plpc[i].mc->umi);
     kh_destroy(umihash, plpc[i].pc->umi);
     R_Free(plpc[i].pc); R_Free(plpc[i].mc);
-    if(!in_mem) fclose(pd->fps[i]);
-  }
 
+  }
+  if(!in_mem) {
+    for (i = 0; i < n + 1; ++i) {fclose(pd->fps[i]);}
+  }
   free(data); free(plp); free(n_plp);
   free(mp_ref.ref[0]);
   free(mp_ref.ref[1]);
 
-  R_Free(plpc); R_Free(ef);
+  R_Free(pall->p_ref_pos);  R_Free(pall->p_alt_pos);
+  R_Free(pall->m_alt_pos);  R_Free(pall->m_alt_pos);
+  R_Free(pall);
+
+  R_Free(plpc);
   if(pd->fps) R_Free(pd->fps);
   R_Free(pd->pdat);
   if (conf->fai) fai_destroy(conf->fai);
@@ -1279,6 +1398,7 @@ fail:
     }
     kh_destroy(str, conf->brhash);
   }
+  if(stats) R_Free(stats);
 
   UNPROTECT(1);
 
@@ -1312,7 +1432,8 @@ static void check_plp_args(SEXP bampaths,
               SEXP mismatches_fn,
               SEXP read_bqual_filter,
               SEXP ext,
-              SEXP umi) {
+              SEXP umi,
+              SEXP fraction_trim) {
 
   if(!IS_INTEGER(n) || (LENGTH(n) != 1)){
     Rf_error("'n' must be integer(1)");
@@ -1359,8 +1480,8 @@ static void check_plp_args(SEXP bampaths,
      Rf_error("'b_flags' must be integer of length 2");
   }
 
-  if(!LOGICAL(in_mem)[0] && (!IS_CHARACTER(outfns) || (LENGTH(outfns) != n_files))){
-    Rf_error("'outfns' must be character vector equal in length to number of bam files");
+  if(!LOGICAL(in_mem)[0] && (!IS_CHARACTER(outfns) || (LENGTH(outfns) != n_files + 1))){
+    Rf_error("'outfns' must be character vector equal in length to number of bam files + 1");
   }
 
   if(!IS_INTEGER(min_reads) || (LENGTH(min_reads) != 1)){
@@ -1394,6 +1515,10 @@ static void check_plp_args(SEXP bampaths,
   if(!IS_CHARACTER(umi) || (LENGTH(umi) > 1)){
     Rf_error("'umi' must be character of length 0 or 1");
   }
+
+  if(!IS_NUMERIC(fraction_trim) || (LENGTH(fraction_trim) != 2)){
+    Rf_error("'fraction_trim' must be numeric of length 2");
+  }
 }
 
 SEXP pileup(SEXP bampaths,
@@ -1416,7 +1541,8 @@ SEXP pileup(SEXP bampaths,
             SEXP reads_fn,
             SEXP mismatches_fn,
             SEXP ext,
-            SEXP umi) {
+            SEXP umi,
+            SEXP fraction_trim) {
 
   check_plp_args(bampaths,
                  n,
@@ -1438,7 +1564,8 @@ SEXP pileup(SEXP bampaths,
                  mismatches_fn,
                  read_bqual_filter,
                  ext,
-                 umi);
+                 umi,
+                 fraction_trim);
 
   int i;
   char ** cbampaths = (char **) R_alloc(sizeof(const char *), Rf_length(bampaths));
@@ -1493,7 +1620,8 @@ SEXP pileup(SEXP bampaths,
                     cmismatches_fn,
                     REAL(read_bqual_filter),
                     ext,
-                    umi_tag);
+                    umi_tag,
+                    REAL(fraction_trim));
 
   return res ;
 }

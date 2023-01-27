@@ -4,18 +4,18 @@
 \alias{correct_strand}
 \title{Apply strand correction using gene annotations}
 \usage{
-correct_strand(gr, genes_gr)
+correct_strand(rse, genes_gr)
 }
 \arguments{
-\item{gr}{GRanges object containing editing sites processed with
+\item{rse}{RangedSummarizedExperiment object containing editing sites processed with
 "genomic-unstranded" setting}
 
 \item{genes_gr}{GRanges object containing reference features to annotate the
 strand of the editing sites.}
 }
 \value{
-GenomicRanges onbject containing pileup counts, with strand corrected
-based on supplied genomic intervals.
+RangedSummarizedExperiment object containing pileup assays,
+with strand corrected based on supplied genomic intervals.
 }
 \description{
 Gene annotations are used to infer the likely strand of editing
@@ -32,7 +32,7 @@ suppressPackageStartupMessages(library("GenomicRanges"))
 bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")
 fp <- FilterParam(library_type = "genomic-unstranded")
-plp <- get_pileup(bamfn, fafn, filterParam = fp)
+rse <- pileup_sites(bamfn, fafn, filterParam = fp)
 
 genes <- GRanges(c(
   "DHFR:200-400:+",
@@ -41,6 +41,6 @@ genes <- GRanges(c(
   "SSR3:6-12:+"
 ))
 
-correct_strand(plp, genes)
+correct_strand(rse, genes)
 
 }

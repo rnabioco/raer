@@ -42,18 +42,18 @@ each entry in the cell_barcodes list, or across batches of single cells specifie
 by batch_size.}
 
 \item{batch_size}{When processing single cells, the batch_size controls
-how many individual cell bams to process in each invocation of \code{get_pileup()}.
+how many individual cell bams to process in each invocation of \code{pileup_sites()}.
 Batching the cells reduces run time by avoiding  loading sequences from the
 fasta file for each cell. Setting values above 50 is unlikely to further improve
 runtime.}
 
-\item{bam_flags}{See arguments for \verb{[get_pileup()]}}
+\item{bam_flags}{See arguments for \verb{[pileup_sites()]}}
 
-\item{umi_tag}{See arguments for \verb{[get_pileup()]}}
+\item{umi_tag}{See arguments for \verb{[pileup_sites()]}}
 
 \item{verbose}{Display messages}
 
-\item{...}{additional arguments passed to \verb{[get_pileup()]}.}
+\item{...}{additional arguments passed to \verb{[pileup_sites()]}.}
 }
 \description{
 Calculate editing frequencies per cell or per cluster

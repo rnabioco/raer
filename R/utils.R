@@ -16,17 +16,17 @@ is_null_extptr <- function(pointer) {
 #' bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
 #' fafn <- system.file("extdata", "human.fasta", package = "raer")
 #' plp_fn <- tempfile()
-#' plp <- get_pileup(bamfn, fafn, return_data = FALSE, outfile_prefix = plp_fn)
-#'
+#' fns <- pileup_sites(bamfn, fafn, return_data = FALSE, outfile_prefix = plp_fn)
+#' plp <- fns[2]
 #' head(read_tabix(plp))
 #'
 #' read_tabix(plp, region = "SPCS3:498-500")
 #'
 #' get_tabix_chroms(plp)
 #'
-#' unlink(c(plp, plp_fn, paste0(plp, ".tbi")))
-#' @rdname read_tabix
+#' unlink(c(fns, plp_fn, plp, paste0(plp, ".tbi")))
 #' @export
+#' @keywords internal
 read_tabix <- function(filename,
                        region = ".",
                        numeric_cols = c(2, 6:12),

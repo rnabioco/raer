@@ -8,12 +8,10 @@ reference:
   contents:
   - has_concept('pileup')
   - '`pileup_cells`'
-  - 'merge_pileups'
 - title: Calculations
   contents:
   - '`calc_AEI`'
   - '`calc_edit_frequency`'
-  - '`count_edits`'
 - title: Filtering
   contents:
   - has_concept('se-filters')
@@ -32,14 +30,13 @@ reference:
   - '`sc_editing`'
 - title: Data
   contents:
-  - '`download_GSE99249`'
+  - has_concept('external-data')
   - rse_adar_ifn
 - title: Utilities
   contents:
   - '`build_tag_index`'
   - '`correct_strand`'
   - '`raer_example`'
-  - '`read_tabix`'
   - '`read_pileup`'
   - '`read_sparray`'
 - title: Classes

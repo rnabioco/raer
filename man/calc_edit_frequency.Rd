@@ -51,7 +51,7 @@ fraction of edits (edit_idx) is returned.
 }
 \examples{
 library(SummarizedExperiment)
-se <- calc_edit_frequency(rse_adar_ifn)
-assay(se, "edit_freq")[1:5, ]
+rse <- calc_edit_frequency(rse_adar_ifn)
+assay(rse, "edit_freq")[1:5, ]
 
 }

@@ -39,40 +39,46 @@ BiocManager::install("rnabioco/raer")
 raer provides methods to compute per site read count summaries from BAM
 alignment files, either for known sites, or for all detected sites.
 
-```{r get_pileup}
+```{r pileup_sites}
 library(raer)
-bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+bam1fn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")
 bedfn <- raer_example("regions.bed")
+bams <- c("ko" = bam1fn, "wt" = bam2fn)
 
-res <- get_pileup(bamfn, fafn, bedfile = bedfn)
-res[1:5, ]
+rse <- pileup_sites(bams, fafn, bedfile = bedfn)
 ```
 
-Multiple BAM files can be processed, enabling rapid comparisons of RNA-Seq vs.
-WGS or WXS data, or RNA-Seq vs RNA-seq (e.g., ADAR WT VS ADAR KO).
+
+To facilitate comparisons across groups, base count data and genomic coordinates 
+are stored in a  `RangedSummarizedExperiment`. 
+
+```{r}
+suppressMessages(library(SummarizedExperiment))
+rse
+assays(rse)
+colData(rse)
+```
+
+```{r}
+assays(rse)$nRef[1:4, ]
+assays(rse)$nVar[1:4, ]
+```
+
 
 The `FilterParam()` class holds multiple options for customizing the output of 
-`get_pileup()`.
+`pileup_sites()`.
 
-To facilitate comparisons across groups, pileups can be combined in a 
-`RangedSummarizedExperiment`. 
-
-```{r create_se}
+```{r params}
 fp <- FilterParam(
   only_keep_variants = TRUE,
   library_type = "fr-first-strand",
   min_nucleotide_depth = 2
 )
 
-plps <- get_pileup(
-  c(bam2fn, bamfn),
-  fafn,
-  filterParam = fp
-)
-
-create_se(plps)
+rse <- pileup_sites(bams, fafn, filterParam = fp)
+rse
 ```
 
 ## Related work

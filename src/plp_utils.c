@@ -53,7 +53,7 @@ int query_end(bam1_t *b){
         Rf_error("Invalid clipping in CIGAR string");
       }
     } else if (op == BAM_CSOFT_CLIP){
-      end_offset += cigar[i] >> BAM_CIGAR_SHIFT;
+      end_offset -= cigar[i] >> BAM_CIGAR_SHIFT;
     } else {
       break;
     }
@@ -93,12 +93,39 @@ int check_simple_repeat(char** ref, hts_pos_t* ref_len, int pos, int nmer){
 
 // check if query position is within dist from 5' or 3' end of alignment
 // pos = query position
-int trim_pos(bam1_t* b, int pos, int dist_5p, int dist_3p){
+int check_variant_pos(bam1_t* b, int pos, int dist_5p, int dist_3p){
   // pos is 0-based query position
   // need to adjust to trim based on alignment start/end
   int qs, qe;
   qs = query_start(b);
   qe = query_end(b);
+
+  if(!(b->core.flag&BAM_FREVERSE)){
+    if(pos < (dist_5p + qs) || (qe - pos) <= dist_3p){
+      return 1;
+    }
+  } else if (b->core.flag&(BAM_FREVERSE)) {
+    if((qe - pos) <= dist_5p || pos < (dist_3p + qs)){
+      return 1;
+    }
+  } else {
+    Rf_error("don't believe should happen in trim_pos");
+  }
+  return 0;
+}
+
+// check if query position is within fractional dist from 5' or 3' end of alignment
+// pos = query position
+int check_variant_fpos(bam1_t* b, int pos, double fdist_5p, double fdist_3p){
+  // pos is 0-based query position
+  // need to adjust to trim based on alignment start/end
+  int qs, qe, ql, dist_5p, dist_3p;
+  qs = query_start(b);
+  qe = query_end(b);
+  ql = qe - qs;
+  if(ql <= 0) return 1;
+  dist_5p = (int) floor(fdist_5p * ql);
+  dist_3p = (int) ceil(fdist_3p * ql);
 
   if(!(b->core.flag&BAM_FREVERSE)){
     if(pos < (dist_5p + qs) || (qe - pos) <= dist_3p){

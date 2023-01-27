@@ -215,7 +215,7 @@ calc_AEI <- function(bam_fn,
   filterParam@min_nucleotide_depth <- 1L
   filterParam@only_keep_variants <- FALSE
 
-  plp <- get_pileup(bam_fn,
+  plp <- pileup_sites(bam_fn,
     fafile = fasta_fn,
     bedfile = alu_bed_fn,
     chroms = chrom,
@@ -242,12 +242,12 @@ calc_AEI <- function(bam_fn,
   for (i in seq_along(bases)) {
     rb <- bases[i]
     other_b <- setdiff(bases, rb)
-    j <- plp[plp$Ref == rb]
+    j <- plp[rowData(plp)$Ref == rb]
     for (k in seq_along(other_b)) {
       ab <- other_b[k]
       id <- paste0(rb, "_", ab)
-      n_alt <- sum(mcols(j)[[paste0("n", ab)]])
-      n_ref <- sum(mcols(j)[[paste0("n", rb)]])
+      n_alt <- sum(assays(j)[[paste0("n", ab)]][, 1])
+      n_ref <- sum(assays(j)[[paste0("n", rb)]][, 1])
       var_list[[id]] <- c(
         alt = n_alt,
         ref = n_ref,
@@ -320,13 +320,13 @@ get_overlapping_snps <- function(gr,
 #'   object. Sites with no-overlap, or overlapping features with conflicting
 #'   strands (+ and -) will be removed.
 #'
-#' @param gr GRanges object containing editing sites processed with
+#' @param rse RangedSummarizedExperiment object containing editing sites processed with
 #'   "genomic-unstranded" setting
 #' @param genes_gr GRanges object containing reference features to annotate the
 #'   strand of the editing sites.
 #'
-#' @return GenomicRanges onbject containing pileup counts, with strand corrected
-#' based on supplied genomic intervals.
+#' @return RangedSummarizedExperiment object containing pileup assays,
+#' with strand corrected based on supplied genomic intervals.
 #'
 #' @examples
 #' suppressPackageStartupMessages(library("GenomicRanges"))
@@ -334,7 +334,7 @@ get_overlapping_snps <- function(gr,
 #' bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 #' fafn <- raer_example("human.fasta")
 #' fp <- FilterParam(library_type = "genomic-unstranded")
-#' plp <- get_pileup(bamfn, fafn, filterParam = fp)
+#' rse <- pileup_sites(bamfn, fafn, filterParam = fp)
 #'
 #' genes <- GRanges(c(
 #'   "DHFR:200-400:+",
@@ -343,49 +343,57 @@ get_overlapping_snps <- function(gr,
 #'   "SSR3:6-12:+"
 #' ))
 #'
-#' correct_strand(plp, genes)
+#' correct_strand(rse, genes)
 #'
 #' @importFrom stringr str_count
 #'
 #' @export
-correct_strand <- function(gr, genes_gr) {
-  if (length(gr) == 0) {
-    return(gr)
+correct_strand <- function(rse, genes_gr) {
+  if (length(rse) == 0) {
+    return(rse)
   }
 
-  stopifnot(all(strand(gr) == "+"))
-  stopifnot(all(c("Ref", "Var", "nA", "nT", "nC", "nG") %in% names(mcols(gr))))
+  stopifnot(all(strand(rse) == "+"))
+  #stopifnot(all(c("Ref", "Var", "nA", "nT", "nC", "nG") %in% names(mcols(gr))))
 
   genes_gr$gene_strand <- strand(genes_gr)
-  gr <- annot_from_gr(gr, genes_gr, "gene_strand", ignore.strand = TRUE)
+  rse <- annot_from_gr(rse, genes_gr, "gene_strand", ignore.strand = TRUE)
 
   # drop non-genic and multi-strand (overlapping annotations)
-  gr <- gr[!is.na(gr$gene_strand)]
-  gr <- gr[stringr::str_count(gr$gene_strand, ",") == 0]
+  rse <- rse[!is.na(rowData(rse)$gene_strand), ]
+  rse <- rse[stringr::str_count(rowData(rse)$gene_strand, ",") == 0, ]
 
-  flip_rows <- as.vector(strand(gr) != gr$gene_strand)
+  flip_rows <- as.vector(strand(rse) != rowData(rse)$gene_strand)
 
-  gr$Ref[flip_rows] <- BASE_MAP[gr$Ref[flip_rows]]
+  rowData(rse)$Ref[flip_rows] <- BASE_MAP[rowData(rse)$Ref[flip_rows]]
 
-  gr$Var[flip_rows] <- unlist(lapply(
-    str_split(gr$Var[flip_rows], ","),
-    function(x) {
-      paste0(unname(ALLELE_MAP[x]),
-        collapse = ","
-      )
-    }
-  ))
+  flipped_variants <- vector(mode = "list", ncol(rse))
+  to_flip <- assay(rse, "Var")[flip_rows, , drop = FALSE]
+  flipped_variants <- apply(to_flip, c(1,2), function(x) {
+    vapply(str_split(x, ","), function(y) paste0(unname(ALLELE_MAP[y]),
+                                                 collapse = ","),
+           character(1))
+    })
 
-  # complement the nucleotide counts by reordering the columns
-  cols_to_swap <- c("nA", "nT", "nC", "nG")
-  bp_swap <- mcols(gr)[flip_rows, cols_to_swap]
-  bp_swap <- bp_swap[, c(2, 1, 4, 3)]
-  colnames(bp_swap) <- cols_to_swap
-  mcols(gr)[flip_rows, cols_to_swap] <- bp_swap
+  assay(rse, "Var")[flip_rows, ] <- flipped_variants
 
-  strand(gr) <- gr$gene_strand
-  gr$gene_strand <- NULL
-  gr
+
+  # complement the nucleotide counts by reordering the assays
+  assays_to_swap <- c("nA", "nT", "nC", "nG")
+  og_order <- rownames(rse)
+  sites_to_swap <- rse[flip_rows, , drop = FALSE]
+
+  to_swap <- assays(sites_to_swap)[assays_to_swap]
+  to_swap <- to_swap[c(2, 1, 4, 3)]
+  names(to_swap) <- assays_to_swap
+  assays(sites_to_swap)[assays_to_swap] <- to_swap
+
+  rse <- rbind(rse[!flip_rows, ], sites_to_swap)
+  rse <- rse[og_order, ]
+
+  strand(rse) <- rowData(rse)$gene_strand
+  rowData(rse)$gene_strand <- NULL
+  rse
 }
 
 

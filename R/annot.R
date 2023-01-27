@@ -97,8 +97,8 @@ annot_snps.SummarizedExperiment <- function(obj,
 #' gr$feature <- sample(1:100, size = 20)
 #' gr$id <- sample(LETTERS, size = 20)
 #'
-#' se <- annot_from_gr(rse_adar_ifn, gr, c(feature_set = "feature", "id"))
-#' rowData(se)
+#' rse <- annot_from_gr(rse_adar_ifn, gr, c(feature_set = "feature", "id"))
+#' rowData(rse)
 #'
 #' @importFrom S4Vectors aggregate unstrsplit
 #' @importFrom GenomeInfoDb seqlevelsStyle seqlevelsStyle<- seqlevels
