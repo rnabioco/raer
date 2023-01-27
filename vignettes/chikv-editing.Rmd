@@ -379,41 +379,47 @@ tidy_all <- qs::qread(fs::path(ext_path, '/rds/tidy_all.rds'), nthreads = 10)
 ### Variants identified by the pileup
 
 ```{r plot_counts}
-var_counts <-
+vnt_counts <-
   tidy_all |>
   group_by(treat, rep) |>
-  dplyr::count(var) |>
-  arrange(var) |>
+  dplyr::count(vnt) |>
+  arrange(vnt) |>
   mutate(
     treat = fct_relevel(treat, c('mock', 'virus'))
-  )
+  ) |> 
+  ungroup()
 
 ggplot(
   # add a name column that highlights `A>G` in bold, red text
   mutate(
-    var_counts,
+    vnt_counts,
     plt_name = case_when(
-      var == 'A>G' ~ "<b style='color:red'>A>G</b>",
-      TRUE ~ var
-    ),
-    plt_name = fct_relevel(
-      as_factor(plt_name),
-      "<b style='color:red'>A>G</b>",
-      after = 1
+      vnt == 'A>G' ~ "<b style='color:red'>A>G</b>"
+   ),
+   plt_name = coalesce(plt_name, vnt),
+   plt_name = fct_relevel(
+    as_factor(plt_name),
+    "<b style='color:red'>A>G</b>",
+    after = 1
     )
   ),
-  aes(x = plt_name, y = n / 1e5, fill = rep)
+  aes(x = plt_name, y = n, fill = rep)
   ) +
-  geom_col() +
+  geom_bar(stat = 'identity', position = 'dodge') +
   facet_grid(~ treat) +
   scale_fill_brewer(palette = 'Greys') +
   labs(
+    title = 'Variants identified from pileup of CHIKV scRNA-seq data',
     x = '',
-    y = 'n (x 1e5)'
+    y = '',
+    fill = 'replicate'
   ) + 
   theme_cowplot() +
   theme(
-    axis.text.x = element_markdown(angle = 45, hjust = 1)
+    axis.text.x = element_markdown(angle = 45, hjust = 1),
+    legend.position='top', 
+    legend.justification='left',
+    legend.direction='horizontal'
   )
 ```
 
