@@ -69,6 +69,8 @@ fns = list(
   snp_db  = fs::path(ext_path, 'ref', 'snp142.mm10.bed.gz'),
   redi_db = fs::path(ext_path, "ref", 'rediportal.mm10.cleaned.tsv.gz')
 )
+
+names(fns$bams) <- samples
 ```
 
 ### External data sources
@@ -106,18 +108,17 @@ fp <- FilterParam(
   only_keep_variants   = rep(TRUE, 6)
 )
 
-bpp <- SnowParam(workers = 8)
-plps <- get_pileup(
+bpp <- MulticoreParam(
+  workers = 24,
+  progressbar = TRUE
+)
+
+all_rse <- pileup_sites(
   fns$bams,
   fafile = fns$fasta,
   filterParam = fp,
   BPPARAM = bpp
 )
-
-names(plps) <- samples 
-plps
-
-all_rse <- create_se(plps)
 
 # remove multi-allelics now, they're not much use later.
 # this step removes about 15% (~8 million) of the sites.
@@ -368,7 +369,10 @@ var_counts <-
   tidy_all |>
   group_by(treat, rep) |>
   dplyr::count(var) |>
-  arrange(var)
+  arrange(var) |>
+  mutate(
+    treat = fct_relevel(treat, c('mock', 'virus'))
+  )
 
 ggplot(
   # add a name column that highlights `A>G` in bold, red text
@@ -387,7 +391,7 @@ ggplot(
   aes(x = plt_name, y = n / 1e5, fill = rep)
   ) +
   geom_col() +
-  facet_grid(~treat) +
+  facet_grid(~ treat) +
   scale_fill_brewer(palette = 'Greys') +
   labs(
     x = '',
@@ -523,9 +527,12 @@ redi_db <- read_tsv(
   fns$redi_db,
   col_names = TRUE
 ) |>
-  janitor::clean_names() |>
+  janitor::clean_names()
+
+redi_db <- 
   setNames(
-    names(xx) |>
+    redi_db,
+    names(redi_db) |>
       str_replace('_wg_encode_gencode_basic_vm16', '_gencode') |>
       str_replace('_ref_gene', '_refgene') |>
       str_replace('repeat', 'repeat_class')
@@ -634,7 +641,11 @@ tidy_redi_tbl |>
 
 ## TODO
 
-- Examine edit_freq within REDIportal xref data.
+- [ ] Count number of A>G in our data vs rediportal (common and unique to either)
+
+- [ ] Examine edit_freq within REDIportal xref data.
+
+- [ ] Examine how mouse edits track with mock or virus. 
 
 - [ ] Remove contigs and `_random` chromosomes from all objects early on,
   and relevel the GRanges objects.
