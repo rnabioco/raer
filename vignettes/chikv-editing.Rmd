@@ -8,6 +8,7 @@ vignette: >
 editor_options: 
   markdown: 
     wrap: 72
+  chunk_output_type: console
 ---
 
 ```{r, include = FALSE}
@@ -49,6 +50,7 @@ library(fs)
 library(glue)
 library(qs)
 library(janitor)
+library(cli)
 
 library(BiocParallel)
 library(SummarizedExperiment)
@@ -100,7 +102,7 @@ fp <- FilterParam(
   min_mapq             = rep(255, 6),
   library_type         = rep("fr-second-strand", 6),
   trim_5p              = 5,
-  trim_3p              = 30,
+  trim_3p              = 5,
   indel_dist           = 4,
   homopolymer_len      = 6,
   max_mismatch_type    = c(3, 3),
@@ -122,7 +124,7 @@ all_rse <- pileup_sites(
 
 # remove multi-allelics now, they're not much use later.
 # this step removes about 15% (~8 million) of the sites.
-all_rse <- remove_multiallelic(all_rse)
+all_rse <- filter_multiallelic(all_rse)
 
 chikv_rse <- subsetByOverlaps(
   all_rse,
@@ -196,14 +198,21 @@ removes a large chunk of the data, so we only compute the next steps on
 # n = 861939 after this step
 mm_rse_filt <- filter_replicates(mm_rse, "nVar", thresh = 3)
 
+# variant position bias (vpb, from 0 -> 1, 1 is less bias) 
+# filter on vpb, 0.015 or more
+mm_rse_filt <- subsetByOverlaps(
+  mm_rse_filt,
+  filter(rowRanges(mm_rse_filt), vpb >= 0.015)
+)
+
 # Next, remove sites based on gene annotations
 txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
 
 # n = 325352 after this step
-mm_rse_filt <- remove_clustered_variants(
+mm_rse_filt <- filter_clustered_variants(
   mm_rse_filt, txdb, variant_dist = 100
   ) |>
-  remove_splice_variants(txdb)
+  filter_splice_variants(txdb)
 
 # calculate `edit_freq` and `depth`
 mm_rse_filt <- calc_edit_frequency(mm_rse_filt)
@@ -225,6 +234,11 @@ virus coverage we have.
 ```{r filter_chikv, eval = FALSE}
 # n = 4.25
 chikv_rse_filt <- filter_replicates(chikv_rse, "nVar", thresh = 3)
+
+chikv_rse_filt <- subsetByOverlaps(
+  mm_rse_filt,
+  filter(rowRanges(chikv_rse_filt), vpb >= 0.015)
+)
 
 # calculate edit frequencies and depth
 chikv_rse_filt <- calc_edit_frequency(chikv_rse_filt)
@@ -380,7 +394,7 @@ ggplot(
     var_counts,
     plt_name = case_when(
       var == 'A>G' ~ "<b style='color:red'>A>G</b>",
-      .default = var
+      TRUE ~ var
     ),
     plt_name = fct_relevel(
       as_factor(plt_name),
