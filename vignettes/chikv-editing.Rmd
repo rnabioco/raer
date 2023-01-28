@@ -677,9 +677,22 @@ de_res <- perform_de(
   type = 'DESeq2'
 )
 
-# no significant results?
-de_res$sig_results
+sig_results <- 
+  rownames_to_column(de_res$sig_results, "site") |>
+  as_tibble() |>
+  arrange(padj)
+
+ComplexHeatmap::Heatmap(
+  assay(se_filt, "edit_freq")[head(sig_results, 50)$site, ],
+  col = viridis::viridis(100),
+  column_labels = se_filt$sample
+)
+
+# TODO: join these sites with genes / gene regions for a more informative display
 ```
+
+There are `nrow(sig_results)` significantly changed sites in the mouse transcriptome upon
+virus infection.
 
 ## TODO
 
