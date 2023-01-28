@@ -698,6 +698,7 @@ sig_de_res <-
   mutate(end = start + 1)
 
 # qs::qsave(sig_de_res, fs::path(ext_path, "/rds/sig_de_res.rds"))
+sig_de_res <- qs::qread(fs::path(ext_path, "/rds/sig_de_res.rds"))
 
 ComplexHeatmap::Heatmap(
   assay(se_filt, "edit_freq")[head(sig_de_res, 50)$site, ],
@@ -729,11 +730,9 @@ all_sce <- Seurat::as.SingleCellExperiment(all_so)
 ```{r single-cell}
 plotUMAP(all_sce, colour_by = "cell_type")
 
-sig_de_gr$ref <- 'A'
-sig_de_gr$var <- 'G'
-
-outdir <- file.path(tempdir(), "sc_edits")
-cbs <- colnames(sce)
+query_sites <- filter(rowRanges(mm_rse_filt), Var == 'AG')
+query_sites$ref <- 'A'
+query_sites$alt <- 'G'
 
 fp <- FilterParam(
   min_base_quality     = 30,
@@ -748,17 +747,30 @@ bpp <- MulticoreParam(
   progressbar = TRUE
 )
 
-e_sce <- pileup_cells(
-  bamfile = fns$bams,
-  sites = sig_de_gr,
-  cell_barcodes = cbs,
-  output_directory = outdir,
-  cb_tag = "CB",
-  umi_tag = "UB",
-  BPPARAM = bpp
-)
+sce_samples <- c('M1', 'M2', 'M3', 'A1', 'A2', 'A3')
+outs <- list()
 
-e_sce
+for (i in seq_along(sce_samples)) {
+  
+  cli::cli_alert_info("processing sample: {sce_samples[[i]]}")
+  
+  sce <- all_sce[, grepl(paste0('_', i, '$'), colnames(all_sce))]
+  colnames(sce) <- str_split_i(colnames(sce), paste0('_', i), i = 1)
+  cbs <- colnames(sce)
+  
+  e_sce <- pileup_cells(
+    bamfile = fs::path(ext_path, 'bam', paste0(sce_samples[[i]], '.bam')), 
+    sites = query_sites,
+    cell_barcodes = cbs,
+    output_directory = fs::file_temp(pattern = 'sc-edits', ext = i),
+    cb_tag = "CB",
+    umi_tag = "UB",
+    BPPARAM = bpp
+  )
+ 
+  colnames(e_sce) <- paste0(colnames(e_sce), '_', i) 
+  outs[[i]] <- e_sce
+}
 ```
 
 
