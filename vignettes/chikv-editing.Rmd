@@ -51,12 +51,13 @@ library(glue)
 library(qs)
 library(janitor)
 library(cli)
+library(Seurat)
 
 library(BiocParallel)
 library(SummarizedExperiment)
 library(plyranges)
 library(VariantAnnotation)
-library(TxDb.Mmusculus.UCSC.mm10.knownGene)
+library(TxDb.Mmusculus.UCSC.mm10.ensGene)
 ```
 
 ```{r setup_common_data}
@@ -206,7 +207,7 @@ mm_rse_filt <- subsetByOverlaps(
 )
 
 # Next, remove sites based on gene annotations
-txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
+txdb <- TxDb.Mmusculus.UCSC.mm10.ensGene
 
 # n = 325352 after this step
 mm_rse_filt <- filter_clustered_variants(
@@ -516,7 +517,7 @@ filter(
 ### Variants in genic regions
 
 ```{r annotate_variants, eval=FALSE}
-txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
+txdb <- TxDb.Mmusculus.UCSC.mm10.ensGene
 common <- intersect(seqlevels(txdb), seqlevels(rowRanges(mm_rse_filt)))
 txdb_common <- keepSeqlevels(txdb, common)
           
@@ -528,6 +529,7 @@ rse_rows_ann <- VariantAnnotation::locateVariants(
 
 # TODO: figure out how to cross-ref GENEID in the result with the starting txdb
 ```
+
 ### Cross-referencing with REDIportal
 
 ```{r rediportal_xref, message=FALSE}
@@ -653,6 +655,7 @@ tidy_redi_tbl |>
 ## Differential editing analysis
 
 ```{r diff_ed}
+# prepare the data
 colData(mm_rse_filt)$sample <- c(
   str_c('virus-', c(1,2,3)),
   str_c('mock-', c(1,2,3))
@@ -670,6 +673,8 @@ se_filt <- calc_edit_frequency(
 
 dse <- prep_for_de(se_filt)
 
+# run the diffferential editing. edgeR yields 0 sites, DESeq2 about 250.
+# not sure what the diff is.
 de_res <- perform_de(
   dse,
   condition_control = "mock",
@@ -677,16 +682,35 @@ de_res <- perform_de(
   type = 'DESeq2'
 )
 
-sig_results <- 
+sig_de_res <- 
   rownames_to_column(de_res$sig_results, "site") |>
   as_tibble() |>
-  arrange(padj)
+  dplyr::rename(lfc = log2FoldChange) |>
+  janitor::clean_names() |>
+  rename_with(~str_c("de_", .), .cols = -site) |>
+  arrange(de_padj) |>
+  mutate(new_site = site) |>
+  separate(
+    new_site,
+    into = c('seqnames', 'start', 'strand'),
+    sep = '_',
+    convert = TRUE) |>
+  mutate(end = start + 1)
+
+# qs::qsave(sig_de_res, fs::path(ext_path, "/rds/sig_de_res.rds"))
 
 ComplexHeatmap::Heatmap(
-  assay(se_filt, "edit_freq")[head(sig_results, 50)$site, ],
+  assay(se_filt, "edit_freq")[head(sig_de_res, 50)$site, ],
   col = viridis::viridis(100),
   column_labels = se_filt$sample
 )
+
+sig_de_gr <- as_granges(sig_de_res)
+genes_gr <- GenomicFeatures::transcripts(txdb)
+
+# end up with multiple rows matching, so need to collapse somehow
+# bioconductor makes my head hurt
+plyranges::join_overlap_left(de_res_gr, genes_gr)
 
 # TODO: join these sites with genes / gene regions for a more informative display
 ```
@@ -694,18 +718,51 @@ ComplexHeatmap::Heatmap(
 There are `nrow(sig_results)` significantly changed sites in the mouse transcriptome upon
 virus infection.
 
+## Single-cell analysis
+
+```{r read-so, eval=FALSE}
+all_so <- read_rds(fs::path(ext_path, 'so/so.rds'))
+all_sce <- Seurat::as.SingleCellExperiment(all_so)
+# qs::qsave(all_sce, fs::path(ext_path, '/sce/all_sce.rds'), nthreads = 10)
+```
+
+```{r single-cell}
+plotUMAP(all_sce, colour_by = "cell_type")
+
+sig_de_gr$ref <- 'A'
+sig_de_gr$var <- 'G'
+
+outdir <- file.path(tempdir(), "sc_edits")
+cbs <- colnames(sce)
+
+fp <- FilterParam(
+  min_base_quality     = 30,
+  library_type         = "fr-second-strand",
+  trim_5p              = 5,
+  trim_3p              = 5,
+  min_variant_reads    = 1
+)
+
+bpp <- MulticoreParam(
+  workers = 24,
+  progressbar = TRUE
+)
+
+e_sce <- pileup_cells(
+  bamfile = fns$bams,
+  sites = sig_de_gr,
+  cell_barcodes = cbs,
+  output_directory = outdir,
+  cb_tag = "CB",
+  umi_tag = "UB",
+  BPPARAM = bpp
+)
+
+e_sce
+```
+
+
+
 ## TODO
 
 - [ ] Count number of A>G in our data vs rediportal (common and unique to either)
-
-- [ ] Examine edit_freq within REDIportal xref data.
-
-- [ ] Examine how mouse edits track with mock or virus. 
-
-- [ ] Remove contigs and `_random` chromosomes from all objects early on,
-  and relevel the GRanges objects.
-  
-  This will likely eliminate warnings from `annot_from_gr()` like `Each of the 2
-  combined objects has sequence levels not in the other`, and may also enable
-  `VariantAnnotation::locateVariants()` to work correctly.
-
