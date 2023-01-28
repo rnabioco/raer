@@ -1,18 +1,18 @@
 #' Adds editing frequencies
 #'
-#' @description Adds editing frequencies to an existing
-#' SummarizedExperiment object (created by create_se`). The
-#' SummarizedExperiment with a new assay for editing frequencies
-#' for each site (`edit_freq`), depth of coverage computed
-#' using the indicatededited nucleotides (`depth`) and new colData
-#' columns with the number of edited sites (n_sites) and the
-#' fraction of edits (edit_idx) is returned.
+#' @description Adds editing frequencies to an existing SummarizedExperiment
+#'   object (created by `pileup_sites()`).
+#'
+#'   New assays are added including for editing frequencies for each site
+#'   (`edit_freq`), depth of coverage computed using the indicated edited
+#'   nucleotides (`depth`), and new `colData` with the number of edited sites
+#'   (`n_sites`) and the fraction of edits (`edit_idx`).
 #'
 #' @param se A SummarizedExperiment object created by `create_se`
-#' @param edit_from This should be a nucleotide (A, C, G, or T)
-#'   corresponding to the nucleotide you expect in the reference. Ex. for A to I
-#'   editing events, this would be "A". If NULL, then editing frequencies will be
-#'   calculated using the `nVar` and `nRef` values.
+#' @param edit_from This should be a nucleotide (A, C, G, or T) corresponding to
+#'   the nucleotide you expect in the reference. Ex. for A to I editing events,
+#'   this would be "A". If NULL, then editing frequencies will be calculated
+#'   using the `nVar` and `nRef` values.
 #' @param edit_to This should be a nucleotide (A, C, G, or T) and should
 #'   correspond to the nucleotide you expect after the editing event. Ex. for A
 #'   to I editing events, this would be "G". If NULL, then editing frequencies
@@ -28,15 +28,15 @@
 #'   of editing sites detected.
 #'
 #' @return
-#' SummarizedExperiment supplemented with `edit_freq` assay.
+#' `SummarizedExperiment` supplemented with `edit_freq` assay.
 #'
 #' @examples
-#' example(create_se, echo = FALSE)
-#' se <- calc_edit_frequency(se)
+#' se <- calc_edit_frequency(rse_adar_ifn)
 #' assay(se, "edit_freq")[1:5, ]
 #'
 #' @import SummarizedExperiment
 #' @importFrom Matrix colSums
+#'
 #' @export
 calc_edit_frequency <- function(se,
                                 edit_from = NULL,
@@ -106,7 +106,7 @@ calc_edit_frequency <- function(se,
   se
 }
 
-#' Counts edits
+#' Counts edits in a SummarizedExperiment
 #'
 #' @description Counts edits per sample and add new colData columns with the
 #'   number of edited sites (n_sites) and the  fraction of edits (edit_idx).
@@ -150,13 +150,13 @@ count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
   se
 }
 
-#' Make summarized experiment object for DE
+#' Prepare a `SummarizedExperiment` for differential editing testing
 #'
 #' @description Generates a SummarizedExperiment object for use with edgeR or
-#'   DESeq2 will generate a counts assay with a matrix formated with 2 columns
+#'   DESeq2 will generate a counts assay with a matrix formatted with 2 columns
 #'   per sample
 #'
-#' @param se A SummarizedExperiment object
+#' @param se A SummarizedExperiment
 #' @param type OPTIONAL the type of editing event to add. Currently, only A to I
 #'   is supported ("AI") which is the default, but your own custom can be added
 #'   by setting this to "none".
@@ -179,8 +179,7 @@ count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
 #'
 #' @import SummarizedExperiment
 #' @examples
-#' example(create_se, echo = FALSE)
-#' se <- calc_edit_frequency(se)
+#' se <- calc_edit_frequency(rse_adar_ifn)
 #' dse <- prep_for_de(se)
 #' assay(dse, "counts")
 #' dse
@@ -241,22 +240,21 @@ prep_for_de <- function(se,
 #'   return values.
 #'
 #' @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
-#' @param type OPTIONAL if edgeR or DESeq should be run. Default is edgeR
-#' @param sample_col OPTIONAL the name of the column from colData(deobj) that
+#' @param type one of `edgeR` or `DESeq2`. Default is `edgeR`.
+#' @param sample_col OPTIONAL the name of the column from `colData(deobj)` that
 #'   contains your sample information. Default is sample. If you do not have a
 #'   column named "sample", you must provide the appropriate sample column
-#' @param condition_col OPTIONAL the name of the column from colData(deobj) that
+#' @param condition_col OPTIONAL the name of the column from `colData(deobj)` that
 #'   contains your treatment information. Default is condition, If you do not
 #'   have a column named "condition", you must provide the appropriate condition
 #'   column
 #' @param condition_control The name of the control condition. This must be a
-#'   variable in your condition_col of colData(deobj). No default provided.
+#'   variable in your condition_col of `colData(deobj)`. No default provided.
 #' @param condition_treatment The name of the treatment condition. This must be
-#'   a variable in your condition_col of colData(deobj).
+#'   a variable in your condition_col of `colData(deobj)`.
 #'
 #' @examples
-#' example(create_se, echo = FALSE)
-#' se <- calc_edit_frequency(se)
+#' se <- calc_edit_frequency(rse_adar_ifn)
 #' dse <- prep_for_de(se)
 #' res <- perform_de(dse, condition_control = "WT", condition_treatment = "KO")
 #' res$sig_results[1:5, ]
@@ -268,11 +266,13 @@ prep_for_de <- function(se,
 #'
 #' @import stringr
 #' @importFrom stats model.matrix
+#'
 #' @export
 perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
                        condition_col = "condition",
                        condition_control = NULL,
                        condition_treatment = NULL) {
+
   # Make sure all variables are present
   if (!sample_col %in% colnames(colData(deobj))) {
     stop(paste0(
@@ -349,33 +349,33 @@ perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
     results <- run_deseq2(deobj, condition_control, condition_treatment)
   } else {
     stop(paste0(
-      "Unrecognized type: '", type, "'. type must be either edgeR",
-      " or DESeq2."
+      "Unrecognized type: '", type, "'. type must be one of `edgeR`",
+      " or `DESeq2`."
     ))
   }
   return(results)
 }
 
-# Perform differential editing with DESeq2
-#
-# @description Uses DESeq2 to perform differential editing analysis. This will
-#   work for simple designs that have 1 treatment and 1 control. For more
-#   complex designs, we suggest you perform your own. It will test if your
-#   sample column makes the model matrix not full rank. If that happens, the
-#   model matrix will be modified to be full rank. This is not intended to be
-#   called directly by the user, instead, this should be called by `perform_de`
-#
-#   At the moment, this function will only find editing events specific to the
-#   treatment, but it will be pretty straight forward to add other possible
-#   return values.
-#
-# @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
-# @param condition_control The name of the control condition. This must be a
-#   variable in your condition_col of colData(deobj). No default provided.
-# @param condition_treatment The name of the treatment condition. This must be
-#   a variable in your condition_col of colData(deobj).
-#
-#
+#' Perform differential editing with DESeq2
+#'
+#' @description Uses DESeq2 to perform differential editing analysis. This will
+#'   work for simple designs that have 1 treatment and 1 control. For more
+#'   complex designs, we suggest you perform your own. It will test if your
+#'   sample column makes the model matrix not full rank. If that happens, the
+#'   model matrix will be modified to be full rank. This is not intended to be
+#'   called directly by the user, instead, this should be called by `perform_de`
+#'
+#'   At the moment, this function will only find editing events specific to the
+#'   treatment, but it will be pretty straight forward to add other possible
+#'   return values.
+#'
+#' @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
+#' @param condition_control The name of the control condition. This must be a
+#'   variable in your condition_col of colData(deobj). No default provided.
+#' @param condition_treatment The name of the treatment condition. This must be a
+#'   variable in your condition_col of colData(deobj).
+#'
+#' @keywords internal
 run_deseq2 <- function(deobj, condition_control = NULL,
                        condition_treatment = NULL) {
   if (!requireNamespace("DESeq2", quietly = TRUE)) {
@@ -453,24 +453,26 @@ run_deseq2 <- function(deobj, condition_control = NULL,
   ))
 }
 
-# Perform differential editing with edgeR
+#' Perform differential editing with edgeR
+#'
+#' @description Uses edgeR to perform differential editing analysis. This will work for
+#' simple designs that have 1 treatment and 1 control. For more complex designs,
+#' we suggest you perform your own. It will test if your sample column makes the
+#' model matrix not full rank. If that happens, the model matrix will be
+#' modified to be full rank. This is not intended to be called directly by the
+#' user, instead, this should be called by `perform_de`
+#'
+#' At the moment, this function will only find editing events specific to the
+#' treatment, but it will be pretty straight forward to add other possible
+#' return values.
 #
-# @description Uses edgeR to perform differential editing analysis. This will work for
-# simple designs that have 1 treatment and 1 control. For more complex designs,
-# we suggest you perform your own. It will test if your sample column makes the
-# model matrix not full rank. If that happens, the model matrix will be
-# modified to be full rank. This is not intended to be called directly by the
-# user, instead, this should be called by `perform_de`
-#
-# At the moment, this function will only find editing events specific to the
-# treatment, but it will be pretty straight forward to add other possible
-# return values.
-#
-# @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
-# @param condition_control The name of the control condition. This must be a
-#   variable in your condition_col of colData(deobj). No default provided.
-# @param condition_treatment The name of the treatment condition. This must be
-#   a variable in your condition_col of colData(deobj).
+#' @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
+#' @param condition_control The name of the control condition. This must be a
+#'   variable in your condition_col of colData(deobj). No default provided.
+#' @param condition_treatment The name of the treatment condition. This must be
+#'   a variable in your condition_col of colData(deobj).
+#'
+#' @keywords internal
 run_edger <- function(deobj, condition_control = NULL,
                       condition_treatment = NULL) {
   if (!requireNamespace("edgeR", quietly = TRUE)) {
