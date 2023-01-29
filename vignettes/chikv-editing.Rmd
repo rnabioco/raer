@@ -824,6 +824,33 @@ for (i in seq_along(sce_samples)) {
 sce_outs <- qs::qread(file = fs::path(ext_path, '/rds/sce_outs.qs'))
 ```
 
+```{r}
+tidy_sce <- function(x) {
+  cli::cli_alert_info("tidying sce")
+  sce_assays <- c('nVar', 'nRef')
+  purrr::map(sce_assays, ~ tidy_sce_assay(x, .x)) |>
+    purrr::reduce(left_join)
+}
+
+tidy_sce_assay <- function(sce, sce_assay) {
+  cli::cli_alert_info("tidying assay: {sce_assay}")
+ 
+  sce_sub <- sce[rowSums(assay(sce, sce_assay)) > 0, ]
+  
+  assay(sce_sub, sce_assay) |>
+    as.data.frame() |>
+    rownames_to_column("site") |>
+    as_tibble() |>
+    pivot_longer(-site, values_to = {{ sce_assay }}) |>
+    filter( !! rlang::sym(sce_assay) > 0) |>
+    separate_wider_delim(name, names = c('cb', 'rep'), delim = '_') |>
+    separate_wider_delim(site, names = c('chrom', 'pos'), delim = '_', too_many = 'drop') |>
+    janitor::clean_names()
+}
+
+tidy_sce_tbl <- bind_rows(purrr::map(sce_outs, tidy_sce))
+```
+
 
 
 ## TODO
