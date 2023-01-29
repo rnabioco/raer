@@ -196,7 +196,6 @@ removes a large chunk of the data, so we only compute the next steps on
 ```{r filter_mm, eval = FALSE}
 # filter for at least 3 reads at each site every sample in the replicates.
 # this removes a large chunk of the data that is low coverage, ~90% or so
-# n = 861939 after this step
 mm_rse_filt <- filter_replicates(mm_rse, "nVar", thresh = 3)
 
 # variant position bias (vpb, from 0 -> 1, 1 is less bias) 
@@ -209,7 +208,6 @@ mm_rse_filt <- subsetByOverlaps(
 # Next, remove sites based on gene annotations
 txdb <- TxDb.Mmusculus.UCSC.mm10.ensGene
 
-# n = 325352 after this step
 mm_rse_filt <- filter_clustered_variants(
   mm_rse_filt, txdb, variant_dist = 100
   ) |>
@@ -219,11 +217,9 @@ mm_rse_filt <- filter_clustered_variants(
 mm_rse_filt <- calc_edit_frequency(mm_rse_filt)
 
 # filter on site depth >= 3 for all samples within replicates (nVar + nRef)
-# n = XXX 
 mm_rse_filt <- filter_replicates(mm_rse_filt, "depth", thresh = 6)
 
 # filter for edit_freq >= 0.05 for at least 3 samples
-# n = 266645
 mm_rse_filt <- filter_replicates(mm_rse_filt, "edit_freq", thresh = 0.05)
 
 mm_rse_filt
@@ -233,7 +229,6 @@ Now do the same for viral data --- these may be a bit harsh for the
 virus coverage we have.
 
 ```{r filter_chikv, eval = FALSE}
-# n = 4.25
 chikv_rse_filt <- filter_replicates(chikv_rse, "nVar", thresh = 3)
 
 chikv_rse_filt <- subsetByOverlaps(
@@ -248,7 +243,6 @@ chikv_rse_filt <- calc_edit_frequency(chikv_rse_filt)
 chikv_rse_filt <- filter_replicates(chikv_rse_filt, "depth", thresh = 3)
 
 # filter for edit_freq >= 0.05 for all replicates
-# n = 42
 chikv_rse_filt <- filter_replicates(chikv_rse_filt, "edit_freq", thresh = 0.05)
 
 chikv_rse_filt
@@ -268,8 +262,6 @@ rmsk_db <-  read_tsv(
 ) |>
   plyranges::as_granges()
 
-# XXX: it might be useful to get a version of this table that has `ref` and `alt` alleles
-# so we can quickly compute variant stats
 snp_db  <- read_tsv(
   fns$snp_db,
   col_names = c('seqnames', 'start', 'end', 'snpId', 'score', 'strand')
@@ -290,14 +282,12 @@ mm_rse_filt <- annot_from_gr(
 )
 
 # filter out specific repeat classes
-# n = 233792
 mm_rse_filt <- mm_rse_filt[
   !rowData(mm_rse_filt)$repFamily %in%
     c("Simple_repeat", "Low_complexity", "Low_complexity,Low_complexity")
 ]
 
 # filter out common variants (i.e., already have a snpId)
-# n = 217893
 mm_rse_filt <- mm_rse_filt[is.na(rowData(mm_rse_filt)$snpId)] 
 
 mm_rse_filt
@@ -310,9 +300,9 @@ qs::qsave(mm_rse_filt, fs::path(ext_path, '/rds/mm_rse_filt.rds'), nthreads = 10
 qs::qsave(chikv_rse_filt, fs::path(ext_path, '/rds/chikv_rse_filt.rds'), nthreads = 10)
 ```
 
-## Exploratory analysis
+## Analaysis & annotation
 
-### Annotate variants in genic regions
+### Variants in genic regions
 
 ```{r annotate_variants, eval=FALSE}
 txdb <- TxDb.Mmusculus.UCSC.mm10.ensGene
@@ -333,6 +323,78 @@ mm_rse_filt <- annot_from_gr(
   )  
 )
 ```
+
+### Differential editing
+
+```{r diff_ed}
+# prepare the data
+colData(mm_rse_filt)$sample <- c(
+  str_c('virus-', c(1,2,3)),
+  str_c('mock-', c(1,2,3))
+)
+
+colData(mm_rse_filt)$condition <- c(rep('virus', 3), rep('mock', 3))
+colData(mm_rse_filt)
+
+se_filt <- calc_edit_frequency(
+  mm_rse_filt,
+  edit_from = "A",
+  edit_to = "G",
+  drop = TRUE
+)
+
+dse <- prep_for_de(se_filt)
+
+# run the diffferential editing. edgeR yields 0 sites, DESeq2 about 250.
+# not sure what the diff is.
+de_res <- perform_de(
+  dse,
+  condition_control = "mock",
+  condition_treatment = "virus",
+  type = 'DESeq2'
+)
+
+sig_de_res <- 
+  rownames_to_column(de_res$sig_results, "site") |>
+  as_tibble() |>
+  dplyr::rename(lfc = log2FoldChange) |>
+  janitor::clean_names() |>
+  rename_with(~str_c("de_", .), .cols = -site) |>
+  arrange(de_padj) |>
+  mutate(new_site = site) |>
+  separate(
+    new_site,
+    into = c('seqnames', 'start', 'strand'),
+    sep = '_',
+    convert = TRUE) |>
+  mutate(end = start)
+
+sig_de_gr <- as_granges(sig_de_res)
+
+mm_rse_filt <- annot_from_gr(
+  mm_rse_filt,
+  sig_de_gr,
+  cols_to_map = c(
+    'de_lfc', 'de_padj'
+  )
+)
+
+# qs::qsave(sig_de_res, fs::path(ext_path, "/rds/sig_de_res.rds"))
+# sig_de_res <- qs::qread(fs::path(ext_path, "/rds/sig_de_res.rds"))
+
+ComplexHeatmap::Heatmap(
+  assay(se_filt, "edit_freq")[head(sig_de_res, 50)$site, ],
+  col = viridis::viridis(100),
+  column_labels = se_filt$sample
+)
+
+```
+
+There are `nrow(sig_results)` significantly changed sites in the mouse transcriptome upon
+virus infection.
+
+## Exploratory analysis
+
 
 ### Data tidying
 
@@ -659,74 +721,6 @@ tidy_redi_tbl |>
   )
 ```
 
-## Differential editing analysis
-
-```{r diff_ed}
-# prepare the data
-colData(mm_rse_filt)$sample <- c(
-  str_c('virus-', c(1,2,3)),
-  str_c('mock-', c(1,2,3))
-)
-
-colData(mm_rse_filt)$condition <- c(rep('virus', 3), rep('mock', 3))
-colData(mm_rse_filt)
-
-se_filt <- calc_edit_frequency(
-  mm_rse_filt,
-  edit_from = "A",
-  edit_to = "G",
-  drop = TRUE
-)
-
-dse <- prep_for_de(se_filt)
-
-# run the diffferential editing. edgeR yields 0 sites, DESeq2 about 250.
-# not sure what the diff is.
-de_res <- perform_de(
-  dse,
-  condition_control = "mock",
-  condition_treatment = "virus",
-  type = 'DESeq2'
-)
-
-sig_de_res <- 
-  rownames_to_column(de_res$sig_results, "site") |>
-  as_tibble() |>
-  dplyr::rename(lfc = log2FoldChange) |>
-  janitor::clean_names() |>
-  rename_with(~str_c("de_", .), .cols = -site) |>
-  arrange(de_padj) |>
-  mutate(new_site = site) |>
-  separate(
-    new_site,
-    into = c('seqnames', 'start', 'strand'),
-    sep = '_',
-    convert = TRUE) |>
-  mutate(end = start + 1)
-
-sig_de_gr <- as_granges(sig_de_res)
-
-mm_rse_filt <- annot_from_gr(
-  mm_rse_filt,
-  sig_de_gr,
-  cols_to_map = c(
-    'de_lfc', 'de_padj'
-  )
-)
-
-# qs::qsave(sig_de_res, fs::path(ext_path, "/rds/sig_de_res.rds"))
-sig_de_res <- qs::qread(fs::path(ext_path, "/rds/sig_de_res.rds"))
-
-ComplexHeatmap::Heatmap(
-  assay(se_filt, "edit_freq")[head(sig_de_res, 50)$site, ],
-  col = viridis::viridis(100),
-  column_labels = se_filt$sample
-)
-
-```
-
-There are `nrow(sig_results)` significantly changed sites in the mouse transcriptome upon
-virus infection.
 
 ## Single-cell analysis
 
