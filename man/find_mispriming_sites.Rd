@@ -11,10 +11,30 @@ find_mispriming_sites(
   pos_3p = 20,
   min_reads = 2,
   tag = "pa",
-  tag_values = 6:300,
+  tag_values = 3:300,
   n_reads_per_chunk = 1e+06,
   verbose = TRUE
 )
+}
+\arguments{
+\item{bamfile}{path to bamfile}
+
+\item{fafile}{path to fasta file}
+
+\item{pos_5p}{distance 5' of mispriming site to define mispriming region}
+
+\item{pos_3p}{distance 3' of mispriming site to define mispriming region}
+
+\item{min_reads}{minimum required number of reads at a mispriming site}
+
+\item{tag}{bam tag containing number of poly(A) bases trimmed}
+
+\item{tag_values}{range of values required for read to be considered}
+
+\item{n_reads_per_chunk}{number of reads to process in memory, see
+\code{\link[Rsamtools:BamFile-class]{Rsamtools::BamFile()}}}
+
+\item{verbose}{if true report progress}
 }
 \description{
 OligodT will prime at A-rich regions in an RNA. Reverse transcription

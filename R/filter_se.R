@@ -227,7 +227,18 @@ filter_clustered_variants <- function(se, txdb,
 #' regions 5 bases upstream and 20 bases downstream of these putative mispriming sites
 #' are returned.
 #'
-#' @importFrom Rsamtools ScanBamParam BamFile open.BamFile close.Bamfile
+#' @param bamfile path to bamfile
+#' @param fafile path to fasta file
+#' @param pos_5p distance 5' of mispriming site to define mispriming region
+#' @param pos_3p distance 3' of mispriming site to define mispriming region
+#' @param min_reads minimum required number of reads at a mispriming site
+#' @param tag bam tag containing number of poly(A) bases trimmed
+#' @param tag_values range of values required for read to be considered
+#' @param n_reads_per_chunk number of reads to process in memory, see
+#' [`Rsamtools::BamFile()`]
+#' @param verbose if true report progress
+#'
+#' @importFrom Rsamtools ScanBamParam BamFile
 #' @importFrom GenomicAlignments readGAlignments
 #' @importFrom IRanges grouplengths
 #' @importFrom S4Vectors aggregate
@@ -238,7 +249,7 @@ filter_clustered_variants <- function(se, txdb,
 #'
 #' @export
 find_mispriming_sites <- function(bamfile, fafile, pos_5p = 5, pos_3p = 20,
-                                  min_reads = 2, tag = "pa", tag_values = 6:300,
+                                  min_reads = 2, tag = "pa", tag_values = 3:300,
                                   n_reads_per_chunk = 1e6, verbose = TRUE){
   tg_lst <- list(tag_values)
   names(tg_lst) <- tag
@@ -247,7 +258,7 @@ find_mispriming_sites <- function(bamfile, fafile, pos_5p = 5, pos_3p = 20,
   open(bf)
   pa_pks <- GRanges()
   repeat {
-    # should only return for reads with pa tag set
+    # should only return reads with pa tag set
     galn <- readGAlignments(bf, param = sbp)
 
     if (length(galn) == 0) break
