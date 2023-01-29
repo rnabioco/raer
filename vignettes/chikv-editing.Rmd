@@ -770,7 +770,9 @@ tidy_redi_tbl |>
 ```{r read-so, eval=FALSE}
 all_so <- read_rds(fs::path(ext_path, 'so/so.rds'))
 all_sce <- Seurat::as.SingleCellExperiment(all_so)
-# qs::qsave(all_sce, fs::path(ext_path, '/sce/all_sce.rds'), nthreads = 10)
+
+# qs::qsave(all_sce, fs::path(ext_path, '/sce/all_sce.qs'), nthreads = 10)
+all_sce <- qs::qread(fs::path(ext_path, '/sce/all_sce.qs'), nthreads = 10)
 ```
 
 ```{r single-cell, eval = FALSE}
@@ -824,7 +826,7 @@ for (i in seq_along(sce_samples)) {
 sce_outs <- qs::qread(file = fs::path(ext_path, '/rds/sce_outs.qs'))
 ```
 
-```{r}
+```{r tidy_sce_outs}
 tidy_sce <- function(x) {
   cli::cli_alert_info("tidying sce")
   sce_assays <- c('nVar', 'nRef')
@@ -848,11 +850,62 @@ tidy_sce_assay <- function(sce, sce_assay) {
     janitor::clean_names()
 }
 
-tidy_sce_tbl <- bind_rows(purrr::map(sce_outs, tidy_sce))
+tidy_sce_edits <-
+  bind_rows(purrr::map(sce_outs, tidy_sce)) |>
+  mutate(
+    n_ref = replace_na(n_ref, 0),
+    n_var = replace_na(n_var, 0),
+    depth = n_ref + n_var,
+    edit_freq = n_var / depth
+  ) |>
+  # re-create colnames so they match the original all_sce
+  unite(barcode, cb:rep)
+
+tidy_sce_coldata <-
+  colData(all_sce) |>
+  as.data.frame() |>
+  rownames_to_column("barcode") |>
+  as_tibble()
+
+sc_edit_tbl <-
+  left_join(tidy_sce_edits, tidy_sce_coldata, by = 'barcode') |>
+  dplyr::select(orig.ident, cell_type, subtype) |>
+  separate_wider_delim(orig.ident, names = c('treat', 'rep'), delim = '-') |>
+  group_by(treat, cell_type, subtype)|>
+  dplyr::count(sort = TRUE) |>
+  mutate(
+    treat = as_factor(treat), 
+    treat = fct_relevel(treat, "mock", "CHIKV"),
+    cell_type = as_factor(cell_type),
+    subtype = as_factor(subtype),
+  ) |>
+  ungroup() |>
+  tidyr::complete(
+    treat,
+    nesting(cell_type, subtype),
+    fill = list(n = 0)
+  )
+  
+ggplot(
+  sc_edit_tbl,
+  aes(
+    x = fct_reorder(subtype, n),
+    y = n,
+    fill = treat
+  )
+) +
+  geom_bar(position = 'dodge', stat = 'identity') +
+  theme_cowplot() +
+  coord_flip() +
+  scale_fill_manual(values = c('black', 'red')) +
+  labs(
+    x = '',
+    y = '',
+    fill = 'sample',
+    title = 'Number of cells with evidence of RNA editing'
+  ) +
+  theme(
+    legend.position = 'top'
+  )
 ```
 
-
-
-## TODO
-
-- [ ] Count number of A>G in our data vs rediportal (common and unique to either)
