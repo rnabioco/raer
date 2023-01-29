@@ -1000,6 +1000,18 @@ SEXP run_pileup(char** cbampaths,
   plp = calloc(n, sizeof(bam_pileup1_t*));
   n_plp = calloc(n, sizeof(int));
 
+  pcounts *plpc;
+  plpc = R_Calloc(n, pcounts);
+
+  pall_counts *pall = R_Calloc(1, pall_counts);
+  pall->p_ref_pos = R_Calloc(NBASE_POS, int);
+  pall->p_alt_pos = R_Calloc(NBASE_POS, int);
+  pall->m_ref_pos = R_Calloc(NBASE_POS, int);
+  pall->m_alt_pos = R_Calloc(NBASE_POS, int);
+  pall->p_has_var = pall->m_has_var = 0;
+
+  double *stats = R_Calloc(4, double);
+
   if(cfapath){
     conf->fai_fname = cfapath;
     conf->fai = fai_load(conf->fai_fname);
@@ -1185,8 +1197,7 @@ SEXP run_pileup(char** cbampaths,
     goto fail;
   }
 
-  pcounts *plpc;
-  plpc = R_Calloc(n, pcounts);
+
   for (i = 0; i < n + 1; ++i) {
      if(!in_mem){
        // initialize output files
@@ -1210,15 +1221,6 @@ SEXP run_pileup(char** cbampaths,
      if (plpc[i].pc->umi == NULL) plpc[i].pc->umi = kh_init(umihash);
      if (plpc[i].mc->umi == NULL) plpc[i].mc->umi = kh_init(umihash);
   }
-
-  pall_counts *pall = R_Calloc(1, pall_counts);
-  pall->p_ref_pos = R_Calloc(NBASE_POS, int);
-  pall->p_alt_pos = R_Calloc(NBASE_POS, int);
-  pall->m_ref_pos = R_Calloc(NBASE_POS, int);
-  pall->m_alt_pos = R_Calloc(NBASE_POS, int);
-  pall->p_has_var = pall->m_has_var = 0;
-
-  double *stats = R_Calloc(4, double);
 
   int last_tid = -1;
   int n_iter = 0;

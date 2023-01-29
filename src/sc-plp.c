@@ -750,7 +750,7 @@ SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
   memset(&ga, 0, sizeof(sc_mplp_conf_t));
 
   regidx_t *idx = regidx_build(lst, 1);
-  if (!idx) Rf_error("Failed to build region index");
+  if (!idx) Rf_error("[raer internal] Failed to build region index");
 
   int ret, res;
 
@@ -761,6 +761,7 @@ SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
                          INTEGER(event_filters), INTEGER(libtype)[0],
                          nbcs, bcs, c_cbtag, c_umi, LOGICAL(index_skip)[0],
                          LOGICAL(pe)[0], INTEGER(min_counts)[0]);
+  if(ret != 0) Rf_error("[raer internal] Failed to set config");
 
   // write barcodes file, all barcodes will be reported in matrix
   write_barcodes(ga.fps[2], bcs, nbcs);

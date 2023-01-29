@@ -207,7 +207,7 @@ int check_splice_overhang(bam1_t* b, int pos, int dist){
       continue;
     }
   }
-  Rf_error("site not found in read: %s %i %i %i", bam_get_qname(b), pos, p_op, cl);
+  Rf_error("site not found in read: %s %i %i\n", bam_get_qname(b), pos, p_op);
 }
 
 // return -1 if no indel found
