@@ -538,7 +538,7 @@ ggplot(
   facet_grid(~ treat) +
   scale_fill_manual(values = c('grey70', 'grey50', 'grey30')) +
   labs(
-    title = 'Variants identified from pileup of dLN / CHIKV scRNA-seq data',
+    title = 'Variants from raer pileup of Mm / CHIKV scRNA-seq',
     x = '',
     y = '',
     fill = 'replicate'
@@ -548,7 +548,14 @@ ggplot(
     axis.text.x = element_markdown(angle = 45, hjust = 1),
     legend.position='top', 
     legend.justification='left',
-    legend.direction='horizontal'
+    legend.direction='horizontal',
+    strip.background = element_blank(),
+    strip.text = element_textbox(
+      size = 14,
+      color = "black", fill = "grey90", box.color = "grey90",
+      halign = 0.5, linetype = 1, r = unit(5, "pt"), width = unit(1, "npc"),
+      padding = margin(2, 0, 1, 0), margin = margin(3, 3, 3, 3)
+    )
   )
 ```
 
