@@ -623,7 +623,9 @@ ggplot(
 
 ### Differential editing
 
-```{r de_sites}
+#### Heatmap of edit frequencies
+
+```{r de_site_heatmap}
 heatmap_tbl <- 
   filter(tidy_mm_tbl, vnt == 'A>G', !is.na(de_padj)) |>
   dplyr::select(chrom, pos, treat, rep, edit_freq) |>
@@ -634,13 +636,48 @@ heatmap_tbl <-
 
 heatmap_mtx <- as.matrix(dplyr::select(heatmap_tbl, -rowname))
 rownames(heatmap_mtx) <- heatmap_tbl$rowname
+# colnames(heatmap_mtx) <- str_split_i(colnames(heatmap_mtx), '_', 2)
+heatmap_mtx <- t(heatmap_mtx)
 
-  
-ComplexHeatmap::Heatmap(
+nc <- ncol(heatmap_mtx)
+
+hm <- ComplexHeatmap::Heatmap(
   heatmap_mtx,
-  col = viridis::viridis(100),
-  column_labels = colnames(heatmap_mtx)
+  column_title = glue('Differentially edited A>G sites (n = {nc}; FDR = 0.01)'),
+  row_labels = rownames(heatmap_mtx),
+  col = viridis::viridis(10),
+  cluster_rows = FALSE,
+  cluster_columns = TRUE,
+  show_column_dend = FALSE,
+  show_column_names = FALSE,
+  show_row_names = TRUE,
+  show_row_dend = FALSE,
+  row_names_side = "left",
+  # row_split = 2,
+  row_title = NULL,
+  # use_raster = TRUE,
+  heatmap_legend_param = list(
+    title = "editing frequency (nVar / nRef)",
+    direction = "horizontal",
+    title_position = "lefttop"
+  )
 )
+
+ComplexHeatmap::draw(hm, heatmap_legend_side = "bottom")
+```
+
+#### Features associated with DE sites
+
+```{r de_site_genes}
+de_genes_tbl <-
+  filter(tidy_mm_tbl, vnt == 'A>G', !is.na(de_padj)) |>
+  dplyr::select(
+    chrom, pos, starts_with('ens_'),
+    redi_gene_gencode, rep_family
+    ) |>
+  unique()
+
+DT::datatable(de_genes_tbl)
 ```
 
 ### Cross-referencing with REDIportal
