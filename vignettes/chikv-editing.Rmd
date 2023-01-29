@@ -90,7 +90,7 @@ names(fns$bams) <- samples
   these data are the first 22 columns, and anything after the first ~10 may
   not be useful.
   
-## Pileup
+## Pileup and filtering
 
 This is the main raer pileup routine. On this data set, this step takes about 4
 hours (parallelized) and generates a large `RangedSummarizedExperiment` (`rse`)
@@ -100,15 +100,15 @@ with \~48 million sites.
 fp <- FilterParam(
   min_nucleotide_depth = 3,
   min_base_quality     = 30,
-  min_mapq             = rep(255, 6),
-  library_type         = rep("fr-second-strand", 6),
+  min_mapq             = 255,
+  library_type         = "fr-second-strand",
   trim_5p              = 5,
   trim_3p              = 5,
   indel_dist           = 4,
   homopolymer_len      = 6,
   max_mismatch_type    = c(3, 3),
   min_read_bqual       = c(0.25, 20),
-  only_keep_variants   = rep(TRUE, 6)
+  only_keep_variants   = TRUE
 )
 
 bpp <- MulticoreParam(
@@ -148,7 +148,7 @@ mm_rse <- qs::qread(fs::path(ext_path, '/rds/mm_rse.rds'), nthreads = 10)
 chikv_rse <- qs::qread(fs::path(ext_path, '/rds/chikv_rse.rds'), nthreads = 10)
 ```
 
-## Filtering for high confidence sites
+### Filtering for high confidence sites
 
 From the intial set of \~50 million sites from the pileup, we filter
 based on several criteria:
@@ -303,7 +303,7 @@ mm_rse_filt <- mm_rse_filt[is.na(rowData(mm_rse_filt)$snpId)]
 mm_rse_filt
 ```
 
-## Save filtered data
+### Save filtered data
 
 ```{r save_filt_data, eval=FALSE}
 qs::qsave(mm_rse_filt, fs::path(ext_path, '/rds/mm_rse_filt.rds'), nthreads = 10)
@@ -311,6 +311,28 @@ qs::qsave(chikv_rse_filt, fs::path(ext_path, '/rds/chikv_rse_filt.rds'), nthread
 ```
 
 ## Exploratory analysis
+
+### Annotate variants in genic regions
+
+```{r annotate_variants, eval=FALSE}
+txdb <- TxDb.Mmusculus.UCSC.mm10.ensGene
+common <- intersect(seqlevels(txdb), seqlevels(rowRanges(mm_rse_filt)))
+txdb_common <- keepSeqlevels(txdb, common)
+          
+txdb_annot_gr <- VariantAnnotation::locateVariants(
+  rowRanges(mm_rse_filt),
+  txdb_common,
+  AllVariants()
+)
+
+mm_rse_filt <- annot_from_gr(
+  mm_rse_filt,
+  txdb_annot_gr,
+  cols_to_map = c(
+    'LOCATION', 'GENEID'
+  )  
+)
+```
 
 ### Data tidying
 
@@ -514,21 +536,6 @@ filter(
   )
 ```
 
-### Variants in genic regions
-
-```{r annotate_variants, eval=FALSE}
-txdb <- TxDb.Mmusculus.UCSC.mm10.ensGene
-common <- intersect(seqlevels(txdb), seqlevels(rowRanges(mm_rse_filt)))
-txdb_common <- keepSeqlevels(txdb, common)
-          
-rse_rows_ann <- VariantAnnotation::locateVariants(
-  rowRanges(mm_rse_filt),
-  txdb_common,
-  AllVariants()
-)
-
-# TODO: figure out how to cross-ref GENEID in the result with the starting txdb
-```
 
 ### Cross-referencing with REDIportal
 
@@ -697,6 +704,16 @@ sig_de_res <-
     convert = TRUE) |>
   mutate(end = start + 1)
 
+sig_de_gr <- as_granges(sig_de_res)
+
+mm_rse_filt <- annot_from_gr(
+  mm_rse_filt,
+  sig_de_gr,
+  cols_to_map = c(
+    'de_lfc', 'de_padj'
+  )
+)
+
 # qs::qsave(sig_de_res, fs::path(ext_path, "/rds/sig_de_res.rds"))
 sig_de_res <- qs::qread(fs::path(ext_path, "/rds/sig_de_res.rds"))
 
@@ -706,14 +723,6 @@ ComplexHeatmap::Heatmap(
   column_labels = se_filt$sample
 )
 
-sig_de_gr <- as_granges(sig_de_res)
-genes_gr <- GenomicFeatures::transcripts(txdb)
-
-# end up with multiple rows matching, so need to collapse somehow
-# bioconductor makes my head hurt
-plyranges::join_overlap_left(de_res_gr, genes_gr)
-
-# TODO: join these sites with genes / gene regions for a more informative display
 ```
 
 There are `nrow(sig_results)` significantly changed sites in the mouse transcriptome upon
