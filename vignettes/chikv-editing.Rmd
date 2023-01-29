@@ -494,7 +494,7 @@ tidy_mm_tbl <-
     )
   )
 
-qs::qsave(tidy_all, file = fs::path(ext_path, '/rds/tidy_mm_tbl.qs'), nthreads = 8)    
+qs::qsave(tidy_mm_tbl, file = fs::path(ext_path, '/rds/tidy_mm_tbl.qs'), nthreads = 8)    
 ```
 
 ## Exploratory analysis
@@ -773,7 +773,7 @@ all_sce <- Seurat::as.SingleCellExperiment(all_so)
 # qs::qsave(all_sce, fs::path(ext_path, '/sce/all_sce.rds'), nthreads = 10)
 ```
 
-```{r single-cell}
+```{r single-cell, eval = FALSE}
 plotUMAP(all_sce, colour_by = "cell_type")
 
 query_sites <- filter(rowRanges(mm_rse_filt), Var == 'AG')
