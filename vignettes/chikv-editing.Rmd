@@ -769,8 +769,12 @@ for (i in seq_along(sce_samples)) {
   )
  
   colnames(e_sce) <- paste0(colnames(e_sce), '_', i) 
+  #names(assays(e_sce)) <- str_c(names(assays(e_sce)), paste0('_', i))
+  
   outs[[i]] <- e_sce
 }
+
+qs::qsave(outs, file = fs::path(ext_path, '/rds/sce_outs.qs'))
 ```
 
 
