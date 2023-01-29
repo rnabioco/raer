@@ -21,8 +21,6 @@
 #include <getopt.h>
 #include <inttypes.h>
 
-#include <time.h>
-
 #include <Rinternals.h>
 
 #define STRICT_R_HEADERS
@@ -1225,18 +1223,22 @@ SEXP run_pileup(char** cbampaths,
   int last_tid = -1;
   int n_iter = 0;
   while ((ret = bam_mplp64_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
+    // check if in single region requested
+    if (cregion && (pos < beg0 || pos >= end0)) continue;
 
-    if (cregion && (pos < beg0 || pos >= end0)) continue; // not in of single region requested
-
-    mplp_get_ref(data[0], tid, &ref, &ref_len); // not in of single region requested
+    mplp_get_ref(data[0], tid, &ref, &ref_len);
     if (tid < 0) break;
 
     // check user interrupt, using a 2^k value is 2-3x faster than say 1e6
     if (n_iter % 262144 == 0) {
       if(checkInterrupt()){
+        REprintf("[raer internal] user interrupt detected, exiting\n");
+        ret = -1;
         goto fail;
       }
     }
+    ++n_iter;
+
     // ensure position is in requested intervals
     if (conf->bed && tid >= 0 && !bed_overlap(conf->bed, sam_hdr_tid2name(h, tid), pos, pos+1)) continue;
 
@@ -1339,10 +1341,10 @@ SEXP run_pileup(char** cbampaths,
    int sres = calc_biases(pall, stats);
    if(sres < 0) {ret = -1; goto fail;}
 
-    // write or store records if pass depth criteria
-    store_counts(pd, plpc, only_keep_variants, n, min_reads, sam_hdr_tid2name(h, tid),
-                 pos, pref_b, mref_b,
-                 in_mem, conf->min_var_reads, stats);
+   // write or store records if pass depth criteria
+   store_counts(pd, plpc, only_keep_variants, n, min_reads, sam_hdr_tid2name(h, tid),
+                pos, pref_b, mref_b,
+                in_mem, conf->min_var_reads, stats);
   }
 
 fail:
