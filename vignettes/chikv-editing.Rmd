@@ -643,7 +643,7 @@ nc <- ncol(heatmap_mtx)
 
 hm <- ComplexHeatmap::Heatmap(
   heatmap_mtx,
-  column_title = glue('Differentially edited A>G sites (n = {nc}; FDR = 0.01)'),
+  column_title = glue('Differentially edited A>G sites (n = {nc}; FDR = 0.05)'),
   row_labels = rownames(heatmap_mtx),
   col = viridis::viridis(10),
   cluster_rows = FALSE,
