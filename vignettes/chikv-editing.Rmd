@@ -461,7 +461,7 @@ tidy_all_tbl <-
   left_join(tidy_assays_tbl, tidy_annots_tbl, by = c('site'))
 
 tidy_mm_tbl <-
-  janitor::clean_names(mm_tidy_tbl) |>
+  janitor::clean_names(tidy_all_tbl) |>
   # filter out ambiguous var
   filter(var != '-' & !str_detect(var, '^N')) |>
   # polish columns in variables
@@ -486,6 +486,7 @@ tidy_mm_tbl <-
     ) |>
   mutate(across(c(treat, rep, vnt, rep_family), as_factor)) |>
   mutate(across(c(de_lfc, de_padj), as.numeric)) |>
+  mutate(across(c(pos), as.integer)) |>
   mutate(
     across(
       c(redi_gene_gencode, redi_func_gencode, ens_gene_id, ens_location, ),
@@ -623,12 +624,23 @@ ggplot(
 ### Differential editing
 
 ```{r de_sites}
-ComplexHeatmap::Heatmap(
-  assay(se_filt, "edit_freq")[head(sig_de_res, 50)$site, ],
-  col = viridis::viridis(100),
-  column_labels = se_filt$sample
-)
+heatmap_tbl <- 
+  filter(tidy_mm_tbl, vnt == 'A>G', !is.na(de_padj)) |>
+  dplyr::select(chrom, pos, treat, rep, edit_freq) |>
+  arrange(chrom, pos) |>
+  unite(smpl, c(treat, rep)) |>
+  pivot_wider(names_from = smpl, values_from = edit_freq, values_fill = 0) |>
+  unite(rowname, c(chrom, pos)) 
 
+heatmap_mtx <- as.matrix(dplyr::select(heatmap_tbl, -rowname))
+rownames(heatmap_mtx) <- heatmap_tbl$rowname
+
+  
+ComplexHeatmap::Heatmap(
+  heatmap_mtx,
+  col = viridis::viridis(100),
+  column_labels = colnames(heatmap_mtx)
+)
 ```
 
 ### Cross-referencing with REDIportal
