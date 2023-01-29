@@ -53,11 +53,12 @@ library(janitor)
 library(cli)
 library(Seurat)
 
-library(BiocParallel)
-library(SummarizedExperiment)
 library(plyranges)
+library(SummarizedExperiment)
+library(SingleCellExperiment)
 library(VariantAnnotation)
 library(TxDb.Mmusculus.UCSC.mm10.ensGene)
+library(BiocParallel)
 ```
 
 ```{r setup_common_data}
@@ -298,9 +299,54 @@ mm_rse_filt
 ```{r save_filt_data, eval=FALSE}
 qs::qsave(mm_rse_filt, fs::path(ext_path, '/rds/mm_rse_filt.rds'), nthreads = 10)
 qs::qsave(chikv_rse_filt, fs::path(ext_path, '/rds/chikv_rse_filt.rds'), nthreads = 10)
+# mm_rse_filt <- qs::qread(fs::path(ext_path, '/rds/mm_rse_filt.rds'), nthreads = 10)
 ```
 
-## Analaysis & annotation
+## Analysis & annotation
+
+### REDIportal annotation
+
+```{r rediportal_annotation}
+redi_tbl <- read_tsv(
+  fns$redi_db,
+  col_names = TRUE
+) |>
+  janitor::clean_names()
+
+redi_gr <- 
+  setNames(
+    redi_tbl,
+    names(redi_tbl) |>
+      str_replace('_wg_encode_gencode_basic_vm16', '_gencode') |>
+      str_replace('_ref_gene', '_refgene') |>
+      str_replace('repeat', 'repeat_class')
+  ) |>
+  dplyr::rename(
+    seqnames = region,
+    start = position
+  ) |>
+  mutate(
+    end = start + 1
+  ) |>
+  relocate(end, .after = 2) |>
+  relocate(strand, .after = 3) |>
+  # we'll only keep gencode annotations, through `exonic_func`
+  dplyr::select(seqnames:exonic_func_gencode) |>
+  rename_with(~ str_c('redi_', .x), .cols = ref:exonic_func_gencode) |>
+  plyranges::as_granges()
+
+mm_rse_filt <- annot_from_gr(
+  mm_rse_filt,
+  redi_gr,
+  cols_to_map = c(
+    'redi_ref',
+    'redi_ed',
+    'redi_func_gencode',
+    'redi_gene_gencode'
+  )
+)
+
+```
 
 ### Variants in genic regions
 
@@ -378,66 +424,51 @@ mm_rse_filt <- annot_from_gr(
     'de_lfc', 'de_padj'
   )
 )
-
-# qs::qsave(sig_de_res, fs::path(ext_path, "/rds/sig_de_res.rds"))
-# sig_de_res <- qs::qread(fs::path(ext_path, "/rds/sig_de_res.rds"))
-
-ComplexHeatmap::Heatmap(
-  assay(se_filt, "edit_freq")[head(sig_de_res, 50)$site, ],
-  col = viridis::viridis(100),
-  column_labels = se_filt$sample
-)
-
 ```
 
-There are `nrow(sig_results)` significantly changed sites in the mouse transcriptome upon
-virus infection.
+### Save annotated data
+```{r, eval=FALSE}
+qs::qsave(mm_rse_filt, fs::path(ext_path, "/rds/mm_rse_filt.rds"))
+```
 
-## Exploratory analysis
-
-
-### Data tidying
+## Data tidying
 
 ```{r tidy_data, eval=FALSE}
-prep_tibble <- function(rse, assay_name) {
+
+rse_assays <- c('nRef', 'nVar', 'Var', 'depth', 'edit_freq')
+
+pull_assay <- function(rse, assay_name) {
   assay(rse, assay_name) |>
     as.data.frame() |>
     rownames_to_column("site") |>
-    as_tibble()
+    as_tibble() |>
+    pivot_longer(-site) |>
+    dplyr::rename(!! assay_name := value)
 }
 
-tidy_nref <- prep_tibble(mm_rse_filt, "nRef") |>
-  pivot_longer(-site) |> dplyr::rename(n_ref = value)
-tidy_nvar <- prep_tibble(mm_rse_filt, "nVar") |>
-  pivot_longer(-site) |> dplyr::rename(n_var = value)
-tidy_var <- prep_tibble(mm_rse_filt, "Var") |>
-  pivot_longer(-site) |> dplyr::rename(var = value)
-tidy_depth <- prep_tibble(mm_rse_filt, "depth") |>
-  pivot_longer(-site) |> dplyr::rename(depth = value)
-tidy_edit_freq <- prep_tibble(mm_rse_filt, "edit_freq") |>
-  pivot_longer(-site) |> dplyr::rename(edit_freq = value)
+tidy_assays_tbl <- 
+  purrr::map(rse_assays, ~ pull_assay(mm_rse_filt, .x)) |>
+  purrr::reduce(left_join, by = c('site', 'name'))
 
-tidy_annots <- rowData(mm_rse_filt) |>
+tidy_annots_tbl <-
+  rowData(mm_rse_filt) |>
   as.data.frame() |>
   rownames_to_column("site") |>
   as_tibble() |>
   dplyr::select(-Ref, -Var, -snpId)
   
-# combine the above
-tidy_all <- left_join(tidy_var, tidy_nvar, by = c('site', 'name')) |>
-  left_join(tidy_nref, by = c('site', 'name')) |>
-  left_join(tidy_depth, by = c('site', 'name')) |>
-  left_join(tidy_edit_freq, by = c('site', 'name')) |>
-  left_join(tidy_annots, by = c('site'))
- 
-tidy_all <- tidy_all |> 
+tidy_all_tbl <-
+  left_join(tidy_assays_tbl, tidy_annots_tbl, by = c('site'))
+
+tidy_mm_tbl <-
+  janitor::clean_names(mm_tidy_tbl) |>
   # filter out ambiguous var
   filter(var != '-' & !str_detect(var, '^N')) |>
   # polish columns in variables
   separate(name, into = c('treat', 'rep'), sep = 1) |>
   # use intuitive var, i.e. `AT` -> `A>T`
   separate(var, into = c('ref', 'alt'), sep = 1) |>
-  unite(var, ref:alt, sep = '>') |>
+  unite(vnt, ref:alt, sep = '>') |>
   # use intuitive treatment names
   mutate(
     treat = case_when(
@@ -446,26 +477,39 @@ tidy_all <- tidy_all |>
     )
   ) |>
   separate(site, into = c('chrom', 'pos', 'strand'), sep = '_') |>
-  arrange(var) |>
-  mutate(across(c(treat, rep, var), as_factor)) |>
-  janitor::clean_names()
+  arrange(vnt) |>
+  dplyr::select(-rbpz, -vpb) |>
+  dplyr::rename(
+    n_vnt = n_var,
+    ens_gene_id = geneid,
+    ens_location = location
+    ) |>
+  mutate(across(c(treat, rep, vnt, rep_family), as_factor)) |>
+  mutate(across(c(de_lfc, de_padj), as.numeric)) |>
+  mutate(
+    across(
+      c(redi_gene_gencode, redi_func_gencode, ens_gene_id, ens_location, ),
+      ~ str_split_i(.x, ',', 1)
+    )
+  )
 
-qs::qsave(tidy_all, file = fs::path(ext_path, '/rds/tidy_all.rds'), nthreads = 8)    
+qs::qsave(tidy_all, file = fs::path(ext_path, '/rds/tidy_mm_tbl.qs'), nthreads = 8)    
 ```
+
+## Exploratory analysis
 
 ### Load data 
 
 ```{r load_rds}
 mm_rse_filt <- qs::qread(fs::path(ext_path, '/rds/mm_rse_filt.rds'), nthreads = 10)
-chikv_rse_filt <- qs::qread(fs::path(ext_path, '/rds/chikv_rse_filt.rds'), nthreads = 10)
-tidy_all <- qs::qread(fs::path(ext_path, '/rds/tidy_all.rds'), nthreads = 10)    
+tidy_mm_tbl <- qs::qread(fs::path(ext_path, '/rds/tidy_mm_tbl.qs'), nthreads = 10)    
 ```
 
 ### Variants identified by the pileup
 
 ```{r plot_counts}
 vnt_counts <-
-  tidy_all |>
+  tidy_mm_tbl |>
   group_by(treat, rep) |>
   dplyr::count(vnt) |>
   arrange(vnt) |>
@@ -510,23 +554,25 @@ ggplot(
 
 The plot of counts above shows us a few things:
 
-*   There are ~4,000 `A>G` sites per replicate.
+* There are ~4,000 `A>G` sites per replicate.
     
-    ```{r}
-    filter(vnt_counts, vnt == 'A>G') 
-    ```
+  ```{r}
+  filter(vnt_counts, vnt == 'A>G') 
+  ```
     
-*   There's a small signal for `T>C` (not sure what that is), and the
-    remaining variants are at much lower levels.
+* There's a smaller signal for `T>C`, which comes from second-strand
+  synthesis issues for abundant transcripts. The `X>A` variants are a mis-priming
+  artifact that is largely mitigated by the earlier `vbpz` filtering step.
 
-### Editing frequency and depth
+### Inspect editing frequency and depth
 
 ```{r plot_depth_edit_freq}
-plot_tbl <-
-  tidy_all |>
+depth_edit_tbl <-
+  tidy_mm_tbl |>
     mutate(log_depth = log10(depth)) |>
     dplyr::select(
-      -(chrom:strand), -depth, -starts_with('rep_') # , -rbpz, -vpb
+      treat, rep, vnt, log_depth, edit_freq,
+      
       ) |>
     pivot_longer(edit_freq:log_depth) |>
     arrange(vnt) |>
@@ -537,7 +583,7 @@ plot_tbl <-
 ggplot(
   # add a name column that highlights `A>G` in bold, red text
   mutate(
-    plot_tbl,
+    depth_edit_tbl,
     plt_name = case_when(
       vnt == 'A>G' ~ "<b style='color:red'>A>G</b>"
    ),
@@ -565,81 +611,22 @@ ggplot(
 
 - `A>G` has one of the *lowest* editing frequency.
   
-- All variants have have apprxoimately the same `log_depth` and `rbpz`.
+- All variants have have apprxoimately the same `log_depth` .
 
-- `A>G` has one of hte lowest `vpb` values.
+### Differential editing
 
-### Variants among repeat classes - OLD, see REDI below
+```{r de_sites}
+ComplexHeatmap::Heatmap(
+  assay(se_filt, "edit_freq")[head(sig_de_res, 50)$site, ],
+  col = viridis::viridis(100),
+  column_labels = se_filt$sample
+)
 
-```{r rep_families, eval = FALSE}
-rep_counts <- tidy_all |>
-  dplyr::select(treat, vnt, rep_name, rep_family) |>
-  filter(!is.na(rep_name)) |>
-  pivot_longer(-c(treat, vnt), names_to = 'rep_class', values_to = 'rep_name') |>
-  group_by(treat, vnt, rep_class) |>
-  dplyr::count(rep_name)
-
-filter(
-  rep_counts,
-  rep_class == 'rep_family' & n >= 20,
-  # examine the most abundant / interesting vntiants
-  vnt %in% c('A>G', 'G>A', 'C>A', 'T>A')
-) |>
-  ggplot(aes(fct_reorder(rep_name, n), log10(n), fill = treat)) +
-    geom_col() +
-    coord_flip() +
-    facet_grid(~ vnt) +
-    theme_cowplot() + 
-    scale_fill_manual(values = c('black', 'red')) +
-  theme(axis.text.y = element_text(size = 8)) +
-  labs(
-    x = '',
-    y = 'n vntiants in repeats (log10)'
-  )
 ```
-
 
 ### Cross-referencing with REDIportal
 
 ```{r rediportal_xref, message=FALSE}
-redi_db <- read_tsv(
-  fns$redi_db,
-  col_names = TRUE
-) |>
-  janitor::clean_names()
-
-redi_db <- 
-  setNames(
-    redi_db,
-    names(redi_db) |>
-      str_replace('_wg_encode_gencode_basic_vm16', '_gencode') |>
-      str_replace('_ref_gene', '_refgene') |>
-      str_replace('repeat', 'repeat_class')
-  ) |>
-  dplyr::rename(
-    seqnames = region,
-    start = position
-  ) |>
-  mutate(
-    end = start + 1
-  ) |>
-  relocate(end, .after = 2) |>
-  relocate(strand, .after = 3) |>
-  # we'll only keep gencode annotations, through `exonic_func`
-  dplyr::select(seqnames:exonic_func_gencode) |>
-  rename_with(~ str_c('redi_', .x), .cols = ref:exonic_func_gencode) |>
-  plyranges::as_granges()
-
-mm_rse_filt <- annot_from_gr(
-  mm_rse_filt,
-  redi_db,
-  cols_to_map = c(
-    'redi_ref',
-    'redi_ed',
-    'redi_func_gencode',
-    'redi_gene_gencode'
-  )
-)
 
 # tidy code for analysis
 tidy_redi_tbl <- 
@@ -777,7 +764,8 @@ for (i in seq_along(sce_samples)) {
   outs[[i]] <- e_sce
 }
 
-qs::qsave(outs, file = fs::path(ext_path, '/rds/sce_outs.qs'))
+# qs::qsave(outs, file = fs::path(ext_path, '/rds/sce_outs.qs'))
+sce_outs <- qs::qread(file = fs::path(ext_path, '/rds/sce_outs.qs'))
 ```
 
 
