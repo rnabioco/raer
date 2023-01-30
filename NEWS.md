@@ -1,5 +1,7 @@
 # raer 0.99.0
 
+* Added utility to screen scRNA-seq bam files for regions with oligo-dT mispriming (`find_mispriming_sites()`).
+
 * Added `FilterParam` option to trim reads based on fractional distance from 5' (`ftrim_5p`) or 3' end (`ftrim_3p`).
 
 * Incorporated RBPZ and VDB statistics from bcftools, now returned as rowData columns 
