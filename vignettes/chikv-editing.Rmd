@@ -544,7 +544,7 @@ ggplot(
     y = '',
     fill = 'replicate'
   ) + 
-  theme_cowplot() +
+  theme_minimal_hgrid() +
   theme(
     axis.text.x = element_markdown(angle = 45, hjust = 1),
     legend.position='top', 
@@ -736,26 +736,25 @@ tidy_redi_tbl |>
   left_join(func_counts) |>
   ggplot(
     aes(
-      x = fct_reorder(redi_func_gencode, -func_n),
+      x = fct_reorder(redi_func_gencode, func_n),
       y = n,
       fill = fct_relevel(rep_family_collapse, 'Not in repeat', after = Inf)
     )
   ) +
   geom_col() +
-  theme_cowplot() +
+  theme_minimal_vgrid() +
   labs(
     x = '',
     y = '',
-    title = 'REDIportal annotation of mouse A>G sites',
-    subtitle = glue('n = {scales::comma(total_sites)} total sites'),
+    title = glue('Annotation of {scales::comma(total_sites)} mouse A>G sites with REDIportal'),
     fill = 'Repeat class'
   ) +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
     legend.position='top', 
     legend.justification='left',
     legend.direction='horizontal'
   ) +
+  coord_flip() +
   scale_fill_manual(
     values = c(
       scales::brewer_pal(palette = "Dark2")(n_rep_family - 1),
@@ -774,6 +773,8 @@ all_sce <- Seurat::as.SingleCellExperiment(all_so)
 # qs::qsave(all_sce, fs::path(ext_path, '/sce/all_sce.qs'), nthreads = 10)
 all_sce <- qs::qread(fs::path(ext_path, '/sce/all_sce.qs'), nthreads = 10)
 ```
+
+### Single-cell pileup
 
 ```{r single-cell, eval = FALSE}
 plotUMAP(all_sce, colour_by = "cell_type")
@@ -826,7 +827,10 @@ for (i in seq_along(sce_samples)) {
 sce_outs <- qs::qread(file = fs::path(ext_path, '/rds/sce_outs.qs'))
 ```
 
+### Data Tidying
+
 ```{r tidy_sce_outs}
+
 tidy_sce <- function(x) {
   cli::cli_alert_info("tidying sce")
   sce_assays <- c('nVar', 'nRef')
@@ -853,6 +857,7 @@ tidy_sce_assay <- function(sce, sce_assay) {
 tidy_sce_edits <-
   bind_rows(purrr::map(sce_outs, tidy_sce)) |>
   mutate(
+    pos = as.integer(pos),
     n_ref = replace_na(n_ref, 0),
     n_var = replace_na(n_var, 0),
     depth = n_ref + n_var,
@@ -860,13 +865,18 @@ tidy_sce_edits <-
   ) |>
   # re-create colnames so they match the original all_sce
   unite(barcode, cb:rep)
+```
 
+### Editing per cell type
+
+```{r}
 tidy_sce_coldata <-
   colData(all_sce) |>
   as.data.frame() |>
   rownames_to_column("barcode") |>
   as_tibble()
 
+# total sites
 sc_edit_tbl <-
   left_join(tidy_sce_edits, tidy_sce_coldata, by = 'barcode') |>
   dplyr::select(orig.ident, cell_type, subtype) |>
@@ -884,10 +894,48 @@ sc_edit_tbl <-
     treat,
     nesting(cell_type, subtype),
     fill = list(n = 0)
-  )
-  
+  ) |>
+  mutate(sites = 'all')
+
+# significant sites
+sig_de_sites <- filter(tidy_mm_tbl, !is.na(de_padj)) |>
+  dplyr::select(chrom, pos) |>
+  unique()
+
+tidy_sce_edits_sig <- semi_join(tidy_sce_edits, sig_de_sites)
+
+sc_edit_tbl_sig <-
+  left_join(tidy_sce_edits_sig, tidy_sce_coldata, by = 'barcode') |>
+  dplyr::select(orig.ident, cell_type, subtype) |>
+  separate_wider_delim(orig.ident, names = c('treat', 'rep'), delim = '-') |>
+  group_by(treat, cell_type, subtype)|>
+  dplyr::count(sort = TRUE) |>
+  mutate(
+    treat = as_factor(treat), 
+    treat = fct_relevel(treat, "mock", "CHIKV"),
+    cell_type = as_factor(cell_type),
+    subtype = as_factor(subtype),
+  ) |>
+  ungroup() |>
+  tidyr::complete(
+    treat,
+    nesting(cell_type, subtype),
+    fill = list(n = 0)
+  ) |>
+  mutate(sites = 'sig')
+
+all_sc_edit_tbl <- bind_rows(sc_edit_tbl, sc_edit_tbl_sig)
+
+total_sites <- nrow(unique(dplyr::select(tidy_sce_edits, chrom, pos)))  
+total_sites_sig <- nrow(unique(dplyr::select(tidy_sce_edits_sig, chrom, pos)))  
+
+sites_labels <- c(
+  all = glue('all A>G sites (n = {scales::comma(total_sites)})'),
+  sig = glue('differentially edited A>G sites (n = {scales::comma(total_sites_sig)}, FDR = 0.05)')
+)
+
 ggplot(
-  sc_edit_tbl,
+  all_sc_edit_tbl,
   aes(
     x = fct_reorder(subtype, n),
     y = n,
@@ -895,17 +943,34 @@ ggplot(
   )
 ) +
   geom_bar(position = 'dodge', stat = 'identity') +
-  theme_cowplot() +
+  theme_minimal_vgrid() +
   coord_flip() +
   scale_fill_manual(values = c('black', 'red')) +
   labs(
     x = '',
-    y = '',
+    y = 'Number of cells with 1 or more A>G sites',
     fill = 'sample',
-    title = 'Number of cells with evidence of RNA editing'
+    title = glue('RNA editing across cell types identifed in Mm / CHIKV scRNA-seq')
+  ) +
+  facet_grid(
+    ~ sites,
+    scales = "free_x",
+    labeller = labeller(
+      sites = sites_labels 
+    )
   ) +
   theme(
-    legend.position = 'top'
+    legend.position = 'top',
+    strip.background = element_blank(),
+    strip.text = element_textbox(
+      size = 12,
+      color = "black", fill = "grey90", box.color = "grey90",
+      halign = 0.5, linetype = 1, r = unit(5, "pt"), width = unit(1, "npc"),
+      padding = margin(2, 0, 1, 0), margin = margin(3, 3, 3, 3)
+    )
   )
+
 ```
+
+
 
