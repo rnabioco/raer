@@ -666,7 +666,7 @@ hm <- ComplexHeatmap::Heatmap(
 ComplexHeatmap::draw(hm, heatmap_legend_side = "bottom")
 ```
 
-#### Features associated with DE sites
+### Features associated with DE sites
 
 ```{r de_site_genes}
 de_genes_tbl <-
@@ -869,6 +869,8 @@ tidy_sce_edits <-
 
 ### Editing per cell type
 
+#### Data tidying
+
 ```{r}
 tidy_sce_coldata <-
   colData(all_sce) |>
@@ -925,7 +927,56 @@ sc_edit_tbl_sig <-
   mutate(sites = 'sig')
 
 all_sc_edit_tbl <- bind_rows(sc_edit_tbl, sc_edit_tbl_sig)
+```
 
+### Viz subtype proportions
+
+```{r plot_cell_prop}
+subtype_cnts <- 
+tidy_sce_coldata |>
+  dplyr::select(orig.ident, subtype) |>
+  separate_wider_delim(orig.ident, names = c('treat', 'rep'), delim = '-') |>
+  group_by(treat, rep, subtype) |>
+  dplyr::count(sort = TRUE) |>
+  group_by(treat, subtype) |>
+  summarize(
+    n_mean = mean(n),
+    n_sd = sd(n)
+  ) |>
+  ungroup() |>
+  tidyr::complete(
+    treat, subtype,
+    fill = list(n_mean = 0, n_sd = 0)
+  ) |>
+  mutate(
+    treat = fct_relevel(treat, c('mock', 'CHIKV'))
+  )
+
+ggplot(
+  subtype_cnts,
+  aes(
+    x = n_mean,
+    y = fct_reorder(subtype, n_mean),
+    fill = treat
+  )
+) +
+  geom_bar(stat = 'identity', position = 'dodge') +
+  scale_fill_manual(values = c('black', 'red')) +
+  labs(
+    x = '',
+    y = '',
+    fill = 'sample',
+    title = 'Cells annotated in Mm / CHIKV scRNA-seq'
+  ) +
+  theme_minimal_vgrid() +
+  theme(
+    legend.position = 'top' 
+  ) 
+```
+
+### Plot editing levels per cell type
+
+```{r plot_cell_types}
 total_sites <- nrow(unique(dplyr::select(tidy_sce_edits, chrom, pos)))  
 total_sites_sig <- nrow(unique(dplyr::select(tidy_sce_edits_sig, chrom, pos)))  
 
@@ -961,6 +1012,7 @@ ggplot(
   ) +
   theme(
     legend.position = 'top',
+    plot.title.position = 'plot',
     strip.background = element_blank(),
     strip.text = element_textbox(
       size = 12,
@@ -969,7 +1021,6 @@ ggplot(
       padding = margin(2, 0, 1, 0), margin = margin(3, 3, 3, 3)
     )
   )
-
 ```
 
 
