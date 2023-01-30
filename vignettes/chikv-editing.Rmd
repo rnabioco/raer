@@ -985,11 +985,16 @@ sites_labels <- c(
   sig = glue('differentially edited A>G sites (n = {scales::comma(total_sites_sig)}, FDR = 0.05)')
 )
 
+# normalize site counts by cell type counts
+norm_sc_edit_tbl <-
+  left_join(all_sc_edit_tbl, subtype_cnts) |>
+  mutate(n_norm = n / n_mean)
+
 ggplot(
-  all_sc_edit_tbl,
+  norm_sc_edit_tbl,
   aes(
     x = fct_reorder(subtype, n),
-    y = n,
+    y = n_norm,
     fill = treat
   )
 ) +
