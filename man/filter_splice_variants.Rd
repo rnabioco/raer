@@ -22,25 +22,10 @@ splice junctions.
 }
 \examples{
 if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
-  library(SummarizedExperiment)
-  nrows <- 5
-  ncols <- 6
-  counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
-  rowRanges <- GRanges(rep("chr1", 5),
-    IRanges(c(12055, 12174, 12194, 12719, 12889), width = 1),
-    strand = rep("+", 5)
+  filter_splice_variants(
+    rse_adar_ifn,
+    TxDb.Hsapiens.UCSC.hg38.knownGene
   )
-  colData <- DataFrame(
-    Treatment = rep(c("adar_wt", "adar_ko"), 3),
-    row.names = LETTERS[1:6]
-  )
-  rse <- SummarizedExperiment(
-    assays = SimpleList(counts = counts),
-    rowRanges = rowRanges, colData = colData
-  )
-
-  se <- filter_splice_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
-  se
 }
 
 }

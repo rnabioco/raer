@@ -13,6 +13,7 @@
 #'
 #' @export
 filter_multiallelic <- function(se) {
+  n_in <- nrow(se)
   is_not_multiallelic <- apply(assay(se, "Var"), 1, function(x) {
     x <- unique(x[x != "-"])
     if (length(x) == 0 | length(x) >= 2) {
@@ -22,6 +23,15 @@ filter_multiallelic <- function(se) {
   })
   se <- se[which(is_not_multiallelic), ]
   rowData(se)$Var <- apply(assay(se, "Var"), 1, function(x) unique(x[x != "-"]))
+
+  n_filt <- sum(c(is.na(is_not_multiallelic), !is_not_multiallelic), na.rm = TRUE)
+  cli::cli_alert_info(
+    c(
+      "{.fun filter_multiallelic}: removed {.val {n_filt}} sites",
+      " from {.val {n_in}} ({.val {nrow(se)}} remain)"
+    )
+  )
+
   se
 }
 
@@ -87,25 +97,10 @@ get_splice_sites <- function(txdb, slop = 4) {
 #'
 #' @examples
 #' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
-#'   library(SummarizedExperiment)
-#'   nrows <- 5
-#'   ncols <- 6
-#'   counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
-#'   rowRanges <- GRanges(rep("chr1", 5),
-#'     IRanges(c(12055, 12174, 12194, 12719, 12889), width = 1),
-#'     strand = rep("+", 5)
+#'   filter_splice_variants(
+#'     rse_adar_ifn,
+#'     TxDb.Hsapiens.UCSC.hg38.knownGene
 #'   )
-#'   colData <- DataFrame(
-#'     Treatment = rep(c("adar_wt", "adar_ko"), 3),
-#'     row.names = LETTERS[1:6]
-#'   )
-#'   rse <- SummarizedExperiment(
-#'     assays = SimpleList(counts = counts),
-#'     rowRanges = rowRanges, colData = colData
-#'   )
-#'
-#'   se <- filter_splice_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
-#'   se
 #' }
 #'
 #' @importFrom GenomicFeatures intronsByTranscript
@@ -114,10 +109,20 @@ get_splice_sites <- function(txdb, slop = 4) {
 filter_splice_variants <- function(se, txdb,
                                    splice_site_dist = 4,
                                    ignore.strand = FALSE) {
+  n_in <- nrow(se)
   ss <- get_splice_sites(txdb, splice_site_dist)
   x <- rowRanges(se)
   fo <- findOverlaps(x, ss, type = "any", ignore.strand = ignore.strand)
   to_keep <- setdiff(1:length(x), unique(queryHits(fo)))
+
+  n_filt <- length(to_keep)
+  cli::cli_alert_info(
+    c(
+      "{.fun filter_splice_variants}: removed {.val {n_in - n_filt}} sites",
+      " from {.val {n_in}} ({.val {n_filt}} remain)"
+    )
+  )
+
   se[to_keep, ]
 }
 
@@ -137,26 +142,12 @@ filter_splice_variants <- function(se, txdb,
 #'
 #' @examples
 #' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
-#'   library(SummarizedExperiment)
-#'   nrows <- 5
-#'   ncols <- 6
-#'   counts <- matrix(runif(nrows * ncols, 1, 1e4), nrows)
-#'   rowRanges <- GRanges(rep("chr1", 5),
-#'     IRanges(c(12055, 12174, 12194, 12719, 12889), width = 1),
-#'     strand = rep("+", 5)
-#'   )
-#'   mcols(rowRanges)$Var <- c("AG", "AT", "AC", "TC", "GC")
-#'   colData <- DataFrame(
-#'     Treatment = rep(c("adar_wt", "adar_ko"), 3),
-#'     row.names = LETTERS[1:6]
-#'   )
-#'   rse <- SummarizedExperiment(
-#'     assays = SimpleList(counts = counts),
-#'     rowRanges = rowRanges, colData = colData
-#'   )
+#'   rse <- filter_multiallelic(rse_adar_ifn)
 #'
-#'   se <- filter_clustered_variants(rse, TxDb.Hsapiens.UCSC.hg38.knownGene)
-#'   se
+#'   filter_clustered_variants(
+#'     rse,
+#'     TxDb.Hsapiens.UCSC.hg38.knownGene
+#'   )
 #' }
 #'
 #' @family se-filters
@@ -176,6 +167,8 @@ filter_clustered_variants <- function(se, txdb,
   if (length(setdiff(regions, c("transcript", "genome"))) > 0) {
     stop("only transcript and/or genome are valid arguments for region")
   }
+
+  n_in <- nrow(se)
 
   x <- rowRanges(se)
 
@@ -209,6 +202,16 @@ filter_clustered_variants <- function(se, txdb,
     tx_sites <- tx_sites[as.integer(to_drop)]
     x <- x[setdiff(1:length(x), unique(tx_sites$xHits))]
   }
+
+  n_out <- length(x)
+
+  cli::cli_alert_info(
+    c(
+      "{.fun filter_clustered_variants}: removed {.val {n_in - n_out}} sites",
+      " from {.val {n_in}} ({.val {n_out}} remain)"
+    )
+  )
+
   se[names(x), ]
 }
 
