@@ -65,7 +65,18 @@ typedef struct {
 } trim_t;
 
 typedef struct {
-  int min_mq, flag, min_baseQ, max_depth, all, multi, output_reads;
+  int min_global_mq, flag, min_bq, min_depth, max_depth, output_reads;
+  int report_multiallelics, multi_itr, ignore_query_Ns, in_memory;
+  int nmer, splice_dist, indel_dist;
+  int n_mm_type, n_mm, min_overhang, min_var_reads;
+  int nbam, nfps;
+  double min_af;
+  int umi;
+  char *umi_tag;
+  int *min_mqs; // across all bam files
+  int *libtype; // across all bam files
+  int *only_keep_variants; // across all bam files
+  trim_t trim;
   read_qual_t read_qual;
   uint32_t keep_flag[2];
   char *reg, *fai_fname, *output_fname;
@@ -74,11 +85,6 @@ typedef struct {
   rnhash_t rnames;
   strhash_t brhash;
   FILE *reads_fp;
-  int umi;
-  char *umi_tag;
-  trim_t trim;
-  int nmer, splice_dist, indel_dist, trim_5p_dist, trim_3p_dist;
-  int n_mm_type, n_mm, min_overhang, min_var_reads;
 } mplp_conf_t;
 
 typedef struct {
@@ -103,8 +109,6 @@ typedef struct {
   int *n_plp, *m_plp;
   bam_pileup1_t **plp;
 } mplp_pileup_t;
-
-
 
 void clear_varhash_set(varhash_t vhash)
 {
@@ -388,14 +392,14 @@ static int readaln(void *data, bam1_t *b) {
     if (~test_flag & 2047u){ skip = 1; continue;}
 
     // test overlap
-    if (g->conf->bed && !g->conf->multi) {
+    if (g->conf->bed && !g->conf->multi_itr) {
       skip = !bed_overlap(g->conf->bed, sam_hdr_tid2name(g->h, b->core.tid), b->core.pos, bam_endpos(b));
       if (skip) continue;
     }
 
     skip = 0;
     // check mapping quality
-    if (b->core.qual < g->conf->min_mq) {
+    if (b->core.qual < g->conf->min_global_mq) {
       skip = 1;
     } else if ((b->core.flag&BAM_FPAIRED) && !(b->core.flag&BAM_FPROPER_PAIR)){
       skip = 1;
@@ -947,28 +951,8 @@ static int check_umi(const bam_pileup1_t *p, mplp_conf_t *conf,
   return(1);
 }
 
-SEXP run_pileup(char** cbampaths,
-                int n,
-                char* cfapath,
-                char* cregion,
-                int in_mem,
-                int multi_region_itr,
-                const char** coutfns,
-                const char* cbedfn,
-                int min_reads,
-                int max_depth,
-                int min_baseQ,
-                int* min_mapQ,
-                int* libtype,
-                int* b_flags,
-                int* int_filters,
-                int* only_keep_variants,
-                const char* reads_fn,
-                char* mismatches,
-                double* read_bqual_filter,
-                SEXP ext,
-                char* umi_tag,
-                double* fraction_trim) {
+static int run_pileup(char** cbampaths, const char** coutfns,
+                      PLP_DATA pd, mplp_conf_t *conf) {
 
   hts_set_log_level(HTS_LOG_ERROR);
 
@@ -976,121 +960,29 @@ SEXP run_pileup(char** cbampaths,
   int i, tid, *n_plp, ret = 0;
   hts_pos_t pos, beg0 = 0, end0 = INT32_MAX, ref_len;
 
-  if(min_baseQ < 0) min_baseQ = 0;
-  if(!max_depth) max_depth = 10000;
-
   const bam_pileup1_t **plp;
   mplp_ref_t mp_ref = MPLP_REF_INIT;
   bam_mplp_t iter;
   bam_hdr_t *h = NULL; /* header of first file in input list */
   char *ref;
 
-  SEXP result = PROTECT(pileup_result_init(n));
-  PLP_DATA pd = init_PLP_DATA(result,  n);
-
-  if(!in_mem) pd->fps = R_Calloc(n + 1, FILE*);
-
-  mplp_pileup_t gplp;
-
-  mplp_conf_t mplp;
-  mplp_conf_t *conf;
-  memset(&mplp, 0, sizeof(mplp_conf_t));
-  conf = &mplp;
-
-  memset(&gplp, 0, sizeof(mplp_pileup_t));
-  data = calloc(n, sizeof(mplp_aux_t*));
-  plp = calloc(n, sizeof(bam_pileup1_t*));
-  n_plp = calloc(n, sizeof(int));
-
-  if(cfapath){
-    conf->fai_fname = cfapath;
-    conf->fai = fai_load(conf->fai_fname);
-  }
-  // load and index bed intervals or use pointer to index
-  // optionally build a multi-region iterator
-  if(cbedfn){
-    conf->bed = bed_read(cbedfn);
-    conf->multi = multi_region_itr;
-  } else if (!Rf_isNull(ext)){
-    _BED_FILE *ffile = BEDFILE(ext) ;
-    if (ffile->index == NULL){
-      Rf_error("Failed to load bed index");
-    }
-    conf->bed = ffile->index;
-    conf->multi = multi_region_itr;
-  }
-  // single region for pileup
-  if(cregion) conf->reg = cregion;
-
-  if(mismatches){
-    int chk = 0;
-    if(n > 1){
-      Rf_error("unable to exclude bad reads with multiple input files");
-    }
-    conf->brhash = kh_init(str);
-    if (conf->brhash == NULL) {
-      Rf_error("issue building hash");
-    }
-    chk = populate_lookup_from_file(conf->brhash, mismatches);
-    if(chk < 0){
-      Rf_error("issue building hash");
-    }
-  }
-
-  // if multiple bam files, use minimum mapQ for initial filtering,
-  // then later filter in pileup loop
-  if(min_mapQ[0] >= 0) {
-    int mq;
-    mq = min_mapQ[0];
-    for(int i = 0; i < n; ++i){
-      if(min_mapQ[i] < mq){
-        mq = min_mapQ[i];
-      }
-    }
-    conf->min_mq = mq;
-  }
-
-  if(b_flags){
-    conf->keep_flag[0] = b_flags[0];
-    conf->keep_flag[1] = b_flags[1];
-  }
-
-  conf->trim.i5p = int_filters[0];
-  conf->trim.i3p = int_filters[1];
-  conf->splice_dist = int_filters[2];
-  conf->indel_dist = int_filters[3];
-  conf->nmer = int_filters[4];
-  conf->n_mm_type = int_filters[5];
-  conf->n_mm = int_filters[6];
-  conf->min_overhang = int_filters[7];
-  conf->min_var_reads = int_filters[8];
-
-  if(read_bqual_filter){
-    conf->read_qual.pct = read_bqual_filter[0];
-    conf->read_qual.minq = (int)read_bqual_filter[1];
-  }
-  if(fraction_trim){
-    conf->trim.f5p = fraction_trim[0];
-    conf->trim.f3p = fraction_trim[1];
-  }
-
-  if(umi_tag){
-    conf->umi = 1;
-    conf->umi_tag = umi_tag;
-  }
+  data = calloc(conf->nbam, sizeof(mplp_aux_t*));
+  plp = calloc(conf->nbam, sizeof(bam_pileup1_t*));
+  n_plp = calloc(conf->nbam, sizeof(int));
 
   // read the header of each file in the list and initialize data
-  for (i = 0; i < n; ++i) {
+  for (i = 0; i < conf->nbam; ++i) {
     bam_hdr_t *h_tmp;
     data[i] = calloc(1, sizeof(mplp_aux_t));
     data[i]->fp = sam_open(cbampaths[i], "rb");
     if ( !data[i]->fp ) {
-      Rf_error("failed to open %s: %s\n", cbampaths[i], strerror(errno));
+      Rf_error("[raer internal] failed to open %s: %s\n",
+               cbampaths[i], strerror(errno));
     }
     if (conf->fai_fname) {
       if (hts_set_fai_filename(data[i]->fp, conf->fai_fname) != 0) {
-        Rf_error("failed to process %s: %s\n",
-                 cfapath, strerror(errno));
+        Rf_error("[raer internal] failed to process %s: %s\n",
+                 conf->fai_fname, strerror(errno));
       }
     }
     data[i]->conf = conf;
@@ -1119,7 +1011,7 @@ SEXP run_pileup(char** cbampaths,
       }
       hts_idx_destroy(idx);
 
-    } else if (conf->bed && conf->multi){
+    } else if (conf->bed && conf->multi_itr){
       data[i]->idx = sam_index_load(data[i]->fp, cbampaths[i]) ;
 
       if (data[i]->idx == NULL) {
@@ -1159,27 +1051,20 @@ SEXP run_pileup(char** cbampaths,
     }
   }
 
-  if (reads_fn){
-    conf->output_reads = 1;
-    conf->reads_fp = fopen(R_ExpandFileName(reads_fn), "w");
-    if (!conf->reads_fp) {
-      Rf_error("failed to open %s: %s\n",R_ExpandFileName(reads_fn), strerror(errno));
-    }
-    conf->rnames = kh_init(rname);
-  }
 
-  iter = bam_mplp_init(n, readaln, (void**)data);
+  iter = bam_mplp_init(conf->nbam, readaln, (void**)data);
 
   // return type void in rhtslib (htslib v 1.7), current v1.14 htslib returns int
   // enable overlap detection
   ret = bam_mplp_init_overlaps(iter) ;
   if(ret < 0) {
     REprintf("[raer internal] issue initializing iterator");
+    ret = -1;
     goto fail;
   }
 
   // set max depth
-  bam_mplp_set_maxcnt(iter, max_depth);
+  bam_mplp_set_maxcnt(iter, conf->max_depth);
 
   if (!iter) {
     REprintf("[raer internal] issue setting max depth on iterator");
@@ -1188,19 +1073,8 @@ SEXP run_pileup(char** cbampaths,
   }
 
   pcounts *plpc;
-  plpc = R_Calloc(n, pcounts);
-  for (i = 0; i < n + 1; ++i) {
-     if(!in_mem){
-       // initialize output files
-       pd->fps[i] = fopen(R_ExpandFileName(coutfns[i]), "w");
-       if (pd->fps[i] == NULL) {
-         REprintf("Failed to open file outputfile %s\n", R_ExpandFileName(coutfns[i]));
-         ret = -1;
-         goto fail;
-       }
-     }
-  }
-  for (i = 0; i < n; ++i) {
+  plpc = R_Calloc(conf->nbam, pcounts);
+  for (i = 0; i < conf->nbam; ++i) {
      plpc[i].pc = R_Calloc(1, counts);
      plpc[i].mc = R_Calloc(1, counts);
 
@@ -1222,11 +1096,25 @@ SEXP run_pileup(char** cbampaths,
 
   double *stats = R_Calloc(4, double);
 
+  if(!conf->in_memory) pd->fps = R_Calloc(conf->nfps, FILE*);
+  for (i = 0; i < conf->nfps; ++i) {
+    if(!conf->in_memory){
+      // initialize output files
+      pd->fps[i] = fopen(R_ExpandFileName(coutfns[i]), "w");
+      if (pd->fps[i] == NULL) {
+        REprintf("[raer internal] Failed to open file outputfile %s\n",
+                 R_ExpandFileName(coutfns[i]));
+        ret = -1;
+        goto fail;
+      }
+    }
+  }
+
   int last_tid = -1;
   int n_iter = 0;
   while ((ret = bam_mplp64_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
 
-    if (cregion && (pos < beg0 || pos >= end0)) continue; // not in of single region requested
+    if (conf->reg && (pos < beg0 || pos >= end0)) continue; // not in of single region requested
 
     mplp_get_ref(data[0], tid, &ref, &ref_len); // not in of single region requested
     if (tid < 0) break;
@@ -1234,6 +1122,8 @@ SEXP run_pileup(char** cbampaths,
     // check user interrupt, using a 2^k value is 2-3x faster than say 1e6
     if (n_iter % 262144 == 0) {
       if(checkInterrupt()){
+        REprintf("[raer internal] user interrupt detected");
+        ret = -1;
         goto fail;
       }
     }
@@ -1256,24 +1146,24 @@ SEXP run_pileup(char** cbampaths,
     // reset count structure
     clear_pall_counts(pall);
     memset(stats, 0, sizeof(double) * 4);
-    for(i = 0; i < n; ++i){
+    for(i = 0; i < conf->nbam; ++i){
       clear_pcounts(&plpc[i]);
     }
 
     // check if site is in a homopolymer
     if(conf->nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, conf->nmer)) continue;
 
-    // check if read count less than min_reads
+    // check if read count less than min_depth
     int pass_reads = 0;
-    for(i = 0; i < n; ++i){
-      if (n_plp[i] >= min_reads) {
+    for(i = 0; i < conf->nbam; ++i){
+      if (n_plp[i] >= conf->min_depth) {
         pass_reads = 1;
       }
     }
     if(!pass_reads) continue;
 
     // iterate through bam files
-    for (i = 0; i < n; ++i) {
+    for (i = 0; i < conf->nbam; ++i) {
       int j;
   	  // iterate through reads that overlap position
       for (j = 0; j < n_plp[i]; ++j) {
@@ -1286,15 +1176,15 @@ SEXP run_pileup(char** cbampaths,
         : 'N';
 
         // store base counts based on library type and r1/r2 status
-        int invert = invert_read_orientation(p->b, libtype[i]);
+        int invert = invert_read_orientation(p->b, conf->libtype[i]);
         if(invert < 0){
-          REprintf("[internal] invert read orientation failure %i\n", invert);
+          REprintf("[raer internal] invert read orientation failure %i\n", invert);
           ret = -1;
           goto fail;
         }
 
         // remove bad reads
-        int rret = check_read_filters(p, conf, min_baseQ, min_mapQ[i]);
+        int rret = check_read_filters(p, conf, conf->min_bq, conf->min_mqs[i]);
 
         // only keep first read with a UMI tag per position
         if(conf->umi){
@@ -1340,24 +1230,22 @@ SEXP run_pileup(char** cbampaths,
    if(sres < 0) {ret = -1; goto fail;}
 
     // write or store records if pass depth criteria
-    store_counts(pd, plpc, only_keep_variants, n, min_reads, sam_hdr_tid2name(h, tid),
+    store_counts(pd, plpc, conf->only_keep_variants,
+                 conf->nbam, conf->min_depth, sam_hdr_tid2name(h, tid),
                  pos, pref_b, mref_b,
-                 in_mem, conf->min_var_reads, stats);
+                 conf->in_memory, conf->min_var_reads, stats);
   }
 
 fail:
-  if(in_mem) finish_PLP_DATA(pd);
+  if(conf->in_memory) finish_PLP_DATA(pd);
 
   bam_mplp_destroy(iter);
   bam_hdr_destroy(h);
 
-  for (i = 0; i < gplp.n; ++i) free(gplp.plp[i]);
-  free(gplp.plp); free(gplp.n_plp); free(gplp.m_plp);
-
-  for (i = 0; i < n; ++i) {
+  for (i = 0; i < conf->nbam; ++i) {
     sam_close(data[i]->fp);
     if(data[i]->iter) hts_itr_destroy(data[i]->iter);
-    if(multi_region_itr && data[i]->idx) hts_idx_destroy(data[i]->idx);
+    if(conf->multi_itr && data[i]->idx) hts_idx_destroy(data[i]->idx);
     free(data[i]);
     clear_pcounts(&plpc[i]);
     kh_destroy(varhash, plpc[i].mc->var);
@@ -1367,8 +1255,8 @@ fail:
     R_Free(plpc[i].pc); R_Free(plpc[i].mc);
 
   }
-  if(!in_mem) {
-    for (i = 0; i < n + 1; ++i) {fclose(pd->fps[i]);}
+  if(!conf->in_memory) {
+    for (i = 0; i < conf->nfps; ++i) {fclose(pd->fps[i]);}
   }
   free(data); free(plp); free(n_plp);
   free(mp_ref.ref[0]);
@@ -1382,8 +1270,7 @@ fail:
   if(pd->fps) R_Free(pd->fps);
   R_Free(pd->pdat);
   if (conf->fai) fai_destroy(conf->fai);
-  // don't destroy index if passed from R
-  if (conf->bed && Rf_isNull(ext)) bed_destroy(conf->bed);
+  if (conf->bed) bed_destroy(conf->bed);
 
   if (conf->output_reads) {
     clear_rname_set(conf->rnames);
@@ -1391,50 +1278,17 @@ fail:
     fclose(conf->reads_fp);
   }
 
-  if (mismatches) {
-    khint_t k;
-    for (k = 0; k < kh_end(conf->brhash); ++k){
-      if (kh_exist(conf->brhash, k)) free((char*)kh_key(conf->brhash, k));
-    }
-    kh_destroy(str, conf->brhash);
-  }
   if(stats) R_Free(stats);
 
-  UNPROTECT(1);
-
-  if(ret < 0) Rf_error("error detected during pileup");
-
-  if(in_mem){
-    return pd->result;
-  } else {
-    return Rf_ScalarInteger(ret);
-  }
+  return ret;
 }
 
 
-static void check_plp_args(SEXP bampaths,
-              SEXP n,
-              SEXP fapath,
-              SEXP region,
-              SEXP in_mem,
-              SEXP multi_region_itr,
-              SEXP outfns,
-              SEXP bedfn,
-              SEXP min_reads,
-              SEXP max_depth,
-              SEXP min_baseQ,
-              SEXP min_mapQ,
-              SEXP libtype,
-              SEXP b_flags,
-              SEXP event_filters,
-              SEXP only_keep_variants,
-              SEXP reads_fn,
-              SEXP mismatches_fn,
-              SEXP read_bqual_filter,
-              SEXP ext,
-              SEXP umi,
-              SEXP fraction_trim) {
-
+static void check_plp_args(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP bedfn,
+                           SEXP int_args, SEXP dbl_args, SEXP lgl_args,
+                           SEXP libtype, SEXP only_keep_variants, SEXP min_mapQ,
+                           SEXP in_mem, SEXP multi_region_itr, SEXP outfns,
+                           SEXP reads_fn, SEXP mismatches_fn, SEXP umi) {
   if(!IS_INTEGER(n) || (LENGTH(n) != 1)){
     Rf_error("'n' must be integer(1)");
   }
@@ -1456,12 +1310,23 @@ static void check_plp_args(SEXP bampaths,
     Rf_error("'bedfn' must be character of length 0 or 1");
   }
 
-  if(!IS_LOGICAL(in_mem) || (LENGTH(in_mem) != 1)){
-    Rf_error("'in_mem' must be logical(1)");
+  // vectors populated with parameters of fixed sizes
+  if(!IS_INTEGER(int_args) || (LENGTH(int_args) != 14)){
+    Rf_error("'int_args' must be integer of length 14");
   }
 
-  if(!IS_LOGICAL(multi_region_itr) || (LENGTH(multi_region_itr) != 1)){
-    Rf_error("'multi_region_itr' must be logical(1)");
+  if(!IS_INTEGER(dbl_args) || (LENGTH(dbl_args) != 10)){
+    Rf_error("'dbl_args' must be numeric of length XXX");
+  }
+
+  if(!IS_INTEGER(lgl_args) || (LENGTH(lgl_args) != 10)){
+    Rf_error("'lgl_args' must be logical of length XXX");
+  }
+
+
+  // args depending on n_files
+  if(!IS_INTEGER(libtype) || (LENGTH(libtype) != n_files)){
+    Rf_error("'lib_type' must be integer of same length as bamfiles");
   }
 
   if(!IS_LOGICAL(only_keep_variants) || (LENGTH(only_keep_variants) != n_files)){
@@ -1472,100 +1337,152 @@ static void check_plp_args(SEXP bampaths,
     Rf_error("'min_mapQ' must be integer of same length as bamfiles");
   }
 
-  if(!IS_INTEGER(libtype) || (LENGTH(libtype) != n_files)){
-    Rf_error("'lib_type' must be integer of same length as bamfiles");
+  // other args
+  if(!IS_LOGICAL(in_mem) || (LENGTH(in_mem) != 1)){
+    Rf_error("'in_mem' must be logical(1)");
   }
 
-  if(!IS_INTEGER(b_flags) || (LENGTH(b_flags) != 2)){
-     Rf_error("'b_flags' must be integer of length 2");
+  if(!IS_LOGICAL(multi_region_itr) || (LENGTH(multi_region_itr) != 1)){
+    Rf_error("'multi_region_itr' must be logical(1)");
   }
 
   if(!LOGICAL(in_mem)[0] && (!IS_CHARACTER(outfns) || (LENGTH(outfns) != n_files + 1))){
     Rf_error("'outfns' must be character vector equal in length to number of bam files + 1");
   }
 
-  if(!IS_INTEGER(min_reads) || (LENGTH(min_reads) != 1)){
-    Rf_error("'min_reads' must be integer(1)");
-  }
-
-  if(!IS_INTEGER(max_depth) || (LENGTH(max_depth) != 1)){
-    Rf_error("'max_depth' must be integer(1)");
-  }
-
-  if(!IS_INTEGER(min_baseQ) || (LENGTH(min_baseQ) != 1)){
-    Rf_error("'min_baseQ' must be integer(1)");
-  }
-
   if(!IS_CHARACTER(reads_fn) || (LENGTH(reads_fn) > 1)){
-     Rf_error("'reads_fn' must be character of length 0 or 1");
+    Rf_error("'reads_fn' must be character of length 0 or 1");
   }
 
   if(!IS_CHARACTER(mismatches_fn) || (LENGTH(mismatches_fn) > 1)){
-     Rf_error("'mismatches_fn' must be character of length 0 or 1");
-  }
-
-  if(!IS_NUMERIC(read_bqual_filter) || (LENGTH(read_bqual_filter) != 2)){
-     Rf_error("'read_bqual_filter' must be numeric of length 2");
-  }
-
-  if(!IS_INTEGER(event_filters) || (LENGTH(event_filters) != 9)){
-     Rf_error("'event_filters' must be integer of length 9");
+    Rf_error("'mismatches_fn' must be character of length 0 or 1");
   }
 
   if(!IS_CHARACTER(umi) || (LENGTH(umi) > 1)){
     Rf_error("'umi' must be character of length 0 or 1");
   }
 
-  if(!IS_NUMERIC(fraction_trim) || (LENGTH(fraction_trim) != 2)){
-    Rf_error("'fraction_trim' must be numeric of length 2");
-  }
 }
 
-SEXP pileup(SEXP bampaths,
-            SEXP n,
-            SEXP fapath,
-            SEXP region,
-            SEXP bedfn,
-            SEXP min_reads,
-            SEXP event_filters,
-            SEXP min_mapQ,
-            SEXP max_depth,
-            SEXP min_baseQ,
-            SEXP read_bqual_filter,
-            SEXP libtype,
-            SEXP b_flags,
-            SEXP only_keep_variants,
-            SEXP in_mem,
-            SEXP multi_region_itr,
-            SEXP outfns,
-            SEXP reads_fn,
-            SEXP mismatches_fn,
-            SEXP ext,
-            SEXP umi,
-            SEXP fraction_trim) {
+static int set_mplp_conf(mplp_conf_t *conf, int n_bams,
+                         char* fafn, char* qregion, char* bedfn,
+                         int* i_args, double* d_args, int* b_args,
+                         int* libtypes, int* keep_variants, int* min_mapqs,
+                         int in_memory, int multi_itr,
+                         char* reads_fn, char* mismatches_fn, char* umi){
+  int ret = 0;
+  if(n_bams <= 0) {
+    REprintf("[raer internal] invalid bam input");
+    return -1;
+  }
+  conf->nbam = n_bams;
+  conf->nfps = n_bams + 1; // 1 extra file stores the rowdata information
 
-  check_plp_args(bampaths,
-                 n,
-                 fapath,
-                 region,
-                 in_mem,
-                 multi_region_itr,
-                 outfns,
-                 bedfn,
-                 min_reads,
-                 max_depth,
-                 min_baseQ,
-                 min_mapQ,
-                 libtype,
-                 b_flags,
-                 event_filters,
-                 only_keep_variants,
-                 reads_fn,
-                 mismatches_fn,
-                 read_bqual_filter,
-                 ext,
-                 umi,
-                 fraction_trim);
+  if(fafn){
+    conf->fai_fname = fafn;
+    conf->fai = fai_load(conf->fai_fname);
+  }
+
+  // single region for pileup
+  if(qregion) conf->reg = qregion;
+
+  // load and index bed intervals
+  if(bedfn){
+    conf->bed = bed_read(bedfn);
+    conf->multi_itr = multi_itr;
+  }
+
+  conf->max_depth     = i_args[0];
+  conf->min_depth     = i_args[1];
+  conf->min_bq        = i_args[2];
+  conf->trim.i5p      = i_args[3];
+  conf->trim.i3p      = i_args[4];
+  conf->indel_dist    = i_args[5];
+  conf->splice_dist   = i_args[6];
+  conf->min_overhang  = i_args[7];
+  conf->nmer          = i_args[8];
+  conf->min_var_reads = i_args[9];
+  conf->n_mm_type     = i_args[10];
+  conf->n_mm          = i_args[11];
+  conf->keep_flag[0]  = i_args[12];
+  conf->keep_flag[1]  = i_args[13];
+
+  conf->trim.f5p       = d_args[0];
+  conf->trim.f3p       = d_args[1];
+  conf->min_af         = d_args[2];
+  conf->read_qual.minq = d_args[3];
+  conf->read_qual.pct  = d_args[4];
+
+  conf->report_multiallelics = b_args[0];
+  conf->ignore_query_Ns      = b_args[1];
+
+  conf->libtype            = libtypes;
+  conf->only_keep_variants = keep_variants;
+
+  // if multiple bam files, use minimum mapQ for initial filtering,
+  // then later filter in pileup loop
+  conf->min_mqs = min_mapqs;
+  if(min_mapqs[0] > 0) {
+    int mq;
+    mq = min_mapqs[0];
+    for(int i = 0; i < n_bams; ++i){
+      if(min_mapqs[i] < mq){
+        mq = min_mapqs[i];
+      }
+    }
+    conf->min_global_mq = mq;
+  }
+
+  conf->in_memory = in_memory;
+
+  if(reads_fn){
+    conf->output_reads = 1;
+    conf->reads_fp = fopen(R_ExpandFileName(reads_fn), "w");
+    if (!conf->reads_fp) {
+      REprintf("[raer internal ]failed to open %s: %s\n",
+               R_ExpandFileName(reads_fn), strerror(errno));
+      return -1;
+    }
+    conf->rnames = kh_init(rname);
+  }
+
+  if(mismatches_fn){
+    int chk = 0;
+    if(n_bams > 1){
+      REprintf("[raer internal] exclude bad reads only works with 1 input bam");
+      return -1;
+    }
+    conf->brhash = kh_init(str);
+    if (conf->brhash == NULL) {
+      REprintf("[raer internal] issue building mismatches hash");
+      return -1;
+    }
+    chk = populate_lookup_from_file(conf->brhash, mismatches_fn);
+    if(chk < 0){
+      REprintf("[raer internal] issue building mismatches hash");
+      return -1;
+    }
+  }
+
+  if(umi){
+    conf->umi = 1;
+    conf->umi_tag = umi;
+  }
+
+  return ret;
+}
+
+SEXP pileup(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP bedfn,
+            SEXP int_args, SEXP dbl_args, SEXP lgl_args,
+            SEXP libtype, SEXP only_keep_variants, SEXP min_mapQ,
+            SEXP in_mem, SEXP multi_region_itr, SEXP outfns,
+            SEXP reads_fn, SEXP mismatches_fn, SEXP umi) {
+
+  check_plp_args(bampaths, n, fapath, region, bedfn,
+                 int_args, dbl_args, lgl_args,
+                 libtype, only_keep_variants, min_mapQ,
+                 in_mem, multi_region_itr, outfns,
+                 reads_fn, mismatches_fn, umi);
 
   int i;
   char ** cbampaths = (char **) R_alloc(sizeof(const char *), Rf_length(bampaths));
@@ -1573,18 +1490,19 @@ SEXP pileup(SEXP bampaths,
     cbampaths[i] = (char *) translateChar(STRING_ELT(bampaths, i));
   }
 
-  const char *cbedfn = LENGTH(bedfn) == 0 ?
-    NULL : translateChar(STRING_ELT(bedfn, 0));
+  char * cfafn = (char *) translateChar(STRING_ELT(fapath, 0));
+
+  char *cbedfn =  LENGTH(bedfn) == 0 ?
+    NULL : (char *) translateChar(STRING_ELT(bedfn, 0));
 
   char *cregion = LENGTH(region) == 0 ?
     NULL : (char *) translateChar(STRING_ELT(region, 0));
 
-  const char *creads_fn = LENGTH(reads_fn) == 0 ?
-    NULL : translateChar(STRING_ELT(reads_fn, 0));
+  char *creads_fn = LENGTH(reads_fn) == 0 ?
+    NULL : (char *) translateChar(STRING_ELT(reads_fn, 0));
 
   char *cmismatches_fn = LENGTH(mismatches_fn) == 0 ?
     NULL : (char *) translateChar(STRING_ELT(mismatches_fn, 0));
-
 
   char *umi_tag = LENGTH(umi) == 0 ?
   NULL : (char *) translateChar(STRING_ELT(umi, 0));
@@ -1599,29 +1517,43 @@ SEXP pileup(SEXP bampaths,
     coutfns = NULL;
   }
 
-  SEXP res;
-  res = run_pileup(cbampaths,
-                    INTEGER(n)[0],
-                    (char *) translateChar(STRING_ELT(fapath, 0)), // already checked for length 1 and required arg
-                    cregion,
-                    LOGICAL(in_mem)[0],
-                    LOGICAL(multi_region_itr)[0],
-                    coutfns,
-                    cbedfn,
-                    INTEGER(min_reads)[0],
-                    INTEGER(max_depth)[0],
-                    INTEGER(min_baseQ)[0],
-                    INTEGER(min_mapQ),
-                    INTEGER(libtype),
-                    INTEGER(b_flags),
-                    INTEGER(event_filters),
-                    LOGICAL(only_keep_variants),
-                    creads_fn,
-                    cmismatches_fn,
-                    REAL(read_bqual_filter),
-                    ext,
-                    umi_tag,
-                    REAL(fraction_trim));
+  mplp_conf_t ga;
+  memset(&ga, 0, sizeof(mplp_conf_t));
+  int ret = 0;
+  int nbam = INTEGER(n)[0];
+  ret = set_mplp_conf(&ga, nbam, cfafn, cregion, cbedfn,
+                      INTEGER(int_args), REAL(dbl_args), LOGICAL(lgl_args),
+                      INTEGER(libtype), LOGICAL(only_keep_variants), INTEGER(min_mapQ),
+                      LOGICAL(in_mem)[0],  LOGICAL(multi_region_itr)[0],
+                      creads_fn, cmismatches_fn, umi_tag);
+  SEXP result;
+  PLP_DATA pd;
+  if(ret >= 0){
+    result = PROTECT(pileup_result_init(nbam));
+    pd = init_PLP_DATA(result,  nbam);
+    ret = run_pileup(cbampaths, coutfns, pd, &ga);
+    if(ret < 0) REprintf("[raer internal] error detected during pileup");
+  }
 
-  return res ;
+  // clean up
+  if (ga.fai) fai_destroy(ga.fai);
+  if (ga.bed) bed_destroy(ga.bed);
+  if (ga.output_reads) {
+    clear_rname_set(ga.rnames);
+    kh_destroy(rname, ga.rnames);
+    fclose(ga.reads_fp);
+  }
+
+  if (cmismatches_fn) {
+    khint_t k;
+    for (k = 0; k < kh_end(ga.brhash); ++k){
+      if (kh_exist(ga.brhash, k)) free((char*)kh_key(ga.brhash, k));
+    }
+    kh_destroy(str, ga.brhash);
+  }
+  UNPROTECT(1);
+  if(ga.in_memory){
+    return Rf_ScalarInteger(ret);
+  }
+  return result ;
 }

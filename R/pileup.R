@@ -14,10 +14,6 @@
 #' @param chroms chromosomes to process, not to be used with region
 #' @param filterParam object of class [FilterParam()] which specify various
 #'   filters to apply to reads and sites during pileup.
-#' @param bedidx A BedFile object, if supplied, pileup will use index generated
-#'   by [indexBed()]
-#' @param bam_flags bam flags to filter or keep, use [Rsamtools::scanBamFlag()]
-#'   to generate
 #' @param reads if supplied a fasta file will be written with reads that pass
 #'   filters and contain variants
 #' @param bad_reads a textfile containing read names to exclude from pileup.
@@ -93,8 +89,6 @@ pileup_sites <- function(bamfiles,
                        chroms = NULL,
                        filterParam = FilterParam(),
                        outfile_prefix = NULL,
-                       bedidx = NULL,
-                       bam_flags = NULL,
                        reads = NULL,
                        return_data = TRUE,
                        BPPARAM = SerialParam(),
@@ -203,35 +197,6 @@ pileup_sites <- function(bamfiles,
     )
   }
 
-  idx_ptr <- NULL
-  if (!is.null(bedidx)) {
-    if (!is(bedidx, "BedFile") & !(bedidx$open)) {
-      warning("bedidx not valid, setting to NULL")
-      idx_ptr <- NULL
-    }
-
-    if (is_null_extptr(bedidx$.extptr)) {
-      warning("bedidx pointer not valid, setting to NULL")
-      idx_ptr <- NULL
-    } else {
-      idx_ptr <- bedidx$.extptr
-    }
-    bedfile <- character()
-  }
-
-  if (is.null(bam_flags)) {
-    bam_flags <- Rsamtools::scanBamFlag(
-      isSecondaryAlignment = FALSE,
-      isNotPassingQualityCont = FALSE,
-      isDuplicate = FALSE,
-      isSupplementaryAlignment = FALSE
-    )
-  } else {
-    if (length(bam_flags) != 2 || !all(names(bam_flags) == c("keep0", "keep1"))) {
-      stop("bam_flags must be generated using Rsamtools::scanBamFlag()")
-    }
-  }
-
   if (!is.null(reads)) {
     if (!is.character(reads) | length(reads) != 1) {
       stop("reads must be a character vector of length 1")
@@ -256,41 +221,17 @@ pileup_sites <- function(bamfiles,
     umi_tag <- character()
   }
 
-  filterParam <- .adjustParams(filterParam, n_files)
-  fp <- .as.list_FilterParam(filterParam)
-
-  # encode libtype as
-  # 0 = genomic-unstranded  all reads on + strand
-  # 1 = fr-first-strand     strand based on R1/antisense, R2/sense
-  # 2 = fr-second-strand    strand based on R1/sense, R2/antisense
-  # 3 = unstranded          strand based on alignment
-  lib_values <- c(
-    "genomic-unstranded",
-    "fr-first-strand",
-    "fr-second-strand",
-    "unstranded"
+  ## set bam flags
+  bam_flags <- Rsamtools::scanBamFlag(
+    isSecondaryAlignment = FALSE,
+    isNotPassingQualityCont = FALSE,
+    isDuplicate = FALSE,
+    isSupplementaryAlignment = FALSE
   )
-  lib_code <- match(fp$library_type, lib_values)
-  if (any(is.na(lib_code))) {
-    stop("library_type must be one of :", paste(lib_values, collapse = " "))
-  } else {
-    lib_code <- lib_code - 1
-  }
 
-  if (length(lib_code) != n_files) {
-    lib_code <- rep(lib_code, n_files)
-  }
-  event_filters <- unlist(fp[c(
-    "trim_5p",
-    "trim_3p",
-    "splice_dist",
-    "indel_dist",
-    "homopolymer_len",
-    "max_mismatch_type",
-    "min_read_qual",
-    "min_splice_overhang",
-    "min_variant_reads"
-  )])
+  filterParam <- .adjustParams(filterParam, n_files)
+  fp <- .c_args_FilterParam(filterParam)
+
   run_in_parallel <- FALSE
   temp_bed_file <- FALSE
   if (is(BPPARAM, "SerialParam") || length(chroms_to_process) == 1) {
@@ -310,23 +251,15 @@ pileup_sites <- function(bamfiles,
       fafile,
       region,
       bedfile,
-      fp$min_nucleotide_depth,
-      event_filters,
-      fp$min_mapq,
-      fp$max_depth,
-      fp$min_base_quality,
-      fp$min_read_bqual,
-      as.integer(lib_code),
-      bam_flags,
-      fp$only_keep_variants,
+      fp[["int_args"]],
+      fp[["numeric_args"]],
+      fp[["lgl_args"]],
       in_memory,
       use_index,
       outfiles,
       reads,
       bad_reads,
-      idx_ptr,
-      umi_tag,
-      c(fp$ftrim_5p, fp$ftrim_3p)
+      umi_tag
     )
 
     if (!in_memory) {
@@ -387,7 +320,6 @@ pileup_sites <- function(bamfiles,
           tmp_outfiles,
           reads,
           bad_reads,
-          idx_ptr,
           umi_tag,
           c(fp$ftrim_5p, fp$ftrim_3p)
         )
@@ -617,43 +549,110 @@ empty_plp_record <- function() {
 #' @importFrom methods slot slot<- slotNames
 .FilterParam <- setClass(
   "FilterParam",
-  representation(
+  slots = c(
     max_depth = "integer",
+    min_depth = "integer",
     min_base_quality = "integer",
     min_mapq = "integer",
-    min_nucleotide_depth = "integer",
-    library_type = "character",
-    only_keep_variants = "logical",
-    ignore_query_Ns = "logical",
+    library_type = "integer",
+    bam_flags = "integer", # length 2
     trim_5p = "integer",
     trim_3p = "integer",
     indel_dist = "integer",
     splice_dist = "integer",
+    min_splice_overhang = "integer",
     homopolymer_len = "integer",
     max_mismatch_type = "integer", # length 2
-    min_read_bqual = "numeric", # length 2
-    min_splice_overhang = "integer",
     min_variant_reads = "integer",
+
+    only_keep_variants = "logical",
+    report_multiallelic = "logical",
+    ignore_query_Ns = "logical",
+
     ftrim_5p = "numeric",
-    ftrim_3p = "numeric"
+    ftrim_3p = "numeric",
+    read_bqual = "numeric", # length 2
+    min_allelic_freq = "numeric"
   )
 )
 
 setMethod(show, "FilterParam", function(object) {
   cat("class: ", class(object), "\n")
-  values <- sapply(slotNames(object), slot, object = object)
+  values <- unlist(lapply(slotNames(object), slot, object = object))
   info <- paste(slotNames(object), values, sep = ": ", collapse = "; ")
   cat(strwrap(info, exdent = 2), sep = "\n")
 })
 
-.as.list_FilterParam <- function(x, ...) {
+
+.encode_libtype <- function(library_type, n_files){
+  # encode libtype as integer
+  # 0 = genomic-unstranded  all reads on + strand
+  # 1 = fr-first-strand     strand based on R1/antisense, R2/sense
+  # 2 = fr-second-strand    strand based on R1/sense, R2/antisense
+  # 3 = unstranded          strand based on alignment
+  lib_values <- c(
+    "genomic-unstranded",
+    "fr-first-strand",
+    "fr-second-strand",
+    "unstranded"
+  )
+  lib_code <- match(fp$library_type, lib_values)
+  if (any(is.na(lib_code))) {
+    stop("library_type must be one of :", paste(lib_values, collapse = " "))
+  } else {
+    lib_code <- lib_code - 1
+  }
+
+  lib_code
+}
+
+.c_args_FilterParam <- function(x, ...) {
   slotnames <- slotNames(x)
   names(slotnames) <- slotnames
-  lapply(slotnames, slot, object = x)
+  fp <- lapply(slotnames, slot, object = x)
+
+  # consistent length args are populated into vectors
+  # note that unlisting will increase vector size greather than number of args
+  # (e.g. bam_flags will add 2 to vector)
+  int_args <- unlist(fp[c(
+    "max_depth",
+    "min_depth",
+    "min_base_quality",
+    "trim_5p",
+    "trim_3p",
+    "indel_dist",
+    "splice_dist",
+    "min_splice_overhang",
+    "homopolymer_len",
+    "min_variant_reads",
+    "max_mismatch_type", # length 2
+    "bam_flags" # length 2
+  )])
+
+  numeric_args <- unlist(fp[c(
+    "ftrim_5p",
+    "ftrim_3p",
+    "min_allelic_freq",
+    "read_bqual" # length 2
+  )])
+
+  lgl_args <- unlist(fp[c(
+    "report_multiallelic",
+    "ignore_query_Ns"
+  )])
+  # variable length args
+  # passed as separate args to c fxns
+
+  list(int_args = int_args,
+       numeric_args = numeric_args,
+       lgl_args = lgl_args,
+       library_type = fp[["library_type"]],
+       only_keep_variants = fp[["only_keep_variants"]],
+       min_mapq = fp[["min_mapq"]])
 }
 
 
-#' @param min_nucleotide_depth min read depth needed to report site
+#' @param min_depth min read depth needed to report site
 #' @param min_base_quality min base quality score to consider read for pileup
 #' @param max_depth maximum read depth considered at each site
 #' @param min_mapq minimum required MAPQ score, can be a vector of values
@@ -664,12 +663,16 @@ setMethod(show, "FilterParam", function(object) {
 #' genomic-unstranded will report all variants w.r.t the + strand.
 #' @param only_keep_variants if TRUE, then only variant sites will be reported
 #' (FALSE by default), can be a vector for each input bamfile
+#' @param bam_flags bam flags to filter or keep, use [Rsamtools::scanBamFlag()]
+#'   to generate.
 #' @param trim_5p Bases to trim from 5' end of read alignments
 #' @param trim_3p Bases to trim from 3' end of read alignments
 #' @param ftrim_5p Fraction of bases to trim from 5' end of read alignments
 #' @param ftrim_3p Fraction of bases to trim from 3' end of read alignments
 #' @param splice_dist Exclude read if site occurs within given
 #' distance from splicing event in the read
+#' @param min_splice_overhang Exclude read if site is located adjacent to splice
+#' site with an overhang of less than given length.
 #' @param indel_dist Exclude read if site occurs within given
 #' distance from indel event in the read
 #' @param homopolymer_len Exclude site if occurs within homopolymer of given
@@ -678,31 +681,30 @@ setMethod(show, "FilterParam", function(object) {
 #' (e.g A-to-G, G-to-C, C-to-G, is 3 mismatch types) or Y # of mismatches,
 #' must be supplied as a integer vector of length 2. e.g.
 #' c(X, Y).
-#' @param min_read_bqual Exclude read if more than X percent of the bases have
+#' @param read_bqual Exclude read if more than X percent of the bases have
 #' base qualities less than Y. Numeric vector of length 2. e.g. c(0.25, 20)
-#' @param min_splice_overhang Exclude read if site is located adjacent to splice
-#' site with an overhang of less than given length.
 #' @param min_variant_reads Required number of reads containing a variant for a site
 #' to be reported. Calculated per bam file, such that if 1 bam file has >= min_variant_reads,
 #' then the site will be reported.
+#' @param min_allelic_freq minimum allelic frequency required for a variant to be
+#' reported in Var assays.
+#' @param report_multiallelic if TRUE, report sites with multiple variants passing
+#' filters. If FALSE, site will not be reported.
 #' @param ignore_query_Ns ignored for now
-
 #'
 #' @rdname pileup_sites
 #' @export
 FilterParam <-
-  function(max_depth = 1e4, min_base_quality = 20L,
-           min_mapq = 0L, min_nucleotide_depth = 1L,
-           library_type = "fr-first-strand",
-           only_keep_variants = FALSE,
-           trim_5p = 0L, trim_3p = 0L,
-           ftrim_5p = 0, ftrim_3p = 0,
-           indel_dist = 0L,
-           splice_dist = 0L, homopolymer_len = 0L,
-           max_mismatch_type = c(0L, 0L), min_read_bqual = c(0.0, 0.0),
-           min_splice_overhang = 0L,
-           min_variant_reads = 0L,
-           ignore_query_Ns = FALSE) {
+  function(max_depth = 1e4, min_depth = 1L,min_base_quality = 20L,
+           min_mapq = 0L, library_type = "fr-first-strand",
+           bam_flags = NULL, only_keep_variants = FALSE,
+           trim_5p = 0L, trim_3p = 0L, ftrim_5p = 0, ftrim_3p = 0,
+           indel_dist = 0L,splice_dist = 0L,  min_splice_overhang = 0L,
+           homopolymer_len = 0L,
+           max_mismatch_type = c(0L, 0L), read_bqual = c(0.0, 0.0),
+           min_variant_reads = 0L, min_allelic_freq = 0.01,
+           report_multiallelic = TRUE, ignore_query_Ns = FALSE) {
+
     stopifnot(isSingleNumber(max_depth))
     stopifnot(isSingleNumber(min_base_quality))
     stopifnot(isSingleNumber(min_nucleotide_depth))
@@ -715,6 +717,7 @@ FilterParam <-
     stopifnot(isSingleNumber(min_variant_reads))
     stopifnot(isSingleNumber(ftrim_5p))
     stopifnot(isSingleNumber(ftrim_3p))
+    stopifnot(isSingleNumber(min_allelic_freq))
 
     max_depth <- as.integer(max_depth)
     min_base_quality <- as.integer(min_base_quality)
@@ -732,6 +735,7 @@ FilterParam <-
     min_variant_reads <- as.integer(min_variant_reads)
     ftrim_5p <- as.numeric(ftrim_5p)
     ftrim_3p <- as.numeric(ftrim_3p)
+    min_allelic_freq <- as.numeric(min_allelic_freq)
 
     stopifnot(ftrim_5p >= 0 && ftrim_5p <= 1)
     stopifnot(ftrim_3p >= 0 && ftrim_3p <= 1)
@@ -739,11 +743,23 @@ FilterParam <-
     stopifnot(length(max_mismatch_type) == 2 && !any(is.na(max_mismatch_type)))
     stopifnot(length(min_read_bqual) == 2 && !any(is.na(min_read_bqual)))
     stopifnot(isTRUEorFALSE(ignore_query_Ns))
+    stopifnot(isTRUEorFALSE(report_multiallelic))
 
     # variable length depending on n_files
     stopifnot(is.character(library_type))
     stopifnot(is.integer(min_mapq))
     stopifnot(is.logical(only_keep_variants))
+
+    if (is.null(bam_flags)) {
+      # defaults to allowing all reads
+      bam_flags <- Rsamtools::scanBamFlag()
+    } else {
+      if (length(bam_flags) != 2 || !all(names(bam_flags) == c("keep0", "keep1"))) {
+        stop("bam_flags must be generated using Rsamtools::scanBamFlag()")
+      }
+    }
+
+    library_type <- .encode_libtype(library_type)
 
     # to implement
     if (ignore_query_Ns) {
@@ -754,14 +770,17 @@ FilterParam <-
     ## creation
     .FilterParam(
       max_depth = max_depth, min_base_quality = min_base_quality,
-      min_mapq = min_mapq, min_nucleotide_depth = min_nucleotide_depth,
+      min_mapq = min_mapq, min_depth = min_depth,
       library_type = library_type, only_keep_variants = only_keep_variants,
       ignore_query_Ns = ignore_query_Ns,
       trim_5p = trim_5p, trim_3p = trim_3p, indel_dist = indel_dist,
       splice_dist = splice_dist, homopolymer_len = homopolymer_len,
-      max_mismatch_type = max_mismatch_type, min_read_bqual = min_read_bqual,
-      min_splice_overhang = min_splice_overhang, min_variant_reads = min_variant_reads,
-      ftrim_5p = ftrim_5p, ftrim_3p = ftrim_3p)
+      max_mismatch_type = max_mismatch_type, read_bqual = read_bqual,
+      min_splice_overhang = min_splice_overhang,
+      min_variant_reads = min_variant_reads,
+      ftrim_5p = ftrim_5p, ftrim_3p = ftrim_3p,
+      min_allelic_freq = min_allelic_freq, report_multiallelic = report_multiallelic,
+      bam_flags = bam_flags)
   }
 
 PILEUP_COLS <- c(
