@@ -13,8 +13,8 @@ sc_editing(
   tag_index_args = list(tag = "CB"),
   BPPARAM = SerialParam(),
   batch_size = 50,
-  bam_flags = NULL,
   umi_tag = "UB",
+  param = FilterParam(),
   verbose = TRUE,
   ...
 )
@@ -47,9 +47,10 @@ Batching the cells reduces run time by avoiding  loading sequences from the
 fasta file for each cell. Setting values above 50 is unlikely to further improve
 runtime.}
 
-\item{bam_flags}{See arguments for \verb{[pileup_sites()]}}
-
 \item{umi_tag}{See arguments for \verb{[pileup_sites()]}}
+
+\item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
+filters to apply to reads and sites during pileup.}
 
 \item{verbose}{Display messages}
 
@@ -79,7 +80,7 @@ se <- sc_editing(
   bedfile = raer_example("5k_neuron_sites.bed.gz"),
   cell_barcodes = cbs[1:15],
   verbose = FALSE,
-  filterParam = fp
+  param = fp
 )
 
 # pool cell barcodes across clusters
@@ -97,7 +98,7 @@ se <- sc_editing(
   cell_barcodes = cb_lst,
   umi_tag = NULL,
   verbose = FALSE,
-  filterParam = fp
+  param = fp
 )
 assays(se)$nA
 assays(se)$nG

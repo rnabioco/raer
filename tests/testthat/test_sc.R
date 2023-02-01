@@ -18,7 +18,7 @@ test_that("basic functionality works", {
     bedfile = raer_example("5k_neuron_sites.bed.gz"),
     cell_barcodes = cbs[1:15],
     verbose = FALSE,
-    filterParam = fp
+    param = fp
   )
   expect_equal(ncol(se), 15)
   expect_true(all(startsWith(colnames(se), "AAA")))
@@ -31,7 +31,7 @@ test_that("basic functionality works", {
     cell_barcodes = cb_lst,
     verbose = FALSE,
     umi_tag = NULL,
-    filterParam = fp
+    param = fp
   )
   expect_equal(ncol(se), 5)
   expect_true(all(startsWith(colnames(se), "cluster")))
@@ -58,7 +58,7 @@ test_that("umi deduplication works", {
     cell_barcodes = cbs[1:25],
     umi_tag = "UB",
     verbose = FALSE,
-    filterParam = fp
+    param = fp
   )
   se_noumi <- sc_editing(
     bamfile = bamfn,
@@ -67,7 +67,7 @@ test_that("umi deduplication works", {
     cell_barcodes = cbs[1:25],
     umi_tag = NULL,
     verbose = FALSE,
-    filterParam = fp
+    param = fp
   )
 
   av <- as.matrix(assays(se_umi)$nA)

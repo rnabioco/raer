@@ -10,8 +10,16 @@ bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")
 bedfn <- raer_example("regions.bed")
+res <- pileup_sites(bamfn, fafn,
+                    param = FilterParam(
+                      read_bqual = c(0.25, 20),
+                      min_base_quality = 0L,
+                      library_type = c("genomic-unstranded")
+                    )
+)
 
 res <- pileup_sites(bamfn, fafn, bedfn)
+
 
 test_that("pileup works", {
   expect_equal(length(rowData(res)$Ref), 182)
@@ -21,13 +29,13 @@ test_that("pileup works", {
 test_that("filtering for variants in pileup works", {
   vars <- res[assay(res, "Var")[, 1] != "-"]
   res_all_vars <- pileup_sites(bamfn, fafn, bedfn,
-    filterParam = FilterParam(only_keep_variants = TRUE)
+    param = FilterParam(only_keep_variants = TRUE)
   )
   expect_equal(nrow(res_all_vars), 2)
   expect_equal(vars, res_all_vars)
 
   res_2_vars <- pileup_sites(bamfn, fafn, bedfn,
-                             filterParam = FilterParam(min_variant_reads = 2))
+                             param = FilterParam(min_variant_reads = 2))
   expect_equal(nrow(res_2_vars), 1)
   expect_equal(vars[assay(vars, "nVar")[, 1] >= 2, ],
                res_2_vars)
@@ -36,7 +44,7 @@ test_that("filtering for variants in pileup works", {
 
 test_that("n-bam pileup works", {
   res <- pileup_sites(c(bamfn, bamfn), fafn, bedfn,
-    filterParam = FilterParam(library_type = c(
+    param = FilterParam(library_type = c(
       "fr-first-strand",
       "fr-first-strand"
     ))
@@ -50,7 +58,7 @@ test_that("n-bam pileup works", {
   expect_false(identical(res[, 1], res[, 2]))
 
   res <- pileup_sites(c(bamfn, bamfn), fafn, bedfn,
-    filterParam = FilterParam(library_type = c(
+    param = FilterParam(library_type = c(
       "fr-first-strand",
       "genomic-unstranded"
     ))
@@ -60,7 +68,7 @@ test_that("n-bam pileup works", {
   expect_true(no_nas)
 
   res <- pileup_sites(c(bamfn, bam2fn), fafn, bedfn,
-    filterParam = FilterParam(
+    param = FilterParam(
       library_type = "fr-first-strand",
       only_keep_variants = TRUE
     ),
@@ -71,13 +79,13 @@ test_that("n-bam pileup works", {
   expect_true(all(rowSums(assay(res, "Var") != "-") > 0))
 
   res <- pileup_sites(rep(bamfn, 4), fafn, bedfn,
-    filterParam = FilterParam(library_type = "fr-first-strand")
+    param = FilterParam(library_type = "fr-first-strand")
   )
   expect_true(ncol(res) == 4)
 
   # all sites in first bam are variant
   res <- pileup_sites(c(bamfn, bam2fn), fafn, bedfn,
-    filterParam = FilterParam(
+    param = FilterParam(
       library_type = "fr-first-strand",
       only_keep_variants = c(TRUE, FALSE)
     )
@@ -86,7 +94,7 @@ test_that("n-bam pileup works", {
 
   # all sites in second bam are variant
   res <- pileup_sites(c(bamfn, bam2fn), fafn, bedfn,
-    filterParam = FilterParam(
+    param = FilterParam(
       library_type = "fr-first-strand",
       only_keep_variants = c(FALSE, TRUE)
     )
@@ -120,7 +128,7 @@ test_that("missing files are caught", {
 
 test_that("library types are respected", {
   res <- pileup_sites(bamfn, fafn,
-    filterParam = FilterParam(library_type = "fr-first-strand")
+    param = FilterParam(library_type = "fr-first-strand")
   )
   expect_true(table(strand(res))["+"] == 619)
   expect_true(table(strand(res))["-"] == 1047)
@@ -128,7 +136,7 @@ test_that("library types are respected", {
   expect_true(all(strand(res[seqnames(res) == "SPCS3"]) == "+"))
 
   res <- pileup_sites(bamfn, fafn,
-    filterParam = FilterParam(library_type = "fr-second-strand")
+    param = FilterParam(library_type = "fr-second-strand")
   )
   expect_true(table(strand(res))["+"] == 1047)
   expect_true(table(strand(res))["-"] == 619)
@@ -136,17 +144,17 @@ test_that("library types are respected", {
   expect_true(all(strand(res[seqnames(res) == "SPCS3"]) == "-"))
 
   res <- pileup_sites(bamfn, fafn,
-    filterParam = FilterParam(library_type = "genomic-unstranded")
+    param = FilterParam(library_type = "genomic-unstranded")
   )
   expect_true(all(strand(res) == "+"))
 
   res <- pileup_sites(bamfn, fafn,
-    filterParam = FilterParam(library_type = "unstranded")
+    param = FilterParam(library_type = "unstranded")
   )
   expect_true(all(strand(res) %in% c("+", "-")))
 
   expect_error(pileup_sites(bamfn, fafn, bedfn,
-    filterParam = FilterParam(library_type = "unknown-string")
+    param = FilterParam(library_type = "unknown-string")
   ))
 })
 
@@ -167,7 +175,7 @@ test_that("pileup depth lims", {
   flt_cnts <- base_cnts[rowSums(base_cnts) >= 30, ]
 
   res <- pileup_sites(bamfn, fafn,
-    filterParam = FilterParam(min_nucleotide_depth = 30)
+    param = FilterParam(min_depth = 30)
   )
   base_cnts <- do.call(cbind, assays(res)[nt_clmns])
   expect_equal(base_cnts, base_cnts)
@@ -196,7 +204,7 @@ test_that("pileup check nRef and nVar", {
 
   for (strd in strds) {
     res <- pileup_sites(bamfn, fafn,
-                      filterParam = FilterParam(library_type = strd))
+                      param = FilterParam(library_type = strd))
     check_nRef_calc(res)
   }
 })
@@ -211,7 +219,7 @@ test_that("pileup check mapq filter", {
   )
   # enforce same colname in rse returned
   names(bout) <- basename(bamfn)
-  a <- pileup_sites(bamfn, fafn, filterParam = FilterParam(min_mapq = 255))
+  a <- pileup_sites(bamfn, fafn, param = FilterParam(min_mapq = 255))
   b <- pileup_sites(bout, fafn)
   expect_true(identical(a, b))
 })
@@ -223,7 +231,8 @@ test_that("pileup check flag filtering", {
     indexDestination = TRUE
   )
   names(bout) <- basename(bamfn)
-  a <- pileup_sites(bamfn, fafn, bedfn, bam_flags = scanBamFlag(isMinusStrand = F))
+  fp <- FilterParam(bam_flags = scanBamFlag(isMinusStrand = F))
+  a <- pileup_sites(bamfn, fafn, bedfn, param = fp)
   b <- pileup_sites(bout, fafn, bedfn)
   expect_true(identical(a, b))
 
@@ -233,7 +242,8 @@ test_that("pileup check flag filtering", {
     indexDestination = TRUE
   )
   names(bout) <- basename(bamfn)
-  a <- pileup_sites(bamfn, fafn, bedfn, bam_flags = scanBamFlag(isMinusStrand = T))
+  fp <- FilterParam(bam_flags = scanBamFlag(isMinusStrand = T))
+  a <- pileup_sites(bamfn, fafn, bedfn, param = fp)
   b <- pileup_sites(bout, fafn, bedfn)
   expect_true(identical(a, b))
 })
@@ -244,9 +254,9 @@ test_that("pileup read trimming filter works", {
   vec <- function(rse, assay, col = 1) unname(assays(rse)[[assay]][, col])
 
   a <- pileup_sites(bamfn, fafn, region = "SSR3:440-450")
-  b <- pileup_sites(bamfn, fafn, filterParam = FilterParam(trim_5p = 6), region = "SSR3:440-450")
-  d <- pileup_sites(bamfn, fafn, filterParam = FilterParam(trim_5p = 6, trim_3p = 6), region = "SSR3:440-450")
-  e <- pileup_sites(bamfn, fafn, filterParam = FilterParam(trim_3p = 6), region = "SSR3:440-450")
+  b <- pileup_sites(bamfn, fafn, param = FilterParam(trim_5p = 6), region = "SSR3:440-450")
+  d <- pileup_sites(bamfn, fafn, param = FilterParam(trim_5p = 6, trim_3p = 6), region = "SSR3:440-450")
+  e <- pileup_sites(bamfn, fafn, param = FilterParam(trim_3p = 6), region = "SSR3:440-450")
   ex1 <- c(0L, 0L, 0L, 1L, 1L, 1L, 1L, 1L, 1L, 0L, 0L)
   ex2 <- c(1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)
 
@@ -255,9 +265,9 @@ test_that("pileup read trimming filter works", {
   expect_equal(vec(a, "nRef") - vec(e, "nRef"), ex2)
 
   a <- pileup_sites(bamfn, fafn, region = "SSR3:128-130")
-  b <- pileup_sites(bamfn, fafn, filterParam = FilterParam(trim_5p = 6), region = "SSR3:128-130")
-  d <- pileup_sites(bamfn, fafn, filterParam = FilterParam(trim_5p = 6, trim_3p = 6), region = "SSR3:128-130")
-  e <- pileup_sites(bamfn, fafn, filterParam = FilterParam(trim_3p = 6), region = "SSR3:128-130")
+  b <- pileup_sites(bamfn, fafn, param = FilterParam(trim_5p = 6), region = "SSR3:128-130")
+  d <- pileup_sites(bamfn, fafn, param = FilterParam(trim_5p = 6, trim_3p = 6), region = "SSR3:128-130")
+  e <- pileup_sites(bamfn, fafn, param = FilterParam(trim_3p = 6), region = "SSR3:128-130")
   ex1 <- c(3L, 4L, 2L)
   ex2 <- c(3L, 2L, 0L)
   expect_equal(vec(a, "nRef") - vec(b, "nRef"), ex1)
@@ -269,7 +279,7 @@ test_that("pileup fractional read trimming filter works", {
   vec <- function(rse, assay, col = 1) unname(assays(rse)[[assay]][, col])
   test_plp_fxn <- function(...) {
     pileup_sites(bamfn, fafn, region = "SSR3:440-450",
-               filterParam = FilterParam(min_base_quality = 0,
+               param = FilterParam(min_base_quality = 0,
                                          ...))}
 
   a <- test_plp_fxn()
@@ -293,7 +303,7 @@ fa <- scanFa(fafn)
 hp_matches <- vmatchPattern(strrep("A", 6), fa) |> as("GRanges")
 
 test_that("pileup check homopolymer filter", {
-  a <- pileup_sites(bamfn, fafn, filterParam = FilterParam(homopolymer_len = 6))
+  a <- pileup_sites(bamfn, fafn, param = FilterParam(homopolymer_len = 6))
   b <- pileup_sites(bamfn, fafn)
   expect_false(identical(a, b))
 
@@ -312,7 +322,7 @@ test_that("filtering for splicing events works", {
   # (SPCS3  227, 347, 348)
   sites_near_splices <- rse[queryHits(findOverlaps(rse, splices, maxgap = 4))]
 
-  rse <- pileup_sites(bamfn, fafn, filterParam = FilterParam(splice_dist = 5))
+  rse <- pileup_sites(bamfn, fafn, param = FilterParam(splice_dist = 5))
   rse <- rse[assay(rse, "Var")[, 1] != "-"]
   bsites_near_splices <- rse[queryHits(findOverlaps(rse,
     splices,
@@ -333,14 +343,14 @@ test_that("filtering for indel events works", {
   cig_pos <- unique(GRanges(cig_ops))
 
   rse <- pileup_sites(bamfn, fafn,
-                    filterParam = FilterParam(min_base_quality = 1,
+                    param = FilterParam(min_base_quality = 1,
                                               only_keep_variants = TRUE))
 
   # SSR3 387 variant has 1 read with variant with indel 4 bp away
   # SRR3 388 variant has 1 read with variant 3bp away from indel
   sites_near_indels <- rse[queryHits(findOverlaps(rse, cig_pos))]
 
-  rse_b <- pileup_sites(bamfn, fafn, filterParam = FilterParam(
+  rse_b <- pileup_sites(bamfn, fafn, param = FilterParam(
     min_base_quality = 1,
     indel_dist = 5,
     only_keep_variants = TRUE
@@ -385,7 +395,7 @@ test_that("excluding reads with mismatches works", {
 
 test_that("filtering for read-level mismatches works", {
   rse <- pileup_sites(bamfn, fafn,
-    filterParam = FilterParam(
+    param = FilterParam(
       min_base_quality = 10,
       only_keep_variants = TRUE
     ),
@@ -395,7 +405,7 @@ test_that("filtering for read-level mismatches works", {
 
   rse <- pileup_sites(bamfn, fafn,
     region = "SSR3:244-247",
-    filterParam = FilterParam(
+    param = FilterParam(
       min_base_quality = 10,
       only_keep_variants = TRUE,
       max_mismatch_type = c(1, 1)
@@ -406,7 +416,7 @@ test_that("filtering for read-level mismatches works", {
 
   rse <- pileup_sites(bamfn, fafn,
     region = "SSR3:244-247",
-    filterParam = FilterParam(
+    param = FilterParam(
       min_base_quality = 10,
       only_keep_variants = TRUE,
       max_mismatch_type = c(0, 10)
@@ -416,7 +426,7 @@ test_that("filtering for read-level mismatches works", {
 
   rse <- pileup_sites(bamfn, fafn,
     region = "SSR3:244-247",
-    filterParam = FilterParam(
+    param = FilterParam(
       min_base_quality = 10,
       only_keep_variants = TRUE,
       max_mismatch_type = c(0, 1)
@@ -427,7 +437,7 @@ test_that("filtering for read-level mismatches works", {
 
   rse <- pileup_sites(bamfn, fafn,
     region = "SSR3:244-247",
-    filterParam = FilterParam(
+    param = FilterParam(
       min_base_quality = 10,
       only_keep_variants = TRUE,
       max_mismatch_type = c(8, 0)
@@ -437,7 +447,7 @@ test_that("filtering for read-level mismatches works", {
 
   rse <- pileup_sites(bamfn, fafn,
     region = "SSR3:244-247",
-    filterParam = FilterParam(
+    param = FilterParam(
       min_base_quality = 10,
       only_keep_variants = TRUE,
       max_mismatch_type = c(1, 0)
@@ -500,13 +510,13 @@ test_that("unsorted bam file fails", {
 
 test_that("single end libary types are respected", {
   fp <- FilterParam(library_type = "genomic-unstranded")
-  rse <- pileup_sites(sort_cbbam, cbfa, filterParam = fp)
+  rse <- pileup_sites(sort_cbbam, cbfa, param = fp)
   expect_true(all(strand(rse) == "+"))
 })
 
-test_that("poor quality reads get excluded with min_read_bqual", {
+test_that("poor quality reads get excluded with read_bqual", {
   res_no_filter <- pileup_sites(bamfn, fafn,
-    filterParam = FilterParam(
+    param = FilterParam(
       min_base_quality = 0L,
       library_type = c("genomic-unstranded")
     )
@@ -525,8 +535,8 @@ test_that("poor quality reads get excluded with min_read_bqual", {
   bad_reads <- subsetByOverlaps(bad_reads, res_no_filter)
 
   res <- pileup_sites(bamfn, fafn,
-    filterParam = FilterParam(
-      min_read_bqual = bqual_cutoff,
+    param = FilterParam(
+      read_bqual = bqual_cutoff,
       min_base_quality = 0L,
       library_type = c("genomic-unstranded")
     )
@@ -553,7 +563,7 @@ test_that("sites within short splice overhangs can be excluded", {
     min_splice_overhang = 0,
     min_base_quality = 0
   )
-  res <- pileup_sites(bamfn, fafn, filterParam = fp, region = "SPCS3:220-220")
+  res <- pileup_sites(bamfn, fafn, param = fp, region = "SPCS3:220-220")
   expect_equal(length(res), 1)
   expect_equal(as.vector(assay(res, "nRef")), 7)
 
@@ -563,7 +573,7 @@ test_that("sites within short splice overhangs can be excluded", {
     min_splice_overhang = 52,
     min_base_quality = 0
   )
-  res <- pileup_sites(bamfn, fafn, filterParam = fp, region = "SPCS3:220-220")
+  res <- pileup_sites(bamfn, fafn, param = fp, region = "SPCS3:220-220")
   expect_equal(length(res), 1)
   expect_equal(as.vector(assay(res, "nRef")), 6)
 
@@ -572,7 +582,7 @@ test_that("sites within short splice overhangs can be excluded", {
     min_splice_overhang = 0,
     min_base_quality = 0
   )
-  res <- pileup_sites(bamfn, fafn, filterParam = fp, region = "SPCS3:350-350")
+  res <- pileup_sites(bamfn, fafn, param = fp, region = "SPCS3:350-350")
   expect_equal(length(res), 1)
   expect_equal(as.vector(assay(res, "nRef")), 5)
 
@@ -582,7 +592,7 @@ test_that("sites within short splice overhangs can be excluded", {
     min_splice_overhang = 79,
     min_base_quality = 0
   )
-  res <- pileup_sites(bamfn, fafn, filterParam = fp, region = "SPCS3:350-350")
+  res <- pileup_sites(bamfn, fafn, param = fp, region = "SPCS3:350-350")
   expect_equal(length(res), 1)
   expect_equal(as.vector(assay(res, "nRef")), 4)
 
@@ -592,7 +602,7 @@ test_that("sites within short splice overhangs can be excluded", {
     min_splice_overhang = 101,
     min_base_quality = 0
   )
-  res <- pileup_sites(bamfn, fafn, filterParam = fp, region = "SPCS3:350-350")
+  res <- pileup_sites(bamfn, fafn, param = fp, region = "SPCS3:350-350")
   expect_equal(length(res), 0)
 })
 unlink(c(tmp, sort_cbbam, idx))

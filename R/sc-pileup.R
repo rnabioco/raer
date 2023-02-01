@@ -73,11 +73,10 @@ pileup_cells <- function(bamfile,
                       sites,
                       cell_barcodes,
                       output_directory,
-                      bam_flags = NULL,
                       chroms = NULL,
                       umi_tag = "UB",
                       cb_tag = "CB",
-                      fp = FilterParam(),
+                      param = FilterParam(),
                       BPPARAM = SerialParam(),
                       return_sce = TRUE,
                       verbose = FALSE) {
@@ -93,16 +92,14 @@ pileup_cells <- function(bamfile,
   }
 
   stopifnot(is(sites, "GRanges"))
-  if(is.null(bam_flags)){
-    bam_flags <- Rsamtools::scanBamFlag(
+
+  ## set default bam flags if not supplied
+  if(identical(param@bam_flags, Rsamtools::scanBamFlag())){
+    param@bam_flags <- Rsamtools::scanBamFlag(
       isSecondaryAlignment = FALSE,
       isSupplementaryAlignment = FALSE,
       isNotPassingQualityControls = FALSE
     )
-  } else {
-    if (length(bam_flags) != 2 || !all(names(bam_flags) == c("keep0", "keep1"))) {
-      stop("bam_flags must be generated using Rsamtools::scanBamFlag()")
-    }
   }
 
   cell_barcodes <- cell_barcodes[!is.na(cell_barcodes)]
@@ -128,10 +125,10 @@ pileup_cells <- function(bamfile,
     chroms_to_process <- intersect(chroms, chroms_to_process)
   }
 
-  fp <- .adjustParams(fp, 1)
+  fp <- .adjustParams(param, 1)
   fp <- .as.list_FilterParam(fp)
 
-  lib_code <- encode_library_type(fp$library_type)
+  lib_code <- fp$library_type
 
   event_filters <- unlist(fp[c(
     "trim_5p",
@@ -153,7 +150,6 @@ pileup_cells <- function(bamfile,
                               sites = sites,
                               barcodes = cell_barcodes,
                               outfile_prefix = output_directory,
-                              bam_flags = bam_flags,
                               cb_tag = cb_tag,
                               umi_tag = umi_tag,
                               libtype_code = lib_code,
@@ -256,8 +252,8 @@ read_sparray <- function(mtx_fn, sites_fn, bc_fn){
 # Utilities -------------------------------------------------------
 
 get_sc_pileup <- function(bamfn, sites, barcodes,
-                          outfile_prefix, bam_flags,
-                          chrom, umi_tag, cb_tag, libtype_code,
+                          outfile_prefix, chrom,
+                          umi_tag, cb_tag, libtype_code,
                           event_filters, fp, verbose){
   sites <- sites[seqnames(sites) %in% chrom, ]
   if(length(sites) == 0) return(character())
@@ -278,9 +274,9 @@ get_sc_pileup <- function(bamfn, sites, barcodes,
                fp$min_mapq,
                fp$max_depth,
                fp$min_base_quality,
-               fp$min_read_bqual,
+               fp$read_bqual,
                as.integer(libtype_code),
-               bam_flags,
+               fp$bam_flags,
                chr_outfns,
                umi_tag,
                FALSE,
@@ -337,23 +333,3 @@ check_tag <- function(x) {
   }
 }
 
-# encode libtype as
-# 0 = genomic-unstranded  all reads on + strand
-# 1 = fr-first-strand     strand based on R1/antisense, R2/sense
-# 2 = fr-second-strand    strand based on R1/sense, R2/antisense
-# 3 = unstranded          strand based on alignment
-encode_library_type <- function(x) {
-  lib_values <- c(
-    "genomic-unstranded",
-    "fr-first-strand",
-    "fr-second-strand",
-    "unstranded"
-  )
-  lib_code <- match(x, lib_values)
-  if (any(is.na(lib_code))) {
-    stop("library_type must be one of :", paste(lib_values, collapse = " "))
-  } else {
-    lib_code <- lib_code - 1
-  }
-  lib_code
-}

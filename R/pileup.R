@@ -12,7 +12,7 @@
 #' @param bedfile path to bed file with sites or regions to query
 #' @param region samtools region query string (i.e. chr1:100-1000)
 #' @param chroms chromosomes to process, not to be used with region
-#' @param filterParam object of class [FilterParam()] which specify various
+#' @param param object of class [FilterParam()] which specify various
 #'   filters to apply to reads and sites during pileup.
 #' @param reads if supplied a fasta file will be written with reads that pass
 #'   filters and contain variants
@@ -48,8 +48,8 @@
 #'
 #' rse <- pileup_sites(bamfn, fafn)
 #'
-#' fp <- FilterParam(only_keep_variants = TRUE, min_nucleotide_depth = 55)
-#' pileup_sites(bamfn, fafn, filterParam = fp)
+#' fp <- FilterParam(only_keep_variants = TRUE, min_depth = 55)
+#' pileup_sites(bamfn, fafn, param = fp)
 #'
 #'
 #' # using multiple bam files
@@ -63,7 +63,7 @@
 #' names(bams) <- sample_ids
 #'
 #' fp <- FilterParam(only_keep_variants = TRUE)
-#' rse <- pileup_sites(bams, fafn, filterParam = fp)
+#' rse <- pileup_sites(bams, fafn, param = fp)
 #' rse
 #'
 #' rse$condition <- substr(rse$sample, 1, 2)
@@ -87,7 +87,7 @@ pileup_sites <- function(bamfiles,
                        bedfile = NULL,
                        region = NULL,
                        chroms = NULL,
-                       filterParam = FilterParam(),
+                       param = FilterParam(),
                        outfile_prefix = NULL,
                        reads = NULL,
                        return_data = TRUE,
@@ -221,16 +221,18 @@ pileup_sites <- function(bamfiles,
     umi_tag <- character()
   }
 
-  ## set bam flags
-  bam_flags <- Rsamtools::scanBamFlag(
-    isSecondaryAlignment = FALSE,
-    isNotPassingQualityCont = FALSE,
-    isDuplicate = FALSE,
-    isSupplementaryAlignment = FALSE
-  )
+  ## set default bam flags if not supplied
+  if(identical(param@bam_flags, Rsamtools::scanBamFlag())){
+    param@bam_flags <- Rsamtools::scanBamFlag(
+      isSecondaryAlignment = FALSE,
+      isNotPassingQualityCont = FALSE,
+      isDuplicate = FALSE,
+      isSupplementaryAlignment = FALSE
+    )
+  }
 
-  filterParam <- .adjustParams(filterParam, n_files)
-  fp <- .c_args_FilterParam(filterParam)
+  fp <- .adjustParams(param, n_files)
+  fp <- .c_args_FilterParam(fp)
 
   run_in_parallel <- FALSE
   temp_bed_file <- FALSE
@@ -254,6 +256,9 @@ pileup_sites <- function(bamfiles,
       fp[["int_args"]],
       fp[["numeric_args"]],
       fp[["lgl_args"]],
+      fp[["library_type"]],
+      fp[["only_keep_variants"]],
+      fp[["min_mapq"]],
       in_memory,
       use_index,
       outfiles,
@@ -306,22 +311,18 @@ pileup_sites <- function(bamfiles,
           fafile,
           ctig,
           bedfile,
-          fp$min_nucleotide_depth,
-          event_filters,
-          fp$min_mapq,
-          fp$max_depth,
-          fp$min_base_quality,
-          fp$min_read_bqual,
-          as.integer(lib_code),
-          bam_flags,
-          fp$only_keep_variants,
+          fp[["int_args"]],
+          fp[["numeric_args"]],
+          fp[["lgl_args"]],
+          fp[["library_type"]],
+          fp[["only_keep_variants"]],
+          fp[["min_mapq"]],
           in_memory,
           use_index,
           tmp_outfiles,
           reads,
           bad_reads,
-          umi_tag,
-          c(fp$ftrim_5p, fp$ftrim_3p)
+          umi_tag
         )
 
         if (!in_memory) {
@@ -553,8 +554,8 @@ empty_plp_record <- function() {
     max_depth = "integer",
     min_depth = "integer",
     min_base_quality = "integer",
-    min_mapq = "integer",
-    library_type = "integer",
+    min_mapq = "integer", # variable length
+    library_type = "integer", # variable length
     bam_flags = "integer", # length 2
     trim_5p = "integer",
     trim_3p = "integer",
@@ -565,7 +566,7 @@ empty_plp_record <- function() {
     max_mismatch_type = "integer", # length 2
     min_variant_reads = "integer",
 
-    only_keep_variants = "logical",
+    only_keep_variants = "logical", # variable length
     report_multiallelic = "logical",
     ignore_query_Ns = "logical",
 
@@ -578,7 +579,7 @@ empty_plp_record <- function() {
 
 setMethod(show, "FilterParam", function(object) {
   cat("class: ", class(object), "\n")
-  values <- unlist(lapply(slotNames(object), slot, object = object))
+  values <- lapply(slotNames(object), slot, object = object)
   info <- paste(slotNames(object), values, sep = ": ", collapse = "; ")
   cat(strwrap(info, exdent = 2), sep = "\n")
 })
@@ -596,14 +597,14 @@ setMethod(show, "FilterParam", function(object) {
     "fr-second-strand",
     "unstranded"
   )
-  lib_code <- match(fp$library_type, lib_values)
+  lib_code <- match(library_type, lib_values)
   if (any(is.na(lib_code))) {
     stop("library_type must be one of :", paste(lib_values, collapse = " "))
   } else {
     lib_code <- lib_code - 1
   }
 
-  lib_code
+  as.integer(lib_code)
 }
 
 .c_args_FilterParam <- function(x, ...) {
@@ -651,10 +652,15 @@ setMethod(show, "FilterParam", function(object) {
        min_mapq = fp[["min_mapq"]])
 }
 
+.as.list_FilterParam <- function(x, ...) {
+  slotnames <- slotNames(x)
+  names(slotnames) <- slotnames
+  lapply(slotnames, slot, object = x)
+}
 
 #' @param min_depth min read depth needed to report site
-#' @param min_base_quality min base quality score to consider read for pileup
 #' @param max_depth maximum read depth considered at each site
+#' @param min_base_quality min base quality score to consider read for pileup
 #' @param min_mapq minimum required MAPQ score, can be a vector of values
 #' for each bam file
 #' @param library_type read orientation, one of fr-first-strand,
@@ -695,7 +701,7 @@ setMethod(show, "FilterParam", function(object) {
 #' @rdname pileup_sites
 #' @export
 FilterParam <-
-  function(max_depth = 1e4, min_depth = 1L,min_base_quality = 20L,
+  function(max_depth = 1e4, min_depth = 1L, min_base_quality = 20L,
            min_mapq = 0L, library_type = "fr-first-strand",
            bam_flags = NULL, only_keep_variants = FALSE,
            trim_5p = 0L, trim_3p = 0L, ftrim_5p = 0, ftrim_3p = 0,
@@ -707,7 +713,7 @@ FilterParam <-
 
     stopifnot(isSingleNumber(max_depth))
     stopifnot(isSingleNumber(min_base_quality))
-    stopifnot(isSingleNumber(min_nucleotide_depth))
+    stopifnot(isSingleNumber(min_depth))
     stopifnot(isSingleNumber(trim_5p))
     stopifnot(isSingleNumber(trim_3p))
     stopifnot(isSingleNumber(indel_dist))
@@ -722,7 +728,7 @@ FilterParam <-
     max_depth <- as.integer(max_depth)
     min_base_quality <- as.integer(min_base_quality)
 
-    min_nucleotide_depth <- as.integer(min_nucleotide_depth)
+    min_depth <- as.integer(min_depth)
     trim_5p <- as.integer(trim_5p)
     trim_3p <- as.integer(trim_3p)
     indel_dist <- as.integer(indel_dist)
@@ -730,7 +736,7 @@ FilterParam <-
     min_mapq <- as.integer(min_mapq)
     homopolymer_len <- as.integer(homopolymer_len)
     max_mismatch_type <- as.integer(max_mismatch_type)
-    min_read_bqual <- as.numeric(min_read_bqual)
+    read_bqual <- as.numeric(read_bqual)
     min_splice_overhang <- as.integer(min_splice_overhang)
     min_variant_reads <- as.integer(min_variant_reads)
     ftrim_5p <- as.numeric(ftrim_5p)
@@ -741,7 +747,7 @@ FilterParam <-
     stopifnot(ftrim_3p >= 0 && ftrim_3p <= 1)
 
     stopifnot(length(max_mismatch_type) == 2 && !any(is.na(max_mismatch_type)))
-    stopifnot(length(min_read_bqual) == 2 && !any(is.na(min_read_bqual)))
+    stopifnot(length(read_bqual) == 2 && !any(is.na(read_bqual)))
     stopifnot(isTRUEorFALSE(ignore_query_Ns))
     stopifnot(isTRUEorFALSE(report_multiallelic))
 

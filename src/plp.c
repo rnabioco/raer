@@ -1269,14 +1269,7 @@ fail:
   R_Free(plpc);
   if(pd->fps) R_Free(pd->fps);
   R_Free(pd->pdat);
-  if (conf->fai) fai_destroy(conf->fai);
-  if (conf->bed) bed_destroy(conf->bed);
 
-  if (conf->output_reads) {
-    clear_rname_set(conf->rnames);
-    kh_destroy(rname, conf->rnames);
-    fclose(conf->reads_fp);
-  }
 
   if(stats) R_Free(stats);
 
@@ -1315,12 +1308,12 @@ static void check_plp_args(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP
     Rf_error("'int_args' must be integer of length 14");
   }
 
-  if(!IS_INTEGER(dbl_args) || (LENGTH(dbl_args) != 10)){
-    Rf_error("'dbl_args' must be numeric of length XXX");
+  if(!IS_NUMERIC(dbl_args) || (LENGTH(dbl_args) != 5)){
+    Rf_error("'dbl_args' must be numeric of length 5");
   }
 
-  if(!IS_INTEGER(lgl_args) || (LENGTH(lgl_args) != 10)){
-    Rf_error("'lgl_args' must be logical of length XXX");
+  if(!IS_LOGICAL(lgl_args) || (LENGTH(lgl_args) != 2)){
+    Rf_error("'lgl_args' must be logical of length 2");
   }
 
 
@@ -1381,6 +1374,10 @@ static int set_mplp_conf(mplp_conf_t *conf, int n_bams,
   if(fafn){
     conf->fai_fname = fafn;
     conf->fai = fai_load(conf->fai_fname);
+    if (conf->fai == NULL) {
+      REprintf("[raer internal] unable to load fasta index");
+      return -1;
+    }
   }
 
   // single region for pileup
@@ -1389,6 +1386,10 @@ static int set_mplp_conf(mplp_conf_t *conf, int n_bams,
   // load and index bed intervals
   if(bedfn){
     conf->bed = bed_read(bedfn);
+    if (!conf->bed){
+      REprintf("[raer internal] unable to load bed index");
+      return -1;
+    }
     conf->multi_itr = multi_itr;
   }
 
@@ -1410,8 +1411,8 @@ static int set_mplp_conf(mplp_conf_t *conf, int n_bams,
   conf->trim.f5p       = d_args[0];
   conf->trim.f3p       = d_args[1];
   conf->min_af         = d_args[2];
-  conf->read_qual.minq = d_args[3];
-  conf->read_qual.pct  = d_args[4];
+  conf->read_qual.pct  = d_args[3];
+  conf->read_qual.minq = d_args[4];
 
   conf->report_multiallelics = b_args[0];
   conf->ignore_query_Ns      = b_args[1];
@@ -1532,7 +1533,6 @@ SEXP pileup(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP bedfn,
     result = PROTECT(pileup_result_init(nbam));
     pd = init_PLP_DATA(result,  nbam);
     ret = run_pileup(cbampaths, coutfns, pd, &ga);
-    if(ret < 0) REprintf("[raer internal] error detected during pileup");
   }
 
   // clean up
@@ -1552,7 +1552,8 @@ SEXP pileup(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP bedfn,
     kh_destroy(str, ga.brhash);
   }
   UNPROTECT(1);
-  if(ga.in_memory){
+  if(ret < 0) Rf_error("[raer internal] error detected during pileup");
+  if(!ga.in_memory){
     return Rf_ScalarInteger(ret);
   }
   return result ;
