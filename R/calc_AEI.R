@@ -27,7 +27,7 @@
 #'   a GRanges to snp_db rather than supplying all known SNPs (see
 #'   [get_overlapping_snps()]). Combined with using a bedfile for alu_ranges can
 #'   also will save time.
-#' @param filterParam object of class [FilterParam()] which specify various
+#' @param param object of class [FilterParam()] which specify various
 #'   filters to apply to reads and sites during pileup.
 #' @param BPPARAM A [BiocParallelParam] object for specifying parallel options
 #'   for operating over chromosomes.
@@ -59,7 +59,7 @@ calc_AEI <- function(bam_fn,
                      alu_ranges = NULL,
                      txdb = NULL,
                      snp_db = NULL,
-                     filterParam = FilterParam(),
+                     param = FilterParam(),
                      BPPARAM = SerialParam(),
                      verbose = FALSE) {
   chroms <- names(Rsamtools::scanBamHeader(bam_fn)[[1]]$targets)
@@ -80,11 +80,11 @@ calc_AEI <- function(bam_fn,
   genes_gr <- NULL
   tmp_files <- NULL
   alu_bed_fn <- NULL
-  if (filterParam@library_type %in% c("unstranded", "genomic-unstranded")) {
+  if (param@library_type %in% c("unstranded", "genomic-unstranded")) {
     if (is.null(txdb)) {
       stop("txdb required for processing unstranded data")
     }
-    filterParam@library_type == "genomic-unstranded"
+    param@library_type == "genomic-unstranded"
     if (is(txdb, "TxDb")) {
       genes_gr <- suppressWarnings(GenomicFeatures::genes(txdb))
     } else {
@@ -152,7 +152,7 @@ calc_AEI <- function(bam_fn,
         bam_fn = bam_fn,
         fasta_fn = fasta_fn,
         alu_bed_fn = alu_bed_fn,
-        filterParam = filterParam,
+        param = param,
         snp_gr = NULL,
         genes_gr = genes_gr,
         verbose = verbose
@@ -171,7 +171,7 @@ calc_AEI <- function(bam_fn,
         bam_fn = bam_fn,
         fasta_fn = fasta_fn,
         alu_bed_fn = alu_bed_fn,
-        filterParam = filterParam,
+        param = param,
         genes_gr = genes_gr,
         verbose = verbose
       ),
@@ -204,7 +204,7 @@ calc_AEI <- function(bam_fn,
                                 fasta_fn,
                                 alu_bed_fn,
                                 chrom,
-                                filterParam,
+                                param,
                                 snp_gr,
                                 genes_gr,
                                 verbose) {
@@ -212,14 +212,14 @@ calc_AEI <- function(bam_fn,
     start <- Sys.time()
     message("\tworking on: ", chrom, " time: ", Sys.time())
   }
-  filterParam@min_nucleotide_depth <- 1L
-  filterParam@only_keep_variants <- FALSE
+  param@min_depth <- 1L
+  param@only_keep_variants <- FALSE
 
   plp <- pileup_sites(bam_fn,
     fafile = fasta_fn,
     bedfile = alu_bed_fn,
     chroms = chrom,
-    filterParam = filterParam
+    param = param
   )
 
   if (!is.null(snp_gr) && !is.null(plp)) {
@@ -229,7 +229,7 @@ calc_AEI <- function(bam_fn,
     )
   }
 
-  if (filterParam@library_type == "genomic-unstranded") {
+  if (param@library_type == "genomic-unstranded") {
     plp <- correct_strand(plp, genes_gr)
   }
 
@@ -334,7 +334,7 @@ get_overlapping_snps <- function(gr,
 #' bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 #' fafn <- raer_example("human.fasta")
 #' fp <- FilterParam(library_type = "genomic-unstranded")
-#' rse <- pileup_sites(bamfn, fafn, filterParam = fp)
+#' rse <- pileup_sites(bamfn, fafn, param = fp)
 #'
 #' genes <- GRanges(c(
 #'   "DHFR:200-400:+",

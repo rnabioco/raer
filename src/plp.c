@@ -212,7 +212,8 @@ int parse_mismatches(bam1_t* b,const int pos, int n_types, int n_mis){
     }
 
     if (x != y) {
-      REprintf("inconsistent MD for read '%s' (%d != %d); ignore MD\n", bam_get_qname(b), x, y);
+      REprintf("[raer internal] inconsistent MD for read '%s' (%d != %d); ignore MD\n",
+               bam_get_qname(b), x, y);
       ret = -1;
     } else {
       if(kh_size(vh) >= n_types && nm >= n_mis){
@@ -645,6 +646,8 @@ static int store_counts(PLP_DATA pd, pcounts *pc, const char* ctig,
   double vf;
   int p_has_v = 0;
   int m_has_v = 0;
+  int p_is_ma = 0;
+  int m_is_ma = 0;
   int write_p = 0;
   int write_m = 0;
   int write_only_v = 0;
@@ -695,25 +698,27 @@ static int store_counts(PLP_DATA pd, pcounts *pc, const char* ctig,
       }
     }
 
-    if(write_only_v && conf->only_keep_variants[i]){
-      vs = kh_size((pc + i)->pc->var);
-      if(vs > 0){
-        if(conf->report_multiallelics || vs == 1){
-          p_has_v = 1;
-        }
-      }
-      vs = kh_size((pc + i)->mc->var);
-      if(vs > 0){
-        if(conf->report_multiallelics || vs == 1){
-          m_has_v = 1;
-        }
-      }
+    vs = kh_size((pc + i)->pc->var);
+    if(vs > 0){
+      if(conf->only_keep_variants[i]) p_has_v = 1;
+      if(vs > 1) p_is_ma = 1;
+    }
+
+    vs = kh_size((pc + i)->mc->var);
+    if(vs > 0){
+      if(conf->only_keep_variants[i]) m_has_v = 1;
+      if(vs > 1) m_is_ma = 1;
     }
   }
 
   if(write_only_v){
     write_p = p_has_v && write_p;
     write_m = m_has_v && write_m;
+  }
+
+  if(!conf->report_multiallelics){
+    write_p = !p_is_ma && write_p;
+    write_m = !m_is_ma && write_m;
   }
 
   if(write_p){
@@ -823,6 +828,7 @@ static int write_reads(bam1_t *b,  mplp_conf_t *conf, const char* ref, const int
 static int get_relative_position(const bam_pileup1_t *p){
   int qs, qe, pos, alen, rpos;
   qs = query_start(p->b);
+  if(qs < 0) return -1;
   qe = p->b->core.l_qseq - query_end(p->b);
   pos = p->qpos + 1 - qs;
   alen = p->b->core.l_qseq - qs - qe;
@@ -860,8 +866,12 @@ static int count_one_record(const bam_pileup1_t *p, pcounts *pc, mplp_conf_t *co
       char *var = strdup(mvar);
 
       k = kh_put(varhash, pc->mc->var, var, &hret);
-      kh_value(pc->mc->var, k) += 1;
-      if (hret == 0) free(var);
+      if (hret == 0) {
+        free(var);
+        kh_value(pc->mc->var, k) += 1;
+      } else {
+        kh_value(pc->mc->var, k) = 1;
+      }
 
       if(i == 0 && conf->output_reads){
         int wret = write_reads(p->b, conf, ctig, pos);
@@ -906,8 +916,13 @@ static int count_one_record(const bam_pileup1_t *p, pcounts *pc, mplp_conf_t *co
 
       char *var = strdup(pvar);
       k = kh_put(varhash, pc->pc->var, var, &hret);
-      kh_value(pc->pc->var, k) += 1;
-      if (hret == 0) free(var);
+      if (hret == 0) {
+        free(var);
+        kh_value(pc->pc->var, k) += 1;
+      } else {
+        kh_value(pc->pc->var, k) = 1;
+      }
+
       if(i == 0 && conf->output_reads){
         int wret = write_reads(p->b, conf, ctig, pos);
         if(wret != 0){
@@ -946,7 +961,7 @@ static int count_one_record(const bam_pileup1_t *p, pcounts *pc, mplp_conf_t *co
  * 2 = read fails do no count as bad read
  */
 static int check_read_filters(const bam_pileup1_t *p, mplp_conf_t *conf, int baq, int maq){
-
+  int res = 0;
  // skip indel and ref skip ;
   if(p->is_del || p->is_refskip) return(2) ;
 
@@ -967,18 +982,26 @@ static int check_read_filters(const bam_pileup1_t *p, mplp_conf_t *conf, int baq
 
   // check if pos is within x dist from 5' end of read, qpos is 0-based
   if(conf->trim.f5p > 0 || conf->trim.f3p > 0){
-    if(check_variant_fpos(p->b, p->qpos, conf->trim.f5p, conf->trim.f3p)) return(1);
+    res = check_variant_fpos(p->b, p->qpos, conf->trim.f5p, conf->trim.f3p);
+    if(res < 0) return -1; // error
+    if(res > 0) return 1;
   }
 
   if(conf->trim.i5p > 0 || conf->trim.i3p > 0){
-    if(check_variant_pos(p->b, p->qpos, conf->trim.i5p, conf->trim.i3p)) return(1);
+    res = check_variant_pos(p->b, p->qpos, conf->trim.i5p, conf->trim.i3p);
+    if(res < 0) return -1; // error
+    if(res > 0) return 1;
   }
 
   // check for splice in alignment nearby
   if(conf->splice_dist && dist_to_splice(p->b, p->qpos, conf->splice_dist) >= 0) return(1);
 
   // check if site in splice overhang and > min_overhang
-  if(conf->min_overhang && check_splice_overhang(p->b, p->qpos, conf->min_overhang) > 0) return(1);
+  if(conf->min_overhang){
+    res = check_splice_overhang(p->b, p->qpos, conf->min_overhang);
+    if(res == -2) return -1; // error
+    if(res > 0) return(1);
+  }
 
   // check if indel event nearby
   if(conf->indel_dist && dist_to_indel(p->b, p->qpos, conf->indel_dist) >= 0) return(1);

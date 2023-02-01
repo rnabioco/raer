@@ -23,9 +23,7 @@
 #' @param chroms A character vector of chromosomes to process, if supplied, only
 #'   sites present in the listed chromosomes will be processed
 #' @param cell_barcodes A character vector of single cell barcodes to process.
-#' @param bam_flags bam flags to filter or keep, use [Rsamtools::scanBamFlag()]
-#'   to generate
-#' @param fp object of class [FilterParam()] which specify various filters to
+#' @param param object of class [FilterParam()] which specify various filters to
 #'   apply to reads and sites during pileup. Note that the `min_variant_reads`
 #'   parameter, if set > 0, specifies the number of variant reads at a site
 #'   required in order to report a site. E.g. if set to 2, then at least 2 reads
@@ -60,7 +58,7 @@
 #' on.exit(unlink(outdir, bai))
 #'
 #' fp <- FilterParam(library_type = "fr-second-strand")
-#' sce <- pileup_cells(bam_fn, gr, cbs, outdir, fp = fp)
+#' sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
 #' sce
 #'
 #' @importFrom GenomeInfoDb  seqinfo seqlengths

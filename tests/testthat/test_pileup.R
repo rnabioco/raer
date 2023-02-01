@@ -603,3 +603,44 @@ test_that("chroms missing from fasta file will not be processed", {
   mfafn <- raer_example("mouse_tiny.fasta")
   expect_error(expect_warning(pileup_sites(bamfn, mfafn, bedfn)))
 })
+
+test_that("excluding multiallelics works",{
+  # DHFR_299_- has "AG,AT"
+  res_no_filter <- pileup_sites(bam2fn, fafn, region = "DHFR:299-299")
+  expect_equal(assay(res_no_filter, "Var")[1, 1], "AG,AT")
+
+  fp <- FilterParam(report_multiallelic = FALSE)
+  res <- pileup_sites(bam2fn, fafn, param = fp,  region = "DHFR:299-299")
+  expect_equal(nrow(res), 0)
+
+  fp <- FilterParam(report_multiallelic = FALSE)
+  res <- pileup_sites(bam2fn, fafn, param = fp)
+  n_og <- nrow(pileup_sites(bam2fn, fafn))
+  expect_equal(nrow(res), n_og - 1)
+
+
+  fp <- FilterParam(min_allelic_freq = 0.05)
+  res <- pileup_sites(bam2fn, fafn, param = fp,  region = "DHFR:299-299")
+  expect_equal(nrow(res), 1)
+  expect_equal(assay(res, "Var")[1, 1], "AG")
+  # Var is first assay
+  expect_equal(assays(res)[-1], assays(res_no_filter)[-1])
+
+  res <- pileup_sites(bam2fn, fafn, param = fp)
+  expect_equal(nrow(res), n_og)
+
+  # the combination works,
+  # e.g. excludes low frequency variant first, then checks if site is multiallelic
+  fp <- FilterParam(min_allelic_freq = 0.05, report_multiallelic = FALSE)
+  res <- pileup_sites(bam2fn, fafn, param = fp,  region = "DHFR:299-299")
+  expect_equal(nrow(res), 1)
+  expect_equal(assay(res, "Var")[1, 1], "AG")
+
+
+  fp <- FilterParam(min_allelic_freq = 0.0001)
+  res <- pileup_sites(bam2fn, fafn, param = fp,  region = "DHFR:299-299")
+  expect_equal(nrow(res), 1)
+  expect_equal(assay(res, "Var")[1, 1], "AG,AT")
+
+
+})

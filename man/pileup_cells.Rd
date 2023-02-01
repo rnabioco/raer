@@ -36,6 +36,13 @@ sites present in the listed chromosomes will be processed}
 
 \item{cb_tag}{tag in bam containing the cell barcode sequence}
 
+\item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various filters to
+apply to reads and sites during pileup. Note that the \code{min_variant_reads}
+parameter, if set > 0, specifies the number of variant reads at a site
+required in order to report a site. E.g. if set to 2, then at least 2 reads
+(from any cell) must have a variant in order to report the site. The
+default of 0 reports all sites present in the \code{sites} object.}
+
 \item{BPPARAM}{BiocParallel instance. Parallel computation occurs across
 chromosomes.}
 
@@ -44,16 +51,6 @@ chromosomes.}
 \code{outfile_prefix}, will be returned.}
 
 \item{verbose}{Display messages}
-
-\item{bam_flags}{bam flags to filter or keep, use \code{\link[Rsamtools:ScanBamParam-class]{Rsamtools::scanBamFlag()}}
-to generate}
-
-\item{fp}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various filters to
-apply to reads and sites during pileup. Note that the \code{min_variant_reads}
-parameter, if set > 0, specifies the number of variant reads at a site
-required in order to report a site. E.g. if set to 2, then at least 2 reads
-(from any cell) must have a variant in order to report the site. The
-default of 0 reports all sites present in the \code{sites} object.}
 }
 \value{
 Returns either a \code{SingleCellExperiment} or character vector of paths
@@ -92,7 +89,7 @@ bai <- indexBam(bam_fn)
 on.exit(unlink(outdir, bai))
 
 fp <- FilterParam(library_type = "fr-second-strand")
-sce <- pileup_cells(bam_fn, gr, cbs, outdir, fp = fp)
+sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
 sce
 
 }

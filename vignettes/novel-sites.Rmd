@@ -72,7 +72,7 @@ Filtering parameters for the `pileup_sites()` function can accept multiple argum
 
 ```{r}
 fp <- FilterParam(
-  min_nucleotide_depth = 1,
+  min_depth = 1,
   min_base_quality = 30,
   min_mapq = c(255, 30),
   library_type = c("fr-first-strand", "genomic-unstranded"),
@@ -81,7 +81,7 @@ fp <- FilterParam(
   indel_dist = 4,
   homopolymer_len = 6,
   max_mismatch_type = c(3, 3),
-  min_read_bqual = c(0.25, 20),
+  read_bqual = c(0.25, 20),
   only_keep_variants = c(TRUE, FALSE)
 )
 
@@ -90,7 +90,7 @@ names(bams) <- c("rna", "dna")
 rse <- pileup_sites(bams,
   fafile = fafn,
   chrom = "chr4",
-  filterParam = fp
+  param = fp
 )
 
 rse

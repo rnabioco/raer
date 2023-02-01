@@ -95,7 +95,7 @@ e_sce <- pileup_cells(
   output_directory = outdir,
   cb_tag = "CB",
   umi_tag = "UB",
-  fp = FilterParam(
+  param = FilterParam(
     min_base_quality = 30L,
     library_type = "fr-second-strand",
     min_variant_reads = 1L,

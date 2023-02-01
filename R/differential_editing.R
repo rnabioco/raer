@@ -267,7 +267,7 @@ prep_for_de <- function(se,
 #' names(bams) <- sample_ids
 #'
 #' fp <- FilterParam(only_keep_variants = TRUE)
-#' rse <- pileup_sites(bams, fafn, filterParam = fp)
+#' rse <- pileup_sites(bams, fafn, param = fp)
 #' rse$condition <- substr(rse$sample, 1, 2)
 #'
 #' rse <- calc_edit_frequency(rse)
