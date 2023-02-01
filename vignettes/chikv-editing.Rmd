@@ -37,6 +37,9 @@ RNA sequencing, focusing on CD45- stromal cells.
 Data from triplicate infection and mock samples were analyzed by the CellRanger
 pipeline, and output BAM files serve as the input data below.
 
+N.B.: we also have unpublished data from an 8hr time point, and all have viral enrichement
+data where coverage of virus goes up several fold.
+
 ### Sample information
 
 * Todo: Create table of samples, 10x summary
@@ -1027,6 +1030,22 @@ ggplot(
     )
   )
 ```
+
+## TODO
+
+### Quality control
+
+- report read length distribution to gauge library quality via TSO / pA trimming
+
+### Filtering variants
+
+- employ filter_mispriming filtter
+
+- rewrite filter_multiallelic in Rcpp etc
+
+### Single-cell
+
+- Look for differential editing directly from the single-cell data instead of a external set (either between cell types in one virus / mock, or between virus mock). Pseudobulk with DESeq2 or Airpart.
 
 
 
