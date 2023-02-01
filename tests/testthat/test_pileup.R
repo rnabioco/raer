@@ -10,16 +10,8 @@ bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")
 bedfn <- raer_example("regions.bed")
-res <- pileup_sites(bamfn, fafn,
-                    param = FilterParam(
-                      read_bqual = c(0.25, 20),
-                      min_base_quality = 0L,
-                      library_type = c("genomic-unstranded")
-                    )
-)
 
 res <- pileup_sites(bamfn, fafn, bedfn)
-
 
 test_that("pileup works", {
   expect_equal(length(rowData(res)$Ref), 182)

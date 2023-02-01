@@ -41,7 +41,7 @@ FilterParam(
   max_mismatch_type = c(0L, 0L),
   read_bqual = c(0, 0),
   min_variant_reads = 0L,
-  min_allelic_freq = 0.01,
+  min_allelic_freq = 0,
   report_multiallelic = TRUE,
   ignore_query_Ns = FALSE
 )

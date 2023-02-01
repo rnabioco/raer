@@ -46,7 +46,7 @@ typedef khash_t(rname) *rnhash_t;
 KHASH_SET_INIT_STR(str)
 typedef khash_t(str) *strhash_t;
 
-KHASH_SET_INIT_STR(varhash)
+KHASH_MAP_INIT_STR(varhash, int)
 typedef khash_t(varhash) *varhash_t;
 
 KHASH_SET_INIT_STR(umihash)
@@ -197,7 +197,11 @@ int parse_mismatches(bam1_t* b,const int pos, int n_types, int n_mis){
           int rval = 0;
           kh_put(varhash, vh, var, &rval);
           if(rval == -1){
-            Rf_error("issue tabulating variants per read at, %s", bam_get_qname(b));
+            REprintf("[raer internal] issue tabulating variants per read at, %s\n",
+                     bam_get_qname(b));
+            clear_varhash_set(vh);
+            kh_destroy(varhash, vh);
+            return -1;
           } else if (rval == 0){
             free(var);
           }
@@ -210,16 +214,15 @@ int parse_mismatches(bam1_t* b,const int pos, int n_types, int n_mis){
     if (x != y) {
       REprintf("inconsistent MD for read '%s' (%d != %d); ignore MD\n", bam_get_qname(b), x, y);
       ret = -1;
-    }
-
-    if(kh_size(vh) >= n_types && nm >= n_mis){
-      ret = kh_size(vh);
+    } else {
+      if(kh_size(vh) >= n_types && nm >= n_mis){
+        ret = kh_size(vh);
+      }
     }
   }
   clear_varhash_set(vh);
   kh_destroy(varhash, vh);
   return ret;
-
 }
 
 int8_t seq_comp_table[16] = { 0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15 };
@@ -251,7 +254,7 @@ int populate_lookup_from_file(strhash_t lookup, char *fn)
   int ret = 0;
   fp = fopen(fn, "r");
   if (fp == NULL) {
-    Rf_error("failed to open \"%s\" for reading", fn);
+    REprintf("[raer internal] failed to open \"%s\" for reading", fn);
     return -1;
   }
 
@@ -265,10 +268,10 @@ int populate_lookup_from_file(strhash_t lookup, char *fn)
     }
   }
   if (ferror(fp)) ret = -1;
-  if (ret == -1) {
-    Rf_error("failed to read \"%s\"", fn);
-  }
   fclose(fp);
+  if (ret == -1) {
+    REprintf("[raer internal] failed to read \"%s\"", fn);
+  }
   return (ret != -1) ? 0 : -1;
 }
 
@@ -357,7 +360,9 @@ static int readaln(void *data, bam1_t *b) {
       if(!((b)->core.flag&BAM_FPAIRED)){
         key = malloc(len + 1);
         if(!key) {
-          Rf_error( "malloc failed\n");
+          REprintf("[raer internal] malloc failed\n");
+          ret = -1;
+          break;
         }
         strcpy(key, bam_get_qname(b));
         key[len] = '\0';
@@ -365,7 +370,9 @@ static int readaln(void *data, bam1_t *b) {
       } else {
         key = malloc(len + 2 + 1);
         if(!key) {
-          Rf_error( "malloc failed\n");
+          REprintf("[raer internal] malloc failed\n");
+          ret = -1;
+          break;
         }
         if((b)->core.flag&BAM_FREAD1){
           c = '1' ;
@@ -493,32 +500,35 @@ static void get_var_string(varhash_t *vhash, char *out){
   }
 }
 
-static void print_counts(FILE *fp, counts *p, const char* ctig, int pos, int ref, int strand){
+static int print_counts(FILE *fp, counts *p, const char* ctig, int pos, int ref, int strand){
   char vout[12];
+  int ret;
   get_var_string(&(p->var), vout);
-  fprintf(fp,
-          "%s\t%i\t%c\t%c\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n",
-          ctig,
-          pos + 1,
-          strand,
-          ref,
-          vout,
-          p->nr,
-          p->nv,
-          p->na,
-          p->nt,
-          p->nc,
-          p->ng,
-          p->nn,
-          p->nx);
+  ret = fprintf(fp,
+                "%s\t%i\t%c\t%c\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n",
+                ctig,
+                pos + 1,
+                strand,
+                ref,
+                vout,
+                p->nr,
+                p->nv,
+                p->na,
+                p->nt,
+                p->nc,
+                p->ng,
+                p->nn,
+                p->nx);
+  return ret;
 }
 
-static void add_counts(PLP_DATA pd, int fi, counts *p, const char* ctig, int gpos, int ref, int strand){
+static int add_counts(PLP_DATA pd, int fi, counts *p, const char* ctig, int gpos, int ref, int strand){
 
+  int ret = 0;
   if(fi >= pd->nfiles || fi < 0){
-    Rf_error("[raer internal] issue with file index %d", fi);
+    REprintf("[raer internal] issue with file index %d", fi);
+    return -1;
   }
-
   SEXP r = get_or_grow_PLP_DATA(pd, -1, PLP_DATA_LST), s;
   int li;
   int idx = pd->icnt;
@@ -532,8 +542,10 @@ static void add_counts(PLP_DATA pd, int fi, counts *p, const char* ctig, int gpo
     switch (li) {
     case SEQNAME_IDX:
       buf = R_Calloc(strlen(ctig) + 1, char);
-      if (!buf)
-        Rf_error("add_plp_data: failed to allocate memory");
+      if (!buf){
+        REprintf("[raer internal ] add_plp_data: failed to allocate memory");
+        return -1;
+      }
       strcpy(buf, ctig);
       pd->pdat[fi].seqnames[idx] = buf;
       break;
@@ -581,22 +593,26 @@ static void add_counts(PLP_DATA pd, int fi, counts *p, const char* ctig, int gpo
       break;
 
     default:
-      Rf_error("[raer internal]: unhandled add_counts");
+      REprintf("[raer internal ] unhandled add_counts");
+      ret = -1;
     break;
     }
   }
+  return ret;
 }
 
-static void print_stats(FILE* fp, double s1, double s2,
+static int print_stats(FILE* fp, double s1, double s2,
                         const char* ctig, int pos, int ref, int strand){
-  fprintf(fp,
-          "%s\t%i\t%c\t%c\t%g\t%g\n",
-          ctig,
-          pos + 1,
-          strand,
-          ref,
-          s1,
-          s2);
+  int ret = 0;
+  ret = fprintf(fp,
+                "%s\t%i\t%c\t%c\t%g\t%g\n",
+                ctig,
+                pos + 1,
+                strand,
+                ref,
+                s1,
+                s2);
+  return ret;
 }
 
 
@@ -621,75 +637,117 @@ static int calc_biases(pall_counts *pall, double* res){
   return 0;
 }
 
-static void store_counts(PLP_DATA pd, pcounts *pc, int *only_variants, int n, int min_depth,
-                         const char* ctig, const int gpos, int pref, int mref, int in_memory,
-                         int min_var_depth, double* stats){
-  int i;
-  int pv = 0;
-  int mv = 0;
+static int store_counts(PLP_DATA pd, pcounts *pc, const char* ctig,
+                         const int gpos, int pref, int mref, double* stats,
+                         mplp_conf_t *conf){
+
+  int i, nv, ret = 0;
+  double vf;
+  int p_has_v = 0;
+  int m_has_v = 0;
   int write_p = 0;
   int write_m = 0;
   int write_only_v = 0;
+  int vs = 0;
+  khiter_t k;
 
-  for(i = 0; i < n; ++i){
-    if(only_variants[i]){
+  for(i = 0; i < conf->nbam; ++i){
+    if(conf->only_keep_variants[i]){
       write_only_v = 1;
     }
   }
 
   // write out if any samples are > min_depth and any samples have a variant
   // predicated on the true or false values in only_variants
-  for(i = 0; i < n; ++i){
-    if((pc + i)->pc->total >= min_depth && (pc + i)->pc->nv >= min_var_depth){
+  for(i = 0; i < conf->nbam; ++i){
+    // check depth
+    if((pc + i)->pc->total >= conf->min_depth && (pc + i)->pc->nv >= conf->min_var_reads){
       write_p = 1;
     }
-    if((pc + i)->mc->total >= min_depth && (pc + i)->mc->nv >= min_var_depth){
+    if((pc + i)->mc->total >= conf->min_depth && (pc + i)->mc->nv >= conf->min_var_reads){
       write_m = 1;
     }
-    if(write_only_v && only_variants[i]){
+
+    // check allele freq, remove from hashmap if does not pass
+    if(conf->min_af > 0){
       if(kh_size((pc + i)->pc->var) > 0){
-        pv = 1;
+        for (k = kh_begin((pc + i)->pc->var); k < kh_end((pc + i)->pc->var); k++) {
+          if (kh_exist((pc + i)->pc->var, k)) {
+            nv = kh_value((pc + i)->pc->var, k);
+            vf = (double) nv / (pc + i)->pc->total;
+            if(vf < conf->min_af){
+              kh_del(varhash, (pc + i)->pc->var, k);
+            }
+          }
+        }
       }
+
       if(kh_size((pc + i)->mc->var) > 0){
-        mv = 1;
+        for (k = kh_begin((pc + i)->mc->var); k < kh_end((pc + i)->mc->var); k++) {
+          if (kh_exist((pc + i)->mc->var, k)) {
+            nv = kh_value((pc + i)->mc->var, k);
+            vf = (double) nv / (pc + i)->mc->total;
+            if(vf < conf->min_af){
+              kh_del(varhash, (pc + i)->mc->var, k);
+            }
+          }
+        }
+      }
+    }
+
+    if(write_only_v && conf->only_keep_variants[i]){
+      vs = kh_size((pc + i)->pc->var);
+      if(vs > 0){
+        if(conf->report_multiallelics || vs == 1){
+          p_has_v = 1;
+        }
+      }
+      vs = kh_size((pc + i)->mc->var);
+      if(vs > 0){
+        if(conf->report_multiallelics || vs == 1){
+          m_has_v = 1;
+        }
       }
     }
   }
+
   if(write_only_v){
-    write_p = pv && write_p;
-    write_m = mv && write_m;
+    write_p = p_has_v && write_p;
+    write_m = m_has_v && write_m;
   }
 
   if(write_p){
-    for(i = 0; i < n; ++i){
-      if(in_memory){
-        add_counts(pd, i, (pc + i)->pc, ctig, gpos, pref, '+');
+    for(i = 0; i < conf->nbam; ++i){
+      if(conf->in_memory){
+        ret = add_counts(pd, i, (pc + i)->pc, ctig, gpos, pref, '+');
       } else {
-        print_counts(pd->fps[i + 1], (pc + i)->pc, ctig, gpos, pref, '+') ;
+        ret = print_counts(pd->fps[i + 1], (pc + i)->pc, ctig, gpos, pref, '+') ;
       }
     }
-    if(in_memory){
+    if(conf->in_memory){
       add_stats(pd, pd->icnt, stats[0], stats[1]);
     } else {
-      print_stats(pd->fps[0], stats[0], stats[1], ctig, gpos, pref, '+');
+      ret = print_stats(pd->fps[0], stats[0], stats[1], ctig, gpos, pref, '+');
     }
     pd->icnt += 1;
   }
+
   if(write_m){
-    for(i = 0; i < n; ++i){
-      if(in_memory){
-        add_counts(pd, i, (pc + i)->mc, ctig, gpos, mref, '-');
+    for(i = 0; i < conf->nbam; ++i){
+      if(conf->in_memory){
+        ret = add_counts(pd, i, (pc + i)->mc, ctig, gpos, mref, '-');
       } else {
-        print_counts(pd->fps[i + 1], (pc + i)->mc, ctig, gpos, mref, '-') ;
+        ret = print_counts(pd->fps[i + 1], (pc + i)->mc, ctig, gpos, mref, '-') ;
       }
     }
-    if(in_memory){
+    if(conf->in_memory){
       add_stats(pd, pd->icnt, stats[2], stats[3]);
     } else {
-      print_stats(pd->fps[0], stats[2], stats[3], ctig, gpos, mref, '-');
+      ret = print_stats(pd->fps[0], stats[2], stats[3], ctig, gpos, mref, '-');
     }
     pd->icnt += 1;
   }
+  return ret;
 }
 
 
@@ -721,7 +779,8 @@ static int write_reads(bam1_t *b,  mplp_conf_t *conf, const char* ref, const int
   if(!((b)->core.flag&BAM_FPAIRED)){
     key = malloc(len + 1);
     if(!key) {
-      Rf_error( "malloc failed\n");
+      REprintf("[raer internal] malloc failed\n");
+      return -1;
     }
     strcpy(key, bam_get_qname(b));
     key[len] = '\0';
@@ -729,7 +788,8 @@ static int write_reads(bam1_t *b,  mplp_conf_t *conf, const char* ref, const int
   } else {
     key = malloc(len + 2 + 1);
     if(!key) {
-      Rf_error( "malloc failed\n");
+      REprintf("[raer internal] malloc failed\n");
+      return -1;
     }
     if((b)->core.flag&BAM_FREAD1){
       c = '1' ;
@@ -750,7 +810,8 @@ static int write_reads(bam1_t *b,  mplp_conf_t *conf, const char* ref, const int
     int ret = 0;
     ret = write_fasta(b, conf, ref, c, pos + 1);
     if(ret < 0) {
-      Rf_error("writing read failed\n");
+      REprintf("[raer internal] malloc failed\n");
+      return -1;
     }
   } else {
     free(key);
@@ -780,6 +841,8 @@ static int count_one_record(const bam_pileup1_t *p, pcounts *pc, mplp_conf_t *co
   mvar[2] = '\0';
   pvar[2] = '\0';
 
+  khiter_t k;
+
   rpos = get_relative_position(p);
   if(rpos < 0) return -1;
   if(invert){
@@ -795,13 +858,15 @@ static int count_one_record(const bam_pileup1_t *p, pcounts *pc, mplp_conf_t *co
 
       // store variants as (AG, AT, AC, etc.) hash set
       char *var = strdup(mvar);
-      kh_put(varhash, pc->mc->var, var, &hret);
+
+      k = kh_put(varhash, pc->mc->var, var, &hret);
+      kh_value(pc->mc->var, k) += 1;
       if (hret == 0) free(var);
 
       if(i == 0 && conf->output_reads){
         int wret = write_reads(p->b, conf, ctig, pos);
         if(wret != 0){
-          REprintf( "writing mismatched reads failed\n");
+          REprintf( "[raer internal] writing mismatched reads failed\n");
           return -1;
         }
       }
@@ -840,12 +905,13 @@ static int count_one_record(const bam_pileup1_t *p, pcounts *pc, mplp_conf_t *co
       pvar[1] = read_base;
 
       char *var = strdup(pvar);
-      kh_put(varhash, pc->pc->var, var, &hret);
+      k = kh_put(varhash, pc->pc->var, var, &hret);
+      kh_value(pc->pc->var, k) += 1;
       if (hret == 0) free(var);
       if(i == 0 && conf->output_reads){
         int wret = write_reads(p->b, conf, ctig, pos);
         if(wret != 0){
-          REprintf( "writing mismatched reads failed\n");
+          REprintf( "[raer internal] writing mismatched reads failed\n");
           return -1;
         }
       }
@@ -990,7 +1056,7 @@ static int run_pileup(char** cbampaths, const char** coutfns,
 
     h_tmp = sam_hdr_read(data[i]->fp);
     if ( !h_tmp ) {
-      Rf_error("fail to read the header of %s\n", cbampaths[i]);
+      Rf_error("[raer internal] fail to read the header of %s\n", cbampaths[i]);
     }
 
     if(conf->reg){
@@ -998,11 +1064,11 @@ static int run_pileup(char** cbampaths, const char** coutfns,
       idx = sam_index_load(data[i]->fp, cbampaths[i]) ;
 
       if (idx == NULL) {
-        Rf_error("fail to load bamfile index for %s\n", cbampaths[i]);
+        Rf_error("[raer internal] fail to load bamfile index for %s\n", cbampaths[i]);
       }
 
       if ( (data[i]->iter=sam_itr_querys(idx, h_tmp, conf->reg)) == 0) {
-        Rf_error("Fail to parse region '%s' with %s\n", conf->reg, cbampaths[i]);
+        Rf_error("[raer internal] fail to parse region '%s' with %s\n", conf->reg, cbampaths[i]);
       }
 
       if(i == 0){
@@ -1015,24 +1081,24 @@ static int run_pileup(char** cbampaths, const char** coutfns,
       data[i]->idx = sam_index_load(data[i]->fp, cbampaths[i]) ;
 
       if (data[i]->idx == NULL) {
-        Rf_error("fail to load bamfile index for %s\n", cbampaths[i]);
+        Rf_error("[raer internal] fail to load bamfile index for %s\n", cbampaths[i]);
       }
 
       bed_unify(conf->bed);
 
       if (!conf->bed) { // index is unavailable or no regions have been specified
-        Rf_error("No regions or BED file have been provided. Aborting.");
+        Rf_error("[raer internal] No regions or BED file have been provided. Aborting.");
       }
 
       int regcount = 0;
       hts_reglist_t *reglist = bed_reglist(conf->bed, 0, &regcount);
       if (!reglist) {
-        Rf_error("Region list is empty or could not be created. ");
+        Rf_error("[raer internal] Region list is empty or could not be created. ");
       }
 
       data[i]->iter = sam_itr_regions(data[i]->idx, h_tmp, reglist, regcount);
       if(!data[i]->iter) {
-        Rf_error("Multi-region iterator could not be created. Aborting.");
+        Rf_error("[raer internal] Multi-region iterator could not be created. Aborting.");
       }
 
       if(i == 0){
@@ -1051,11 +1117,8 @@ static int run_pileup(char** cbampaths, const char** coutfns,
     }
   }
 
-
   iter = bam_mplp_init(conf->nbam, readaln, (void**)data);
 
-  // return type void in rhtslib (htslib v 1.7), current v1.14 htslib returns int
-  // enable overlap detection
   ret = bam_mplp_init_overlaps(iter) ;
   if(ret < 0) {
     REprintf("[raer internal] issue initializing iterator");
@@ -1209,7 +1272,12 @@ static int run_pileup(char** cbampaths, const char** coutfns,
         if(conf->n_mm_type > 0 || conf->n_mm > 0) {
           if((invert && mref_b != c) || pref_b != c){
             int m = parse_mismatches(p->b, pos, conf->n_mm_type, conf->n_mm);
-              if(m > 0) continue;
+              if(m == -1){
+                ret = -1;
+                goto fail;
+              } else if (m > 0){
+                continue;
+              }
             }
         }
 
@@ -1229,15 +1297,20 @@ static int run_pileup(char** cbampaths, const char** coutfns,
    int sres = calc_biases(pall, stats);
    if(sres < 0) {ret = -1; goto fail;}
 
-    // write or store records if pass depth criteria
-    store_counts(pd, plpc, conf->only_keep_variants,
-                 conf->nbam, conf->min_depth, sam_hdr_tid2name(h, tid),
-                 pos, pref_b, mref_b,
-                 conf->in_memory, conf->min_var_reads, stats);
+   // write or store records if pass depth criteria
+   sres = store_counts(pd, plpc, sam_hdr_tid2name(h, tid),
+                      pos, pref_b, mref_b, stats, conf);
+   if(sres < 0){
+     REprintf("[raer internal] failed storing counts, %s %d\n",
+              sam_hdr_tid2name(h, tid),
+              pos);
+     ret = -1;
+     goto fail;
+   }
   }
 
 fail:
-  if(conf->in_memory) finish_PLP_DATA(pd);
+  if(conf->in_memory && ret >= 0) finish_PLP_DATA(pd);
 
   bam_mplp_destroy(iter);
   bam_hdr_destroy(h);

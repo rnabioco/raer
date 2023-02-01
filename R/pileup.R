@@ -708,7 +708,7 @@ FilterParam <-
            indel_dist = 0L,splice_dist = 0L,  min_splice_overhang = 0L,
            homopolymer_len = 0L,
            max_mismatch_type = c(0L, 0L), read_bqual = c(0.0, 0.0),
-           min_variant_reads = 0L, min_allelic_freq = 0.01,
+           min_variant_reads = 0L, min_allelic_freq = 0,
            report_multiallelic = TRUE, ignore_query_Ns = FALSE) {
 
     stopifnot(isSingleNumber(max_depth))
