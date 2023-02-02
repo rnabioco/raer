@@ -155,10 +155,10 @@
 <code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pileup_sites.html">FilterParam</a></span><span class="op">(</span></span>
 <span>  only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  library_type <span class="op">=</span> <span class="st">"fr-first-strand"</span>,</span>
-<span>  min_nucleotide_depth <span class="op">=</span> <span class="fl">2</span></span>
+<span>  min_depth <span class="op">=</span> <span class="fl">2</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pileup_sites.html">pileup_sites</a></span><span class="op">(</span><span class="va">bams</span>, <span class="va">fafn</span>, filterParam <span class="op">=</span> <span class="va">fp</span><span class="op">)</span></span>
+<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pileup_sites.html">pileup_sites</a></span><span class="op">(</span><span class="va">bams</span>, <span class="va">fafn</span>, param <span class="op">=</span> <span class="va">fp</span><span class="op">)</span></span>
 <span><span class="va">rse</span></span>
 <span><span class="co">#&gt; class: RangedSummarizedExperiment </span></span>
 <span><span class="co">#&gt; dim: 74 2 </span></span>
