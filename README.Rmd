@@ -74,10 +74,10 @@ The `FilterParam()` class holds multiple options for customizing the output of
 fp <- FilterParam(
   only_keep_variants = TRUE,
   library_type = "fr-first-strand",
-  min_nucleotide_depth = 2
+  min_depth = 2
 )
 
-rse <- pileup_sites(bams, fafn, filterParam = fp)
+rse <- pileup_sites(bams, fafn, param = fp)
 rse
 ```
 

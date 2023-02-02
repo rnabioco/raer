@@ -324,6 +324,8 @@ get_cell_pileup <- function(bamfn,
 #' @param assay_cols assays to store in returned se. Set to "A" and "G". Note that
 #'   storing multiple assays can require large amounts of memory.
 #' @param tag_index_args arguments pass to [`build_tag_index()`]
+#' @param param object of class [FilterParam()] which specify various
+#'   filters to apply to reads and sites during pileup.
 #' @param BPPARAM BiocParallel instance. Parallel computation occurs across
 #'   each entry in the cell_barcodes list, or across batches of single cells specified
 #'   by batch_size.
@@ -332,7 +334,6 @@ get_cell_pileup <- function(bamfn,
 #'   Batching the cells reduces run time by avoiding  loading sequences from the
 #'   fasta file for each cell. Setting values above 50 is unlikely to further improve
 #'   runtime.
-#' @param bam_flags See arguments for `[pileup_sites()]`
 #' @param umi_tag See arguments for `[pileup_sites()]`
 #' @param verbose Display messages
 #' @param ... additional arguments passed to `[pileup_sites()]`.
@@ -358,7 +359,7 @@ get_cell_pileup <- function(bamfn,
 #'   bedfile = raer_example("5k_neuron_sites.bed.gz"),
 #'   cell_barcodes = cbs[1:15],
 #'   verbose = FALSE,
-#'   filterParam = fp
+#'   param = fp
 #' )
 #'
 #' # pool cell barcodes across clusters
@@ -376,7 +377,7 @@ get_cell_pileup <- function(bamfn,
 #'   cell_barcodes = cb_lst,
 #'   umi_tag = NULL,
 #'   verbose = FALSE,
-#'   filterParam = fp
+#'   param = fp
 #' )
 #' assays(se)$nA
 #' assays(se)$nG
@@ -394,8 +395,8 @@ sc_editing <- function(bamfile,
                        tag_index_args = list(tag = "CB"),
                        BPPARAM = SerialParam(),
                        batch_size = 50,
-                       bam_flags = NULL,
                        umi_tag = "UB",
+                       param = FilterParam(),
                        verbose = TRUE,
                        ...) {
   if (!all(assay_cols %in% PILEUP_COLS)) {
@@ -408,16 +409,12 @@ sc_editing <- function(bamfile,
     )
   }
 
-  if(is.null(bam_flags)){
-    bam_flags <- Rsamtools::scanBamFlag(
+  if(identical(param@bam_flags, Rsamtools::scanBamFlag())){
+    param@bam_flags <- Rsamtools::scanBamFlag(
       isSecondaryAlignment = FALSE,
       isSupplementaryAlignment = FALSE,
       isNotPassingQualityControls = FALSE
     )
-  } else {
-    if (length(bam_flags) != 2 || !all(names(bam_flags) == c("keep0", "keep1"))) {
-      stop("bam_flags must be generated using Rsamtools::scanBamFlag()")
-    }
   }
 
   # fail early if incorrect args passed through ...
@@ -462,11 +459,10 @@ sc_editing <- function(bamfile,
       assay_cols = assay_cols,
       per_cell = per_cell,
       bedfile = bedfile,
-      bedidx = NULL,
       return_data = TRUE,
-      bam_flags = bam_flags,
       umi_tag = umi_tag,
       verbose = verbose,
+      param = param,
       ...
     ),
     BPPARAM = BPPARAM,

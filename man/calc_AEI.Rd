@@ -10,7 +10,7 @@ calc_AEI(
   alu_ranges = NULL,
   txdb = NULL,
   snp_db = NULL,
-  filterParam = FilterParam(),
+  param = FilterParam(),
   BPPARAM = SerialParam(),
   verbose = FALSE
 )
@@ -36,7 +36,7 @@ a GRanges to snp_db rather than supplying all known SNPs (see
 \code{\link[=get_overlapping_snps]{get_overlapping_snps()}}). Combined with using a bedfile for alu_ranges can
 also will save time.}
 
-\item{filterParam}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
+\item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
 filters to apply to reads and sites during pileup.}
 
 \item{BPPARAM}{A \link{BiocParallelParam} object for specifying parallel options

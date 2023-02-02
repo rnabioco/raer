@@ -7,7 +7,6 @@ fafn <- system.file("extdata", "human.fasta", package = "raer")
 bedfn <- system.file("extdata", "regions.bed", package = "raer")
 idx <- indexBed(bedfn)
 
-#cbbam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_cbsort.bam", package = "raer")
 cbbam_fn <- system.file("extdata", "5k_neuron_mouse_cbsort.bam", package = "raer")
 ubbam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_ubsort.bam", package = "raer")
 
@@ -16,11 +15,6 @@ test_that("bedindex works", {
   expect_false(is_null_extptr(idx$.extptr))
 })
 
-test_that("bedindex can be used with pileup", {
-  res <- pileup_sites(bamfn, fafn, bedidx = idx)
-  res2 <- pileup_sites(bamfn, fafn, bedfile = bedfn)
-  expect_true(identical(res, res2))
-})
 
 test_that("close cleans up index", {
   idx <- close(idx)

@@ -86,7 +86,7 @@ rse <- pileup_sites(bam_files,
   fafile = fafn,
   bedfile = bedfn,
   region = "chr18",
-  filterParam = fp
+  param = fp
 )
 ```
 

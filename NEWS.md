@@ -1,5 +1,15 @@
 # raer 0.99.0
 
+* Changed `filterParam` argument in `pileup_sites` and `pileup_cells` to `param` for
+simplicity
+
+* Added `FilterParam` to exclude multi-allelic sites `report_multiallelic`, or exclude reporting a variant in the Var assay based on allelic frequency (`min_allelic_freq`).
+
+* The `bam_flags` parameter used in `pileup_sites` and `pileup_cells` has been moved into the `FilterParam` class. 
+
+* The `bedindex` parameter for `pileup_sites` has been removed. This option is not needed
+at the user level and is planned to be replaced by the regional indexing used in `pileup_cells()`.
+
 * Added `FilterParam` option to trim reads based on fractional distance from 5' (`ftrim_5p`) or 3' end (`ftrim_3p`).
 
 * Incorporated RBPZ and VDB statistics from bcftools, now returned as rowData columns 

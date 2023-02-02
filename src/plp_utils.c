@@ -24,7 +24,9 @@ int query_start(bam1_t *b){
     op = cigar[i] & BAM_CIGAR_MASK;
     if (op == BAM_CHARD_CLIP){
       if (start_offset != 0 && start_offset != b->core.l_qseq){
-        Rf_error("Invalid clipping in CIGAR string");
+        REprintf("[raer internal] Invalid clipping in CIGAR string: %s\n",
+                 bam_get_qname(b));
+        return -1;
       }
     } else if (op == BAM_CSOFT_CLIP){
       start_offset += cigar[i] >> BAM_CIGAR_SHIFT;
@@ -43,14 +45,18 @@ int query_end(bam1_t *b){
   int end_offset = b->core.l_qseq;
 
   if(end_offset == 0){
-    Rf_error("SEQ record missing from BAM file");
+    REprintf("[raer internal] SEQ record missing from BAM file: %s\n",
+             bam_get_qname(b));
+    return -1;
   }
 
   for (i = n_cigar; i-- > 0;){
     op = cigar[i] & BAM_CIGAR_MASK;
     if (op == BAM_CHARD_CLIP){
       if (end_offset != 0 && end_offset != b->core.l_qseq){
-        Rf_error("Invalid clipping in CIGAR string");
+        REprintf("[raer internal] Invalid clipping in CIGAR string: %s\n",
+                 bam_get_qname(b));
+        return -1;
       }
     } else if (op == BAM_CSOFT_CLIP){
       end_offset -= cigar[i] >> BAM_CIGAR_SHIFT;
@@ -99,6 +105,7 @@ int check_variant_pos(bam1_t* b, int pos, int dist_5p, int dist_3p){
   int qs, qe;
   qs = query_start(b);
   qe = query_end(b);
+  if(qs < 0 || qe < 0) return -1;
 
   if(!(b->core.flag&BAM_FREVERSE)){
     if(pos < (dist_5p + qs) || (qe - pos) <= dist_3p){
@@ -109,7 +116,9 @@ int check_variant_pos(bam1_t* b, int pos, int dist_5p, int dist_3p){
       return 1;
     }
   } else {
-    Rf_error("don't believe should happen in trim_pos");
+    REprintf("[raer internal] don't believe should happen in trim_pos: %s\n",
+             bam_get_qname(b));
+    return -1;
   }
   return 0;
 }
@@ -122,6 +131,7 @@ int check_variant_fpos(bam1_t* b, int pos, double fdist_5p, double fdist_3p){
   int qs, qe, ql, dist_5p, dist_3p;
   qs = query_start(b);
   qe = query_end(b);
+  if(qs < 0 || qe < 0) return -1;
   ql = qe - qs;
   if(ql <= 0) return 1;
   dist_5p = (int) floor(fdist_5p * ql);
@@ -136,7 +146,9 @@ int check_variant_fpos(bam1_t* b, int pos, double fdist_5p, double fdist_3p){
       return 1;
     }
   } else {
-    Rf_error("don't believe should happen in trim_pos");
+    REprintf("[raer internal] don't believe should happen in trim_pos: %s\n",
+             bam_get_qname(b));
+    return -1;
   }
   return 0;
 }
@@ -170,6 +182,7 @@ int dist_to_splice(bam1_t* b, int pos, int dist){
 }
 
 // return
+// -2 on error
 // -1 if overhand >= dist,
 // 0 if no flanking splice
 // or overlang length if less than dist
@@ -207,7 +220,9 @@ int check_splice_overhang(bam1_t* b, int pos, int dist){
       continue;
     }
   }
-  Rf_error("site not found in read: %s %i %i %i", bam_get_qname(b), pos, p_op, cl);
+  REprintf("[raer internal] site not found in read: %s %i %i %i\n",
+           bam_get_qname(b), pos, p_op, cl);
+  return -2;
 }
 
 // return -1 if no indel found
