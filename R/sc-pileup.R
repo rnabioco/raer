@@ -31,6 +31,7 @@
 #'   default of 0 reports all sites present in the `sites` object.
 #' @param umi_tag tag in bam containing the UMI sequence
 #' @param cb_tag tag in bam containing the cell barcode sequence
+#' @param paired_end set to TRUE if data is paired end.
 #' @param return_sce if `TRUE`, data is returned as a SingleCellExperiment, if
 #'   `FALSE` a character vector of the output files, specified by
 #'   `outfile_prefix`, will be returned.
@@ -55,41 +56,72 @@
 #'
 #' outdir <- tempdir()
 #' bai <- indexBam(bam_fn)
-#' on.exit(unlink(outdir, bai))
+#' on.exit(unlink(c(outdir, bai)))
 #'
 #' fp <- FilterParam(library_type = "fr-second-strand")
 #' sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
 #' sce
 #'
+#' # example of processing multiple smart-seq2 style libraries
+#'
+#' many_small_bams <- rep(bam_fn, 10)
+#' bam_ids <- LETTERS[1:10]
+#' pileup_cells(many_small_bams,
+#'              sites = gr,
+#'              cell_barcodes = bam_ids,
+#'              cb_tag = NULL,
+#'              umi_tag = NULL,
+#'              paired_end = TRUE,
+#'              outdir,
+#'              param = fp)
+#'
 #' @importFrom GenomeInfoDb  seqinfo seqlengths
 #' @importFrom Rsamtools ScanBamParam scanBamFlag
-#'
+#' @importFrom BiocParallel bpworkers
 #' @family pileup
 #'
 #' @export
 pileup_cells <- function(bamfile,
-                      sites,
-                      cell_barcodes,
-                      output_directory,
-                      chroms = NULL,
-                      umi_tag = "UB",
-                      cb_tag = "CB",
-                      param = FilterParam(),
-                      BPPARAM = SerialParam(),
-                      return_sce = TRUE,
-                      verbose = FALSE) {
+                         sites,
+                         cell_barcodes,
+                         output_directory,
+                         chroms = NULL,
+                         umi_tag = "UB",
+                         cb_tag = "CB",
+                         paired_end = FALSE,
+                         param = FilterParam(),
+                         BPPARAM = SerialParam(),
+                         return_sce = TRUE,
+                         verbose = FALSE) {
 
-  if (!all(file.exists(bamfile))) {
-    stop("bamfile(s) not found: ", bamfile[!file.exists(bamfile)], call. = FALSE)
+  if(length(bamfile) > 1) {
+    process_nbam <- TRUE
+    if(length(bamfile) != length(cell_barcodes)){
+      msg <- paste(c("multiple bamfiles detected ",
+                     "a character vector of equal length ",
+                     "to the number of input bams must be ",
+                     "supplied to cell_barcodes"),
+                   collapse = "")
+      cli::cli_abort(msg)
+    }
+  } else {
+    process_nbam <- FALSE
   }
+  if (!all(file.exists(bamfile))) {
+    missing_bams <- bamfile[!file.exists(bamfile)]
+    cli::cli_abort("bamfile(s) not found: {missing_bams}")
+  }
+
   bamfile <- path.expand(bamfile)
-  seq_info <- GenomeInfoDb::seqinfo(Rsamtools::BamFile(bamfile))
+  seq_info <- GenomeInfoDb::seqinfo(Rsamtools::BamFile(bamfile[1]))
 
   if (!dir.exists(output_directory)) {
     dir.create(output_directory, recursive = TRUE)
   }
 
-  stopifnot(is(sites, "GRanges"))
+  if(!is(sites, "GRanges")){
+    cli::cli_abort("sites provided are not formatted as GRanges")
+  }
 
   ## set default bam flags if not supplied
   if(identical(param@bam_flags, Rsamtools::scanBamFlag())){
@@ -101,7 +133,11 @@ pileup_cells <- function(bamfile,
   }
 
   cell_barcodes <- cell_barcodes[!is.na(cell_barcodes)]
-  check_tag(cb_tag)
+  if(is.null(cb_tag)){
+    cb_tag = character()
+  } else {
+    check_tag(cb_tag)
+  }
   if(is.null(umi_tag)){
     umi_tag = character()
   } else {
@@ -115,12 +151,17 @@ pileup_cells <- function(bamfile,
     missing_chroms <- setdiff(chroms, chroms_to_process)
     if (length(missing_chroms) > 0) {
       if(verbose){
-        warning("the following chromosomes are not present in the bamfile(s):\n",
-                paste(missing_chroms, collapse = "\n"),
-                call. = FALSE)
+        msg <- "the following chromosomes are not present in the bamfile(s):\n{missing_chroms}"
+        cli::cli_alert_warning(msg)
       }
     }
     chroms_to_process <- intersect(chroms, chroms_to_process)
+  }
+  chroms_to_process <- as.character(intersect(seqnames(sites), chroms_to_process))
+  sites <- sites[seqnames(sites) %in% chroms_to_process, ]
+
+  if(length(chroms_to_process) == 0){
+    cli::cli_abort("there are no shared chromosomes found in the sites provided and bam file")
   }
 
   fp <- .adjustParams(param, 1)
@@ -140,28 +181,56 @@ pileup_cells <- function(bamfile,
     "min_variant_reads"
   )])
 
-  if (verbose) message("beginning pileup")
-  tmp_plp_files <- bpmapply(get_sc_pileup,
-                            chrom = chroms_to_process,
-                            MoreArgs = list(
-                              bamfn = bamfile,
-                              sites = sites,
-                              barcodes = cell_barcodes,
-                              outfile_prefix = output_directory,
-                              cb_tag = cb_tag,
-                              umi_tag = umi_tag,
-                              libtype_code = lib_code,
-                              event_filters = event_filters,
-                              fp = fp,
-                              verbose = verbose
-                            ),
-                            BPPARAM = BPPARAM,
-                            SIMPLIFY = FALSE)
+  if (verbose) cli::cli_alert("Beginning pileup")
+  if(process_nbam){
+    nwrkers <- BiocParallel::bpworkers(BPPARAM)
+    tmp_bamfns <- chunk_vec(bamfile, nwrkers)
+    tmp_cbs <- chunk_vec(cell_barcodes, nwrkers)
+    ids <- seq_along(tmp_bamfns)
+    tmp_plp_files <- bpmapply(get_sc_pileup,
+                              bamfn = tmp_bamfns,
+                              id = ids,
+                              barcodes = tmp_cbs,
+                              MoreArgs = list(
+                                chrom = character(),
+                                sites = sites,
+                                outfile_prefix = output_directory,
+                                cb_tag = cb_tag,
+                                umi_tag = umi_tag,
+                                libtype_code = lib_code,
+                                event_filters = event_filters,
+                                fp = fp,
+                                pe = paired_end,
+                                verbose = verbose
+                              ),
+                              BPPARAM = BPPARAM,
+                              SIMPLIFY = FALSE)
+  } else {
+    tmp_plp_files <- bpmapply(get_sc_pileup,
+                              chrom = chroms_to_process,
+                              id = chroms_to_process,
+                              MoreArgs = list(
+                                bamfn = bamfile,
+                                sites = sites,
+                                barcodes = cell_barcodes,
+                                outfile_prefix = output_directory,
+                                cb_tag = cb_tag,
+                                umi_tag = umi_tag,
+                                libtype_code = lib_code,
+                                event_filters = event_filters,
+                                fp = fp,
+                                pe = paired_end,
+                                verbose = verbose
+                              ),
+                              BPPARAM = BPPARAM,
+                              SIMPLIFY = FALSE)
+  }
+
   bpstop(BPPARAM)
 
-  if (verbose) message("pileup completed per chromosome, binding matrices")
+  if (verbose) cli::cli_alert("pileup completed, binding matrices")
 
-  tmp_plp_files <- Filter(function(x) length(x)  > 0, tmp_plp_files)
+  tmp_plp_files <- Filter(function(x) length(x) > 0, tmp_plp_files)
   sps <- lapply(tmp_plp_files, function(x){
     read_sparray(x[1], x[2], x[3])
   })
@@ -184,13 +253,24 @@ pileup_cells <- function(bamfile,
     return(res)
   }
 
-  sp_assays <- lapply(sp_assays, function(x) {
-    xx <- do.call(rbind, x)
-    writeLines(colnames(xx), outfns["bc"])
-    writeLines(rownames(xx), outfns["sites"])
-    Matrix::writeMM(xx, outfns["counts"])
-    xx
-  })
+  if(process_nbam){
+    sp_assays <- lapply(sp_assays, function(x) {
+      xx <- do.call(cbind, x)
+      writeLines(colnames(xx), outfns["bc"])
+      writeLines(rownames(xx), outfns["sites"])
+      Matrix::writeMM(xx, outfns["counts"])
+      xx
+    })
+  } else {
+    sp_assays <- lapply(sp_assays, function(x) {
+      xx <- do.call(rbind, x)
+      writeLines(colnames(xx), outfns["bc"])
+      writeLines(rownames(xx), outfns["sites"])
+      Matrix::writeMM(xx, outfns["counts"])
+      xx
+    })
+  }
+
   unlink(unlist(tmp_plp_files))
 
   if(return_sce){
@@ -249,18 +329,21 @@ read_sparray <- function(mtx_fn, sites_fn, bc_fn){
 
 # Utilities -------------------------------------------------------
 
-get_sc_pileup <- function(bamfn, sites, barcodes,
+get_sc_pileup <- function(bamfn, id, sites, barcodes,
                           outfile_prefix, chrom,
                           umi_tag, cb_tag, libtype_code,
-                          event_filters, fp, verbose){
-  sites <- sites[seqnames(sites) %in% chrom, ]
+                          event_filters, fp, pe, verbose){
+  if(length(chrom) > 0) {
+    sites <- sites[seqnames(sites) %in% chrom, ]
+  }
+
   if(length(sites) == 0) return(character())
 
   outfns <- c("counts.mtx", "sites.txt", "bcs.txt")
-  chr_outfns <- file.path(outfile_prefix, paste0(chrom, "_", outfns))
-  chr_outfns <- path.expand(chr_outfns)
+  plp_outfns <- file.path(outfile_prefix, paste0(id, "_", outfns))
+  plp_outfns <- path.expand(plp_outfns)
 
-  if(verbose) message("working on ", chrom)
+  if(verbose) cli::cli_alert("working on group: {id}")
   lst <- gr_to_regions(sites)
   res <- .Call(".scpileup",
                bamfn,
@@ -275,29 +358,29 @@ get_sc_pileup <- function(bamfn, sites, barcodes,
                fp$read_bqual,
                as.integer(libtype_code),
                fp$bam_flags,
-               chr_outfns,
+               plp_outfns,
                umi_tag,
                FALSE,
-               FALSE,
+               pe,
                fp$min_variant_reads)
 
-  if(res < 0) stop("pileup failed")
-  chr_outfns
+  if(res < 0) cli::cli_abort("pileup failed")
+  plp_outfns
 }
 
 gr_to_regions <- function(gr){
   stopifnot(all(width(gr) == 1))
 
   nr <- length(gr);
-  if(nr == 0) stop("No entries in GRanges")
+  if(nr == 0)  cli::cli_abort("No entries in GRanges")
 
   gr_nms <- c("ref", "alt")
   if(!all(gr_nms %in% names(mcols(gr)))){
-    stop("GRanges must have a ref and alt columns")
+    cli::cli_abort("GRanges must have a ref and alt columns")
   }
 
   if(any(strand(gr) == "*")){
-    warning("missing strand not found in input, coercing strand to '+'")
+    cli::cli_alert_warning("missing strand not found in input, coercing strand to '+'")
     strand(gr) <- "+"
   }
   gr$idx <- seq(0, nr - 1) # is zero-based index
@@ -313,13 +396,23 @@ gr_to_regions <- function(gr){
 }
 
 id_to_gr <- function(x, seq_info){
-  xx <- str_split(x, "_", simplify = TRUE)
-  gr <- GRanges(xx[, 1],
-                IRanges(start = as.integer(xx[, 2]),
+  xx <- str_split(x, ":", simplify = TRUE)
+  if(ncol(xx) != 2) {
+    cli::cli_abort("unable to decode sites to rownames")
+  }
+  seqnms <- xx[, 1]
+  other_fields <- str_split(xx[, 2], "_", simplify = TRUE)
+
+  if(ncol(other_fields) != 4) {
+    stop("unable to decode sites to rownames")
+  }
+
+  gr <- GRanges(seqnms,
+                IRanges(start = as.integer(other_fields[, 1]),
                         width = 1L),
-                strand = c("+", "-")[as.integer(xx[, 3])],
-                ref = xx[, 4],
-                alt = xx[, 5],
+                strand = c("+", "-")[as.integer(other_fields[, 2])],
+                ref = other_fields[, 3],
+                alt = other_fields[, 4],
                 seqinfo = seq_info)
   names(gr) <- x
   gr
@@ -330,4 +423,13 @@ check_tag <- function(x) {
     stop("supplied tag must by nchar of 2: ", x)
   }
 }
+
+chunk_vec <- function(x,n) {
+  if(n == 1) {
+    res <- list(`1` = x)
+    return(res)
+  }
+  split(x, cut(seq_along(x), n, labels = FALSE))
+}
+
 

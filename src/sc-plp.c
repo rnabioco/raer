@@ -107,8 +107,6 @@ typedef struct {
   char* mtxfn;
   char* bcfn;
   char* sitesfn;
-  int nbam;
-  char **bamfns;
   FILE **fps; // [0] = mtxfn, [1] = sitefn, [2] = bcfn;
   efilter ef;
   str2intmap_t cbidx; // hashmap cellbarcode key -> column index value
@@ -120,6 +118,7 @@ typedef struct {
   int pe; // 1 if paired end, 0 if not
   int min_counts; // if 0 report all sites in sparseMatrix
   int site_idx; // counter of sites written, used for row index if report_all is FALSE
+  int is_ss2; // 1 if smart-seq2 mode, 0 otherwise
 } sc_mplp_conf_t;
 
 typedef struct {
@@ -177,13 +176,18 @@ static int check_read_filters(const bam_pileup1_t *p, sc_mplp_conf_t *conf){
 // 2 umi is reference
 // 3 umi is alternate
 static int count_record(bam1_t *b, sc_mplp_conf_t *conf, payload_t *pld,
-                        unsigned char base, int strand){
+                        unsigned char base, int strand, char* bamid){
   khiter_t k;
   char *cb, *cb_cpy, *umi, *umi_val;
   cb_t *cbdat;
   int cret, uret;
-  cb = get_aux_ztag(b, conf->cb_tag);
-  if(cb == NULL) return(0);
+  if(conf->is_ss2){
+    cb = bamid;
+  } else {
+    cb = get_aux_ztag(b, conf->cb_tag);
+    if(cb == NULL) return(0);
+  }
+
   cb_cpy = strdup(cb);
 
   k = kh_get(str2intmap, conf->cbidx, cb_cpy);
@@ -254,7 +258,7 @@ static int write_counts(sc_mplp_conf_t *conf, payload_t *pld, const char* seqnam
   }
   // write site
   if(conf->min_counts > 0){
-    ret = fprintf(conf->fps[1], "%s_%d_%d_%s_%s\n", seqname, pos + 1, pld->strand, pld->ref, pld->alt);
+    ret = fprintf(conf->fps[1], "%s:%d_%d_%s_%s\n", seqname, pos + 1, pld->strand, pld->ref, pld->alt);
     if(ret < 0) return(-1);
     conf->site_idx += 1;
   }
@@ -332,7 +336,7 @@ static void set_event_filters(efilter* ef, int* event_filters){
   ef->min_var_reads = event_filters[8];
 }
 
-static int run_scpileup(sc_mplp_conf_t *conf) {
+static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
 
   hts_set_log_level(HTS_LOG_ERROR);
 
@@ -344,59 +348,49 @@ static int run_scpileup(sc_mplp_conf_t *conf) {
   bam_mplp_t iter;
   bam_hdr_t *h = NULL;
 
-  data = calloc(conf->nbam, sizeof(mplp_sc_aux_t*));
-  plp = calloc(conf->nbam, sizeof(bam_pileup1_t*));
-  n_plp = calloc(conf->nbam, sizeof(int));
+  int nbam  = 1;
+  data = calloc(1, sizeof(mplp_sc_aux_t*));
+  plp = calloc(1, sizeof(bam_pileup1_t*));
+  n_plp = calloc(1, sizeof(int));
 
-  // read the header of each file in the list and initialize data
-  // for now we are processing only 1 bam, but plan to add functionality
-  // to process multiple smart-Seq2 bams here
-  for (i = 0; i < conf->nbam; ++i) {
-    bam_hdr_t *h_tmp;
-    data[i] = calloc(1, sizeof(mplp_sc_aux_t));
-    data[i]->fp = sam_open(conf->bamfns[i], "rb");
-    if ( !data[i]->fp ) {
-      Rf_error("failed to open %s: %s\n", conf->bamfns[i], strerror(errno));
-    }
+  // read the header of bam file and initialize data
 
-    data[i]->conf = conf;
-
-    h_tmp = sam_hdr_read(data[i]->fp);
-    if ( !h_tmp ) {
-      Rf_error("fail to read the header of %s\n", conf->bamfns[i]);
-    }
-
-    if(conf->qregion){
-      hts_idx_t *idx = NULL;
-      idx = sam_index_load(data[i]->fp, conf->bamfns[i]) ;
-
-      if (idx == NULL) {
-        Rf_error("fail to load bamfile index for %s\n", conf->bamfns[i]);
-      }
-
-      if ( (data[i]->iter=sam_itr_querys(idx, h_tmp, conf->qregion)) == 0) {
-        Rf_error("Fail to parse region '%s' with %s\n", conf->qregion, conf->bamfns[i]);
-      }
-
-      if(i == 0){
-        beg0 = data[i]->iter->beg;
-        end0 = data[i]->iter->end;
-      }
-      hts_idx_destroy(idx);
-
-    } else {
-      data[i]->iter = NULL;
-    }
-
-    if(i == 0){
-      h = data[i]->h = h_tmp;
-    } else {
-      bam_hdr_destroy(h_tmp);
-      data[i]->h = h;
-    }
+  data[0] = calloc(1, sizeof(mplp_sc_aux_t));
+  data[0]->fp = sam_open(bamfn, "rb");
+  if ( !data[0]->fp ) {
+    Rf_error("failed to open %s: %s\n", bamfn, strerror(errno));
   }
 
-  iter = bam_mplp_init(conf->nbam, screadaln, (void**)data);
+  data[0]->conf = conf;
+
+  h = sam_hdr_read(data[0]->fp);
+  if ( !h ) {
+    Rf_error("fail to read the header of %s\n", bamfn);
+  }
+
+  if(conf->qregion){
+    hts_idx_t *idx = NULL;
+    idx = sam_index_load(data[0]->fp, bamfn) ;
+
+    if (idx == NULL) {
+      Rf_error("fail to load bamfile index for %s\n",bamfn);
+    }
+
+    if ( (data[0]->iter=sam_itr_querys(idx, h, conf->qregion)) == 0) {
+      Rf_error("Fail to parse region '%s' with %s\n", conf->qregion, bamfn);
+    }
+
+    beg0 = data[0]->iter->beg;
+    end0 = data[0]->iter->end;
+    hts_idx_destroy(idx);
+
+  } else {
+    data[0]->iter = NULL;
+  }
+
+   data[0]->h = h;
+
+  iter = bam_mplp_init(nbam, screadaln, (void**)data);
   // enable overlap detection
   if(conf->pe) bam_mplp_init_overlaps(iter) ;
   // set max depth
@@ -450,8 +444,8 @@ static int run_scpileup(sc_mplp_conf_t *conf) {
     clear_cb_umiset(conf->cbmap);
 
     int n_counted = 0;
-    // iterate through bam files
-    for (i = 0; i < conf->nbam; ++i) {
+    // iterate through bam files, in this case 1 bam
+    for (i = 0; i < nbam; ++i) {
       int j;
       // iterate through reads that overlap position
       for (j = 0; j < n_plp[i]; ++j) {
@@ -478,7 +472,7 @@ static int run_scpileup(sc_mplp_conf_t *conf) {
         if(invert) c = (char)comp_base[(unsigned char)c];
         int strand = invert + 1; //invert is 0 if pos, 1 if neg.
 
-        int cret = count_record(p->b, conf, pld, c, strand);
+        int cret = count_record(p->b, conf, pld, c, strand, bamid);
         if(cret < 0) {
           ret = -1;
           REprintf("[raer internal] issue with counting records\n");
@@ -506,29 +500,26 @@ static int run_scpileup(sc_mplp_conf_t *conf) {
     bam_mplp_destroy(iter);
     bam_hdr_destroy(h);
 
-    for (i = 0; i < conf->nbam; ++i) {
-      sam_close(data[i]->fp);
-      if(data[i]->iter) hts_itr_destroy(data[i]->iter);
-      if(data[i]->idx) hts_idx_destroy(data[i]->idx);
-      free(data[i]);
+    for (i = 0; i < nbam; ++i) {
+      sam_close(data[0]->fp);
+      if(data[0]->iter) hts_itr_destroy(data[0]->iter);
+      if(data[0]->idx) hts_idx_destroy(data[0]->idx);
+      free(data[0]);
     }
-    free_hashmaps(conf->cbmap, conf->cbidx);
     free(data); free(plp); free(n_plp);
-    if(conf->reg_itr) regitr_destroy(conf->reg_itr);
 
     return ret;
 }
 
 
-static int set_sc_mplp_conf(sc_mplp_conf_t *conf, int n_bams, char** bamfns,
+static int set_sc_mplp_conf(sc_mplp_conf_t *conf, int nbams,
                             int n_outfns, char** outfns, char* qregion, regidx_t* idx,
                             int min_mapQ, int min_baseQ, double* read_bqual_filter,
                             int max_depth, int* b_flags, int* event_filters, int libtype,
                             int n_bcs, char** bcs, char* cbtag, char* umi,
                             int idx_skip, int pe, int min_counts){
   int ret = 0;
-  conf->bamfns = bamfns;
-  conf->nbam = n_bams;
+  conf->is_ss2 = nbams > 1 ? 1 : 0;
 
   conf->fps = R_Calloc(n_outfns, FILE*);
   if(conf->fps == NULL) Rf_error("[raer internal] unable to alloc");
@@ -613,7 +604,7 @@ static int write_all_sites(sc_mplp_conf_t *conf){
   payload_t *pld;
   while ( regitr_loop(itr) ){
     pld = regitr_payload(itr, payload_t*);
-    fprintf(conf->fps[1], "%s_%d_%d_%s_%s\n",
+    fprintf(conf->fps[1], "%s:%d_%d_%s_%s\n",
             itr->seq,
             (int)itr->beg+1,
             pld->strand,
@@ -741,10 +732,11 @@ SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
     bcs[i] = (char *) translateChar(STRING_ELT(barcodes, i));
   }
 
-  char * c_cbtag = (char *) translateChar(STRING_ELT(cbtag, 0));
+  char * c_cbtag = LENGTH(cbtag) == 0 ?
+    NULL : (char *) translateChar(STRING_ELT(cbtag, 0));
 
   char * c_umi = LENGTH(umi) == 0 ?
-  NULL : (char *) translateChar(STRING_ELT(umi, 0));
+    NULL : (char *) translateChar(STRING_ELT(umi, 0));
 
   sc_mplp_conf_t ga;
   memset(&ga, 0, sizeof(sc_mplp_conf_t));
@@ -754,7 +746,7 @@ SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
 
   int ret, res;
 
-  ret = set_sc_mplp_conf(&ga, nbams, cbampaths, nout, coutfns,
+  ret = set_sc_mplp_conf(&ga, nbams, nout, coutfns,
                          cq_region, idx, INTEGER(min_mapQ)[0],
                          INTEGER(min_baseQ)[0], REAL(read_bqual_filter),
                          INTEGER(max_depth)[0], INTEGER(b_flags),
@@ -767,12 +759,25 @@ SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
   // write sites, if all sites requested, otherwise write during pileup
   if(ga.min_counts == 0) write_all_sites(&ga);
   res = 1;
-  res = run_scpileup(&ga);
+  if(ga.is_ss2){
+    for(int i = 0; i < nbams; ++i){
+      res = run_scpileup(&ga, cbampaths[i], bcs[i]);
+      if(res < 0){
+        REprintf("[raer internal] error processing bamfile %s:", cbampaths[i]);
+        break;
+      }
+    }
+  } else {
+    res = run_scpileup(&ga, cbampaths[0], NULL);
+  }
 
   for(int i = 0; i < nout; ++i) {
     if(ga.fps[i]) fclose(ga.fps[i]);
   }
   if(ga.fps) R_Free(ga.fps);
+  if(ga.reg_itr) regitr_destroy(ga.reg_itr);
+  if(ga.reg_idx) regidx_destroy(ga.reg_idx);
+  free_hashmaps(ga.cbmap, ga.cbidx);
 
   if(res < 0) REprintf("error detected during pileup, %d\n", res);
 

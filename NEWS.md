@@ -1,5 +1,7 @@
 # raer 0.99.0
 
+* `pileup_cells()` gained functionality to process multiple smart-seq2 style bam files.
+
 * Changed `filterParam` argument in `pileup_sites` and `pileup_cells` to `param` for
 simplicity
 

@@ -56,3 +56,28 @@ test_that("ranges are correct", {
   expect_equal(nrow(sce), 4)
 })
 
+
+test_that("if multiple bams are supplied, treat each as a separate cell", {
+  fp <- FilterParam(library_type = "fr-second-strand")
+  sce <- pileup_cells(rep(bam_fn, 10),
+                      sites = gr,
+                      cell_barcodes = LETTERS[1:10],
+                      cb_tag = NULL,
+                      umi_tag = NULL,
+                      outdir, param = fp)
+  expect_true(all(gr == rowRanges(sce)))
+  expect_equal(ncol(sce), 10)
+  expect_true(all(colnames(sce) == LETTERS[1:10]))
+})
+
+test_that("if multiple bams are supplied, require nbam # of barcodes", {
+  fp <- FilterParam(library_type = "fr-second-strand")
+  expect_error(pileup_cells(rep(bam_fn, 10),
+                      sites = gr,
+                      cell_barcodes = LETTERS[1:2],
+                      cb_tag = NULL,
+                      umi_tag = NULL,
+                      outdir, param = fp))
+
+})
+
