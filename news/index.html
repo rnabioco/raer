@@ -56,7 +56,8 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.99.0" id="raer-0990">raer 0.99.0<a class="anchor" aria-label="anchor" href="#raer-0990"></a></h2>
-<ul><li><p>Changed <code>filterParam</code> argument in <code>pileup_sites</code> and <code>pileup_cells</code> to <code>param</code> for simplicity</p></li>
+<ul><li><p><code><a href="../reference/pileup_cells.html">pileup_cells()</a></code> gained functionality to process multiple smart-seq2 style bam files.</p></li>
+<li><p>Changed <code>filterParam</code> argument in <code>pileup_sites</code> and <code>pileup_cells</code> to <code>param</code> for simplicity</p></li>
 <li><p>Added <code>FilterParam</code> to exclude multi-allelic sites <code>report_multiallelic</code>, or exclude reporting a variant in the Var assay based on allelic frequency (<code>min_allelic_freq</code>).</p></li>
 <li><p>The <code>bam_flags</code> parameter used in <code>pileup_sites</code> and <code>pileup_cells</code> has been moved into the <code>FilterParam</code> class.</p></li>
 <li><p>The <code>bedindex</code> parameter for <code>pileup_sites</code> has been removed. This option is not needed at the user level and is planned to be replaced by the regional indexing used in <code><a href="../reference/pileup_cells.html">pileup_cells()</a></code>.</p></li>
