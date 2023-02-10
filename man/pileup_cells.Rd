@@ -89,11 +89,24 @@ cbs <- na.omit(cbs)
 
 outdir <- tempdir()
 bai <- indexBam(bam_fn)
-on.exit(unlink(outdir, bai))
+on.exit(unlink(c(outdir, bai)))
 
 fp <- FilterParam(library_type = "fr-second-strand")
 sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
 sce
+
+# example of processing multiple smart-seq2 style libraries
+
+many_small_bams <- rep(bam_fn, 10)
+bam_ids <- LETTERS[1:10]
+pileup_cells(many_small_bams,
+             sites = gr,
+             cell_barcodes = bam_ids,
+             cb_tag = NULL,
+             umi_tag = NULL,
+             paired_end = TRUE,
+             outdir,
+             param = fp)
 
 }
 \seealso{
