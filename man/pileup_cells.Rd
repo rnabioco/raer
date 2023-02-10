@@ -12,6 +12,7 @@ pileup_cells(
   chroms = NULL,
   umi_tag = "UB",
   cb_tag = "CB",
+  paired_end = FALSE,
   param = FilterParam(),
   BPPARAM = SerialParam(),
   return_sce = TRUE,
@@ -35,6 +36,8 @@ sites present in the listed chromosomes will be processed}
 \item{umi_tag}{tag in bam containing the UMI sequence}
 
 \item{cb_tag}{tag in bam containing the cell barcode sequence}
+
+\item{paired_end}{set to TRUE if data is paired end.}
 
 \item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various filters to
 apply to reads and sites during pileup. Note that the \code{min_variant_reads}
