@@ -50,7 +50,7 @@ regidx_t *regidx_load_simple(char** chroms, int* start, int* end, int n_sites){
   for(i = 0; i < n_sites; ++i){
     chr_beg = chroms[i];
     hts_pos_t s = (hts_pos_t) start[i] - 1; // convert to 0 based
-    hts_pos_t e = (hts_pos_t) end[i];
+    hts_pos_t e = (hts_pos_t) end[i] - 1; // inclusive
     ret = regidx_push(idx, chr_beg, chr_beg + strlen(chr_beg) - 1, s, e, NULL);
     if(ret < 0) Rf_error("[raer internal] index push failed\n");
   }
@@ -136,10 +136,10 @@ regidx_t *regidx_build(SEXP lst, int tbl)
   } else if (tbl == 2) {
     idx = parse_bed_gr(lst);
   } else {
-    Rf_error("[raer internal ]incorrect tbl specification");
+    Rf_error("[raer internal] incorrect tbl specification");
   }
   if (!idx){
-    Rf_error("'regidx_build_internal' indexing failed");
+    Rf_error("[raer internal] regidx indexing failed");
   }
   return idx;
 }

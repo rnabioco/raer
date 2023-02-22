@@ -3,14 +3,14 @@ library(Rsamtools)
 library(SingleCellExperiment)
 
 bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
-
+indexBam(bam_fn)
 gr <- GRanges(c("2:579:-",
                 "2:625:-",
                 "2:645:-",
                 "2:589:-",
                 "2:601:-"))
-gr$ref <- c(rep("A", 4), "T")
-gr$alt <- c(rep("G", 4), "C")
+gr$REF <- c(rep("A", 4), "T")
+gr$ALT <- c(rep("G", 4), "C")
 gr <- sort(gr)
 
 cbs <- unique(scanBam(bam_fn, param = ScanBamParam(tag = "CB"))[[1]]$tag$CB)
@@ -32,7 +32,7 @@ test_that("basic functionality works", {
   expect_true(fe)
   expect_true(is(assays(sce)$nRef, "dgCMatrix"))
   expect_true(sum(assays(sce)$nRef) > 0)
-  expect_true(sum(assays(sce)$nVar) > 0)
+  expect_true(sum(assays(sce)$nAlt) > 0)
 
   expect_warning(pileup_cells(bam_fn, gr,
                               c("non", "existent", "barcodes"),

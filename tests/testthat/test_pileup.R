@@ -5,37 +5,39 @@ library(Rsamtools)
 library(rtracklayer)
 library(BiocParallel)
 library(stringr)
+library(rtracklayer)
 
 bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")
 bedfn <- raer_example("regions.bed")
+sites <- import(bedfn)
 
-res <- pileup_sites(bamfn, fafn, bedfn)
+res <- pileup_sites(bamfn, fafn, sites)
 
 test_that("pileup works", {
-  expect_equal(length(rowData(res)$Ref), 182)
+  expect_equal(length(rowData(res)$REF), 182)
   expect_equal(length(assays(res)), 7)
 })
 
 test_that("filtering for variants in pileup works", {
-  vars <- res[assay(res, "Var")[, 1] != "-"]
-  res_all_vars <- pileup_sites(bamfn, fafn, bedfn,
+  vars <- res[assay(res, "ALT")[, 1] != "-"]
+  res_all_vars <- pileup_sites(bamfn, fafn, sites,
     param = FilterParam(only_keep_variants = TRUE)
   )
   expect_equal(nrow(res_all_vars), 2)
   expect_equal(vars, res_all_vars)
 
-  res_2_vars <- pileup_sites(bamfn, fafn, bedfn,
+  res_2_vars <- pileup_sites(bamfn, fafn, sites,
                              param = FilterParam(min_variant_reads = 2))
   expect_equal(nrow(res_2_vars), 1)
-  expect_equal(vars[assay(vars, "nVar")[, 1] >= 2, ],
+  expect_equal(vars[assay(vars, "nAlt")[, 1] >= 2, ],
                res_2_vars)
 
 })
 
 test_that("n-bam pileup works", {
-  res <- pileup_sites(c(bamfn, bamfn), fafn, bedfn,
+  res <- pileup_sites(c(bamfn, bamfn), fafn, sites,
     param = FilterParam(library_type = c(
       "fr-first-strand",
       "fr-first-strand"
@@ -45,11 +47,11 @@ test_that("n-bam pileup works", {
   expect_equal(dim(res), c(182, 2))
   expect_equal(length(assays(res)), 7)
 
-  res <- pileup_sites(c(bamfn, bam2fn), fafn, bedfn)
+  res <- pileup_sites(c(bamfn, bam2fn), fafn, sites)
   expect_equal(dim(res), c(182, 2))
   expect_false(identical(res[, 1], res[, 2]))
 
-  res <- pileup_sites(c(bamfn, bamfn), fafn, bedfn,
+  res <- pileup_sites(c(bamfn, bamfn), fafn, sites,
     param = FilterParam(library_type = c(
       "fr-first-strand",
       "genomic-unstranded"
@@ -59,7 +61,7 @@ test_that("n-bam pileup works", {
   no_nas <- all(vapply(assays(res), function(x) all(!is.na(x)), logical(1)))
   expect_true(no_nas)
 
-  res <- pileup_sites(c(bamfn, bam2fn), fafn, bedfn,
+  res <- pileup_sites(c(bamfn, bam2fn), fafn, sites,
     param = FilterParam(
       library_type = "fr-first-strand",
       only_keep_variants = TRUE
@@ -68,30 +70,30 @@ test_that("n-bam pileup works", {
   # same sites reported in both files
   expect_true(all(start(res[, 1]) == start(res[, 2])))
   # sites are variant in at least 1 file
-  expect_true(all(rowSums(assay(res, "Var") != "-") > 0))
+  expect_true(all(rowSums(assay(res, "ALT") != "-") > 0))
 
-  res <- pileup_sites(rep(bamfn, 4), fafn, bedfn,
+  res <- pileup_sites(rep(bamfn, 4), fafn, sites,
     param = FilterParam(library_type = "fr-first-strand")
   )
   expect_true(ncol(res) == 4)
 
   # all sites in first bam are variant
-  res <- pileup_sites(c(bamfn, bam2fn), fafn, bedfn,
+  res <- pileup_sites(c(bamfn, bam2fn), fafn, sites,
     param = FilterParam(
       library_type = "fr-first-strand",
       only_keep_variants = c(TRUE, FALSE)
     )
   )
-  expect_true(all(assay(res[,1], "Var") != "-"))
+  expect_true(all(assay(res[,1], "ALT") != "-"))
 
   # all sites in second bam are variant
-  res <- pileup_sites(c(bamfn, bam2fn), fafn, bedfn,
+  res <- pileup_sites(c(bamfn, bam2fn), fafn, sites,
     param = FilterParam(
       library_type = "fr-first-strand",
       only_keep_variants = c(FALSE, TRUE)
     )
   )
-  expect_true(all(assay(res[,2], "Var") != "-"))
+  expect_true(all(assay(res[,2], "ALT") != "-"))
 })
 
 test_that("pileup regional query works", {
@@ -103,7 +105,7 @@ test_that("pileup regional query works", {
   # chr1 does not exist
   expect_error(suppressWarnings(pileup_sites(bamfn, fafn, region = "chr1")))
 
-  res <- pileup_sites(bamfn, fafn, bedfile = NULL, chrom = "SSR3")
+  res <- pileup_sites(bamfn, fafn, chrom = "SSR3")
   expect_equal(nrow(res), 529)
 })
 
@@ -113,9 +115,8 @@ test_that("incorrect regional query is caught", {
 })
 
 test_that("missing files are caught", {
-  expect_error(pileup_sites(bamfile = "hello.bam", fafn, bedfn))
-  expect_error(pileup_sites(bamfn, fafile = "hello.fasta", bedfn))
-  expect_error(pileup_sites(bamfn, fafn, bedfile = "hello.bed"))
+  expect_error(pileup_sites(bamfile = "hello.bam", fafn))
+  expect_error(pileup_sites(bamfn, fafile = "hello.fasta"))
 })
 
 test_that("library types are respected", {
@@ -145,7 +146,7 @@ test_that("library types are respected", {
   )
   expect_true(all(strand(res) %in% c("+", "-")))
 
-  expect_error(pileup_sites(bamfn, fafn, bedfn,
+  expect_error(pileup_sites(bamfn, fafn, sites,
     param = FilterParam(library_type = "unknown-string")
   ))
 })
@@ -178,7 +179,7 @@ check_nRef_calc <- function(input, nts_in = nts) {
   colnames(res) <- names(assays(input))
   for (nt in nts_in) {
     clmn <- paste0("n", nt)
-    dat <- res[res$Ref == nt, ]
+    dat <- res[res$REF == nt, ]
 
     expect_identical(dat[, clmn], dat$nRef)
 
@@ -186,11 +187,11 @@ check_nRef_calc <- function(input, nts_in = nts) {
     other_clmns <- paste0("n", other_clmns)
     var_sums <- rowSums(dat[, other_clmns])
 
-    expect_identical(as.integer(var_sums), as.integer(dat$nVar))
+    expect_identical(as.integer(var_sums), as.integer(dat$nAlt))
   }
 }
 
-test_that("pileup check nRef and nVar", {
+test_that("pileup check nRef and nAlt", {
   strds <- c("fr-first-strand", "fr-second-strand",
              "unstranded", "genomic-unstranded")
 
@@ -224,8 +225,8 @@ test_that("pileup check flag filtering", {
   )
   names(bout) <- basename(bamfn)
   fp <- FilterParam(bam_flags = scanBamFlag(isMinusStrand = F))
-  a <- pileup_sites(bamfn, fafn, bedfn, param = fp)
-  b <- pileup_sites(bout, fafn, bedfn)
+  a <- pileup_sites(bamfn, fafn, sites, param = fp)
+  b <- pileup_sites(bout, fafn, sites)
   expect_true(identical(a, b))
 
   bout <- filterBam(bamfn,
@@ -235,8 +236,8 @@ test_that("pileup check flag filtering", {
   )
   names(bout) <- basename(bamfn)
   fp <- FilterParam(bam_flags = scanBamFlag(isMinusStrand = T))
-  a <- pileup_sites(bamfn, fafn, bedfn, param = fp)
-  b <- pileup_sites(bout, fafn, bedfn)
+  a <- pileup_sites(bamfn, fafn, sites, param = fp)
+  b <- pileup_sites(bout, fafn, sites)
   expect_true(identical(a, b))
 })
 
@@ -308,14 +309,14 @@ test_that("filtering for splicing events works", {
   splices <- GRanges(coverage(junctions(GenomicAlignments::readGAlignmentPairs(bamfn))))
   splices <- splices[splices$score > 0]
   rse <- pileup_sites(bamfn, fafn)
-  rse <- rse[assay(rse, "Var")[, 1] != "-"]
+  rse <- rse[assay(rse, "ALT")[, 1] != "-"]
 
   # 3 sites, 1 is from all non-spliced reds, 2 sites are all from spliced reads,
   # (SPCS3  227, 347, 348)
   sites_near_splices <- rse[queryHits(findOverlaps(rse, splices, maxgap = 4))]
 
   rse <- pileup_sites(bamfn, fafn, param = FilterParam(splice_dist = 5))
-  rse <- rse[assay(rse, "Var")[, 1] != "-"]
+  rse <- rse[assay(rse, "ALT")[, 1] != "-"]
   bsites_near_splices <- rse[queryHits(findOverlaps(rse,
     splices,
     maxgap = 4
@@ -353,8 +354,8 @@ test_that("filtering for indel events works", {
   # lose SSR3 387 site after filtering
   expect_equal(nrow(bsites), 2)
   # lose 1 read from SSR3 388 site after filtering
-  expect_equal( assay(sites_near_indels, "nVar")[2] -
-                  assay(bsites, "nVar")[1], 1)
+  expect_equal( assay(sites_near_indels, "nAlt")[2] -
+                  assay(bsites, "nAlt")[1], 1)
 })
 
 fout <- tempfile(fileext = ".fa")
@@ -376,13 +377,13 @@ test_that("excluding reads with mismatches works", {
   )
   expect_true(nrow(rse) == 1)
   expect_true(nrow(rse2) == 1)
-  expect_true(assay(rse2, "nVar") == 0)
+  expect_true(assay(rse2, "nAlt") == 0)
 
   rse <- pileup_sites(bamfn, fafn)
   rse2 <- pileup_sites(bamfn, fafn, bad_reads = fout)
   expect_true(nrow(rse2) > 0)
-  expect_true(colSums(assay(rse, "nVar")) -
-                colSums(assay(rse2, "nVar")) > 0)
+  expect_true(colSums(assay(rse, "nAlt")) -
+                colSums(assay(rse2, "nAlt")) > 0)
 })
 
 test_that("filtering for read-level mismatches works", {
@@ -537,8 +538,8 @@ test_that("poor quality reads get excluded with read_bqual", {
   res_no_filter <- subsetByOverlaps(res_no_filter, bad_reads)
   res <- subsetByOverlaps(res, bad_reads)
 
-  n_diff <- (assay(res_no_filter, "nRef") + assay(res_no_filter, "nVar") -
-               (assay(res, "nRef") + assay(res, "nVar")))
+  n_diff <- (assay(res_no_filter, "nRef") + assay(res_no_filter, "nAlt") -
+               (assay(res, "nRef") + assay(res, "nAlt")))
 
   # we don't count deletions as coverage
   cov <- coverage(bad_reads, drop.D.ranges = TRUE)
@@ -601,13 +602,13 @@ unlink(c(tmp, sort_cbbam, idx))
 
 test_that("chroms missing from fasta file will not be processed", {
   mfafn <- raer_example("mouse_tiny.fasta")
-  expect_error(expect_warning(pileup_sites(bamfn, mfafn, bedfn)))
+  expect_error(expect_warning(pileup_sites(bamfn, mfafn, sites)))
 })
 
 test_that("excluding multiallelics works",{
-  # DHFR_299_- has "AG,AT"
+  # DHFR_299_- has "A ->G,T"
   res_no_filter <- pileup_sites(bam2fn, fafn, region = "DHFR:299-299")
-  expect_equal(assay(res_no_filter, "Var")[1, 1], "AG,AT")
+  expect_equal(assay(res_no_filter, "ALT")[1, 1], "T,G")
 
   fp <- FilterParam(report_multiallelic = FALSE)
   res <- pileup_sites(bam2fn, fafn, param = fp,  region = "DHFR:299-299")
@@ -622,8 +623,8 @@ test_that("excluding multiallelics works",{
   fp <- FilterParam(min_allelic_freq = 0.05)
   res <- pileup_sites(bam2fn, fafn, param = fp,  region = "DHFR:299-299")
   expect_equal(nrow(res), 1)
-  expect_equal(assay(res, "Var")[1, 1], "AG")
-  # Var is first assay
+  expect_equal(assay(res, "ALT")[1, 1], "G")
+  # ALT is first assay
   expect_equal(assays(res)[-1], assays(res_no_filter)[-1])
 
   res <- pileup_sites(bam2fn, fafn, param = fp)
@@ -634,13 +635,13 @@ test_that("excluding multiallelics works",{
   fp <- FilterParam(min_allelic_freq = 0.05, report_multiallelic = FALSE)
   res <- pileup_sites(bam2fn, fafn, param = fp,  region = "DHFR:299-299")
   expect_equal(nrow(res), 1)
-  expect_equal(assay(res, "Var")[1, 1], "AG")
+  expect_equal(assay(res, "ALT")[1, 1], "G")
 
 
   fp <- FilterParam(min_allelic_freq = 0.0001)
   res <- pileup_sites(bam2fn, fafn, param = fp,  region = "DHFR:299-299")
   expect_equal(nrow(res), 1)
-  expect_equal(assay(res, "Var")[1, 1], "AG,AT")
+  expect_equal(assay(res, "ALT")[1, 1], "T,G")
 
 
 })

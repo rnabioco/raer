@@ -64,7 +64,6 @@ LinkingTo:
     Rcpp,
     Rhtslib (>= 2.0.0)
 SystemRequirements: 
-    C++11, 
     GNU make, 
     libbz2, 
     liblzma,

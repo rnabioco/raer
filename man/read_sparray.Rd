@@ -26,7 +26,7 @@ The .mtx.gz files are formatted with columns:
 \item row index (0 based)
 \item column index (0 based)
 \item values for sparseMatrix #1 (nRef)
-\item values for sparseMatrix #2 (nVar)
+\item values for sparseMatrix #2 (nAlt)
 N) values for sparseMatrix ... (...) ununsed for now
 }
 }

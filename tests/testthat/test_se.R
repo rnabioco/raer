@@ -1,14 +1,15 @@
 library(GenomicRanges)
 library(SummarizedExperiment)
-
+library(rtracklayer)
 bamfn <- system.file("extdata", "SRR5564277_Aligned.sortedByCoord.out.md.bam", package = "raer")
 fafn <- system.file("extdata", "human.fasta", package = "raer")
 bedfn <- system.file("extdata", "regions.bed", package = "raer")
 
+sites <- import(bedfn)
 tmp_dir <- tempdir("plps/tests")
 on.exit(unlink(tmp_dir, recursive = TRUE))
 
-out_fns <- pileup_sites(bamfn, fafn, bedfn,
+out_fns <- pileup_sites(bamfn, fafn, sites,
                         return_data = FALSE,
                         outfile_prefix = tmp_dir)
 out_short_fns <- pileup_sites(bamfn, fafn, region = "SSR3:203-205",
@@ -44,7 +45,7 @@ test_that("creating a sparse RangedSummarizedExperiment works", {
   # non-numeric cols throw warning
   expect_warning(sres <- merge_pileups(plp, sparse = TRUE))
   expect_true(is(assay(sres, "nA"), "sparseMatrix"))
-  expect_false(is(assay(sres, "Var"), "sparseMatrix"))
+  expect_false(is(assay(sres, "ALT"), "sparseMatrix"))
   dres <- merge_pileups(plp, sparse = FALSE)
 
   assays(sres) <- lapply(assays(sres), function(x) {

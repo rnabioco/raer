@@ -12,19 +12,19 @@ names(cb_lst) <- paste0("cluster", 1:5)
 
 test_that("basic functionality works", {
   fp <- FilterParam(library_type = "fr-second-strand")
-  se <- sc_editing(
+  se <- suppressWarnings(sc_editing(
     bamfile = bamfn,
     fafile = raer_example("mouse_tiny.fasta"),
     bedfile = raer_example("5k_neuron_sites.bed.gz"),
     cell_barcodes = cbs[1:15],
     verbose = FALSE,
     param = fp
-  )
+  ))
   expect_equal(ncol(se), 15)
   expect_true(all(startsWith(colnames(se), "AAA")))
   expect_true(all(names(assays(se)) == c("nA", "nG")))
 
-  se <- sc_editing(
+  se <- suppressWarnings(sc_editing(
     bamfile = bamfn,
     fafile = raer_example("mouse_tiny.fasta"),
     bedfile = raer_example("5k_neuron_sites.bed.gz"),
@@ -32,7 +32,7 @@ test_that("basic functionality works", {
     verbose = FALSE,
     umi_tag = NULL,
     param = fp
-  )
+  ))
   expect_equal(ncol(se), 5)
   expect_true(all(startsWith(colnames(se), "cluster")))
 })
@@ -51,7 +51,7 @@ test_that("umi deduplication works", {
   fp <- FilterParam(library_type = "fr-first-strand",
                     min_base_quality = 1,
                     min_mapq = 0)
-  se_umi <- sc_editing(
+  se_umi <- suppressWarnings(sc_editing(
     bamfile = bamfn,
     fafile = raer_example("mouse_tiny.fasta"),
     bedfile = tf,
@@ -59,8 +59,8 @@ test_that("umi deduplication works", {
     umi_tag = "UB",
     verbose = FALSE,
     param = fp
-  )
-  se_noumi <- sc_editing(
+  ))
+  se_noumi <- suppressWarnings(sc_editing(
     bamfile = bamfn,
     fafile = raer_example("mouse_tiny.fasta"),
     bedfile = tf,
@@ -68,7 +68,7 @@ test_that("umi deduplication works", {
     umi_tag = NULL,
     verbose = FALSE,
     param = fp
-  )
+  ))
 
   av <- as.matrix(assays(se_umi)$nA)
   nz_vals <- av[which(av > 0, arr.ind = TRUE)]

@@ -5,7 +5,7 @@ library(Rsamtools)
 bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
 fafn <- system.file("extdata", "human.fasta", package = "raer")
 bedfn <- system.file("extdata", "regions.bed", package = "raer")
-idx <- indexBed(bedfn)
+idx <- suppressWarnings(indexBed(bedfn))
 
 cbbam_fn <- system.file("extdata", "5k_neuron_mouse_cbsort.bam", package = "raer")
 ubbam_fn <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_ubsort.bam", package = "raer")

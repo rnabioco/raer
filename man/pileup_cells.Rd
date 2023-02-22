@@ -68,7 +68,7 @@ tag with a UMI.
 
 The \code{sites} parameter specifies sites to pileup. This must be a GRanges
 object with 1 base intervals, a strand (+ or -), and supplemented with
-metadata columns named \code{ref} and \code{alt} containing the reference and
+metadata columns named \code{REF} and \code{ALT} containing the reference and
 alternate base to query. See examples for an example format.
 
 At each site, bases from overlapped reads will be examined, and counts of
@@ -81,8 +81,8 @@ library(GenomicRanges)
 bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
 
 gr <- GRanges(c("2:579:-", "2:625:-", "2:645:-","2:589:-", "2:601:-"))
-gr$ref <- c(rep("A", 4), "T")
-gr$alt <- c(rep("G", 4), "C")
+gr$REF <- c(rep("A", 4), "T")
+gr$ALT <- c(rep("G", 4), "C")
 
 cbs <- unique(scanBam(bam_fn, param = ScanBamParam(tag = "CB"))[[1]]$tag$CB)
 cbs <- na.omit(cbs)

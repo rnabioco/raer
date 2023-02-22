@@ -9,9 +9,11 @@
 #' the names will be included in the colData of the RangedSummarizedExperiment, otherwise
 #' the colData will be populated with the basename of the bamfile.
 #' @param fafile path to fasta file
-#' @param bedfile path to bed file with sites or regions to query
-#' @param region samtools region query string (i.e. chr1:100-1000)
-#' @param chroms chromosomes to process, not to be used with region
+#' @param sites a GRanges object containing regions or sites to process.
+#' @param region samtools region query string (i.e. chr1:100-1000). Can be combined
+#' with sites, in which case sites will be filtered to keep only sites within the
+#' region.
+#' @param chroms chromosomes to process, not to be used with region.
 #' @param param object of class [FilterParam()] which specify various
 #'   filters to apply to reads and sites during pileup.
 #' @param reads if supplied a fasta file will be written with reads that pass
@@ -26,12 +28,6 @@
 #'   `outfile_prefix`, will be returned.
 #' @param outfile_prefix Output prefix for tabix indexed files. If `NULL`, no
 #'   files will be produced.
-#' @param use_index if TRUE regions supplied in the `bedfile` will be queried
-#'   using the bam file index. By default (FALSE) all alignments are queried via
-#'   streaming and regions in the bedfile are used to select the sites to keep.
-#'   Using the index can be much faster when querying a small number of sites in
-#'   large bamfiles. With many sites in the bedfile , or with small bamfiles,
-#'   this option may be slower than streaming.
 #' @param BPPARAM A [BiocParallel] class to control parallel execution. Parallel
 #'   processing occurs per chromosome, so is disabled when run on a single
 #'   region.
@@ -54,10 +50,6 @@
 #'
 #' # using multiple bam files
 #'
-#' bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
-#' bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
-#' fafn <- raer_example("human.fasta")
-#'
 #' bams <- rep(c(bamfn, bam2fn), each = 3)
 #' sample_ids <- paste0(rep(c("KO", "WT"), each = 3), 1:3)
 #' names(bams) <- sample_ids
@@ -73,6 +65,16 @@
 #'
 #' rowRanges(rse)
 #'
+#' # specifying regions to query use GRanges object
+#' sites <- rowRanges(rse)
+#' rse <- pileup_sites(bams, fafn, sites = sites)
+#' rse
+#'
+#' rse <- pileup_sites(bams, fafn, chroms = c("SPCS3", "DHFR"))
+#' rse
+#'
+#' rse <- pileup_sites(bams, fafn, region = "DHFR:100-101")
+#' rse
 #' @importFrom Rsamtools bgzip indexTabix TabixFile scanTabix scanFaIndex
 #' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges
@@ -84,7 +86,7 @@
 #' @export
 pileup_sites <- function(bamfiles,
                        fafile,
-                       bedfile = NULL,
+                       sites = NULL,
                        region = NULL,
                        chroms = NULL,
                        param = FilterParam(),
@@ -92,7 +94,6 @@ pileup_sites <- function(bamfiles,
                        reads = NULL,
                        return_data = TRUE,
                        BPPARAM = SerialParam(),
-                       use_index = FALSE,
                        bad_reads = NULL,
                        umi_tag = NULL,
                        verbose = FALSE) {
@@ -107,24 +108,25 @@ pileup_sites <- function(bamfiles,
   fafile <- path.expand(fafile)
   n_files <- length(bamfiles)
 
-  if (!is.null(bedfile)) {
-    bedfile <- path.expand(bedfile)
-    if (!file.exists(bedfile)) {
-      stop("bedfile not found: ", bedfile, call. = FALSE)
+  if (!is.null(sites)) {
+    if (!is(sites, "GRanges")) {
+      cl <- class(sites)
+      cli::cli_abort("invalid object passed to sited, expecting GRanges found {cl}")
     }
   }
 
   if (!all(file.exists(bamfiles))) {
-    stop("bamfile(s) not found: ", bamfiles[!file.exists(bamfiles)], call. = FALSE)
+    missing_bams <- bamfiles[!file.exists(bamfiles)]
+    cli::cli_abort("bamfile(s) not found: {missing_bams}")
   }
 
   if (!file.exists(fafile)) {
-    stop("fasta file not found: ", fafile, call. = FALSE)
+    cli::cli_abort("fasta file not found: {fafile}")
   }
 
   if (is.null(outfile_prefix)) {
     if (!return_data) {
-      stop("an outfile_prefix must be supplied if data is written to files")
+      cli::cli_abort("an outfile_prefix must be supplied if data is written to files")
     }
     in_memory <- TRUE
     outfiles <- character()
@@ -137,7 +139,7 @@ pileup_sites <- function(bamfiles,
     }
     outfiles <- path.expand(outfiles)
     if (length(outfiles) != n_files + 1) {
-      stop("# of outfiles does not match # of bam input files: ", outfiles)
+      cli::cli_abort("# of outfiles does not match # of bam input files: {outfiles}")
     }
     # remove files if exist, to avoid appending to existing files
     unlink(outfiles)
@@ -148,30 +150,28 @@ pileup_sites <- function(bamfiles,
 
   contigs <- GenomeInfoDb::seqinfo(Rsamtools::BamFile(bamfiles[1]))
   contig_info <- GenomeInfoDb::seqlengths(contigs)
-  chroms_to_process <- names(contig_info)
+
+  if(is.null(chroms)) {
+    chroms_to_process <- names(contig_info)
+  } else {
+    chroms_to_process <- chroms
+  }
+
   if (is.null(region)) {
     if (!is.null(chroms)) {
       if (length(chroms) == 1) {
         region <- chroms
-        chroms_to_process <- chroms
-      } else {
-        region <- character()
-        chroms_to_process <- chroms
       }
-    } else {
-      region <- character()
     }
-  } else {
-    chroms_to_process <- get_region(region)$chrom
   }
 
   missing_chroms <- chroms_to_process[!chroms_to_process %in% names(contig_info)]
 
   if (length(missing_chroms) > 0) {
     if(verbose){
-      warning("the following chromosomes are not present in the bamfile(s):\n",
-              paste(missing_chroms, collapse = "\n"),
-              call. = FALSE)
+      msg <- paste(missing_chroms, collapse = "\n")
+      cli::cli_warn(c("the following chromosomes are not present in the bamfile(s):",
+                      "{msg}"))
     }
     chroms_to_process <- setdiff(chroms_to_process, missing_chroms)
   }
@@ -181,9 +181,9 @@ pileup_sites <- function(bamfiles,
 
   if(length(missing_chroms) > 0){
     if(verbose){
-      warning("the following chromosomes are not present in the fasta file:\n",
-            paste(missing_chroms, collapse = "\n"),
-            call. = FALSE)
+      msg <- paste(missing_chroms, collapse = "\n")
+      cli::cli_warn(c("the following chromosomes are not present in the fasta file:",
+                     "msg"))
     }
     chroms_to_process <- setdiff(chroms_to_process, missing_chroms)
   }
@@ -191,15 +191,18 @@ pileup_sites <- function(bamfiles,
   chroms_to_process <-
     chroms_to_process[order(match(chroms_to_process, names(contig_info)))]
 
+  if(!is.null(sites)) {
+    sites <- sites[seqnames(sites) %in% chroms_to_process]
+    sites <- gr_to_cregions(sites)
+  }
+
   if (length(chroms_to_process) == 0) {
-    stop("No chromosomes requested are found in bam file",
-      call. = FALSE
-    )
+    cli::cli_abort("No chromosomes requested are found in bam file")
   }
 
   if (!is.null(reads)) {
     if (!is.character(reads) | length(reads) != 1) {
-      stop("reads must be a character vector of length 1")
+      cli::cli_abort("reads must be a character vector of length 1")
     }
   } else {
     reads <- character()
@@ -207,7 +210,7 @@ pileup_sites <- function(bamfiles,
 
   if (!is.null(bad_reads)) {
     if (!is.character(bad_reads) | length(bad_reads) != 1) {
-      stop("bad_reads must be a character vector of length 1")
+      cli::cli_abort("bad_reads must be a character vector of length 1")
     }
   } else {
     bad_reads <- character()
@@ -215,7 +218,7 @@ pileup_sites <- function(bamfiles,
 
   if(!is.null(umi_tag)){
     if(nchar(umi_tag) != 2) {
-      stop("umi_tag must be a character(1) with nchar of 2 ")
+      cli::cli_abort("umi_tag must be a character(1) with nchar of 2 ")
     }
   } else {
     umi_tag <- character()
@@ -234,133 +237,95 @@ pileup_sites <- function(bamfiles,
   fp <- .adjustParams(param, n_files)
   fp <- .c_args_FilterParam(fp)
 
-  run_in_parallel <- FALSE
-  temp_bed_file <- FALSE
-  if (is(BPPARAM, "SerialParam") || length(chroms_to_process) == 1) {
-    if (length(chroms_to_process) > 1 && is.null(bedfile)) {
-      temp_bed_file <- TRUE
-      bedfile <- tempfile(fileext = ".bed")
-      to_process <- contig_info[chroms_to_process]
-      bed_gr <- GRanges(paste0(names(to_process), ":", 1, "-", to_process))
-      rtracklayer::export(bed_gr, bedfile)
-    }
-    if (is.null(bedfile)) bedfile <- character()
+  if(!is.null(region)) {
+    chroms_to_process <- region
+  } else {
+    region <- character()
+  }
 
-    res <- .Call(
-      ".pileup",
-      bamfiles,
-      as.integer(n_files),
-      fafile,
-      region,
-      bedfile,
-      fp[["int_args"]],
-      fp[["numeric_args"]],
-      fp[["lgl_args"]],
-      fp[["library_type"]],
-      fp[["only_keep_variants"]],
-      fp[["min_mapq"]],
-      in_memory,
-      use_index,
-      outfiles,
-      reads,
-      bad_reads,
-      umi_tag
-    )
+  if (is(BPPARAM, "SerialParam") || length(chroms_to_process) == 1) {
+    start_time <- Sys.time()
+    if (length(chroms_to_process) > 1 && is.null(sites)) {
+      to_process <- contig_info[chroms_to_process]
+      sites <- GRanges(paste0(names(to_process), ":", 1, "-", to_process))
+      sites <- gr_to_cregions(sites)
+    }
+    res <- .Call(".pileup", bamfiles, as.integer(n_files), fafile, region,
+                 sites, fp[["int_args"]], fp[["numeric_args"]], fp[["lgl_args"]],
+                 fp[["library_type"]], fp[["only_keep_variants"]], fp[["min_mapq"]],
+                 in_memory, outfiles, reads, bad_reads, umi_tag)
 
     if (!in_memory) {
       if (res != 0) {
-        stop("Error occured during pileup", call. = FALSE)
+        cli::cli_abort("Error occured during pileup")
       }
     } else {
       rdat <- res[[1]]
       res <- res[2:length(res)]
       res <- lists_to_grs(res, contigs)
       res <- merge_pileups(res,
-                       sample_names = sample_ids)
+                           sample_names = sample_ids)
       rowData(res) <- cbind(rowData(res), rdat)
     }
 
-    if (temp_bed_file) unlink(bedfile)
+    if (verbose) {
+      time_elapsed <- prettyNum(Sys.time() - start_time, digits = 3)
+      cli::cli_alert_success("Completed pileup in {time_elapsed}")
+    }
 
   } else {
-    run_in_parallel <- TRUE
-
-    res <- bplapply(chroms_to_process,
-      FUN = function(ctig) {
-        start_time <- Sys.time()
-        if (length(outfiles) > 0) {
-          tmp_outfiles <- unlist(lapply(seq_along(outfiles),
-                                        function(x) tempfile()))
-          tmp_rdatfile <- tmp_outfiles[1]
-          tmp_plpfiles <- tmp_outfiles[2:length(tmp_outfiles)]
-          fn_lst <- list(
-            contig = ctig,
-            bam_fn = bamfiles,
-            tmp_plpfns = tmp_plpfiles,
-            tmp_rdatfn = tmp_rdatfile
-          )
-        } else {
-          tmp_outfiles <- character()
-        }
-        if (is.null(ctig)) ctig <- character()
-        if (is.null(bedfile)) bedfile <- character()
-        res <- .Call(
-          ".pileup",
-          bamfiles,
-          as.integer(n_files),
-          fafile,
-          ctig,
-          bedfile,
-          fp[["int_args"]],
-          fp[["numeric_args"]],
-          fp[["lgl_args"]],
-          fp[["library_type"]],
-          fp[["only_keep_variants"]],
-          fp[["min_mapq"]],
-          in_memory,
-          use_index,
-          tmp_outfiles,
-          reads,
-          bad_reads,
-          umi_tag
+    res <- bplapply(chroms_to_process, function(ctig) {
+      start_time <- Sys.time()
+      if (length(outfiles) > 0) {
+        tmp_outfiles <- unlist(lapply(seq_along(outfiles),
+                                      function(x) tempfile()))
+        tmp_rdatfile <- tmp_outfiles[1]
+        tmp_plpfiles <- tmp_outfiles[2:length(tmp_outfiles)]
+        fn_lst <- list(
+          contig = ctig,
+          bam_fn = bamfiles,
+          tmp_plpfns = tmp_plpfiles,
+          tmp_rdatfn = tmp_rdatfile
         )
+      } else {
+        tmp_outfiles <- character()
+      }
+      if (is.null(ctig)) ctig <- character()
+      res <- .Call(".pileup", bamfiles, as.integer(n_files), fafile, ctig,
+                   sites, fp[["int_args"]], fp[["numeric_args"]],
+                   fp[["lgl_args"]], fp[["library_type"]], fp[["only_keep_variants"]],
+                   fp[["min_mapq"]],   in_memory, tmp_outfiles, reads, bad_reads, umi_tag)
 
-        if (!in_memory) {
-          if (res != 0) {
-            stop("Error occured during pileup", call. = FALSE)
-          }
-          res <- fn_lst
-        } else {
-          rdat <- res[[1]]
-          res <- res[2:length(res)]
-          res <- lists_to_grs(res, contigs)
-          res <- list(rdat = rdat, plps = res)
+      if (!in_memory) {
+        if (res != 0) {
+          cli::cli_abort("Error occured during pileup")
         }
+        res <- fn_lst
+      } else {
+        rdat <- res[[1]]
+        res <- res[2:length(res)]
+        res <- lists_to_grs(res, contigs)
+        res <- list(rdat = rdat, plps = res)
+      }
 
-        if (verbose) {
-          time_elapsed <- Sys.time() - start_time
-          message("Completed pileup on ", ctig, " in ", time_elapsed)
-        }
-        res
-      },
-      BPPARAM = BPPARAM
-    )
-
+      if (verbose) {
+        time_elapsed <- prettyNum(Sys.time() - start_time, digits = 3)
+        cli::cli_alert_success("Completed pileup on {ctig} in {time_elapsed}")
+      }
+      res
+    }, BPPARAM = BPPARAM)
     bpstop(BPPARAM)
-
     if (!in_memory) {
-
       for(i in seq_along(res)){
         ra <- file.append(rdat_outfn, res[[i]]$tmp_rdatfn)
         pa <- file.append(plp_outfns, res[[i]]$tmp_plpfns)
         if(!all(c(ra, pa))) {
-          stop("error occured concatenating pileup files")
+          cli::cli_abort("error occured concatenating pileup files")
         }
         unlink(c(res[[i]]$tmp_rdatfn, res[[i]]$tmp_plpfns))
       }
 
     } else {
-
       res <- lapply(res, function(x) {
         se <- merge_pileups(x$plps, sample_names = sample_ids)
         rowData(se) <- cbind(rowData(se), x$rdat)
@@ -463,14 +428,14 @@ read_pileup <- function(tbx_fn, region = NULL) {
     )
   }
 
-  plp_cols <- c("Var", "nRef", "nVar", "nA", "nT", "nC", "nG", "nN", "nX")
+  plp_cols <- c("ALT", "nRef", "nAlt", "nA", "nT", "nC", "nG", "nN", "nX")
   rowData_cols <- c("rpbz", "vdb")
   if(ncol(from) == 6) {
     cols <- rowData_cols
   } else {
     cols <- plp_cols
   }
-  colnames(from)[4:ncol(from)] <- c("Ref", cols)
+  colnames(from)[4:ncol(from)] <- c("REF", cols)
 
   GenomicRanges::GRanges(
     seqnames = from$V1,
@@ -489,10 +454,10 @@ read_pileup <- function(tbx_fn, region = NULL) {
 # idea from @user2462304 https://stackoverflow.com/a/48180979/6276041
 empty_plp_record <- function() {
   col_types <- list(
-    Ref = character(),
-    Var = character(),
+    REF = character(),
+    ALT = character(),
     nRef = integer(),
-    nVar = integer(),
+    nAlt = integer(),
     nA = integer(),
     nT = integer(),
     nC = integer(),
@@ -693,7 +658,7 @@ setMethod(show, "FilterParam", function(object) {
 #' to be reported. Calculated per bam file, such that if 1 bam file has >= min_variant_reads,
 #' then the site will be reported.
 #' @param min_allelic_freq minimum allelic frequency required for a variant to be
-#' reported in Var assays.
+#' reported in ALT assays.
 #' @param report_multiallelic if TRUE, report sites with multiple variants passing
 #' filters. If FALSE, site will not be reported.
 #' @param ignore_query_Ns ignored for now
@@ -793,10 +758,10 @@ PILEUP_COLS <- c(
   "seqnames",
   "pos",
   "strand",
-  "Ref",
-  "Var",
+  "REF",
+  "ALT",
   "nRef",
-  "nVar",
+  "nAlt",
   "nA",
   "nT",
   "nC",
@@ -820,4 +785,12 @@ lists_to_grs <- function(x, seqinfo = NULL) {
       seqinfo = seqinfo
     )
   })
+}
+
+gr_to_cregions <- function(gr){
+  nr <- length(gr);
+  if(nr == 0) cli::cli_abort("No entries in GRanges")
+  list(as.character(seqnames(gr)),
+       as.integer(start(gr)),
+       as.integer(end(gr)))
 }

@@ -28,7 +28,7 @@
 #' @importFrom Matrix sparseMatrix
 #' @keywords internal
 merge_pileups <- function(plps,
-                      assay_cols = c("Var", "nRef", "nVar", "nA", "nT", "nC", "nG"),
+                      assay_cols = c("ALT", "nRef", "nAlt", "nA", "nT", "nC", "nG"),
                       sample_names = NULL,
                       sparse = FALSE,
                       fill_na = NULL,
@@ -59,11 +59,11 @@ merge_pileups <- function(plps,
   # determine all ranges for across plps,
   # store Ref nt in mcols (should be invariant)
   all_ranges <- unlist(as(plps, "GRangesList"), use.names = FALSE)
-  ref_nt <- mcols(all_ranges)[["Ref"]]
+  ref_nt <- mcols(all_ranges)[["REF"]]
   mcols(all_ranges) <- NULL
-  mcols(all_ranges)$Ref <- ref_nt
+  mcols(all_ranges)$REF <- ref_nt
   all_ranges <- sort(unique(all_ranges), ignore.strand = TRUE)
-  assay_cols <- setdiff(assay_cols, "Ref")
+  assay_cols <- setdiff(assay_cols, "REF")
 
   if (!sparse) {
     non_sparse_assays <- assay_cols

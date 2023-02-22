@@ -20,12 +20,12 @@ calc_edit_frequency(
 \item{edit_from}{This should be a nucleotide (A, C, G, or T)
 corresponding to the nucleotide you expect in the reference. Ex. for A to I
 editing events, this would be "A". If NULL, then editing frequencies will be
-calculated using the \code{nVar} and \code{nRef} values.}
+calculated using the \code{nAlt} and \code{nRef} values.}
 
 \item{edit_to}{This should be a nucleotide (A, C, G, or T) and should
 correspond to the nucleotide you expect after the editing event. Ex. for A
 to I editing events, this would be "G". If NULL, then editing frequencies
-will be calculated using the \code{nVar} and \code{nRef} values.}
+will be calculated using the \code{nAlt} and \code{nRef} values.}
 
 \item{drop}{If TRUE, the summarizedExperiment returned will only retain sites
 matching the specified \code{edit_from} and \code{edit_to} bases.}

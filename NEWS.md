@@ -1,5 +1,11 @@
 # raer 0.99.0
 
+* The bed indexing used in `pileup_sites()` has been replaced with the region indexing approach from `pileup_cells()`. 
+
+* `pileup_sites()` now requires a GRanges object rather than a bed file. The `bedfile `parameter has been removed and replaced with a `sites` parameter.  
+
+* Renamed `Ref` and `Var` output columns to `REF` and `ALT` and `nVar` was renamed to `nAlt`. This provides consistency with VCF format and consistency across `pileup_cells()` and `pileup_sites()` function calls
+
 * `pileup_cells()` gained functionality to process multiple smart-seq2 style bam files.
 
 * Changed `filterParam` argument in `pileup_sites` and `pileup_cells` to `param` for
