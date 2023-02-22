@@ -6,7 +6,7 @@
 \usage{
 merge_pileups(
   plps,
-  assay_cols = c("Var", "nRef", "nVar", "nA", "nT", "nC", "nG"),
+  assay_cols = c("ALT", "nRef", "nAlt", "nA", "nT", "nC", "nG"),
   sample_names = NULL,
   sparse = FALSE,
   fill_na = NULL,

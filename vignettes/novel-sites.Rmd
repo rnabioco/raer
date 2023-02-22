@@ -104,13 +104,13 @@ strand. We therefore use `subsetByOverlaps(..., ignore.strand = TRUE)` to retain
 passing these DNA-seq based filters independent of strand. 
 
 ```{r}
-to_keep <- (assay(rse, "nRef")[, "dna"] >= 5 & assay(rse, "Var")[, "dna"] == "-")
+to_keep <- (assay(rse, "nRef")[, "dna"] >= 5 & assay(rse, "ALT")[, "dna"] == "-")
 rse <- subsetByOverlaps(rse, rse[to_keep, ], ignore.strand = TRUE)
 nrow(rse)
 ```
 
 Next we filter to remove any multi-allelic sites. These sites are stored as comma-separated
-strings in the `Var` assay (e.g. `AG,AC`). Non-variant sites are stored as `-`. 
+strings in the `ALT` assay (e.g. `G,C`). Non-variant sites are stored as `-`. 
 `filter_multiallelic()` will remove any sites that have multiple variants in the samples present in the `summarizedExperiment` object. It will add a new column to the `rowData()` to indicate the variant for each site, and will calculate an `allele_freq` assay with variant allele frequencies for each sample. 
 
 ```{r}
@@ -161,12 +161,12 @@ Lastly, we'll further filter the edit sites to require that the editing frequenc
 to_keep <- assay(rse, "edit_freq")[, 1] > 0.05
 rse <- rse[to_keep, ]
 
-rse <- rse[assay(rse, "nVar")[, 1] >= 2]
+rse <- rse[assay(rse, "nAlt")[, 1] >= 2]
 ```
 
 
 ```{r}
-stopifnot(all(rowData(rse)$Var == "AG"))
+stopifnot(all(rowData(rse)$REF == "A" & rowData(rse)$ALT == "G"))
 rowRanges(rse)
 ```
 

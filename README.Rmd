@@ -44,10 +44,10 @@ library(raer)
 bam1fn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")
-bedfn <- raer_example("regions.bed")
+
 bams <- c("ko" = bam1fn, "wt" = bam2fn)
 
-rse <- pileup_sites(bams, fafn, bedfile = bedfn)
+rse <- pileup_sites(bams, fafn)
 ```
 
 
@@ -63,7 +63,7 @@ colData(rse)
 
 ```{r}
 assays(rse)$nRef[1:4, ]
-assays(rse)$nVar[1:4, ]
+assays(rse)$nAlt[1:4, ]
 ```
 
 

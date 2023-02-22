@@ -12,11 +12,11 @@
 #' @param edit_from This should be a nucleotide (A, C, G, or T)
 #'   corresponding to the nucleotide you expect in the reference. Ex. for A to I
 #'   editing events, this would be "A". If NULL, then editing frequencies will be
-#'   calculated using the `nVar` and `nRef` values.
+#'   calculated using the `nAlt` and `nRef` values.
 #' @param edit_to This should be a nucleotide (A, C, G, or T) and should
 #'   correspond to the nucleotide you expect after the editing event. Ex. for A
 #'   to I editing events, this would be "G". If NULL, then editing frequencies
-#'   will be calculated using the `nVar` and `nRef` values.
+#'   will be calculated using the `nAlt` and `nRef` values.
 #' @param drop If TRUE, the summarizedExperiment returned will only retain sites
 #'   matching the specified `edit_from` and `edit_to` bases.
 #' @param replace_na If TRUE, NA and NaN editing frequencies will be coerced to
@@ -48,7 +48,7 @@ calc_edit_frequency <- function(se,
   # Set edit to and from for pre defined types
   if (is.null(edit_from) | is.null(edit_to)) {
     edit_from <- "Ref"
-    edit_to <- "Var"
+    edit_to <- "Alt"
   } else if (!(edit_from %in% c("A", "C", "G", "T")) |
     !(edit_to %in% c("A", "C", "G", "T"))) {
     stop("`edit_to` and `edit_from` must be nucleotides!")
@@ -58,7 +58,7 @@ calc_edit_frequency <- function(se,
   to_col <- paste0("n", edit_to)
 
   if (drop && from_col != "nRef") {
-    se <- se[mcols(rowRanges(se))$Ref == edit_from, ]
+    se <- se[mcols(rowRanges(se))$REF == edit_from, ]
   }
 
   if ("depth" %in% names(assays(se))) {

@@ -8,7 +8,7 @@
 #'
 #'   The `sites` parameter specifies sites to pileup. This must be a GRanges
 #'   object with 1 base intervals, a strand (+ or -), and supplemented with
-#'   metadata columns named `ref` and `alt` containing the reference and
+#'   metadata columns named `REF` and `ALT` containing the reference and
 #'   alternate base to query. See examples for an example format.
 #'
 #'   At each site, bases from overlapped reads will be examined, and counts of
@@ -48,8 +48,8 @@
 #' bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
 #'
 #' gr <- GRanges(c("2:579:-", "2:625:-", "2:645:-","2:589:-", "2:601:-"))
-#' gr$ref <- c(rep("A", 4), "T")
-#' gr$alt <- c(rep("G", 4), "C")
+#' gr$REF <- c(rep("A", 4), "T")
+#' gr$ALT <- c(rep("G", 4), "C")
 #'
 #' cbs <- unique(scanBam(bam_fn, param = ScanBamParam(tag = "CB"))[[1]]$tag$CB)
 #' cbs <- na.omit(cbs)
@@ -120,7 +120,7 @@ pileup_cells <- function(bamfile,
   }
 
   if(!is(sites, "GRanges")){
-    cli::cli_abort("sites provided are not formatted as GRanges")
+    cli::cli_abort("sites provided must be a GRanges object")
   }
 
   ## set default bam flags if not supplied
@@ -236,7 +236,7 @@ pileup_cells <- function(bamfile,
   })
   sps <- sps[!unlist(lapply(sps, is.null))]
   sp_assays <- list(nRef = lapply(sps, function(x) x[[1]]),
-                    nVar = lapply(sps, function(x) x[[2]]))
+                    nAlt = lapply(sps, function(x) x[[2]]))
 
   outfns <- c("barcodes.txt.gz","sites.txt.gz","counts.mtx.gz")
   outfns <- file.path(output_directory, outfns)
@@ -293,7 +293,7 @@ pileup_cells <- function(bamfile,
 #' 1) row index (0 based)
 #' 2) column index (0 based)
 #' 3) values for sparseMatrix #1 (nRef)
-#' 4) values for sparseMatrix #2 (nVar)
+#' 4) values for sparseMatrix #2 (nAlt)
 #' N) values for sparseMatrix ... (...) ununsed for now
 #'
 #' @param mtx_fn .mtx.gz file path
@@ -374,9 +374,9 @@ gr_to_regions <- function(gr){
   nr <- length(gr);
   if(nr == 0)  cli::cli_abort("No entries in GRanges")
 
-  gr_nms <- c("ref", "alt")
+  gr_nms <- c("REF", "ALT")
   if(!all(gr_nms %in% names(mcols(gr)))){
-    cli::cli_abort("GRanges must have a ref and alt columns")
+    cli::cli_abort("GRanges must have a REF and ALT columns")
   }
 
   if(any(strand(gr) == "*")){
@@ -384,15 +384,12 @@ gr_to_regions <- function(gr){
     strand(gr) <- "+"
   }
   gr$idx <- seq(0, nr - 1) # is zero-based index
-
-
   list(as.character(seqnames(gr)),
        as.integer(start(gr)),
        as.integer(strand(gr)),
-       as.character(mcols(gr)$ref),
-       as.character(mcols(gr)$alt),
+       as.character(mcols(gr)$REF),
+       as.character(mcols(gr)$ALT),
        as.integer(mcols(gr)$idx))
-
 }
 
 id_to_gr <- function(x, seq_info){

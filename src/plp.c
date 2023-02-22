@@ -2,7 +2,6 @@
 #include <htslib/faidx.h>
 #include <htslib/khash.h>
 #include <htslib/hts_log.h>
-#include <bedidx.h>
 #include "regfile.h"
 #include "plp_utils.h"
 #include "plp_data.h"
@@ -20,8 +19,6 @@
 #include <sys/stat.h>
 #include <getopt.h>
 #include <inttypes.h>
-
-#include <time.h>
 
 #include <Rinternals.h>
 
@@ -81,7 +78,8 @@ typedef struct {
   uint32_t keep_flag[2];
   char *reg, *fai_fname, *output_fname;
   faidx_t *fai;
-  void *bed;
+  regidx_t *reg_idx;
+  regitr_t *reg_itr;
   rnhash_t rnames;
   strhash_t brhash;
   FILE *reads_fp;
@@ -155,8 +153,8 @@ int parse_mismatches(bam1_t* b,const int pos, int n_types, int n_mis){
   char *p;
   int nm = 0;
 
-  char vars[3];
-  vars[2] = '\0';
+  char vars[2];
+  vars[1] = '\0';
   varhash_t vh;
   vh = kh_init(varhash);
 
@@ -191,8 +189,7 @@ int parse_mismatches(bam1_t* b,const int pos, int n_types, int n_mis){
           : 'N';
           nm += 1;
 
-          vars[0] = *p;
-          vars[1] = c;
+          vars[0] = c;
           char *var = strdup(vars);
           int rval = 0;
           kh_put(varhash, vh, var, &rval);
@@ -400,8 +397,12 @@ static int readaln(void *data, bam1_t *b) {
     if (~test_flag & 2047u){ skip = 1; continue;}
 
     // test overlap
-    if (g->conf->bed && !g->conf->multi_itr) {
-      skip = !bed_overlap(g->conf->bed, sam_hdr_tid2name(g->h, b->core.tid), b->core.pos, bam_endpos(b));
+    if (g->conf->reg_idx) {
+      skip = !regidx_overlap(g->conf->reg_idx,
+                             sam_hdr_tid2name(g->h, b->core.tid),
+                             b->core.pos,
+                             bam_endpos(b),
+                             g->conf->reg_itr);
       if (skip) continue;
     }
 
@@ -842,10 +843,10 @@ static int count_one_record(const bam_pileup1_t *p, pcounts *pc, mplp_conf_t *co
                             int mref_b, int read_base, int invert, int i){
   int hret = 0, rpos = 0;
 
-  char mvar[3];
-  char pvar[3];
-  mvar[2] = '\0';
-  pvar[2] = '\0';
+  char mvar[2];
+  char pvar[2];
+  mvar[1] = '\0';
+  pvar[1] = '\0';
 
   khiter_t k;
 
@@ -859,10 +860,9 @@ static int count_one_record(const bam_pileup1_t *p, pcounts *pc, mplp_conf_t *co
       pc->mc->nr += 1;
       pall->m_ref_pos[rpos] += 1;
     } else {
-      mvar[0] = mref_b;
-      mvar[1] = read_base;
+      mvar[0] = read_base;
 
-      // store variants as (AG, AT, AC, etc.) hash set
+      // store variants as single bases in hash set
       char *var = strdup(mvar);
 
       k = kh_put(varhash, pc->mc->var, var, &hret);
@@ -911,8 +911,7 @@ static int count_one_record(const bam_pileup1_t *p, pcounts *pc, mplp_conf_t *co
       pall->p_ref_pos[rpos] += 1;
     } else {
 
-      pvar[0] = pref_b;
-      pvar[1] = read_base;
+      pvar[0] = read_base;
 
       char *var = strdup(pvar);
       k = kh_put(varhash, pc->pc->var, var, &hret);
@@ -1099,35 +1098,6 @@ static int run_pileup(char** cbampaths, const char** coutfns,
         end0 = data[i]->iter->end;
       }
       hts_idx_destroy(idx);
-
-    } else if (conf->bed && conf->multi_itr){
-      data[i]->idx = sam_index_load(data[i]->fp, cbampaths[i]) ;
-
-      if (data[i]->idx == NULL) {
-        Rf_error("[raer internal] fail to load bamfile index for %s\n", cbampaths[i]);
-      }
-
-      bed_unify(conf->bed);
-
-      if (!conf->bed) { // index is unavailable or no regions have been specified
-        Rf_error("[raer internal] No regions or BED file have been provided. Aborting.");
-      }
-
-      int regcount = 0;
-      hts_reglist_t *reglist = bed_reglist(conf->bed, 0, &regcount);
-      if (!reglist) {
-        Rf_error("[raer internal] Region list is empty or could not be created. ");
-      }
-
-      data[i]->iter = sam_itr_regions(data[i]->idx, h_tmp, reglist, regcount);
-      if(!data[i]->iter) {
-        Rf_error("[raer internal] Multi-region iterator could not be created. Aborting.");
-      }
-
-      if(i == 0){
-        beg0 = data[i]->iter->beg;
-        end0 = data[i]->iter->end;
-      }
     } else {
      data[i]->iter = NULL;
     }
@@ -1205,7 +1175,7 @@ static int run_pileup(char** cbampaths, const char** coutfns,
     mplp_get_ref(data[0], tid, &ref, &ref_len); // not in of single region requested
     if (tid < 0) break;
 
-    // check user interrupt, using a 2^k value is 2-3x faster than say 1e6
+    // check user interrupt, using a 2^k value is faster
     if (n_iter % 262144 == 0) {
       if(checkInterrupt()){
         REprintf("[raer internal] user interrupt detected");
@@ -1213,8 +1183,16 @@ static int run_pileup(char** cbampaths, const char** coutfns,
         goto fail;
       }
     }
+
     // ensure position is in requested intervals
-    if (conf->bed && tid >= 0 && !bed_overlap(conf->bed, sam_hdr_tid2name(h, tid), pos, pos+1)) continue;
+    if (conf->reg_idx && tid >= 0) {
+      int ol = regidx_overlap(conf->reg_idx,
+                              sam_hdr_tid2name(h, tid),
+                              pos,
+                              pos,
+                              conf->reg_itr);
+      if(!ol) continue;
+    }
 
     // if writing out reads with mismatches, clear out hash table of read names at each chromosome,
     if(tid != last_tid && conf->output_reads){
@@ -1341,7 +1319,6 @@ fail:
   for (i = 0; i < conf->nbam; ++i) {
     sam_close(data[i]->fp);
     if(data[i]->iter) hts_itr_destroy(data[i]->iter);
-    if(conf->multi_itr && data[i]->idx) hts_idx_destroy(data[i]->idx);
     free(data[i]);
     clear_pcounts(&plpc[i]);
     kh_destroy(varhash, plpc[i].mc->var);
@@ -1366,17 +1343,16 @@ fail:
   if(pd->fps) R_Free(pd->fps);
   R_Free(pd->pdat);
 
-
   if(stats) R_Free(stats);
 
   return ret;
 }
 
 
-static void check_plp_args(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP bedfn,
+static void check_plp_args(SEXP bampaths, SEXP n, SEXP fapath, SEXP region,
                            SEXP int_args, SEXP dbl_args, SEXP lgl_args,
                            SEXP libtype, SEXP only_keep_variants, SEXP min_mapQ,
-                           SEXP in_mem, SEXP multi_region_itr, SEXP outfns,
+                           SEXP in_mem, SEXP outfns,
                            SEXP reads_fn, SEXP mismatches_fn, SEXP umi) {
   if(!IS_INTEGER(n) || (LENGTH(n) != 1)){
     Rf_error("'n' must be integer(1)");
@@ -1393,10 +1369,6 @@ static void check_plp_args(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP
 
   if(!IS_CHARACTER(region) || (LENGTH(region) > 1)){
     Rf_error("'region' must be character of length 0 or 1");
-  }
-
-  if(!IS_CHARACTER(bedfn) || (LENGTH(bedfn) > 1)){
-    Rf_error("'bedfn' must be character of length 0 or 1");
   }
 
   // vectors populated with parameters of fixed sizes
@@ -1431,10 +1403,6 @@ static void check_plp_args(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP
     Rf_error("'in_mem' must be logical(1)");
   }
 
-  if(!IS_LOGICAL(multi_region_itr) || (LENGTH(multi_region_itr) != 1)){
-    Rf_error("'multi_region_itr' must be logical(1)");
-  }
-
   if(!LOGICAL(in_mem)[0] && (!IS_CHARACTER(outfns) || (LENGTH(outfns) != n_files + 1))){
     Rf_error("'outfns' must be character vector equal in length to number of bam files + 1");
   }
@@ -1454,11 +1422,11 @@ static void check_plp_args(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP
 }
 
 static int set_mplp_conf(mplp_conf_t *conf, int n_bams,
-                         char* fafn, char* qregion, char* bedfn,
+                         char* fafn, char* qregion, regidx_t *idx,
                          int* i_args, double* d_args, int* b_args,
                          int* libtypes, int* keep_variants, int* min_mapqs,
-                         int in_memory, int multi_itr,
-                         char* reads_fn, char* mismatches_fn, char* umi){
+                         int in_memory, char* reads_fn, char* mismatches_fn,
+                         char* umi){
   int ret = 0;
   if(n_bams <= 0) {
     REprintf("[raer internal] invalid bam input");
@@ -1479,14 +1447,14 @@ static int set_mplp_conf(mplp_conf_t *conf, int n_bams,
   // single region for pileup
   if(qregion) conf->reg = qregion;
 
-  // load and index bed intervals
-  if(bedfn){
-    conf->bed = bed_read(bedfn);
-    if (!conf->bed){
-      REprintf("[raer internal] unable to load bed index");
+  // store interval index
+  if(idx) {
+    conf->reg_idx = (regidx_t *)idx;
+    conf->reg_itr = regitr_init(conf->reg_idx);
+    if (!conf->reg_itr){
+      REprintf("[raer internal] unable to load region index iterator");
       return -1;
     }
-    conf->multi_itr = multi_itr;
   }
 
   conf->max_depth     = i_args[0];
@@ -1569,17 +1537,16 @@ static int set_mplp_conf(mplp_conf_t *conf, int n_bams,
   return ret;
 }
 
-SEXP pileup(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP bedfn,
+SEXP pileup(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP lst,
             SEXP int_args, SEXP dbl_args, SEXP lgl_args,
             SEXP libtype, SEXP only_keep_variants, SEXP min_mapQ,
-            SEXP in_mem, SEXP multi_region_itr, SEXP outfns,
+            SEXP in_mem,  SEXP outfns,
             SEXP reads_fn, SEXP mismatches_fn, SEXP umi) {
 
-  check_plp_args(bampaths, n, fapath, region, bedfn,
+  check_plp_args(bampaths, n, fapath, region,
                  int_args, dbl_args, lgl_args,
                  libtype, only_keep_variants, min_mapQ,
-                 in_mem, multi_region_itr, outfns,
-                 reads_fn, mismatches_fn, umi);
+                 in_mem, outfns,  reads_fn, mismatches_fn, umi);
 
   int i;
   char ** cbampaths = (char **) R_alloc(sizeof(const char *), Rf_length(bampaths));
@@ -1588,9 +1555,6 @@ SEXP pileup(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP bedfn,
   }
 
   char * cfafn = (char *) translateChar(STRING_ELT(fapath, 0));
-
-  char *cbedfn =  LENGTH(bedfn) == 0 ?
-    NULL : (char *) translateChar(STRING_ELT(bedfn, 0));
 
   char *cregion = LENGTH(region) == 0 ?
     NULL : (char *) translateChar(STRING_ELT(region, 0));
@@ -1616,13 +1580,19 @@ SEXP pileup(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP bedfn,
 
   mplp_conf_t ga;
   memset(&ga, 0, sizeof(mplp_conf_t));
+
+  regidx_t *idx = NULL;
+  if(!Rf_isNull(lst) && Rf_length(VECTOR_ELT(lst, 0)) > 0) {
+    idx = regidx_build(lst, 2);
+    if (!idx) Rf_error("Failed to build region index");
+  }
+
   int ret = 0;
   int nbam = INTEGER(n)[0];
-  ret = set_mplp_conf(&ga, nbam, cfafn, cregion, cbedfn,
+  ret = set_mplp_conf(&ga, nbam, cfafn, cregion, idx,
                       INTEGER(int_args), REAL(dbl_args), LOGICAL(lgl_args),
                       INTEGER(libtype), LOGICAL(only_keep_variants), INTEGER(min_mapQ),
-                      LOGICAL(in_mem)[0],  LOGICAL(multi_region_itr)[0],
-                      creads_fn, cmismatches_fn, umi_tag);
+                      LOGICAL(in_mem)[0], creads_fn, cmismatches_fn, umi_tag);
   SEXP result;
   PLP_DATA pd;
   if(ret >= 0){
@@ -1633,7 +1603,8 @@ SEXP pileup(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP bedfn,
 
   // clean up
   if (ga.fai) fai_destroy(ga.fai);
-  if (ga.bed) bed_destroy(ga.bed);
+  if(ga.reg_itr) regitr_destroy(ga.reg_itr);
+  if(ga.reg_idx) regidx_destroy(ga.reg_idx);
   if (ga.output_reads) {
     clear_rname_set(ga.rnames);
     kh_destroy(rname, ga.rnames);

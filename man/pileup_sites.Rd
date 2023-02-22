@@ -8,7 +8,7 @@
 pileup_sites(
   bamfiles,
   fafile,
-  bedfile = NULL,
+  sites = NULL,
   region = NULL,
   chroms = NULL,
   param = FilterParam(),
@@ -16,7 +16,6 @@ pileup_sites(
   reads = NULL,
   return_data = TRUE,
   BPPARAM = SerialParam(),
-  use_index = FALSE,
   bad_reads = NULL,
   umi_tag = NULL,
   verbose = FALSE
@@ -53,11 +52,13 @@ the colData will be populated with the basename of the bamfile.}
 
 \item{fafile}{path to fasta file}
 
-\item{bedfile}{path to bed file with sites or regions to query}
+\item{sites}{a GRanges object containing regions or sites to process.}
 
-\item{region}{samtools region query string (i.e. chr1:100-1000)}
+\item{region}{samtools region query string (i.e. chr1:100-1000). Can be combined
+with sites, in which case sites will be filtered to keep only sites within the
+region.}
 
-\item{chroms}{chromosomes to process, not to be used with region}
+\item{chroms}{chromosomes to process, not to be used with region.}
 
 \item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
 filters to apply to reads and sites during pileup.}
@@ -75,13 +76,6 @@ if \code{FALSE} a character vector of tabix-index files, specified by
 \item{BPPARAM}{A \link{BiocParallel} class to control parallel execution. Parallel
 processing occurs per chromosome, so is disabled when run on a single
 region.}
-
-\item{use_index}{if TRUE regions supplied in the \code{bedfile} will be queried
-using the bam file index. By default (FALSE) all alignments are queried via
-streaming and regions in the bedfile are used to select the sites to keep.
-Using the index can be much faster when querying a small number of sites in
-large bamfiles. With many sites in the bedfile , or with small bamfiles,
-this option may be slower than streaming.}
 
 \item{bad_reads}{a textfile containing read names to exclude from pileup.
 Readnames should be formated as readid_1 or readid_2 or readid for paired
@@ -145,7 +139,7 @@ to be reported. Calculated per bam file, such that if 1 bam file has >= min_vari
 then the site will be reported.}
 
 \item{min_allelic_freq}{minimum allelic frequency required for a variant to be
-reported in Var assays.}
+reported in ALT assays.}
 
 \item{report_multiallelic}{if TRUE, report sites with multiple variants passing
 filters. If FALSE, site will not be reported.}
@@ -179,10 +173,6 @@ pileup_sites(bamfn, fafn, param = fp)
 
 # using multiple bam files
 
-bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
-bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
-fafn <- raer_example("human.fasta")
-
 bams <- rep(c(bamfn, bam2fn), each = 3)
 sample_ids <- paste0(rep(c("KO", "WT"), each = 3), 1:3)
 names(bams) <- sample_ids
@@ -198,6 +188,16 @@ colData(rse)
 
 rowRanges(rse)
 
+# specifying regions to query use GRanges object
+sites <- rowRanges(rse)
+rse <- pileup_sites(bams, fafn, sites = sites)
+rse
+
+rse <- pileup_sites(bams, fafn, chroms = c("SPCS3", "DHFR"))
+rse
+
+rse <- pileup_sites(bams, fafn, region = "DHFR:100-101")
+rse
 }
 \seealso{
 Other pileup: 

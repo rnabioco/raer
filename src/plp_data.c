@@ -277,7 +277,7 @@ SEXP get_or_grow_PLP_DATA(PLP_DATA pd, int len, int lst)
  * will be used as output column names
  */
 static const char *TMPL_ELT_NMS[] = {
-  "seqname", "pos", "strand", "Ref", "Var", "nRef", "nVar", "nA",
+  "seqname", "pos", "strand", "REF", "ALT", "nRef", "nAlt", "nA",
   "nT", "nC", "nG", "nN", "nX"
   /* "vtype", "value" */
 };

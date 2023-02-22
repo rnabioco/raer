@@ -74,8 +74,8 @@ only interested in A->I editing, so we set the ref and alt to `A` and `G`. Note 
 gr <- import(bed_fn)
 gr$name <- NULL
 gr$score <- NULL
-gr$ref <- "A"
-gr$alt <- "G"
+gr$REF <- "A"
+gr$ALT <- "G"
 gr
 ```
 
@@ -113,7 +113,7 @@ dir(outdir)
 Next we'll filter the pileups to find sites with at least 5 cells with an editing event, and add the editing information to the SingleCellExperiment as an `altExp()`. 
 
 ```{r}
-e_sce <- e_sce[rowSums(assays(e_sce)$nVar > 0) >= 5, ]
+e_sce <- e_sce[rowSums(assays(e_sce)$nAlt > 0) >= 5, ]
 e_sce <- calc_edit_frequency(e_sce, replace_na = FALSE)
 altExp(sce) <- e_sce[, colnames(sce)]
 ```
@@ -121,10 +121,10 @@ altExp(sce) <- e_sce[, colnames(sce)]
 With the editing sites added to the gene expression SingleCellExperiment we can use plotting and other methods previously developed for single cell analysis. Here we'll visualize editing sites with the highest edited read counts.
 
 ```{r}
-to_plot <- rownames(altExp(sce))[order(rowSums(assay(altExp(sce), "nVar")), decreasing = TRUE)]
+to_plot <- rownames(altExp(sce))[order(rowSums(assay(altExp(sce), "nAlt")), decreasing = TRUE)]
 
 lapply(to_plot[1:5], function(x) {
-  plotUMAP(sce, colour_by = x, by_exprs_values = "nVar")
+  plotUMAP(sce, colour_by = x, by_exprs_values = "nAlt")
 })
 ```
 
@@ -137,7 +137,7 @@ altExp(sce)$cell_type <- sce$celltype
 plotGroupedHeatmap(altExp(sce),
   features = to_plot[1:25],
   group = "cell_type",
-  exprs_values = "nVar"
+  exprs_values = "nAlt"
 )
 ```
 

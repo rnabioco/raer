@@ -31,7 +31,7 @@ library(SummarizedExperiment)
 library(DESeq2)
 library(ComplexHeatmap)
 library(viridis)
-library(stringr)
+library(rtracklayer)
 ```
 
 
@@ -61,8 +61,8 @@ fafn
 Lastly, we'll use a BED file containing the coordinates of known human editing sites from the REDIPortal database. This file can also be optionally compressed.
 
 ```{r}
-bedfn <- fns$bed
-bedfn
+sites <- import(fns$bed)
+sites
 ```
 
 ## Generate editing site read counts 
@@ -84,7 +84,7 @@ fp <- FilterParam(
 
 rse <- pileup_sites(bam_files,
   fafile = fafn,
-  bedfile = bedfn,
+  sites = sites,
   region = "chr18",
   param = fp
 )
@@ -94,7 +94,7 @@ rse <- pileup_sites(bam_files,
 Pileups data is stored in a `summarizedExperiment` object, which permits comparisons across each sample. The `rowData()` and `rowRanges()` slots can be populated with information related to each editing site, and similarly the `colData()` slot can be used to store sample metadata. The summarizedExperiment object can also interface with other derivative classes, such as `singleCellExperiment()`. 
 
 
-The base counts are counted in a stand specific fashion depending on the `library-type` parameter. The `Ref` and `Var` bases are in reference to the strand. 
+The base counts are counted in a stand specific fashion depending on the `library-type` parameter. The `REF` and `ALT` bases are in reference to the strand. 
 
 ```{r}
 rse
@@ -139,7 +139,7 @@ We can next subset the `summarizedExperiment` object to exclude low frequency ed
 ```{r}
 has_editing <- rowSums(assay(se_filtered, "edit_freq") > 0) >= 1
 has_depth <- rowSums(((assay(se_filtered, "nRef") +
-  assay(se_filtered, "nVar")) >= 5)) == ncol(se_filtered)
+  assay(se_filtered, "nAlt")) >= 5)) == ncol(se_filtered)
 
 se_filtered <- se_filtered[has_editing & has_depth, ]
 se_filtered

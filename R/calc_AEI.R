@@ -14,9 +14,8 @@
 #'
 #' @param bam_fn bam file
 #' @param fasta_fn fasta
-#' @param alu_ranges GRanges or the name of a BEDfile with regions to query for
-#'   calculating the AEI, typically ALU repeats. If a BED file is supplied it
-#'   will not be filtered by the txdb option.
+#' @param alu_ranges GRanges with regions to query for
+#'   calculating the AEI, typically ALU repeats.
 #' @param txdb A txdb object, if supplied, will be used to subset the alu_ranges
 #'   to those found overlapping genes. Alternatively a GRanges object with gene
 #'   coordinates.
@@ -25,8 +24,7 @@
 #'   If `calc_AEI()` will be used many times, one could save some time by first
 #'   identifying SNPs that overlap the supplied alu_ranges, and passing these as
 #'   a GRanges to snp_db rather than supplying all known SNPs (see
-#'   [get_overlapping_snps()]). Combined with using a bedfile for alu_ranges can
-#'   also will save time.
+#'   [get_overlapping_snps()]).
 #' @param param object of class [FilterParam()] which specify various
 #'   filters to apply to reads and sites during pileup.
 #' @param BPPARAM A [BiocParallelParam] object for specifying parallel options
@@ -93,17 +91,7 @@ calc_AEI <- function(bam_fn,
   }
 
   if (!is.null(alu_ranges)) {
-    if (is(alu_ranges, "character")) {
-      if (!file.exists(alu_ranges)) {
-        stop("supplied alu ranges bedfile does not exist:\n",
-          alu_ranges,
-          call. = FALSE
-        )
-      }
-      alu_bed_fn <- alu_ranges
-    } else if (is(alu_ranges, "GRanges")) {
-      alu_bed_fn <- tempfile(fileext = ".bed")
-      tmp_files <- c(tmp_files, alu_bed_fn)
+     if (is(alu_ranges, "GRanges")) {
       if (!is.null(txdb)) {
         if (is(txdb, "TxDb")) {
           genes_gr <- suppressMessages(GenomicFeatures::genes(txdb))
@@ -115,7 +103,6 @@ calc_AEI <- function(bam_fn,
       }
       chroms <- intersect(chroms, as.character(unique(seqnames(alu_ranges))))
       alu_ranges <- alu_ranges[seqnames(alu_ranges) %in% chroms]
-      rtracklayer::export(alu_ranges, alu_bed_fn)
     } else {
       stop("unrecognized format for alu_ranges")
     }
@@ -151,7 +138,7 @@ calc_AEI <- function(bam_fn,
       MoreArgs = list(
         bam_fn = bam_fn,
         fasta_fn = fasta_fn,
-        alu_bed_fn = alu_bed_fn,
+        alu_sites = alu_ranges,
         param = param,
         snp_gr = NULL,
         genes_gr = genes_gr,
@@ -170,7 +157,7 @@ calc_AEI <- function(bam_fn,
       MoreArgs = list(
         bam_fn = bam_fn,
         fasta_fn = fasta_fn,
-        alu_bed_fn = alu_bed_fn,
+        alu_sites = alu_ranges,
         param = param,
         genes_gr = genes_gr,
         verbose = verbose
@@ -202,7 +189,7 @@ calc_AEI <- function(bam_fn,
 
 .calc_AEI_per_chrom <- function(bam_fn,
                                 fasta_fn,
-                                alu_bed_fn,
+                                alu_sites,
                                 chrom,
                                 param,
                                 snp_gr,
@@ -217,7 +204,7 @@ calc_AEI <- function(bam_fn,
 
   plp <- pileup_sites(bam_fn,
     fafile = fasta_fn,
-    bedfile = alu_bed_fn,
+    sites = alu_sites,
     chroms = chrom,
     param = param
   )
@@ -242,7 +229,7 @@ calc_AEI <- function(bam_fn,
   for (i in seq_along(bases)) {
     rb <- bases[i]
     other_b <- setdiff(bases, rb)
-    j <- plp[rowData(plp)$Ref == rb]
+    j <- plp[rowData(plp)$REF == rb]
     for (k in seq_along(other_b)) {
       ab <- other_b[k]
       id <- paste0(rb, "_", ab)
@@ -354,7 +341,6 @@ correct_strand <- function(rse, genes_gr) {
   }
 
   stopifnot(all(strand(rse) == "+"))
-  #stopifnot(all(c("Ref", "Var", "nA", "nT", "nC", "nG") %in% names(mcols(gr))))
 
   genes_gr$gene_strand <- strand(genes_gr)
   rse <- annot_from_gr(rse, genes_gr, "gene_strand", ignore.strand = TRUE)
@@ -365,17 +351,17 @@ correct_strand <- function(rse, genes_gr) {
 
   flip_rows <- as.vector(strand(rse) != rowData(rse)$gene_strand)
 
-  rowData(rse)$Ref[flip_rows] <- BASE_MAP[rowData(rse)$Ref[flip_rows]]
+  rowData(rse)$REF[flip_rows] <- BASE_MAP[rowData(rse)$REF[flip_rows]]
 
   flipped_variants <- vector(mode = "list", ncol(rse))
-  to_flip <- assay(rse, "Var")[flip_rows, , drop = FALSE]
+  to_flip <- assay(rse, "ALT")[flip_rows, , drop = FALSE]
   flipped_variants <- apply(to_flip, c(1,2), function(x) {
     vapply(str_split(x, ","), function(y) paste0(unname(ALLELE_MAP[y]),
                                                  collapse = ","),
            character(1))
     })
 
-  assay(rse, "Var")[flip_rows, ] <- flipped_variants
+  assay(rse, "ALT")[flip_rows, ] <- flipped_variants
 
 
   # complement the nucleotide counts by reordering the assays

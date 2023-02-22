@@ -388,7 +388,7 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
     data[0]->iter = NULL;
   }
 
-   data[0]->h = h;
+  data[0]->h = h;
 
   iter = bam_mplp_init(nbam, screadaln, (void**)data);
   // enable overlap detection
@@ -536,7 +536,7 @@ static int set_sc_mplp_conf(sc_mplp_conf_t *conf, int nbams,
   if(idx) {
     conf->reg_idx = (regidx_t *)idx;
     conf->reg_itr = regitr_init(conf->reg_idx);
-  };
+  }
 
   conf->min_mq = (min_mapQ < 0) ? 0 : min_mapQ;
   conf->min_bq = (min_baseQ < 0) ?  0 : min_baseQ;

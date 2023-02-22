@@ -1,7 +1,7 @@
 #' Filter out multi-allelic sites
 #'
 #' @description Remove sites with multiple variant bases from a
-#'   `SummarizedExperiment`. `rowData()` gains a new column, `Var`, that
+#'   `SummarizedExperiment`. `rowData()` gains a new column, `ALT`, that
 #'   contains the variant allele detected at each site.
 #'
 #' @param se `SummarizedExperiment::SummarizedExperiment`
@@ -14,7 +14,7 @@
 #' @export
 filter_multiallelic <- function(se) {
   n_in <- nrow(se)
-  is_not_multiallelic <- apply(assay(se, "Var"), 1, function(x) {
+  is_not_multiallelic <- apply(assay(se, "ALT"), 1, function(x) {
     x <- unique(x[x != "-"])
     if (length(x) == 0 | length(x) >= 2) {
       return(NA)
@@ -22,7 +22,7 @@ filter_multiallelic <- function(se) {
     !grepl(',', x)
   })
   se <- se[which(is_not_multiallelic), ]
-  rowData(se)$Var <- apply(assay(se, "Var"), 1, function(x) unique(x[x != "-"]))
+  rowData(se)$ALT <- apply(assay(se, "ALT"), 1, function(x) unique(x[x != "-"]))
 
   n_filt <- sum(c(is.na(is_not_multiallelic), !is_not_multiallelic), na.rm = TRUE)
   cli::cli_alert_info(
@@ -174,7 +174,7 @@ filter_clustered_variants <- function(se, txdb,
 
   if ("genome" %in% regions) {
     fo <- findOverlaps(x, x + variant_dist)
-    vars <- split(x[subjectHits(fo)]$Var, queryHits(fo))
+    vars <- split(x[subjectHits(fo)]$ALT, queryHits(fo))
     to_keep <- names(vars)[unlist(lapply(
       vars,
       function(x) {
@@ -187,12 +187,12 @@ filter_clustered_variants <- function(se, txdb,
 
   if ("transcript" %in% regions) {
     tx_sites <- mapToTranscripts(x, txdb)
-    tx_sites$Var <- x[tx_sites$xHits]$Var
+    tx_sites$ALT <- x[tx_sites$xHits]$ALT
     tx_sites <- sort(tx_sites)
     slop <- trim(suppressWarnings(tx_sites + variant_dist))
 
     fo <- findOverlaps(tx_sites, slop)
-    vars <- split(tx_sites[subjectHits(fo)]$Var, queryHits(fo))
+    vars <- split(tx_sites[subjectHits(fo)]$ALT, queryHits(fo))
     to_drop <- names(vars)[unlist(lapply(
       vars,
       function(x) {

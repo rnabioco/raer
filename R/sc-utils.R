@@ -296,7 +296,7 @@ get_cell_pileup <- function(bamfn,
     ...
   )
   assays(out) <- assays(out)[assay_cols]
-  numeric_cols <- c("nRef", "nVar", "nA", "nT", "nC", "nG", "nX")
+  numeric_cols <- c("nREF", "nALT", "nA", "nT", "nC", "nG", "nX")
   sp_cols <- Reduce(intersect,
                     list(names(assays(out)), assay_cols, numeric_cols))
   sp <- lapply(sp_cols, function(x) Matrix::Matrix(assay(out, x), sparse = TRUE))
@@ -399,6 +399,7 @@ sc_editing <- function(bamfile,
                        param = FilterParam(),
                        verbose = TRUE,
                        ...) {
+
   if (!all(assay_cols %in% PILEUP_COLS)) {
     allowed_vals <- paste(PILEUP_COLS[5:length(PILEUP_COLS)],
       collapse = ", "
@@ -448,6 +449,10 @@ sc_editing <- function(bamfile,
     warning(n_invalid_bcs, " cell_barcodes are missing from the tag index.")
   }
 
+  sites <- import(bedfile)
+  if(length(sites) == 0) {
+    stop("bed file not properly formatted, must be readable by rtracklayer::import")
+  }
   if (verbose) message("beginning pileup")
   res <- bpmapply(get_cell_pileup,
     cellbarcodes = cell_barcodes,
@@ -458,7 +463,7 @@ sc_editing <- function(bamfile,
       fafn = fafile,
       assay_cols = assay_cols,
       per_cell = per_cell,
-      bedfile = bedfile,
+      sites = sites,
       return_data = TRUE,
       umi_tag = umi_tag,
       verbose = verbose,

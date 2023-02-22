@@ -11,7 +11,7 @@ filter_multiallelic(se)
 }
 \description{
 Remove sites with multiple variant bases from a
-\code{SummarizedExperiment}. \code{rowData()} gains a new column, \code{Var}, that
+\code{SummarizedExperiment}. \code{rowData()} gains a new column, \code{ALT}, that
 contains the variant allele detected at each site.
 }
 \examples{

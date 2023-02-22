@@ -35,10 +35,10 @@ library(raer)
 bam1fn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")
-bedfn <- raer_example("regions.bed")
+
 bams <- c("ko" = bam1fn, "wt" = bam2fn)
 
-rse <- pileup_sites(bams, fafn, bedfile = bedfn)
+rse <- pileup_sites(bams, fafn)
 ```
 
 To facilitate comparisons across groups, base count data and genomic
@@ -48,16 +48,16 @@ coordinates are stored in a `RangedSummarizedExperiment`.
 suppressMessages(library(SummarizedExperiment))
 rse
 #> class: RangedSummarizedExperiment 
-#> dim: 182 2 
+#> dim: 1695 2 
 #> metadata(0):
-#> assays(7): Var nRef ... nC nG
-#> rownames(182): SSR3_201_- SSR3_202_- ... DHFR_17_- DHFR_18_-
-#> rowData names(3): Ref rbpz vpb
+#> assays(7): ALT nRef ... nC nG
+#> rownames(1695): SSR3_1_- SSR3_2_- ... DHFR_517_- DHFR_518_-
+#> rowData names(3): REF rbpz vpb
 #> colnames(2): ko wt
 #> colData names(1): sample
 assays(rse)
 #> List of length 7
-#> names(7): Var nRef nVar nA nT nC nG
+#> names(7): ALT nRef nAlt nA nT nC nG
 colData(rse)
 #> DataFrame with 2 rows and 1 column
 #>         sample
@@ -68,17 +68,17 @@ colData(rse)
 
 ``` r
 assays(rse)$nRef[1:4, ]
-#>            ko wt
-#> SSR3_201_- 14 19
-#> SSR3_202_- 14 23
-#> SSR3_203_- 14 25
-#> SSR3_204_- 15 24
-assays(rse)$nVar[1:4, ]
-#>            ko wt
-#> SSR3_201_-  0  3
-#> SSR3_202_-  0  0
-#> SSR3_203_-  0  0
-#> SSR3_204_-  0  0
+#>          ko wt
+#> SSR3_1_- 13 12
+#> SSR3_2_- 14 12
+#> SSR3_3_- 14 12
+#> SSR3_4_- 15 12
+assays(rse)$nAlt[1:4, ]
+#>          ko wt
+#> SSR3_1_-  0  0
+#> SSR3_2_-  0  0
+#> SSR3_3_-  0  0
+#> SSR3_4_-  0  0
 ```
 
 The `FilterParam()` class holds multiple options for customizing the
@@ -96,9 +96,9 @@ rse
 #> class: RangedSummarizedExperiment 
 #> dim: 74 2 
 #> metadata(0):
-#> assays(7): Var nRef ... nC nG
+#> assays(7): ALT nRef ... nC nG
 #> rownames(74): SSR3_102_- SSR3_125_- ... DHFR_430_- DHFR_513_-
-#> rowData names(3): Ref rbpz vpb
+#> rowData names(3): REF rbpz vpb
 #> colnames(2): ko wt
 #> colData names(1): sample
 ```
