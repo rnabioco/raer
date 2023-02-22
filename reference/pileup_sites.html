@@ -64,7 +64,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">pileup_sites</span><span class="op">(</span></span>
 <span>  <span class="va">bamfiles</span>,</span>
 <span>  <span class="va">fafile</span>,</span>
-<span>  bedfile <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  sites <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  region <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  chroms <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  param <span class="op">=</span> <span class="fu">FilterParam</span><span class="op">(</span><span class="op">)</span>,</span>
@@ -72,7 +72,6 @@
 <span>  reads <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  return_data <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  BPPARAM <span class="op">=</span> <span class="fu">SerialParam</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  use_index <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  bad_reads <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  umi_tag <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -115,16 +114,18 @@ the colData will be populated with the basename of the bamfile.</p></dd>
 <dd><p>path to fasta file</p></dd>
 
 
-<dt>bedfile</dt>
-<dd><p>path to bed file with sites or regions to query</p></dd>
+<dt>sites</dt>
+<dd><p>a GRanges object containing regions or sites to process.</p></dd>
 
 
 <dt>region</dt>
-<dd><p>samtools region query string (i.e. chr1:100-1000)</p></dd>
+<dd><p>samtools region query string (i.e. chr1:100-1000). Can be combined
+with sites, in which case sites will be filtered to keep only sites within the
+region.</p></dd>
 
 
 <dt>chroms</dt>
-<dd><p>chromosomes to process, not to be used with region</p></dd>
+<dd><p>chromosomes to process, not to be used with region.</p></dd>
 
 
 <dt>param</dt>
@@ -152,15 +153,6 @@ if <code>FALSE</code> a character vector of tabix-index files, specified by
 <dd><p>A BiocParallel class to control parallel execution. Parallel
 processing occurs per chromosome, so is disabled when run on a single
 region.</p></dd>
-
-
-<dt>use_index</dt>
-<dd><p>if TRUE regions supplied in the <code>bedfile</code> will be queried
-using the bam file index. By default (FALSE) all alignments are queried via
-streaming and regions in the bedfile are used to select the sites to keep.
-Using the index can be much faster when querying a small number of sites in
-large bamfiles. With many sites in the bedfile , or with small bamfiles,
-this option may be slower than streaming.</p></dd>
 
 
 <dt>bad_reads</dt>
@@ -268,7 +260,7 @@ then the site will be reported.</p></dd>
 
 <dt>min_allelic_freq</dt>
 <dd><p>minimum allelic frequency required for a variant to be
-reported in Var assays.</p></dd>
+reported in ALT assays.</p></dd>
 
 
 <dt>report_multiallelic</dt>
@@ -314,18 +306,14 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> class: RangedSummarizedExperiment </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> dim: 7 1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): Var nRef ... nC nG</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): ALT nRef ... nC nG</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> rownames(7): DHFR_207_- DHFR_208_- ... DHFR_300_- DHFR_332_-</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(3): Ref rbpz vpb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(3): REF rbpz vpb</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(1): SRR5564269_Aligned.sortedByCoord.out.md.bam</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># using multiple bam files</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">bamfn</span> <span class="op">&lt;-</span> <span class="fu"><a href="raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"SRR5564269_Aligned.sortedByCoord.out.md.bam"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">bam2fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"SRR5564277_Aligned.sortedByCoord.out.md.bam"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="fu"><a href="raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"human.fasta"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">bams</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">bam2fn</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sample_ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"KO"</span>, <span class="st">"WT"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span></span></span>
@@ -337,16 +325,16 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> class: RangedSummarizedExperiment </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> dim: 74 6 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): Var nRef ... nC nG</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): ALT nRef ... nC nG</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> rownames(74): SSR3_102_- SSR3_125_- ... DHFR_430_- DHFR_513_-</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(3): Ref rbpz vpb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(3): REF rbpz vpb</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(6): KO1 KO2 ... WT2 WT3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">rse</span><span class="op">$</span><span class="va">condition</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">rse</span><span class="op">$</span><span class="va">sample</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> List of length 7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> names(7): Var nRef nVar nA nT nC nG</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> names(7): ALT nRef nAlt nA nT nC nG</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> DataFrame with 6 rows and 2 columns</span>
@@ -361,7 +349,7 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowRanges.html" class="external-link">rowRanges</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 74 ranges and 3 metadata columns:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              seqnames    ranges strand |         Ref       rbpz</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              seqnames    ranges strand |         REF       rbpz</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;  &lt;numeric&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3_102_-     SSR3       102      - |           T   2.611800</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3_125_-     SSR3       125      - |           C   0.623238</span>
@@ -390,6 +378,40 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   -------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   seqinfo: 3 sequences from an unspecified genome</span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># specifying regions to query use GRanges object</span></span></span>
+<span class="r-in"><span><span class="va">sites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowRanges.html" class="external-link">rowRanges</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu">pileup_sites</span><span class="op">(</span><span class="va">bams</span>, <span class="va">fafn</span>, sites <span class="op">=</span> <span class="va">sites</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rse</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> class: RangedSummarizedExperiment </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> dim: 74 6 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): ALT nRef ... nC nG</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(74): SSR3_102_- SSR3_125_- ... DHFR_430_- DHFR_513_-</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(3): REF rbpz vpb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colnames(6): KO1 KO2 ... WT2 WT3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu">pileup_sites</span><span class="op">(</span><span class="va">bams</span>, <span class="va">fafn</span>, chroms <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"SPCS3"</span>, <span class="st">"DHFR"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rse</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> class: RangedSummarizedExperiment </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> dim: 1166 6 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): ALT nRef ... nC nG</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(1166): SPCS3_1_+ SPCS3_2_+ ... DHFR_517_- DHFR_518_-</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(3): REF rbpz vpb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colnames(6): KO1 KO2 ... WT2 WT3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu">pileup_sites</span><span class="op">(</span><span class="va">bams</span>, <span class="va">fafn</span>, region <span class="op">=</span> <span class="st">"DHFR:100-101"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rse</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> class: RangedSummarizedExperiment </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> dim: 2 6 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): ALT nRef ... nC nG</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(2): DHFR_100_- DHFR_101_-</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(3): REF rbpz vpb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colnames(6): KO1 KO2 ... WT2 WT3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

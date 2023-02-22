@@ -101,7 +101,7 @@ List chromosomes in a tabix index"><meta property="og:image" content="https://rn
 <span class="r-in"><span><span class="va">fns</span> <span class="op">&lt;-</span> <span class="fu"><a href="pileup_sites.html">pileup_sites</a></span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">fafn</span>, return_data <span class="op">=</span> <span class="cn">FALSE</span>, outfile_prefix <span class="op">=</span> <span class="va">plp_fn</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">plp</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu">read_tabix</span><span class="op">(</span><span class="va">plp</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   seqnames pos strand Ref Var nRef nVar nA nT nC nG nN nX</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   seqnames pos strand REF ALT nRef nAlt nA nT nC nG nN nX</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1     SSR3   1      -   C   -   13    0  0  0 13  0  0  2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2     SSR3   2      -   A   -   14    0 14  0  0  0  0  1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3     SSR3   3      -   A   -   14    0 14  0  0  0  0  1</span>
@@ -110,7 +110,7 @@ List chromosomes in a tabix index"><meta property="og:image" content="https://rn
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6     SSR3   6      -   T   -   15    0  0 15  0  0  0  0</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">read_tabix</span><span class="op">(</span><span class="va">plp</span>, region <span class="op">=</span> <span class="st">"SPCS3:498-500"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   seqnames pos strand Ref Var nRef nVar nA nT nC nG nN nX</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   seqnames pos strand REF ALT nRef nAlt nA nT nC nG nN nX</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1    SPCS3 498      +   A   -    5    0  5  0  0  0  0  0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2    SPCS3 499      +   C   -    4    0  0  0  4  0  0  1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3    SPCS3 500      +   C   -    4    0  0  0  4  0  0  1</span>

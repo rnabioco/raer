@@ -56,7 +56,10 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.99.0" id="raer-0990">raer 0.99.0<a class="anchor" aria-label="anchor" href="#raer-0990"></a></h2>
-<ul><li><p><code><a href="../reference/pileup_cells.html">pileup_cells()</a></code> gained functionality to process multiple smart-seq2 style bam files.</p></li>
+<ul><li><p>The bed indexing used in <code><a href="../reference/pileup_sites.html">pileup_sites()</a></code> has been replaced with the region indexing approach from <code><a href="../reference/pileup_cells.html">pileup_cells()</a></code>.</p></li>
+<li><p><code><a href="../reference/pileup_sites.html">pileup_sites()</a></code> now requires a GRanges object rather than a bed file. The <code>bedfile</code>parameter has been removed and replaced with a <code>sites</code> parameter.</p></li>
+<li><p>Renamed <code>Ref</code> and <code>Var</code> output columns to <code>REF</code> and <code>ALT</code> and <code>nVar</code> was renamed to <code>nAlt</code>. This provides consistency with VCF format and consistency across <code><a href="../reference/pileup_cells.html">pileup_cells()</a></code> and <code><a href="../reference/pileup_sites.html">pileup_sites()</a></code> function calls</p></li>
+<li><p><code><a href="../reference/pileup_cells.html">pileup_cells()</a></code> gained functionality to process multiple smart-seq2 style bam files.</p></li>
 <li><p>Changed <code>filterParam</code> argument in <code>pileup_sites</code> and <code>pileup_cells</code> to <code>param</code> for simplicity</p></li>
 <li><p>Added <code>FilterParam</code> to exclude multi-allelic sites <code>report_multiallelic</code>, or exclude reporting a variant in the Var assay based on allelic frequency (<code>min_allelic_freq</code>).</p></li>
 <li><p>The <code>bam_flags</code> parameter used in <code>pileup_sites</code> and <code>pileup_cells</code> has been moved into the <code>FilterParam</code> class.</p></li>

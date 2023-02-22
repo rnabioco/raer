@@ -90,7 +90,7 @@ region specifiers are supported.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">plp</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu">read_pileup</span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 6 ranges and 3 metadata columns:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       seqnames    ranges strand |         Ref      rpbz       vdb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       seqnames    ranges strand |         REF      rpbz       vdb</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;numeric&gt; &lt;numeric&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [1]     SSR3         1      - |           C         0         0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [2]     SSR3         2      - |           A         0         0</span>
@@ -103,7 +103,7 @@ region specifiers are supported.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 6 ranges and 10 metadata columns:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       seqnames    ranges strand |         Ref         Var      nRef</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       seqnames    ranges strand |         REF         ALT      nRef</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt; &lt;integer&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [1]     SSR3         1      - |           C           -        13</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [2]     SSR3         2      - |           A           -        14</span>
@@ -111,7 +111,7 @@ region specifiers are supported.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [4]     SSR3         4      - |           A           -        15</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [5]     SSR3         5      - |           G           -        15</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [6]     SSR3         6      - |           T           -        15</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            nVar        nA        nT        nC        nG        nN</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            nAlt        nA        nT        nC        nG        nN</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [1]         0         0         0        13         0         0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [2]         0        14         0         0         0         0</span>
