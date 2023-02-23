@@ -527,13 +527,13 @@ ggplot(
   mutate(
     vnt_counts,
     plt_name = case_when(
-      vnt == 'A>G' ~ "<b style='color:red'>A>G</b>"
-   ),
-   plt_name = coalesce(plt_name, vnt),
-   plt_name = fct_relevel(
-    as_factor(plt_name),
-    "<b style='color:red'>A>G</b>",
-    after = 1
+      vnt == 'A>G' ~ "<b style='color:red'>A>G</b>",
+      .default = vnt
+    ),
+    plt_name = fct_relevel(
+      as_factor(plt_name),
+      "<b style='color:red'>A>G</b>",
+      after = 1
     )
   ),
   aes(x = plt_name, y = n, fill = rep)
@@ -542,7 +542,7 @@ ggplot(
   facet_grid(~ treat) +
   scale_fill_manual(values = c('grey70', 'grey50', 'grey30')) +
   labs(
-    title = 'Variants from raer pileup of Mm / CHIKV scRNA-seq',
+    title = 'Pileup summary of CHIKV 24h dLN scRNA-seq',
     x = '',
     y = '',
     fill = 'replicate'
@@ -717,7 +717,7 @@ tidy_redi_tbl <-
         rep_family == 'B4' ~ 'B4',
         str_detect(rep_family, '^ERV') ~ 'ERV family',
         is.na(rep_family) ~ 'Not in repeat',
-        TRUE ~ 'Other repeat'
+        .default = 'Other repeat'
       )
     )
 ```
@@ -765,7 +765,6 @@ tidy_redi_tbl |>
     )
   )
 ```
-
 
 ## Single-cell analysis
 
@@ -1031,6 +1030,13 @@ ggplot(
   )
 ```
 
+```{r sc_airpart}
+library(airpart)
+
+# https://github.com/Wancen/airpart/blob/main/vignettes/airpart.Rmd
+
+```
+
 ## TODO
 
 ### Quality control
@@ -1047,5 +1053,5 @@ ggplot(
 
 - Look for differential editing directly from the single-cell data instead of a external set (either between cell types in one virus / mock, or between virus mock). Pseudobulk with DESeq2 or Airpart.
 
-
+- identify data sets in liver or brain that may enable identification of constitutive editing on APOE or GRIA2
 
