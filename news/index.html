@@ -56,7 +56,19 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.99.0" id="raer-0990">raer 0.99.0<a class="anchor" aria-label="anchor" href="#raer-0990"></a></h2>
-<ul><li><p>The bed indexing used in <code><a href="../reference/pileup_sites.html">pileup_sites()</a></code> has been replaced with the region indexing approach from <code><a href="../reference/pileup_cells.html">pileup_cells()</a></code>.</p></li>
+<ul><li>
+<p>Removed outdated or unused functionality:</p>
+<ul><li>bed indexing (<code>indexBed</code> and related c code)</li>
+<li>bam tag indexing (<code>build_tag_index</code>, <code>show_tag_index</code>, <code>get_tag_bam</code>, )</li>
+<li>bam tag index based single cell approach (<code>sc_editing</code>)</li>
+<li>bam tag indexing c code from bri (<code>src/bri/*</code>)</li>
+<li>sparse matrix merging for <code><a href="../reference/merge_pileups.html">merge_pileups()</a></code>.</li>
+<li>unneeded utilities (<code>filter_by_coverage</code>)</li>
+<li>Remaining (and mostly unused) Rcpp code</li>
+<li>Removed fastmap, Rcpp, zlibbioc, RColorBrewer, and BiocGenerics dependencies</li>
+<li>Removed system requirements for c libraries used by bri</li>
+</ul></li>
+<li><p>The bed indexing used in <code><a href="../reference/pileup_sites.html">pileup_sites()</a></code> has been replaced with the region indexing approach from <code><a href="../reference/pileup_cells.html">pileup_cells()</a></code>.</p></li>
 <li><p><code><a href="../reference/pileup_sites.html">pileup_sites()</a></code> now requires a GRanges object rather than a bed file. The <code>bedfile</code>parameter has been removed and replaced with a <code>sites</code> parameter.</p></li>
 <li><p>Renamed <code>Ref</code> and <code>Var</code> output columns to <code>REF</code> and <code>ALT</code> and <code>nVar</code> was renamed to <code>nAlt</code>. This provides consistency with VCF format and consistency across <code><a href="../reference/pileup_cells.html">pileup_cells()</a></code> and <code><a href="../reference/pileup_sites.html">pileup_sites()</a></code> function calls</p></li>
 <li><p><code><a href="../reference/pileup_cells.html">pileup_cells()</a></code> gained functionality to process multiple smart-seq2 style bam files.</p></li>

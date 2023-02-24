@@ -58,9 +58,6 @@
     <loc>https://rnabioco.github.io/raer/reference/download_human_pbmc.html</loc>
   </url>
   <url>
-    <loc>https://rnabioco.github.io/raer/reference/filter_by_coverage.html</loc>
-  </url>
-  <url>
     <loc>https://rnabioco.github.io/raer/reference/filter_clustered_variants.html</loc>
   </url>
   <url>
@@ -70,9 +67,6 @@
     <loc>https://rnabioco.github.io/raer/reference/filter_splice_variants.html</loc>
   </url>
   <url>
-    <loc>https://rnabioco.github.io/raer/reference/getCoverageAtPositions.html</loc>
-  </url>
-  <url>
     <loc>https://rnabioco.github.io/raer/reference/get_overlapping_snps.html</loc>
   </url>
   <url>
@@ -80,9 +74,6 @@
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/index_bed.html</loc>
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/merge_pileups.html</loc>
@@ -112,15 +103,6 @@
     <loc>https://rnabioco.github.io/raer/reference/read_sparray.html</loc>
   </url>
   <url>
-    <loc>https://rnabioco.github.io/raer/reference/read_tabix.html</loc>
-  </url>
-  <url>
     <loc>https://rnabioco.github.io/raer/reference/rse_adar_ifn.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/sc_editing.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/tag_index.html</loc>
   </url>
 </urlset>
