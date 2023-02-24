@@ -15,30 +15,23 @@ reference:
 - title: Filtering
   contents:
   - has_concept('se-filters')
-  - '`filter_by_coverage`'
-  - '`getCoverageAtPositions`'
 - title: Annotation
   contents:
   - '`annot_from_gr`'
   - '`annot_snps`'
   - '`get_overlapping_snps`'
   - '`get_splice_sites`'
-- title: Bulk and single-cell editing analysis
+- title: Bulk editing analysis
   contents:
   - '`perform_de`'
   - '`prep_for_de`'
-  - '`sc_editing`'
 - title: Data
   contents:
   - has_concept('external-data')
   - rse_adar_ifn
 - title: Utilities
   contents:
-  - '`build_tag_index`'
   - '`correct_strand`'
   - '`raer_example`'
   - '`read_pileup`'
   - '`read_sparray`'
-- title: Classes
-  contents:
-  - '`BedFile-class`'

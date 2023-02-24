@@ -161,11 +161,11 @@ filter_clustered_variants <- function(se, txdb,
                                       regions = c("transcript", "genome"),
                                       variant_dist = 100) {
   if (!is(txdb, "TxDb")) {
-    stop("txdb must be a TxDb object")
+    cli::cli_abort("txdb must be a TxDb object")
   }
 
   if (length(setdiff(regions, c("transcript", "genome"))) > 0) {
-    stop("only transcript and/or genome are valid arguments for region")
+    cli::cli_abort("only transcript and/or genome are valid arguments for region")
   }
 
   n_in <- nrow(se)

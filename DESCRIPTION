@@ -22,8 +22,6 @@ Imports:
     stats,
     utils,
     methods,
-    Rcpp,
-    zlibbioc,
     data.table,
     R.utils,
     GenomicRanges,
@@ -33,20 +31,17 @@ Imports:
     Biostrings,
     SummarizedExperiment,
     S4Vectors,
-    BiocGenerics,
     GenomeInfoDb,
     GenomicAlignments,
     GenomicFeatures,
     BiocParallel,
     rtracklayer,
     stringr,
-    fastmap,
     Matrix,
     cli
 Suggests:
     testthat (>= 3.0.0),
     knitr,
-    RColorBrewer,
     DESeq2,
     edgeR,
     limma,
@@ -61,13 +56,9 @@ Suggests:
     AnnotationHub,
     covr
 LinkingTo: 
-    Rcpp,
     Rhtslib (>= 2.0.0)
-SystemRequirements: 
-    GNU make, 
-    libbz2, 
-    liblzma,
-    libcurl
+SystemRequirements:
+    GNU make
 VignetteBuilder: knitr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

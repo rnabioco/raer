@@ -1,59 +1,4 @@
 
-is_null_extptr <- function(pointer) {
-  stopifnot(is(pointer, "externalptr"))
-  .Call(".isnull", pointer)
-}
-
-
-#' Read in tabix indexed file as a data.frame
-#'
-#' @param filename path to tabix file
-#' @param region samtools region query string (i.e. chr1:100-1000)
-#' @param numeric_cols columns to convert to numeric as a integer vector (one-based index)
-#' @param col_names column names in the output data.frame
-
-#' @examples
-#' bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
-#' fafn <- system.file("extdata", "human.fasta", package = "raer")
-#' plp_fn <- tempfile()
-#' fns <- pileup_sites(bamfn, fafn, return_data = FALSE, outfile_prefix = plp_fn)
-#' plp <- fns[2]
-#' head(read_tabix(plp))
-#'
-#' read_tabix(plp, region = "SPCS3:498-500")
-#'
-#' get_tabix_chroms(plp)
-#'
-#' unlink(c(fns, plp_fn, plp, paste0(plp, ".tbi")))
-#' @export
-#' @keywords internal
-read_tabix <- function(filename,
-                       region = ".",
-                       numeric_cols = c(2, 6:12),
-                       col_names = PILEUP_COLS) {
-  filename <- path.expand(filename)
-  # returned as a list to avoid stringsAsFactors
-  df <- cread_tabix(filename, region)
-  numeric_cols <- intersect(c("start", "end", "pos"), colnames(df))
-  if (!is.null(numeric_cols)) {
-    for (i in numeric_cols) {
-      df[[i]] <- as.numeric(df[[i]])
-    }
-  }
-  colnames(df) <- col_names
-
-  df
-}
-
-#' List chromosomes in a tabix index
-#' @param filename path to indexed tabix file
-#'
-#' @rdname read_tabix
-#' @export
-get_tabix_chroms <- function(filename) {
-  list_tabix_chroms(path.expand(filename))
-}
-
 #' Provide working directory for raer example files.
 #'
 #' @param path path to file
@@ -66,37 +11,25 @@ raer_example <- function(path) {
   system.file("extdata", path, package = "raer", mustWork = TRUE)
 }
 
-
-#' Copy of VariantTools::extractCoverageForPositions
-#' Authors: Michael Lawrence, Jeremiah Degenhardt, Robert Gentleman
-#' @param cov coverage produced by [GenomicAlignments::coverage()]
-#' @param pos GRanges containing editing sites
-#' @importFrom GenomeInfoDb `seqlevels<-` seqlevels
-getCoverageAtPositions <- function(cov, pos) {
-  if (length(setdiff(seqlevels(pos), names(cov))) > 0L) {
-    stop("Some seqlevels are missing from coverage")
-  }
-  if (any(width(pos) > 1L)) {
-    stop("Some ranges are of width > 1")
-  }
-  seqlevels(pos) <- names(cov)
-  ord <- order(seqnames(pos))
-  ans <- integer(length(pos))
-  ans[ord] <- unlist(mapply(function(v, p) {
-    runValue(v)[findRun(p, v)]
-  }, cov, split(start(pos), seqnames(pos)), SIMPLIFY = FALSE), use.names = FALSE)
-  ans
-}
-
 # transpose a list
 # https://stackoverflow.com/questions/30164803/fastest-way-to-transpose-a-list-in-r-rcpp
 t_lst <- function(x) {
   split(unlist(x), sequence(lengths(x)))
 }
 
-# split a vector into bins of n,
-# the last chunk can  be variable in size
-split_vec <- function(x, n) split(x, ceiling(seq_along(x) / n))
+check_tag <- function(x) {
+  if(length(x) != 1 && nchar(x) != 2){
+    stop("supplied tag must by nchar of 2: ", x)
+  }
+}
+
+chunk_vec <- function(x,n) {
+  if(n == 1) {
+    res <- list(`1` = x)
+    return(res)
+  }
+  split(x, cut(seq_along(x), n, labels = FALSE))
+}
 
 
 # flatten top list, keeping names from inner list
