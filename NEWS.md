@@ -1,5 +1,16 @@
 # raer 0.99.0
 
+* Removed outdated or unused functionality:
+  - bed indexing (`indexBed` and related c code)
+  - bam tag indexing (`build_tag_index`, `show_tag_index`, `get_tag_bam`, )
+  - bam tag index based single cell approach (`sc_editing`)
+  - bam tag indexing c code from bri (`src/bri/*`)
+  - sparse matrix merging for `merge_pileups()`.
+  - unneeded utilities (`filter_by_coverage`)
+  - Remaining (and mostly unused) Rcpp code
+  - Removed fastmap, Rcpp, zlibbioc, RColorBrewer, and BiocGenerics dependencies
+  - Removed system requirements for c libraries used by bri
+  
 * The bed indexing used in `pileup_sites()` has been replaced with the region indexing approach from `pileup_cells()`. 
 
 * `pileup_sites()` now requires a GRanges object rather than a bed file. The `bedfile `parameter has been removed and replaced with a `sites` parameter.  
