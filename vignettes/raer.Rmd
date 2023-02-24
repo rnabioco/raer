@@ -167,11 +167,9 @@ For the samples, you can leave as is or combine so the same sample name shows up
 
 It is probably best to update the levels of your object, but if you don't, this will still work.
 
-To run using `DESeq2`, set `type = DESeq2` in the `de_results` function. This function requires you to specify what your control and treatment are from your condition column of your `deobj`. `edgeR` is also supported. 
 
 ```{r}
 de_results <- perform_de(deobj,
-  type = "DESeq2",
   sample_col = "sample",
   condition_col = "genotype",
   condition_control = "Wildtype",

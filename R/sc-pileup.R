@@ -303,7 +303,7 @@ pileup_cells <- function(bamfile,
 #' @returns a list of `sparseMatrix`, of `NULL` if mtx_fn is empty
 #'
 #' @importFrom data.table fread
-#'
+#' @importFrom Matrix sparseMatrix
 #' @export
 read_sparray <- function(mtx_fn, sites_fn, bc_fn){
   if(!file.size(mtx_fn) > 0){
@@ -414,19 +414,3 @@ id_to_gr <- function(x, seq_info){
   names(gr) <- x
   gr
 }
-
-check_tag <- function(x) {
-  if(length(x) != 1 && nchar(x) != 2){
-    stop("supplied tag must by nchar of 2: ", x)
-  }
-}
-
-chunk_vec <- function(x,n) {
-  if(n == 1) {
-    res <- list(`1` = x)
-    return(res)
-  }
-  split(x, cut(seq_along(x), n, labels = FALSE))
-}
-
-

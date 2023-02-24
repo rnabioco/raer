@@ -1,15 +1,46 @@
 #include <Rinternals.h>
 #include <htslib/sam.h>
 #include <htslib/khash.h>
+#include <htslib/hts.h>
 
 #include <ctype.h>
 
 #include "plp_utils.h"
 
-// https://stackoverflow.com/questions/26666614/how-do-i-check-if-an-externalptr-is-null-from-within-r
-SEXP isnull(SEXP pointer) {
-  return ScalarLogical(!R_ExternalPtrAddr(pointer));
+SEXP get_region(SEXP region){
+
+  if(!Rf_isString(region) || (Rf_length(region) != 1)){
+    Rf_error("'region' must be character");
+  }
+
+  char * cregion = (char *) translateChar(STRING_ELT(region, 0));
+
+  int beg, end;
+  const char *chr_pos ;
+  chr_pos = hts_parse_reg(cregion, &beg, &end) ;
+  if(!chr_pos){
+    Rf_error("could not parse region:%s", region);
+  }
+  char *chr_name = (char*) malloc(chr_pos - cregion + 1);
+  memcpy(chr_name, cregion, chr_pos - cregion);
+  chr_name[chr_pos - cregion] = '\0';
+
+  SEXP chr_name_r, r_beg, r_end;
+  chr_name_r = PROTECT(Rf_mkString(chr_name));
+  r_beg = PROTECT(Rf_ScalarInteger(beg));
+  r_end = PROTECT(Rf_ScalarInteger(end));
+
+  const char *names[] = {"chrom", "start", "end", ""};
+  SEXP res = PROTECT(Rf_mkNamed(VECSXP, names));
+  SET_VECTOR_ELT(res, 0, chr_name_r);
+  SET_VECTOR_ELT(res, 1, r_beg);
+  SET_VECTOR_ELT(res, 2, r_end);
+
+  free(chr_name);
+  UNPROTECT(4);
+  return res;
 }
+
 
 // Based on pysam code Cython code
 // https://github.com/pysam-developers/pysam/blob/ef06e42ce98e4c81972a448ddab62289bf3ad22d/pysam/libcalignedsegment.pyx#L501

@@ -1,11 +1,10 @@
 #ifndef raer_UTILS_H
 #define raer_UTILS_H
 
-#include <Rinternals.h>
 #include <htslib/sam.h>
+#include <Rinternals.h>
 
-// https://stackoverflow.com/questions/26666614/how-do-i-check-if-an-externalptr-is-null-from-within-r
-SEXP isnull(SEXP pointer);
+SEXP get_region(SEXP region);
 
 int check_simple_repeat(char** ref, hts_pos_t* ref_len, int pos, int nmer);
 int dist_to_splice(bam1_t* b, int pos, int dist);

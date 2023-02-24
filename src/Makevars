@@ -6,13 +6,11 @@ RHTSLIB_CPPFLAGS=$(shell "${R_HOME}/bin${R_ARCH_BIN}/Rscript" -e \
 PKG_LIBS=$(RHTSLIB_LIBS)
 PKG_CPPFLAGS=$(RHTSLIB_CPPFLAGS)
 
-SOURCES = $(wildcard bri/*.c ) $(wildcard bcftools/*.c)
-
-OBJECTS = RcppExports.o regfile.o bedidx.o plp.o plp_data.o plp_utils.o cpp_utils.o init.o sc-plp.o scidx.o $(SOURCES:.c=.o)
+OBJECTS = regfile.o plp.o plp_data.o plp_utils.o init.o sc-plp.o bcftools/bcftools-ext.o
 
 .PHONY: all clean
 
 all: $(SHLIB)
 
 clean:
-	rm -f bri/*.o bcftools/*.o
+	rm -f bcftools/*.o

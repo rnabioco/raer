@@ -36,12 +36,3 @@
 annot_snps <- function(obj, ...) {
   UseMethod("annot_snps", obj)
 }
-
-#' @param ... For the generic, further arguments to pass to specific methods.
-#' Unused for now.
-#' @rdname index_bed
-#' @export
-setGeneric(
-  "indexBed",
-  function(file, ...) standardGeneric("indexBed")
-)
