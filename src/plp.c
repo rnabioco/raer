@@ -63,7 +63,7 @@ typedef struct {
 
 typedef struct {
   int min_global_mq, flag, min_bq, min_depth, max_depth, output_reads;
-  int report_multiallelics, multi_itr, ignore_query_Ns, in_memory;
+  int report_multiallelics, multi_itr, in_memory;
   int nmer, splice_dist, indel_dist;
   int n_mm_type, n_mm, min_overhang, min_var_reads;
   int nbam, nfps;
@@ -1205,6 +1205,9 @@ static int run_pileup(char** cbampaths, const char** coutfns,
     int pref_b, mref_b;
     pref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
     pref_b = toupper(pref_b);
+
+    if(pref_b == 'N') continue;
+
     mref_b = comp_base[(unsigned char) pref_b];
 
     // reset count structure
@@ -1238,6 +1241,7 @@ static int run_pileup(char** cbampaths, const char** coutfns,
         int c = p->qpos < p->b->core.l_qseq
           ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
         : 'N';
+        if(c == 'N') continue;
 
         // store base counts based on library type and r1/r2 status
         int invert = invert_read_orientation(p->b, conf->libtype[i]);
@@ -1380,10 +1384,9 @@ static void check_plp_args(SEXP bampaths, SEXP n, SEXP fapath, SEXP region,
     Rf_error("'dbl_args' must be numeric of length 5");
   }
 
-  if(!IS_LOGICAL(lgl_args) || (LENGTH(lgl_args) != 2)){
-    Rf_error("'lgl_args' must be logical of length 2");
+  if(!IS_LOGICAL(lgl_args) || (LENGTH(lgl_args) != 1)){
+    Rf_error("'lgl_args' must be logical of length 1");
   }
-
 
   // args depending on n_files
   if(!IS_INTEGER(libtype) || (LENGTH(libtype) != n_files)){
@@ -1479,7 +1482,6 @@ static int set_mplp_conf(mplp_conf_t *conf, int n_bams,
   conf->read_qual.minq = d_args[4];
 
   conf->report_multiallelics = b_args[0];
-  conf->ignore_query_Ns      = b_args[1];
 
   conf->libtype            = libtypes;
   conf->only_keep_variants = keep_variants;
