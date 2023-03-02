@@ -543,7 +543,6 @@ empty_plp_record <- function() {
 
     only_keep_variants = "logical", # variable length
     report_multiallelic = "logical",
-    ignore_query_Ns = "logical",
 
     ftrim_5p = "numeric",
     ftrim_3p = "numeric",
@@ -613,8 +612,7 @@ setMethod(show, "FilterParam", function(object) {
   )])
 
   lgl_args <- unlist(fp[c(
-    "report_multiallelic",
-    "ignore_query_Ns"
+    "report_multiallelic"
   )])
   # variable length args
   # passed as separate args to c fxns
@@ -671,7 +669,6 @@ setMethod(show, "FilterParam", function(object) {
 #' reported in ALT assays.
 #' @param report_multiallelic if TRUE, report sites with multiple variants passing
 #' filters. If FALSE, site will not be reported.
-#' @param ignore_query_Ns ignored for now
 #'
 #' @rdname pileup_sites
 #' @export
@@ -684,7 +681,7 @@ FilterParam <-
            homopolymer_len = 0L,
            max_mismatch_type = c(0L, 0L), read_bqual = c(0.0, 0.0),
            min_variant_reads = 0L, min_allelic_freq = 0,
-           report_multiallelic = TRUE, ignore_query_Ns = FALSE) {
+           report_multiallelic = TRUE) {
 
     stopifnot(isSingleNumber(max_depth))
     stopifnot(isSingleNumber(min_base_quality))
@@ -723,7 +720,6 @@ FilterParam <-
 
     stopifnot(length(max_mismatch_type) == 2 && !any(is.na(max_mismatch_type)))
     stopifnot(length(read_bqual) == 2 && !any(is.na(read_bqual)))
-    stopifnot(isTRUEorFALSE(ignore_query_Ns))
     stopifnot(isTRUEorFALSE(report_multiallelic))
 
     # variable length depending on n_files
@@ -742,18 +738,11 @@ FilterParam <-
 
     library_type <- .encode_libtype(library_type)
 
-    # to implement
-    if (ignore_query_Ns) {
-      warning("ignore_query_Ns not yet implemented")
-      ignore_query_Ns <- FALSE
-    }
-
     ## creation
     .FilterParam(
       max_depth = max_depth, min_base_quality = min_base_quality,
       min_mapq = min_mapq, min_depth = min_depth,
       library_type = library_type, only_keep_variants = only_keep_variants,
-      ignore_query_Ns = ignore_query_Ns,
       trim_5p = trim_5p, trim_3p = trim_3p, indel_dist = indel_dist,
       splice_dist = splice_dist, homopolymer_len = homopolymer_len,
       max_mismatch_type = max_mismatch_type, read_bqual = read_bqual,

@@ -41,8 +41,7 @@ FilterParam(
   read_bqual = c(0, 0),
   min_variant_reads = 0L,
   min_allelic_freq = 0,
-  report_multiallelic = TRUE,
-  ignore_query_Ns = FALSE
+  report_multiallelic = TRUE
 )
 }
 \arguments{
@@ -143,8 +142,6 @@ reported in ALT assays.}
 
 \item{report_multiallelic}{if TRUE, report sites with multiple variants passing
 filters. If FALSE, site will not be reported.}
-
-\item{ignore_query_Ns}{ignored for now}
 }
 \value{
 A RangedSummarizedExperiment or a
