@@ -1205,6 +1205,9 @@ static int run_pileup(char** cbampaths, const char** coutfns,
     int pref_b, mref_b;
     pref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
     pref_b = toupper(pref_b);
+
+    if(pref_b == 'N') continue;
+
     mref_b = comp_base[(unsigned char) pref_b];
 
     // reset count structure
@@ -1238,6 +1241,7 @@ static int run_pileup(char** cbampaths, const char** coutfns,
         int c = p->qpos < p->b->core.l_qseq
           ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
         : 'N';
+        if(c == 'N') continue;
 
         // store base counts based on library type and r1/r2 status
         int invert = invert_read_orientation(p->b, conf->libtype[i]);

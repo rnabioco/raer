@@ -1,5 +1,7 @@
 # raer 0.99.0
 
+* 'N' bases in read or reference are ignored 
+
 * Removed outdated or unused functionality:
   - bed indexing (`indexBed` and related c code)
   - bam tag indexing (`build_tag_index`, `show_tag_index`, `get_tag_bam`, )
