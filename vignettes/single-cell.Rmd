@@ -40,7 +40,7 @@ A subset of a human PBMC scRNA-seq dataset from 10x Genomics, along with other
 needed files can be downloaded using `download_human_pbmc()`.   
 
 ```{r}
-data_dir <- tempdir() 
+data_dir <- tempdir()
 fns <- download_human_pbmc(data_dir)
 fns
 ```
@@ -89,19 +89,21 @@ Processing time can be reduced by operating in parallel across chromosomes, by s
 outdir <- file.path(tempdir(), "sc_edits")
 cbs <- colnames(sce)
 e_sce <- pileup_cells(
-  bamfile = bam_fn,
-  sites = gr,
-  cell_barcodes = cbs,
-  output_directory = outdir,
-  cb_tag = "CB",
-  umi_tag = "UB",
-  param = FilterParam(
-    min_base_quality = 30L,
-    library_type = "fr-second-strand",
-    min_variant_reads = 1L,
-    trim_5p = 5L,
-    trim_3p = 5L),
-  verbose = FALSE)
+    bamfile = bam_fn,
+    sites = gr,
+    cell_barcodes = cbs,
+    output_directory = outdir,
+    cb_tag = "CB",
+    umi_tag = "UB",
+    param = FilterParam(
+        min_base_quality = 30L,
+        library_type = "fr-second-strand",
+        min_variant_reads = 1L,
+        trim_5p = 5L,
+        trim_3p = 5L
+    ),
+    verbose = FALSE
+)
 e_sce
 ```
 
@@ -124,7 +126,7 @@ With the editing sites added to the gene expression SingleCellExperiment we can 
 to_plot <- rownames(altExp(sce))[order(rowSums(assay(altExp(sce), "nAlt")), decreasing = TRUE)]
 
 lapply(to_plot[1:5], function(x) {
-  plotUMAP(sce, colour_by = x, by_exprs_values = "nAlt")
+    plotUMAP(sce, colour_by = x, by_exprs_values = "nAlt")
 })
 ```
 
@@ -135,9 +137,9 @@ number of edited reads per site in each cell type.
 altExp(sce)$cell_type <- sce$celltype
 
 plotGroupedHeatmap(altExp(sce),
-  features = to_plot[1:25],
-  group = "cell_type",
-  exprs_values = "nAlt"
+    features = to_plot[1:25],
+    group = "cell_type",
+    exprs_values = "nAlt"
 )
 ```
 

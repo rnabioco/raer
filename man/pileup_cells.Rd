@@ -80,7 +80,7 @@ library(Rsamtools)
 library(GenomicRanges)
 bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
 
-gr <- GRanges(c("2:579:-", "2:625:-", "2:645:-","2:589:-", "2:601:-"))
+gr <- GRanges(c("2:579:-", "2:625:-", "2:645:-", "2:589:-", "2:601:-"))
 gr$REF <- c(rep("A", 4), "T")
 gr$ALT <- c(rep("G", 4), "C")
 
@@ -100,13 +100,14 @@ sce
 many_small_bams <- rep(bam_fn, 10)
 bam_ids <- LETTERS[1:10]
 pileup_cells(many_small_bams,
-             sites = gr,
-             cell_barcodes = bam_ids,
-             cb_tag = NULL,
-             umi_tag = NULL,
-             paired_end = TRUE,
-             outdir,
-             param = fp)
+    sites = gr,
+    cell_barcodes = bam_ids,
+    cb_tag = NULL,
+    umi_tag = NULL,
+    paired_end = TRUE,
+    outdir,
+    param = fp
+)
 
 }
 \seealso{

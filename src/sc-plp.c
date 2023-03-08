@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <htslib/sam.h>
 #include <htslib/faidx.h>
 #include <htslib/khash.h>
@@ -6,6 +5,10 @@
 #include <htslib/regidx.h>
 #include <htslib/khash_str2int.h>
 #include <Rinternals.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "regfile.h"
 #include "plp.h"
 #include "plp_utils.h"
@@ -19,14 +22,8 @@
 //    alt: number of UMIs supporting alt
 // This will be cleared at each site
 
-KHASH_SET_INIT_STR(str)
-typedef khash_t(str) *strhash_t;
-
-KHASH_MAP_INIT_STR(str2intmap, int)
-typedef khash_t(str2intmap) *str2intmap_t;
-
 typedef struct  {
-  strhash_t umi; // hashset mapping UMI to consensus calls
+  strset_t umi; // hashset mapping UMI to consensus calls
   int ref; // # of UMIs supporting ref
   int alt; // # of UMIs supporting alt
 } cb_t;
@@ -34,13 +31,13 @@ typedef struct  {
 KHASH_MAP_INIT_STR(cbumimap, cb_t*)
 typedef khash_t(cbumimap) *cbumi_map_t;
 
-void clear_umi(strhash_t uhash) {
+void clear_umi(strset_t uhash) {
   khint_t k;
   if(!uhash) return;
   for (k = kh_begin(uhash); k < kh_end(uhash); ++k){
     if (kh_exist(uhash, k)) free((char*)kh_key(uhash, k));
   }
-  kh_clear(str, uhash);
+  kh_clear(strset, uhash);
 }
 
 void clear_cb_umiset(cbumi_map_t cbhash) {
@@ -57,7 +54,7 @@ void clear_cb_umiset(cbumi_map_t cbhash) {
 
 static cb_t* init_umihash(){
   cb_t* cb = R_Calloc(1, cb_t);
-  cb->umi = kh_init(str);
+  cb->umi = kh_init(strset);
   return cb ;
 }
 
@@ -69,7 +66,7 @@ void free_hashmaps(cbumi_map_t cbhash, str2intmap_t cbidx) {
         if (!kh_exist(cbhash, k)) continue;
         cdat = kh_value(cbhash, k);
         clear_umi(cdat->umi);
-        kh_destroy(str, cdat->umi);
+        kh_destroy(strset, cdat->umi);
         free(cdat);
       }
       kh_destroy(cbumimap, cbhash);
@@ -85,18 +82,7 @@ void free_hashmaps(cbumi_map_t cbhash, str2intmap_t cbidx) {
 }
 
 
-//From https://stat.ethz.ch/pipermail/r-devel/2011-April/060702.html
-static void chkIntFn(void *dummy) {
-    R_CheckUserInterrupt();
-}
-
-// this will call the above in a top-level context so it won't longjmp-out of your context
-int _checkInterrupt() {
-  return (R_ToplevelExec(chkIntFn, NULL) == FALSE);
-}
-
 // struct for event filter params
-
 typedef struct {
   int min_mq, libtype, min_bq, max_depth;
   read_qual_t read_qual;
@@ -203,7 +189,7 @@ static int count_record(bam1_t *b, sc_mplp_conf_t *conf, payload_t *pld,
     umi = get_aux_ztag(b, conf->umi_tag);
     if(umi == NULL) return(0);
     umi_val = strdup(umi);
-    kh_put(str, cbdat->umi, umi_val, &uret);
+    kh_put(strset, cbdat->umi, umi_val, &uret);
     if (uret == 0) {
       free(umi_val);
       return(1);
@@ -418,7 +404,7 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
 
     // check user interrupt
     if (n_iter % 65536 == 0) {
-      if(_checkInterrupt()) goto fail;
+      if(checkInterrupt()) goto fail;
     }
 
     // ensure position is in requested intervals

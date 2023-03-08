@@ -6,10 +6,10 @@ output: github_document
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "man/figures/README-",
-  out.width = "100%"
+    collapse = TRUE,
+    comment = "#>",
+    fig.path = "man/figures/README-",
+    out.width = "100%"
 )
 ```
 
@@ -72,9 +72,9 @@ The `FilterParam()` class holds multiple options for customizing the output of
 
 ```{r params}
 fp <- FilterParam(
-  only_keep_variants = TRUE,
-  library_type = "fr-first-strand",
-  min_depth = 2
+    only_keep_variants = TRUE,
+    library_type = "fr-first-strand",
+    min_depth = 2
 )
 
 rse <- pileup_sites(bams, fafn, param = fp)

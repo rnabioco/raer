@@ -16,7 +16,8 @@
 #' colnames(2): wt adar1_ko
 #' colData names(1): sample
 #' ```
-#'
+#' @returns RangedSummarizedExperiment populated with pileup data
 #' @source <https://www.ncbi.nlm.nih.gov/bioproject/PRJNA386593>
 #' @references <https://pubmed.ncbi.nlm.nih.gov/29395325/>
+#' @usage data(rse_adar_ifn)
 "rse_adar_ifn"

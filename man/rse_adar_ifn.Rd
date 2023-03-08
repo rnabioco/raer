@@ -22,7 +22,10 @@ colData names(1): sample
 \url{https://www.ncbi.nlm.nih.gov/bioproject/PRJNA386593}
 }
 \usage{
-rse_adar_ifn
+data(rse_adar_ifn)
+}
+\value{
+RangedSummarizedExperiment populated with pileup data
 }
 \description{
 A subset of data from an RNA-seq experiment to measure

@@ -9,7 +9,6 @@ extern "C" {
 
 /* largely templated from Rsamtools approach (scanBam) */
 
-
 /* arrays of pileup data
    to be stored for each sample */
 typedef struct  {
@@ -33,7 +32,6 @@ typedef struct {
 } _PLP_DATA, *PLP_DATA;
 
 SEXP pileup_result_init(int n);
-
 SEXP pileup_template();
 SEXP sitedata_template();
 
@@ -52,11 +50,10 @@ enum {
 enum {
   SITE_DATA_LST = 0, PLP_DATA_LST
 };
+
 /* From Rsamtools
  robust memory re-allocation */
-
 #define _Rs_Realloc(p, n, t)	(t *) _Rs_Realloc_impl(p, n, sizeof(t))
-
 void *_Rs_Realloc_impl(void *p, size_t n, size_t t);
 
 #ifdef __cplusplus

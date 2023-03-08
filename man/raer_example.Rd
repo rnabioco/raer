@@ -9,6 +9,9 @@ raer_example(path)
 \arguments{
 \item{path}{path to file}
 }
+\value{
+Character vector will path to an internal package file.
+}
 \description{
 Provide working directory for raer example files.
 }

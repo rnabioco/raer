@@ -9,12 +9,18 @@ filter_multiallelic(se)
 \arguments{
 \item{se}{\code{SummarizedExperiment::SummarizedExperiment}}
 }
+\value{
+\code{SummarizedExperiment::SummarizedExperiment} with multiallelic sites
+removed.  A new column,\code{ALT} will be added to \code{rowData()} indicating the
+single allele present at the site.
+}
 \description{
 Remove sites with multiple variant bases from a
 \code{SummarizedExperiment}. \code{rowData()} gains a new column, \code{ALT}, that
 contains the variant allele detected at each site.
 }
 \examples{
+data(rse_adar_ifn)
 filter_multiallelic(rse_adar_ifn)
 
 }

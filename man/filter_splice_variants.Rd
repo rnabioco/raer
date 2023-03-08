@@ -16,16 +16,21 @@ filter_splice_variants(se, txdb, splice_site_dist = 4, ignore.strand = FALSE)
 \item{ignore.strand}{if \code{TRUE}, ignore strand when comparing editing sites to
 splice sites}
 }
+\value{
+\code{SummarizedExperiment::SummarizedExperiment} with sites
+adjacent to splice sites removed.
+}
 \description{
 Remove editing sites found in regions proximal to annotated
 splice junctions.
 }
 \examples{
 if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
-  filter_splice_variants(
-    rse_adar_ifn,
-    TxDb.Hsapiens.UCSC.hg38.knownGene
-  )
+    data(rse_adar_ifn)
+    filter_splice_variants(
+        rse_adar_ifn,
+        TxDb.Hsapiens.UCSC.hg38.knownGene
+    )
 }
 
 }

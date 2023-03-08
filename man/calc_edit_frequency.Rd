@@ -41,7 +41,7 @@ number of sites is stored as n_sites in the colData.}
 of editing sites detected.}
 }
 \value{
-SummarizedExperiment supplemented with \code{edit_freq} assay.
+\code{SummarizedExperiment::SummarizedExperiment} supplemented with \code{edit_freq} assay.
 }
 \description{
 Adds editing frequencies to an existing
@@ -51,6 +51,7 @@ fraction of edits (edit_idx) is returned.
 }
 \examples{
 library(SummarizedExperiment)
+data(rse_adar_ifn)
 rse <- calc_edit_frequency(rse_adar_ifn)
 assay(rse, "edit_freq")[1:5, ]
 
