@@ -42,6 +42,11 @@ least min_samples need to pass this to keep the site. Default is 0.9.}
 \item{min_samples}{OPTIONAL the minimum number of samples passing the cutoffs
 to keep a site. Default is 3.}
 }
+\value{
+\code{SummarizedExperiment::SummarizedExperiment} for use with edgeR or
+DESeq2. Contains a counts assay with a matrix formatted with 2 columns
+per sample (ref and alt counts).
+}
 \description{
 Generates a SummarizedExperiment object for use with edgeR or
 DESeq2 will generate a counts assay with a matrix formated with 2 columns
@@ -49,6 +54,7 @@ per sample
 }
 \examples{
 library(SummarizedExperiment)
+data(rse_adar_ifn)
 rse <- calc_edit_frequency(rse_adar_ifn)
 dse <- prep_for_de(rse, min_samples = 1)
 assay(dse, "counts")[1:5, ]

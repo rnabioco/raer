@@ -7,46 +7,54 @@ annot_snps.GRanges <- function(obj,
                                col_to_aggr = "RefSNP_id",
                                drop = FALSE,
                                ...) {
-  if (!is(dbsnp, "ODLT_SNPlocs")) {
-    stop(dbsnp, " not valid SNP package, please install SNP db")
-  }
+    if (!is(dbsnp, "ODLT_SNPlocs")) {
+        cli::cli_abort("supplied dbSNP not valid SNP package, please install SNP db")
+    }
 
-  if (!is.null(chrom)) {
-    sites <- obj[seqnames(obj) == chrom]
-  } else {
-    sites <- obj
-  }
+    if (!is.null(chrom)) {
+        sites <- obj[seqnames(obj) == chrom]
+    } else {
+        sites <- obj
+    }
 
-  in_style <- seqlevelsStyle(sites)
-  snp_style <- seqlevelsStyle(dbsnp)
-  seqlevelsStyle(sites) <- snp_style
+    in_style <- seqlevelsStyle(sites)
+    snp_style <- seqlevelsStyle(dbsnp)
+    if (!any(in_style %in% snp_style)) {
+        cli::cli_alert_warning(c(
+            "seqlevels style in supplied snps ({snp_style}) ",
+            "differs from sites ({in_style}) ",
+            "attempting to coerce"
+        ))
+    }
 
-  # returns GPos for each snp
-  snps <- snpsByOverlaps(dbsnp, sites)
+    seqlevelsStyle(sites) <- snp_style
 
-  # now annot if site is a SNP
-  snp_overlaps <- findOverlaps(sites, snps, ignore.strand = TRUE)
-  if (length(snp_overlaps) == 0) {
-    mcols(sites)[col_to_aggr] <- NA
+    # returns GPos for each snp
+    snps <- snpsByOverlaps(dbsnp, sites)
+
+    # now annot if site is a SNP
+    snp_overlaps <- findOverlaps(sites, snps, ignore.strand = TRUE)
+    if (length(snp_overlaps) == 0) {
+        mcols(sites)[col_to_aggr] <- NA
+        seqlevelsStyle(sites) <- in_style
+        return(sites)
+    }
+    mcols(sites)[col_to_aggr] <- aggregate(snps,
+        snp_overlaps,
+        snp = unstrsplit(
+            eval(parse(text = col_to_aggr)),
+            ","
+        ),
+        drop = FALSE
+    )$snp
+
     seqlevelsStyle(sites) <- in_style
-    return(sites)
-  }
-  mcols(sites)[col_to_aggr] <- aggregate(snps,
-    snp_overlaps,
-    snp = unstrsplit(
-      eval(parse(text = col_to_aggr)),
-      ","
-    ),
-    drop = FALSE
-  )$snp
 
-  seqlevelsStyle(sites) <- in_style
+    if (drop) {
+        sites <- sites[!is.na(sites$snp)]
+    }
 
-  if (drop) {
-    sites <- sites[!is.na(sites$snp)]
-  }
-
-  sites
+    sites
 }
 
 
@@ -58,17 +66,17 @@ annot_snps.SummarizedExperiment <- function(obj,
                                             col_to_aggr = "RefSNP_id",
                                             drop = FALSE,
                                             ...) {
-  gr <- rowRanges(obj)
-  res <- annot_snps.GRanges(gr,
-    dbsnp,
-    chrom = chrom,
-    col_to_aggr = col_to_aggr,
-    drop = drop
-  )
+    gr <- rowRanges(obj)
+    res <- annot_snps.GRanges(gr,
+        dbsnp,
+        chrom = chrom,
+        col_to_aggr = col_to_aggr,
+        drop = drop
+    )
 
-  res <- cbind(mcols(gr), mcols(res))
-  mcols(rowRanges(obj)) <- res
-  obj
+    res <- cbind(mcols(gr), mcols(res))
+    mcols(rowRanges(obj)) <- res
+    obj
 }
 
 #' Annotate a RangedSummarizedExperiment using Granges objects
@@ -88,10 +96,10 @@ annot_snps.SummarizedExperiment <- function(obj,
 #'
 #' @examples
 #' library(SummarizedExperiment)
-#'
+#' data(rse_adar_ifn)
 #' gr <- GRanges(rep(c("SSR3", "SPCS3"), c(5, 15)),
-#'   IRanges(seq(1, 500, by = 25), width = 50),
-#'   strand = "+"
+#'     IRanges(seq(1, 500, by = 25), width = 50),
+#'     strand = "+"
 #' )
 #'
 #' gr$feature <- sample(1:100, size = 20)
@@ -105,48 +113,48 @@ annot_snps.SummarizedExperiment <- function(obj,
 #'
 #' @export
 annot_from_gr <- function(obj, gr, cols_to_map, ...) {
-  if (is(obj, "RangedSummarizedExperiment")) {
-    gr_sites <- rowRanges(obj)
-    return_se <- TRUE
-  } else {
-    gr_sites <- obj
-    return_se <- FALSE
-  }
-
-  overlaps <- findOverlaps(gr_sites, gr, ...)
-
-  if (!is.null(names(cols_to_map))) {
-    names(cols_to_map) <- ifelse(names(cols_to_map) == "",
-      cols_to_map,
-      names(cols_to_map)
-    )
-  } else {
-    names(cols_to_map) <- cols_to_map
-  }
-
-  for (i in seq_along(cols_to_map)) {
-    col <- cols_to_map[[i]]
-    col_id <- names(cols_to_map)[i]
-    if (!col %in% names(mcols(gr))) {
-      stop(col, " not present in mcols() of input")
+    if (is(obj, "RangedSummarizedExperiment")) {
+        gr_sites <- rowRanges(obj)
+        return_se <- TRUE
+    } else {
+        gr_sites <- obj
+        return_se <- FALSE
     }
-    mcols(gr)[[col]] <- as.character(mcols(gr)[[col]])
-    x <- aggregate(gr,
-      overlaps,
-      tmp = unstrsplit(
-        eval(parse(text = col)),
-        ","
-      ),
-      drop = FALSE
-    )
-    x$tmp <- ifelse(x$tmp == "", NA, x$tmp)
-    mcols(gr_sites)[[col_id]] <- x$tmp
-  }
-  if (return_se) {
-    mcols(rowRanges(obj)) <- mcols(gr_sites)
-  } else {
-    mcols(obj) <- mcols(gr_sites)
-  }
 
-  obj
+    overlaps <- findOverlaps(gr_sites, gr, ...)
+
+    if (!is.null(names(cols_to_map))) {
+        names(cols_to_map) <- ifelse(names(cols_to_map) == "",
+            cols_to_map,
+            names(cols_to_map)
+        )
+    } else {
+        names(cols_to_map) <- cols_to_map
+    }
+
+    for (i in seq_along(cols_to_map)) {
+        col <- cols_to_map[[i]]
+        col_id <- names(cols_to_map)[i]
+        if (!col %in% names(mcols(gr))) {
+            cli::cli_abort("{col} not present in mcols() of input")
+        }
+        mcols(gr)[[col]] <- as.character(mcols(gr)[[col]])
+        x <- aggregate(gr,
+            overlaps,
+            tmp = unstrsplit(
+                eval(parse(text = col)),
+                ","
+            ),
+            drop = FALSE
+        )
+        x$tmp <- ifelse(x$tmp == "", NA, x$tmp)
+        mcols(gr_sites)[[col_id]] <- x$tmp
+    }
+    if (return_se) {
+        mcols(rowRanges(obj)) <- mcols(gr_sites)
+    } else {
+        mcols(obj) <- mcols(gr_sites)
+    }
+
+    obj
 }

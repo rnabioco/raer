@@ -7,47 +7,15 @@
 #include "plp_data.h"
 #include "bcftools/bcftools-ext.h"
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <ctype.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
-#include <strings.h>
-#include <limits.h>
-#include <errno.h>
-#include <sys/stat.h>
-#include <getopt.h>
-#include <inttypes.h>
-
-#include <Rinternals.h>
 
 #define STRICT_R_HEADERS
 #define R_NO_REMAP
 
-//From https://stat.ethz.ch/pipermail/r-devel/2011-April/060702.html
-static void chkIntFn(void *dummy) {
-  R_CheckUserInterrupt();
-}
-
-// this will call the above in a top-level context so it won't longjmp-out of your context
-int checkInterrupt() {
-  return (R_ToplevelExec(chkIntFn, NULL) == FALSE);
-}
-
 #define NBASE_POS 100
-
-KHASH_SET_INIT_STR(rname)
-typedef khash_t(rname) *rnhash_t;
-
-KHASH_SET_INIT_STR(str)
-typedef khash_t(str) *strhash_t;
-
-KHASH_MAP_INIT_STR(varhash, int)
-typedef khash_t(varhash) *varhash_t;
-
-KHASH_SET_INIT_STR(umihash)
-typedef khash_t(umihash) *umihash_t;
 
 typedef struct {
   int minq;
@@ -80,8 +48,8 @@ typedef struct {
   faidx_t *fai;
   regidx_t *reg_idx;
   regitr_t *reg_itr;
-  rnhash_t rnames;
-  strhash_t brhash;
+  strset_t rnames;
+  strset_t brhash;
   FILE *reads_fp;
 } mplp_conf_t;
 
@@ -107,171 +75,6 @@ typedef struct {
   int *n_plp, *m_plp;
   bam_pileup1_t **plp;
 } mplp_pileup_t;
-
-void clear_varhash_set(varhash_t vhash)
-{
-  khint_t k;
-  if(vhash){
-    for (k = kh_begin(vhash); k < kh_end(vhash); ++k){
-      if (kh_exist(vhash, k)) free((char*)kh_key(vhash, k));
-    }
-    kh_clear(varhash, vhash);
-  }
-}
-
-void clear_umihash_set(umihash_t uhash)
-{
-  khint_t k;
-  if(uhash){
-    for (k = kh_begin(uhash); k < kh_end(uhash); ++k){
-      if (kh_exist(uhash, k)) free((char*)kh_key(uhash, k));
-    }
-    kh_clear(umihash, uhash);
-  }
-}
-
-// Parse MD tag and enumerate types and number of mismatches
-// Determine if read passes n_mis and n_types thresholds
-//
-//
-// returns: -1 if no MD tag
-//           0 if read passes filter
-//           >0 with # of unique mismatches if doesn't pass
-//
-// based on cigar and MD parsing code from htsbox (written by Heng Li)
-// https://github.com/lh3/htsbox/blob/ffc1e8ad4f61291c676a323ed833ade3ee681f7c/samview.c#L117
-
-int parse_mismatches(bam1_t* b,const int pos, int n_types, int n_mis){
-  int ret = 0;
-  if(n_types < 1 && n_mis < 1){
-    return ret;
-  }
-  const uint32_t *cigar = bam_get_cigar(b);
-  int k, x, y, c;
-
-  uint8_t *pMD = 0;
-  char *p;
-  int nm = 0;
-
-  char vars[2];
-  vars[1] = '\0';
-  varhash_t vh;
-  vh = kh_init(varhash);
-
-  if ((pMD = bam_aux_get(b, "MD")) != 0) {
-    for (k = x = y = 0; k < b->core.n_cigar; ++k) {
-      int op = bam_cigar_op(cigar[k]);
-      int len = bam_cigar_oplen(cigar[k]);
-      if (op == BAM_CMATCH || op == BAM_CEQUAL || op == BAM_CDIFF) {
-        x += len, y += len;
-      } else if (op == BAM_CINS || op == BAM_CSOFT_CLIP)
-        y += len;
-    }
-
-    p = bam_aux2Z(pMD);
-
-    y = 0;
-    while (isdigit(*p)) {
-      y += strtol(p, &p, 10);
-      if (*p == 0) {
-        break;
-      } else if (*p == '^') { // deletion
-        ++p;
-        while (isalpha(*p)) ++p;
-      } else {
-        while (isalpha(*p)) {
-          if (y >= x) {
-            y = -1;
-            break;
-          }
-          c = y < b->core.l_qseq
-            ? seq_nt16_str[bam_seqi(bam_get_seq(b), y)]
-          : 'N';
-          nm += 1;
-
-          vars[0] = c;
-          char *var = strdup(vars);
-          int rval = 0;
-          kh_put(varhash, vh, var, &rval);
-          if(rval == -1){
-            REprintf("[raer internal] issue tabulating variants per read at, %s\n",
-                     bam_get_qname(b));
-            clear_varhash_set(vh);
-            kh_destroy(varhash, vh);
-            return -1;
-          } else if (rval == 0){
-            free(var);
-          }
-          ++y, ++p;
-        }
-        if (y == -1) break;
-      }
-    }
-
-    if (x != y) {
-      REprintf("[raer internal] inconsistent MD for read '%s' (%d != %d); ignore MD\n",
-               bam_get_qname(b), x, y);
-      ret = -1;
-    } else {
-      if(kh_size(vh) >= n_types && nm >= n_mis){
-        ret = kh_size(vh);
-      }
-    }
-  }
-  clear_varhash_set(vh);
-  kh_destroy(varhash, vh);
-  return ret;
-}
-
-int8_t seq_comp_table[16] = { 0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15 };
-
-/* from samtools bam_fastq.c */
-/* return the read, reverse complemented if necessary */
-char *get_read(const bam1_t *rec)
-{
-  int len = rec->core.l_qseq + 1;
-  char *read = calloc(1, len);
-  char *seq = (char *)bam_get_seq(rec);
-  int n;
-
-  if (!read) return NULL;
-
-  for (n=0; n < rec->core.l_qseq; n++) {
-    if (rec->core.flag & BAM_FREVERSE) read[n] = seq_nt16_str[seq_comp_table[bam_seqi(seq,n)]];
-    else                               read[n] = seq_nt16_str[bam_seqi(seq,n)];
-  }
-  if (rec->core.flag & BAM_FREVERSE) reverse(read);
-  return read;
-}
-
-/* from samtools bam_view.c */
-int populate_lookup_from_file(strhash_t lookup, char *fn)
-{
-  FILE *fp;
-  char buf[1024];
-  int ret = 0;
-  fp = fopen(fn, "r");
-  if (fp == NULL) {
-    REprintf("[raer internal] failed to open \"%s\" for reading", fn);
-    return -1;
-  }
-
-  while (ret != -1 && !feof(fp) && fscanf(fp, "%1023s", buf) > 0) {
-    char *d = strdup(buf);
-    if (d != NULL) {
-      kh_put(str, lookup, d, &ret);
-      if (ret == 0) free(d); /* Duplicate */
-    } else {
-      ret = -1;
-    }
-  }
-  if (ferror(fp)) ret = -1;
-  fclose(fp);
-  if (ret == -1) {
-    REprintf("[raer internal] failed to read \"%s\"", fn);
-  }
-  return (ret != -1) ? 0 : -1;
-}
 
 /* from bam_plcmd.c */
 static int mplp_get_ref(mplp_aux_t *ma, int tid, char **ref, hts_pos_t *ref_len) {
@@ -333,6 +136,45 @@ static int mplp_get_ref(mplp_aux_t *ma, int tid, char **ref, hts_pos_t *ref_len)
   return 1;
 }
 
+static int check_read_exclude(strset_t br, bam1_t *b){
+  char* key;
+  char c;
+  size_t len = strlen(bam_get_qname(b));
+
+  if(!((b)->core.flag&BAM_FPAIRED)){
+    key = malloc(len + 1);
+    if(!key) {
+      REprintf("[raer internal] malloc failed\n");
+      return -1;
+    }
+    strcpy(key, bam_get_qname(b));
+    key[len] = '\0';
+    c = '0';
+  } else {
+    key = malloc(len + 2 + 1);
+    if(!key) {
+      REprintf("[raer internal] malloc failed\n");
+      return -1;
+    }
+    if((b)->core.flag&BAM_FREAD1){
+      c = '1' ;
+    } else {
+      c = '2';
+    }
+    strcpy(key, bam_get_qname(b));
+    key[len] = '_';
+    key[len + 1] = c;
+    key[len + 2] = '\0';
+  }
+
+  if (!key || kh_get(strset, br, key) != kh_end(br)) {
+    free(key);
+    return 1;
+  }
+  if(key) free(key);
+  return 0;
+}
+
 // read processing function for pileup
 static int readaln(void *data, bam1_t *b) {
   mplp_aux_t *g = (mplp_aux_t *)data;
@@ -351,44 +193,10 @@ static int readaln(void *data, bam1_t *b) {
     // exclude reads in the "bad read hash"
     // should only occur if 1 bamfile is passed
     if (g->conf->brhash) {
-      char* key;
-      char c;
-      size_t len = strlen(bam_get_qname(b));
-
-      if(!((b)->core.flag&BAM_FPAIRED)){
-        key = malloc(len + 1);
-        if(!key) {
-          REprintf("[raer internal] malloc failed\n");
-          ret = -1;
-          break;
-        }
-        strcpy(key, bam_get_qname(b));
-        key[len] = '\0';
-        c = '0';
-      } else {
-        key = malloc(len + 2 + 1);
-        if(!key) {
-          REprintf("[raer internal] malloc failed\n");
-          ret = -1;
-          break;
-        }
-        if((b)->core.flag&BAM_FREAD1){
-          c = '1' ;
-        } else {
-          c = '2';
-        }
-        strcpy(key, bam_get_qname(b));
-        key[len] = '_';
-        key[len + 1] = c;
-        key[len + 2] = '\0';
-      }
-
-      if (!key || kh_get(str, g->conf->brhash, key) != kh_end(g->conf->brhash)) {
-        free(key);
-        skip = 1;
-        continue;
-      }
-      if(key) free(key);
+      int v = check_read_exclude(g->conf->brhash, b);
+      if(v < 0) break;
+      skip = v;
+      if(skip) continue;
     }
 
     // test required and filter flags
@@ -422,23 +230,12 @@ static int readaln(void *data, bam1_t *b) {
   return ret;
 }
 
-static void clear_rname_set(rnhash_t rnames)
-{
-  khint_t k;
-  if(rnames){
-    for (k = kh_begin(rnames); k < kh_end(rnames); ++k){
-      if (kh_exist(rnames, k)) free((char*)kh_key(rnames, k));
-    }
-    kh_clear(rname, rnames);
-  }
-}
-
 // structs for holding counts
 typedef struct {
   int total, nr, nv, na, nt, ng, nc, nn, nx;
   int ref_b;
-  varhash_t var;
-  umihash_t umi;
+  str2intmap_t var;
+  strset_t umi;
 } counts;
 
 typedef struct  {
@@ -468,8 +265,8 @@ static void clear_pall_counts(pall_counts *p){
 static void clear_counts(counts *p){
   p->na = p->nc = p->ng = p->nn = p->nr = p->nt = p->nv = p->total = p->nx = 0;
   p->ref_b = 0;
-  clear_varhash_set(p->var);
-  clear_umihash_set(p->umi);
+  clear_str2int_hashmap(p->var);
+  clear_str_set(p->umi);
 }
 
 static void clear_pcounts(pcounts *p){
@@ -478,7 +275,7 @@ static void clear_pcounts(pcounts *p){
   p->pos = 0;
 }
 
-static void get_var_string(varhash_t *vhash, char *out){
+static void get_var_string(str2intmap_t *vhash, char *out){
   const char *reg;
   int z = 1;
   khint_t k;
@@ -680,7 +477,7 @@ static int store_counts(PLP_DATA pd, pcounts *pc, const char* ctig,
             nv = kh_value((pc + i)->pc->var, k);
             vf = (double) nv / (pc + i)->pc->total;
             if(vf < conf->min_af){
-              kh_del(varhash, (pc + i)->pc->var, k);
+              kh_del(str2intmap, (pc + i)->pc->var, k);
             }
           }
         }
@@ -692,7 +489,7 @@ static int store_counts(PLP_DATA pd, pcounts *pc, const char* ctig,
             nv = kh_value((pc + i)->mc->var, k);
             vf = (double) nv / (pc + i)->mc->total;
             if(vf < conf->min_af){
-              kh_del(varhash, (pc + i)->mc->var, k);
+              kh_del(str2intmap, (pc + i)->mc->var, k);
             }
           }
         }
@@ -811,7 +608,7 @@ static int write_reads(bam1_t *b,  mplp_conf_t *conf, const char* ref, const int
   // try to add read to cache, check if already present
   // key will be freed upon cleanup of hashtable
   int rret;
-  kh_put(rname, conf->rnames, key, &rret);
+  kh_put(strset, conf->rnames, key, &rret);
   if (rret == 1) {
     int ret = 0;
     ret = write_fasta(b, conf, ref, c, pos + 1);
@@ -865,7 +662,7 @@ static int count_one_record(const bam_pileup1_t *p, pcounts *pc, mplp_conf_t *co
       // store variants as single bases in hash set
       char *var = strdup(mvar);
 
-      k = kh_put(varhash, pc->mc->var, var, &hret);
+      k = kh_put(str2intmap, pc->mc->var, var, &hret);
       if (hret == 0) {
         free(var);
         kh_value(pc->mc->var, k) += 1;
@@ -914,7 +711,7 @@ static int count_one_record(const bam_pileup1_t *p, pcounts *pc, mplp_conf_t *co
       pvar[0] = read_base;
 
       char *var = strdup(pvar);
-      k = kh_put(varhash, pc->pc->var, var, &hret);
+      k = kh_put(str2intmap, pc->pc->var, var, &hret);
       if (hret == 0) {
         free(var);
         kh_value(pc->pc->var, k) += 1;
@@ -1021,7 +818,7 @@ static int check_umi(const bam_pileup1_t *p, mplp_conf_t *conf,
     umi = get_aux_ztag(p->b, conf->umi_tag);
     if(umi == NULL) return -1;
     char* umi_val = strdup(umi);
-    kh_put(umihash, plpc->mc->umi, umi_val, &ret);
+    kh_put(strset, plpc->mc->umi, umi_val, &ret);
     if (ret == 0) {
       free(umi_val);
       return(0);
@@ -1030,7 +827,7 @@ static int check_umi(const bam_pileup1_t *p, mplp_conf_t *conf,
     umi = get_aux_ztag(p->b, conf->umi_tag);
     if(umi == NULL) return -1;
     char *umi_val = strdup(umi);
-    kh_put(umihash, plpc->pc->umi, umi_val, &ret);
+    kh_put(strset, plpc->pc->umi, umi_val, &ret);
     if (ret == 0) {
       free(umi_val);
       return(0);
@@ -1135,12 +932,12 @@ static int run_pileup(char** cbampaths, const char** coutfns,
      plpc[i].mc = R_Calloc(1, counts);
 
      //initialize variant string set (AG, AT, TC) etc.
-     if (plpc[i].pc->var == NULL) plpc[i].pc->var = kh_init(varhash);
-     if (plpc[i].mc->var == NULL) plpc[i].mc->var = kh_init(varhash);
+     if (plpc[i].pc->var == NULL) plpc[i].pc->var = kh_init(str2intmap);
+     if (plpc[i].mc->var == NULL) plpc[i].mc->var = kh_init(str2intmap);
 
      //initialize umi string set
-     if (plpc[i].pc->umi == NULL) plpc[i].pc->umi = kh_init(umihash);
-     if (plpc[i].mc->umi == NULL) plpc[i].mc->umi = kh_init(umihash);
+     if (plpc[i].pc->umi == NULL) plpc[i].pc->umi = kh_init(strset);
+     if (plpc[i].mc->umi == NULL) plpc[i].mc->umi = kh_init(strset);
   }
 
   pall_counts *pall = R_Calloc(1, pall_counts);
@@ -1197,7 +994,7 @@ static int run_pileup(char** cbampaths, const char** coutfns,
     // if writing out reads with mismatches, clear out hash table of read names at each chromosome,
     if(tid != last_tid && conf->output_reads){
       if (kh_size(conf->rnames)) {
-        clear_rname_set(conf->rnames);
+        clear_str_set(conf->rnames);
       }
       last_tid = tid;
     }
@@ -1325,10 +1122,10 @@ fail:
     if(data[i]->iter) hts_itr_destroy(data[i]->iter);
     free(data[i]);
     clear_pcounts(&plpc[i]);
-    kh_destroy(varhash, plpc[i].mc->var);
-    kh_destroy(varhash, plpc[i].pc->var);
-    kh_destroy(umihash, plpc[i].mc->umi);
-    kh_destroy(umihash, plpc[i].pc->umi);
+    kh_destroy(str2intmap, plpc[i].mc->var);
+    kh_destroy(str2intmap, plpc[i].pc->var);
+    kh_destroy(strset, plpc[i].mc->umi);
+    kh_destroy(strset, plpc[i].pc->umi);
     R_Free(plpc[i].pc); R_Free(plpc[i].mc);
 
   }
@@ -1510,7 +1307,7 @@ static int set_mplp_conf(mplp_conf_t *conf, int n_bams,
                R_ExpandFileName(reads_fn), strerror(errno));
       return -1;
     }
-    conf->rnames = kh_init(rname);
+    conf->rnames = kh_init(strset);
   }
 
   if(mismatches_fn){
@@ -1519,7 +1316,7 @@ static int set_mplp_conf(mplp_conf_t *conf, int n_bams,
       REprintf("[raer internal] exclude bad reads only works with 1 input bam");
       return -1;
     }
-    conf->brhash = kh_init(str);
+    conf->brhash = kh_init(strset);
     if (conf->brhash == NULL) {
       REprintf("[raer internal] issue building mismatches hash");
       return -1;
@@ -1605,11 +1402,11 @@ SEXP pileup(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP lst,
 
   // clean up
   if (ga.fai) fai_destroy(ga.fai);
-  if(ga.reg_itr) regitr_destroy(ga.reg_itr);
-  if(ga.reg_idx) regidx_destroy(ga.reg_idx);
+  if (ga.reg_itr) regitr_destroy(ga.reg_itr);
+  if (ga.reg_idx) regidx_destroy(ga.reg_idx);
   if (ga.output_reads) {
-    clear_rname_set(ga.rnames);
-    kh_destroy(rname, ga.rnames);
+    clear_str_set(ga.rnames);
+    kh_destroy(strset, ga.rnames);
     fclose(ga.reads_fp);
   }
 
@@ -1618,7 +1415,7 @@ SEXP pileup(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP lst,
     for (k = 0; k < kh_end(ga.brhash); ++k){
       if (kh_exist(ga.brhash, k)) free((char*)kh_key(ga.brhash, k));
     }
-    kh_destroy(str, ga.brhash);
+    kh_destroy(strset, ga.brhash);
   }
   UNPROTECT(1);
   if(ret < 0) Rf_error("[raer internal] error detected during pileup");

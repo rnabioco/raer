@@ -17,7 +17,7 @@ from hg38 chromosome 4.
 This function will download ~ 5 GB of data.
 }
 \examples{
-\dontrun{
+\donttest{
 td <- tempdir()
 download_NA12878(td)
 }

@@ -7,32 +7,37 @@
 #' @param se `SummarizedExperiment::SummarizedExperiment`
 #'
 #' @examples
+#' data(rse_adar_ifn)
 #' filter_multiallelic(rse_adar_ifn)
+#'
+#' @returns `SummarizedExperiment::SummarizedExperiment` with multiallelic sites
+#' removed.  A new column,`ALT` will be added to `rowData()` indicating the
+#' single allele present at the site.
 #'
 #' @family se-filters
 #'
 #' @export
 filter_multiallelic <- function(se) {
-  n_in <- nrow(se)
-  is_not_multiallelic <- apply(assay(se, "ALT"), 1, function(x) {
-    x <- unique(x[x != "-"])
-    if (length(x) == 0 | length(x) >= 2) {
-      return(NA)
-    }
-    !grepl(',', x)
-  })
-  se <- se[which(is_not_multiallelic), ]
-  rowData(se)$ALT <- apply(assay(se, "ALT"), 1, function(x) unique(x[x != "-"]))
+    n_in <- nrow(se)
+    is_not_multiallelic <- apply(assay(se, "ALT"), 1, function(x) {
+        x <- unique(x[x != "-"])
+        if (length(x) == 0 | length(x) >= 2) {
+            return(NA)
+        }
+        !grepl(",", x)
+    })
+    se <- se[which(is_not_multiallelic), ]
+    rowData(se)$ALT <- apply(assay(se, "ALT"), 1, function(x) unique(x[x != "-"]))
 
-  n_filt <- sum(c(is.na(is_not_multiallelic), !is_not_multiallelic), na.rm = TRUE)
-  cli::cli_alert_info(
-    c(
-      "{.fun filter_multiallelic}: removed {.val {n_filt}} sites",
-      " from {.val {n_in}} ({.val {nrow(se)}} remain)"
+    n_filt <- sum(c(is.na(is_not_multiallelic), !is_not_multiallelic), na.rm = TRUE)
+    cli::cli_alert_info(
+        c(
+            "{.fun filter_multiallelic}: removed {.val {n_filt}} sites",
+            " from {.val {n_in}} ({.val {nrow(se)}} remain)"
+        )
     )
-  )
 
-  se
+    se
 }
 
 #' Extract regions surrounding splice sites
@@ -48,38 +53,38 @@ filter_multiallelic <- function(se) {
 #'
 #' @examples
 #' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
-#'   txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
-#'   res <- get_splice_sites(txdb)
-#'   res[1:5]
+#'     txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+#'     res <- get_splice_sites(txdb)
+#'     res[1:5]
 #' }
 #'
 #' @importFrom GenomicFeatures intronsByTranscript
 #'
 #' @export
 get_splice_sites <- function(txdb, slop = 4) {
-  if (!is(txdb, "TxDb")) {
-    stop("txdb must be a TxDb object")
-  }
+    if (!is(txdb, "TxDb")) {
+        stop("txdb must be a TxDb object")
+    }
 
-  gr <- GenomicFeatures::intronsByTranscript(txdb)
-  usub <- unlist(gr)
+    gr <- GenomicFeatures::intronsByTranscript(txdb)
+    usub <- unlist(gr)
 
-  int_start <- GRanges(seqnames(usub),
-    IRanges(
-      start(usub) - slop,
-      start(usub) + slop - 1
-    ),
-    strand = strand(usub)
-  )
-  int_end <- GRanges(seqnames(usub),
-    IRanges(
-      end(usub) - slop - 1,
-      end(usub) + slop
-    ),
-    strand = strand(usub)
-  )
-  int_pos <- c(int_start, int_end)
-  sort(int_pos)
+    int_start <- GRanges(seqnames(usub),
+        IRanges(
+            start(usub) - slop,
+            start(usub) + slop - 1
+        ),
+        strand = strand(usub)
+    )
+    int_end <- GRanges(seqnames(usub),
+        IRanges(
+            end(usub) - slop - 1,
+            end(usub) + slop
+        ),
+        strand = strand(usub)
+    )
+    int_pos <- c(int_start, int_end)
+    sort(int_pos)
 }
 
 #' Filter out sites near splice sites
@@ -97,11 +102,15 @@ get_splice_sites <- function(txdb, slop = 4) {
 #'
 #' @examples
 #' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
-#'   filter_splice_variants(
-#'     rse_adar_ifn,
-#'     TxDb.Hsapiens.UCSC.hg38.knownGene
-#'   )
+#'     data(rse_adar_ifn)
+#'     filter_splice_variants(
+#'         rse_adar_ifn,
+#'         TxDb.Hsapiens.UCSC.hg38.knownGene
+#'     )
 #' }
+#'
+#' @returns `SummarizedExperiment::SummarizedExperiment` with sites
+#' adjacent to splice sites removed.
 #'
 #' @importFrom GenomicFeatures intronsByTranscript
 #'
@@ -109,21 +118,21 @@ get_splice_sites <- function(txdb, slop = 4) {
 filter_splice_variants <- function(se, txdb,
                                    splice_site_dist = 4,
                                    ignore.strand = FALSE) {
-  n_in <- nrow(se)
-  ss <- get_splice_sites(txdb, splice_site_dist)
-  x <- rowRanges(se)
-  fo <- findOverlaps(x, ss, type = "any", ignore.strand = ignore.strand)
-  to_keep <- setdiff(1:length(x), unique(queryHits(fo)))
+    n_in <- nrow(se)
+    ss <- get_splice_sites(txdb, splice_site_dist)
+    x <- rowRanges(se)
+    fo <- findOverlaps(x, ss, type = "any", ignore.strand = ignore.strand)
+    to_keep <- setdiff(seq_along(x), unique(queryHits(fo)))
 
-  n_filt <- length(to_keep)
-  cli::cli_alert_info(
-    c(
-      "{.fun filter_splice_variants}: removed {.val {n_in - n_filt}} sites",
-      " from {.val {n_in}} ({.val {n_filt}} remain)"
+    n_filt <- length(to_keep)
+    cli::cli_alert_info(
+        c(
+            "{.fun filter_splice_variants}: removed {.val {n_in - n_filt}} sites",
+            " from {.val {n_in}} ({.val {n_filt}} remain)"
+        )
     )
-  )
 
-  se[to_keep, ]
+    se[to_keep, ]
 }
 
 #' Filter out clustered sequence variants
@@ -142,12 +151,13 @@ filter_splice_variants <- function(se, txdb,
 #'
 #' @examples
 #' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
-#'   rse <- filter_multiallelic(rse_adar_ifn)
+#'     data(rse_adar_ifn)
+#'     rse <- filter_multiallelic(rse_adar_ifn)
 #'
-#'   filter_clustered_variants(
-#'     rse,
-#'     TxDb.Hsapiens.UCSC.hg38.knownGene
-#'   )
+#'     filter_clustered_variants(
+#'         rse,
+#'         TxDb.Hsapiens.UCSC.hg38.knownGene
+#'     )
 #' }
 #'
 #' @family se-filters
@@ -160,57 +170,57 @@ filter_splice_variants <- function(se, txdb,
 filter_clustered_variants <- function(se, txdb,
                                       regions = c("transcript", "genome"),
                                       variant_dist = 100) {
-  if (!is(txdb, "TxDb")) {
-    cli::cli_abort("txdb must be a TxDb object")
-  }
+    if (!is(txdb, "TxDb")) {
+        cli::cli_abort("txdb must be a TxDb object")
+    }
 
-  if (length(setdiff(regions, c("transcript", "genome"))) > 0) {
-    cli::cli_abort("only transcript and/or genome are valid arguments for region")
-  }
+    if (length(setdiff(regions, c("transcript", "genome"))) > 0) {
+        cli::cli_abort("only transcript and/or genome are valid arguments for region")
+    }
 
-  n_in <- nrow(se)
+    n_in <- nrow(se)
 
-  x <- rowRanges(se)
+    x <- rowRanges(se)
 
-  if ("genome" %in% regions) {
-    fo <- findOverlaps(x, x + variant_dist)
-    vars <- split(x[subjectHits(fo)]$ALT, queryHits(fo))
-    to_keep <- names(vars)[unlist(lapply(
-      vars,
-      function(x) {
-        length(unique(x)) == 1
-      }
-    ))]
+    if ("genome" %in% regions) {
+        fo <- findOverlaps(x, x + variant_dist)
+        vars <- split(x[subjectHits(fo)]$ALT, queryHits(fo))
+        to_keep <- names(vars)[unlist(lapply(
+            vars,
+            function(x) {
+                length(unique(x)) == 1
+            }
+        ))]
 
-    x <- x[as.integer(to_keep)]
-  }
+        x <- x[as.integer(to_keep)]
+    }
 
-  if ("transcript" %in% regions) {
-    tx_sites <- mapToTranscripts(x, txdb)
-    tx_sites$ALT <- x[tx_sites$xHits]$ALT
-    tx_sites <- sort(tx_sites)
-    slop <- trim(suppressWarnings(tx_sites + variant_dist))
+    if ("transcript" %in% regions) {
+        tx_sites <- mapToTranscripts(x, txdb)
+        tx_sites$ALT <- x[tx_sites$xHits]$ALT
+        tx_sites <- sort(tx_sites)
+        slop <- trim(suppressWarnings(tx_sites + variant_dist))
 
-    fo <- findOverlaps(tx_sites, slop)
-    vars <- split(tx_sites[subjectHits(fo)]$ALT, queryHits(fo))
-    to_drop <- names(vars)[unlist(lapply(
-      vars,
-      function(x) {
-        length(unique(x)) > 1
-      }
-    ))]
-    tx_sites <- tx_sites[as.integer(to_drop)]
-    x <- x[setdiff(1:length(x), unique(tx_sites$xHits))]
-  }
+        fo <- findOverlaps(tx_sites, slop)
+        vars <- split(tx_sites[subjectHits(fo)]$ALT, queryHits(fo))
+        to_drop <- names(vars)[unlist(lapply(
+            vars,
+            function(x) {
+                length(unique(x)) > 1
+            }
+        ))]
+        tx_sites <- tx_sites[as.integer(to_drop)]
+        x <- x[setdiff(seq_along(x), unique(tx_sites$xHits))]
+    }
 
-  n_out <- length(x)
+    n_out <- length(x)
 
-  cli::cli_alert_info(
-    c(
-      "{.fun filter_clustered_variants}: removed {.val {n_in - n_out}} sites",
-      " from {.val {n_in}} ({.val {n_out}} remain)"
+    cli::cli_alert_info(
+        c(
+            "{.fun filter_clustered_variants}: removed {.val {n_in - n_out}} sites",
+            " from {.val {n_in}} ({.val {n_out}} remain)"
+        )
     )
-  )
 
-  se[names(x), ]
+    se[names(x), ]
 }

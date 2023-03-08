@@ -17,7 +17,7 @@ file of known editing sites from hg38 chromosome 18.
 This function will download ~ 250 MB of data.
 }
 \examples{
-\dontrun{
+\donttest{
 td <- tempdir()
 download_GSE99249(td)
 }
