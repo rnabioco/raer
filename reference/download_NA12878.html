@@ -86,10 +86,34 @@ from hg38 chromosome 4.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">td</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">download_NA12878</span><span class="op">(</span><span class="va">td</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $bams</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                              ERR262996_dedup_chr4_sub.bam </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            "/tmp/Rtmpm1ltol/ERR262996_dedup_chr4_sub.bam" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   SRR1258218_Aligned.sorted.dedup_sub.bam </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "/tmp/Rtmpm1ltol/SRR1258218_Aligned.sorted.dedup_sub.bam" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $bai</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                              ERR262996_dedup_chr4_sub.bam.bai </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            "/tmp/Rtmpm1ltol/ERR262996_dedup_chr4_sub.bam.bai" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   SRR1258218_Aligned.sorted.dedup_sub.bam.bai </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "/tmp/Rtmpm1ltol/SRR1258218_Aligned.sorted.dedup_sub.bam.bai" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $fasta</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   hg38_chr4.fa.bgz </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "/tmp/Rtmpm1ltol/hg38_chr4.fa.bgz" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $snps</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   chr4snps.bed.gz </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "/tmp/Rtmpm1ltol/chr4snps.bed.gz" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $rmsk</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   rmsk_hg38.tsv.gz </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "/tmp/Rtmpm1ltol/rmsk_hg38.tsv.gz" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

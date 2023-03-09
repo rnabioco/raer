@@ -190,7 +190,7 @@ to the files produced.</p>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/GenomicRanges" class="external-link">GenomicRanges</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bam_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"5k_neuron_mouse_possort.bam"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">gr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"2:579:-"</span>, <span class="st">"2:625:-"</span>, <span class="st">"2:645:-"</span>,<span class="st">"2:589:-"</span>, <span class="st">"2:601:-"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">gr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"2:579:-"</span>, <span class="st">"2:625:-"</span>, <span class="st">"2:645:-"</span>, <span class="st">"2:589:-"</span>, <span class="st">"2:601:-"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">gr</span><span class="op">$</span><span class="va">REF</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"T"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">gr</span><span class="op">$</span><span class="va">ALT</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"G"</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"C"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -217,13 +217,14 @@ to the files produced.</p>
 <span class="r-in"><span><span class="va">many_small_bams</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">bam_fn</span>, <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bam_ids</span> <span class="op">&lt;-</span> <span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="fu">pileup_cells</span><span class="op">(</span><span class="va">many_small_bams</span>,</span></span>
-<span class="r-in"><span>             sites <span class="op">=</span> <span class="va">gr</span>,</span></span>
-<span class="r-in"><span>             cell_barcodes <span class="op">=</span> <span class="va">bam_ids</span>,</span></span>
-<span class="r-in"><span>             cb_tag <span class="op">=</span> <span class="cn">NULL</span>,</span></span>
-<span class="r-in"><span>             umi_tag <span class="op">=</span> <span class="cn">NULL</span>,</span></span>
-<span class="r-in"><span>             paired_end <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>             <span class="va">outdir</span>,</span></span>
-<span class="r-in"><span>             param <span class="op">=</span> <span class="va">fp</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    sites <span class="op">=</span> <span class="va">gr</span>,</span></span>
+<span class="r-in"><span>    cell_barcodes <span class="op">=</span> <span class="va">bam_ids</span>,</span></span>
+<span class="r-in"><span>    cb_tag <span class="op">=</span> <span class="cn">NULL</span>,</span></span>
+<span class="r-in"><span>    umi_tag <span class="op">=</span> <span class="cn">NULL</span>,</span></span>
+<span class="r-in"><span>    paired_end <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>    <span class="va">outdir</span>,</span></span>
+<span class="r-in"><span>    param <span class="op">=</span> <span class="va">fp</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> class: SingleCellExperiment </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> dim: 5 10 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>

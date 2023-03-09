@@ -77,6 +77,14 @@ contains the variant allele detected at each site.</p>
 
 </dl></div>
     <div class="section level2">
+    <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
+    
+
+<p><code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html" class="external-link">SummarizedExperiment::SummarizedExperiment</a></code> with multiallelic sites
+removed.  A new column,<code>ALT</code> will be added to <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData()</a></code> indicating the
+single allele present at the site.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p>Other se-filters: 
 <code><a href="filter_clustered_variants.html">filter_clustered_variants</a>()</code>,
@@ -85,7 +93,8 @@ contains the variant allele detected at each site.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">filter_multiallelic</span><span class="op">(</span><span class="va">rse_adar_ifn</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">rse_adar_ifn</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">filter_multiallelic</span><span class="op">(</span><span class="va">rse_adar_ifn</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> `filter_multiallelic()`: removed <span style="color: #0000BB;">2</span> sites from <span style="color: #0000BB;">74</span> (<span style="color: #0000BB;">72</span> remain)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> class: RangedSummarizedExperiment </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> dim: 72 2 </span>

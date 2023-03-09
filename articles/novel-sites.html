@@ -88,7 +88,7 @@
                         <h4 data-toc-skip class="author">Kent
 Riemondy</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-02-24</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-03-09</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/novel-sites.Rmd" class="external-link"><code>vignettes/novel-sites.Rmd</code></a></small>
       <div class="d-none name"><code>novel-sites.Rmd</code></div>
@@ -122,27 +122,27 @@ variable to a valid file path to keep the files for reuse.</p>
 <span><span class="va">fns</span></span></code></pre></div>
 <pre><code><span><span class="co">## $bams</span></span>
 <span><span class="co">##                              ERR262996_dedup_chr4_sub.bam </span></span>
-<span><span class="co">##            "/tmp/RtmpWClIwb/ERR262996_dedup_chr4_sub.bam" </span></span>
+<span><span class="co">##            "/tmp/RtmpmHmoz2/ERR262996_dedup_chr4_sub.bam" </span></span>
 <span><span class="co">##                   SRR1258218_Aligned.sorted.dedup_sub.bam </span></span>
-<span><span class="co">## "/tmp/RtmpWClIwb/SRR1258218_Aligned.sorted.dedup_sub.bam" </span></span>
+<span><span class="co">## "/tmp/RtmpmHmoz2/SRR1258218_Aligned.sorted.dedup_sub.bam" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $bai</span></span>
 <span><span class="co">##                              ERR262996_dedup_chr4_sub.bam.bai </span></span>
-<span><span class="co">##            "/tmp/RtmpWClIwb/ERR262996_dedup_chr4_sub.bam.bai" </span></span>
+<span><span class="co">##            "/tmp/RtmpmHmoz2/ERR262996_dedup_chr4_sub.bam.bai" </span></span>
 <span><span class="co">##                   SRR1258218_Aligned.sorted.dedup_sub.bam.bai </span></span>
-<span><span class="co">## "/tmp/RtmpWClIwb/SRR1258218_Aligned.sorted.dedup_sub.bam.bai" </span></span>
+<span><span class="co">## "/tmp/RtmpmHmoz2/SRR1258218_Aligned.sorted.dedup_sub.bam.bai" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $fasta</span></span>
 <span><span class="co">##                   hg38_chr4.fa.bgz </span></span>
-<span><span class="co">## "/tmp/RtmpWClIwb/hg38_chr4.fa.bgz" </span></span>
+<span><span class="co">## "/tmp/RtmpmHmoz2/hg38_chr4.fa.bgz" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $snps</span></span>
 <span><span class="co">##                   chr4snps.bed.gz </span></span>
-<span><span class="co">## "/tmp/RtmpWClIwb/chr4snps.bed.gz" </span></span>
+<span><span class="co">## "/tmp/RtmpmHmoz2/chr4snps.bed.gz" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $rmsk</span></span>
 <span><span class="co">##                   rmsk_hg38.tsv.gz </span></span>
-<span><span class="co">## "/tmp/RtmpWClIwb/rmsk_hg38.tsv.gz"</span></span></code></pre>
+<span><span class="co">## "/tmp/RtmpmHmoz2/rmsk_hg38.tsv.gz"</span></span></code></pre>
 <p>Additionally we will use the following additional annotation
 resources:</p>
 <ul>
@@ -168,8 +168,8 @@ annotations for chr4 have been included as a text file.</li>
 <span></span>
 <span><span class="va">rmskhg38</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span><span class="va">fns</span><span class="op">$</span><span class="va">rmsk</span><span class="op">)</span></span>
 <span><span class="va">rmskhg38</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/makeGRangesFromDataFrame.html" class="external-link">makeGRangesFromDataFrame</a></span><span class="op">(</span><span class="va">rmskhg38</span>,</span>
-<span>  keep.extra.columns <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  starts.in.df.are.0based <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    keep.extra.columns <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    starts.in.df.are.0based <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>The <code><a href="../reference/pileup_sites.html">pileup_sites()</a></code> function can accept multiple bam
 files, here we supply one from RNA-seq, and one from whole genome
@@ -182,25 +182,25 @@ sequencing.</p>
 accept multiple arguments matched to the input bam files.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pileup_sites.html">FilterParam</a></span><span class="op">(</span></span>
-<span>  min_depth <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  min_base_quality <span class="op">=</span> <span class="fl">30</span>,</span>
-<span>  min_mapq <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">255</span>, <span class="fl">30</span><span class="op">)</span>,</span>
-<span>  library_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"fr-first-strand"</span>, <span class="st">"genomic-unstranded"</span><span class="op">)</span>,</span>
-<span>  trim_5p <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  trim_3p <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  indel_dist <span class="op">=</span> <span class="fl">4</span>,</span>
-<span>  homopolymer_len <span class="op">=</span> <span class="fl">6</span>,</span>
-<span>  max_mismatch_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>,</span>
-<span>  read_bqual <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">20</span><span class="op">)</span>,</span>
-<span>  only_keep_variants <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">TRUE</span>, <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>    min_depth <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>    min_base_quality <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>    min_mapq <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">255</span>, <span class="fl">30</span><span class="op">)</span>,</span>
+<span>    library_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"fr-first-strand"</span>, <span class="st">"genomic-unstranded"</span><span class="op">)</span>,</span>
+<span>    trim_5p <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>    trim_3p <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>    indel_dist <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>    homopolymer_len <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>    max_mismatch_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>,</span>
+<span>    read_bqual <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">20</span><span class="op">)</span>,</span>
+<span>    only_keep_variants <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">TRUE</span>, <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">bams</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">rna_bam</span>, <span class="va">wgs_bam</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">bams</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rna"</span>, <span class="st">"dna"</span><span class="op">)</span></span>
 <span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pileup_sites.html">pileup_sites</a></span><span class="op">(</span><span class="va">bams</span>,</span>
-<span>  fafile <span class="op">=</span> <span class="va">fafn</span>,</span>
-<span>  chrom <span class="op">=</span> <span class="st">"chr4"</span>,</span>
-<span>  param <span class="op">=</span> <span class="va">fp</span></span>
+<span>    fafile <span class="op">=</span> <span class="va">fafn</span>,</span>
+<span>    chrom <span class="op">=</span> <span class="st">"chr4"</span>,</span>
+<span>    param <span class="op">=</span> <span class="va">fp</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">rse</span></span></code></pre></div>
@@ -406,9 +406,9 @@ editing site.</p>
 Session info
 </summary><div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## R Under development (unstable) (2023-02-16 r83857)</span></span>
+<pre><code><span><span class="co">## R Under development (unstable) (2023-03-02 r83926)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu (64-bit)</span></span>
-<span><span class="co">## Running under: Ubuntu 22.04.1 LTS</span></span>
+<span><span class="co">## Running under: Ubuntu 22.04.2 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -441,7 +441,7 @@ Session info
 <span><span class="co">##  [9] GenomicRanges_1.51.4                    </span></span>
 <span><span class="co">## [10] GenomeInfoDb_1.35.15                    </span></span>
 <span><span class="co">## [11] IRanges_2.33.0                          </span></span>
-<span><span class="co">## [12] S4Vectors_0.37.3                        </span></span>
+<span><span class="co">## [12] S4Vectors_0.37.4                        </span></span>
 <span><span class="co">## [13] BiocGenerics_0.45.0                     </span></span>
 <span><span class="co">## [14] raer_0.99.0                             </span></span>
 <span><span class="co">## [15] BiocStyle_2.27.1                        </span></span>
@@ -450,7 +450,7 @@ Session info
 <span><span class="co">##  [1] tidyselect_1.2.0         dplyr_1.1.0             </span></span>
 <span><span class="co">##  [3] blob_1.2.3               R.utils_2.12.2          </span></span>
 <span><span class="co">##  [5] filelock_1.0.2           Biostrings_2.67.0       </span></span>
-<span><span class="co">##  [7] bitops_1.0-7             fastmap_1.1.0           </span></span>
+<span><span class="co">##  [7] bitops_1.0-7             fastmap_1.1.1           </span></span>
 <span><span class="co">##  [9] RCurl_1.98-1.10          BiocFileCache_2.7.2     </span></span>
 <span><span class="co">## [11] GenomicAlignments_1.35.0 XML_3.99-0.13           </span></span>
 <span><span class="co">## [13] digest_0.6.31            lifecycle_1.0.3         </span></span>
@@ -472,26 +472,25 @@ Session info
 <span><span class="co">## [45] httr_1.4.5               rjson_0.2.21            </span></span>
 <span><span class="co">## [47] DBI_1.1.3                cachem_1.0.7            </span></span>
 <span><span class="co">## [49] stringr_1.5.0            zlibbioc_1.45.0         </span></span>
-<span><span class="co">## [51] assertthat_0.2.1         parallel_4.3.0          </span></span>
-<span><span class="co">## [53] BiocManager_1.30.20      XVector_0.39.0          </span></span>
-<span><span class="co">## [55] restfulr_0.0.15          vctrs_0.5.2             </span></span>
-<span><span class="co">## [57] Matrix_1.5-3             jsonlite_1.8.4          </span></span>
-<span><span class="co">## [59] bookdown_0.32            hms_1.1.2               </span></span>
-<span><span class="co">## [61] bit64_4.0.5              systemfonts_1.0.4       </span></span>
-<span><span class="co">## [63] jquerylib_0.1.4          glue_1.6.2              </span></span>
-<span><span class="co">## [65] pkgdown_2.0.7            codetools_0.2-19        </span></span>
-<span><span class="co">## [67] stringi_1.7.12           BiocIO_1.9.2            </span></span>
-<span><span class="co">## [69] tibble_3.1.8             pillar_1.8.1            </span></span>
-<span><span class="co">## [71] rappdirs_0.3.3           htmltools_0.5.4         </span></span>
-<span><span class="co">## [73] GenomeInfoDbData_1.2.9   BSgenome_1.67.4         </span></span>
-<span><span class="co">## [75] R6_2.5.1                 dbplyr_2.3.0            </span></span>
-<span><span class="co">## [77] textshaping_0.3.6        rprojroot_2.0.3         </span></span>
-<span><span class="co">## [79] evaluate_0.20            lattice_0.20-45         </span></span>
-<span><span class="co">## [81] R.methodsS3_1.8.2        png_0.1-8               </span></span>
-<span><span class="co">## [83] Rsamtools_2.15.1         memoise_2.0.1           </span></span>
-<span><span class="co">## [85] bslib_0.4.2              Rcpp_1.0.10             </span></span>
-<span><span class="co">## [87] xfun_0.37                fs_1.6.1                </span></span>
-<span><span class="co">## [89] pkgconfig_2.0.3</span></span></code></pre>
+<span><span class="co">## [51] parallel_4.3.0           BiocManager_1.30.20     </span></span>
+<span><span class="co">## [53] XVector_0.39.0           restfulr_0.0.15         </span></span>
+<span><span class="co">## [55] vctrs_0.5.2              Matrix_1.5-3            </span></span>
+<span><span class="co">## [57] jsonlite_1.8.4           bookdown_0.33           </span></span>
+<span><span class="co">## [59] hms_1.1.2                bit64_4.0.5             </span></span>
+<span><span class="co">## [61] systemfonts_1.0.4        jquerylib_0.1.4         </span></span>
+<span><span class="co">## [63] glue_1.6.2               pkgdown_2.0.7           </span></span>
+<span><span class="co">## [65] codetools_0.2-19         stringi_1.7.12          </span></span>
+<span><span class="co">## [67] BiocIO_1.9.2             tibble_3.2.0            </span></span>
+<span><span class="co">## [69] pillar_1.8.1             rappdirs_0.3.3          </span></span>
+<span><span class="co">## [71] htmltools_0.5.4          GenomeInfoDbData_1.2.9  </span></span>
+<span><span class="co">## [73] BSgenome_1.67.4          R6_2.5.1                </span></span>
+<span><span class="co">## [75] dbplyr_2.3.1             textshaping_0.3.6       </span></span>
+<span><span class="co">## [77] rprojroot_2.0.3          evaluate_0.20           </span></span>
+<span><span class="co">## [79] lattice_0.20-45          R.methodsS3_1.8.2       </span></span>
+<span><span class="co">## [81] png_0.1-8                Rsamtools_2.15.1        </span></span>
+<span><span class="co">## [83] memoise_2.0.1            bslib_0.4.2             </span></span>
+<span><span class="co">## [85] Rcpp_1.0.10              xfun_0.37               </span></span>
+<span><span class="co">## [87] fs_1.6.1                 pkgconfig_2.0.3</span></span></code></pre>
 </details>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
