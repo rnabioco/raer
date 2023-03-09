@@ -34,6 +34,7 @@ PLP_DATA init_PLP_DATA(SEXP result, int n) {
   plpd->sdat = R_Calloc(1, _SITE_VECS);
   plpd->sdat->rpbz = R_Calloc(1, double);
   plpd->sdat->vdb = R_Calloc(1, double);
+  plpd->sdat->fs = R_Calloc(1, double);
 
   plpd->BLOCKSIZE = BAM_INIT_SIZE;
   plpd->result = result;
@@ -48,7 +49,8 @@ int grow_PLP_DATA(PLP_DATA pd, int len)
   SEXP r, s;
 
   pd->sdat->rpbz = _Rs_Realloc(pd->sdat->rpbz, len, double);
-  pd->sdat->vdb = _Rs_Realloc(pd->sdat->vdb, len, double);
+  pd->sdat->vdb  = _Rs_Realloc(pd->sdat->vdb, len, double);
+  pd->sdat->fs   = _Rs_Realloc(pd->sdat->fs, len, double);
 
   for(i = 0; i < pd->nfiles; ++i){
     // skip first list element which will be site level data
@@ -127,9 +129,15 @@ void finish_PLP_DATA(PLP_DATA pd) {
   s = VECTOR_ELT(r, 1);
   s = Rf_lengthgets(s, pd->icnt);
   SET_VECTOR_ELT(r, 1, s);
-  // copy pos array into s
   memcpy(REAL(s), pd->sdat->vdb, pd->icnt * sizeof(double));
   R_Free(pd->sdat->vdb);
+
+  s = VECTOR_ELT(r, 2);
+  s = Rf_lengthgets(s, pd->icnt);
+  SET_VECTOR_ELT(r, 2, s);
+  memcpy(REAL(s), pd->sdat->fs, pd->icnt * sizeof(double));
+  R_Free(pd->sdat->fs);
+
 
   for(f_idx = 0; f_idx < pd->nfiles; ++f_idx){
     // skip first list element which has site level data
@@ -338,14 +346,16 @@ SEXP pileup_template() {
 
 /* site data template */
 SEXP sitedata_template() {
-  int nout = 2;
+  int nout = 3;
   SEXP tmpl = PROTECT(NEW_LIST(nout));
   SET_VECTOR_ELT(tmpl, 0, NEW_NUMERIC(0));
   SET_VECTOR_ELT(tmpl, 1, NEW_NUMERIC(0));
+  SET_VECTOR_ELT(tmpl, 2, NEW_NUMERIC(0));
 
   SEXP names = PROTECT(NEW_CHARACTER(nout));
   SET_STRING_ELT(names, 0, mkChar("rbpz"));
   SET_STRING_ELT(names, 1, mkChar("vpb"));
+  SET_STRING_ELT(names, 2, mkChar("fs"));
   SET_ATTR(tmpl, R_NamesSymbol, names);
   UNPROTECT(2);
   return tmpl;

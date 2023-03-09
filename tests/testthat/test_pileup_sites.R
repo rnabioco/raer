@@ -624,6 +624,7 @@ test_that("excluding multiallelics works",{
   res <- pileup_sites(bam2fn, fafn, param = fp,  region = "DHFR:299-299")
   expect_equal(nrow(res), 1)
   expect_equal(assay(res, "ALT")[1, 1], "G")
+
   # ALT is first assay
   expect_equal(assays(res)[-1], assays(res_no_filter)[-1])
 
@@ -643,5 +644,10 @@ test_that("excluding multiallelics works",{
   expect_equal(nrow(res), 1)
   expect_equal(assay(res, "ALT")[1, 1], "T,G")
 
-
 })
+
+
+
+
+
+

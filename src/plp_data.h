@@ -20,7 +20,7 @@ typedef struct  {
 /* arrays of data to be stored across all samples
    to become rowData values in output */
 typedef struct  {
-  double *rpbz, *vdb;
+  double *rpbz, *vdb, *fs;
 } _SITE_VECS, *SITE_VECS;
 
 typedef struct {
