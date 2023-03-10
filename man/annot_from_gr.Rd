@@ -27,10 +27,10 @@ they will be concatenated as comma separated values.
 }
 \examples{
 library(SummarizedExperiment)
-
+data(rse_adar_ifn)
 gr <- GRanges(rep(c("SSR3", "SPCS3"), c(5, 15)),
-  IRanges(seq(1, 500, by = 25), width = 50),
-  strand = "+"
+    IRanges(seq(1, 500, by = 25), width = 50),
+    strand = "+"
 )
 
 gr$feature <- sample(1:100, size = 20)

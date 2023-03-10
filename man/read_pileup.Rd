@@ -12,6 +12,10 @@ read_pileup(tbx_fn, region = NULL)
 \item{region}{region to read from file, samtools style
 region specifiers are supported.}
 }
+\value{
+\code{GenomicRanges::GRanges} containing positions of editing sites and pileup
+data.
+}
 \description{
 This function can read in pileup or site data tables produced by
 pileup_sites().

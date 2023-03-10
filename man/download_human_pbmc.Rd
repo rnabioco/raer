@@ -18,7 +18,7 @@ SingleCellExperiment
 This function will download < 1 GB of data.
 }
 \examples{
-\dontrun{
+\donttest{
 td <- tempdir()
 download_human_pbmc(td)
 }

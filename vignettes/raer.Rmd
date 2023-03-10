@@ -73,20 +73,20 @@ Internally, `pileup_sites()` will generate pileups in memory. However, these fil
 
 ```{r}
 fp <- FilterParam(
-  only_keep_variants = TRUE,
-  trim_5p = 5,
-  trim_3p = 5,
-  min_base_quality = 30L,
-  min_mapq = 255L,
-  library_type = "fr-first-strand",
-  min_splice_overhang = 10
+    only_keep_variants = TRUE,
+    trim_5p = 5,
+    trim_3p = 5,
+    min_base_quality = 30L,
+    min_mapq = 255L,
+    library_type = "fr-first-strand",
+    min_splice_overhang = 10
 )
 
 rse <- pileup_sites(bam_files,
-  fafile = fafn,
-  sites = sites,
-  region = "chr18",
-  param = fp
+    fafile = fafn,
+    sites = sites,
+    region = "chr18",
+    param = fp
 )
 ```
 
@@ -104,19 +104,19 @@ Next we will add sample metadata to the `summarizedExperiment`, which will be us
 
 ```{r}
 colData(rse)$genotype_treatment <- rep(
-  c(
-    "ADAR1KO Interferon beta",
-    "Wildtype Interferon beta"
-  ),
-  each = 3
+    c(
+        "ADAR1KO Interferon beta",
+        "Wildtype Interferon beta"
+    ),
+    each = 3
 )
 
 colData(rse)$genotype <- rep(
-  c(
-    "ADAR1KO",
-    "Wildtype"
-  ),
-  each = 3
+    c(
+        "ADAR1KO",
+        "Wildtype"
+    ),
+    each = 3
 )
 colData(rse)
 ```
@@ -128,9 +128,9 @@ We next use the `calc_edit_frequency` function to identify the percent of edits 
 
 ```{r}
 se_filtered <- calc_edit_frequency(rse,
-  edit_from = "A",
-  edit_to = "G",
-  drop = TRUE
+    edit_from = "A",
+    edit_to = "G",
+    drop = TRUE
 )
 ```
 
@@ -139,7 +139,7 @@ We can next subset the `summarizedExperiment` object to exclude low frequency ed
 ```{r}
 has_editing <- rowSums(assay(se_filtered, "edit_freq") > 0) >= 1
 has_depth <- rowSums(((assay(se_filtered, "nRef") +
-  assay(se_filtered, "nAlt")) >= 5)) == ncol(se_filtered)
+    assay(se_filtered, "nAlt")) >= 5)) == ncol(se_filtered)
 
 se_filtered <- se_filtered[has_editing & has_depth, ]
 se_filtered
@@ -149,9 +149,9 @@ Once the object has been filtered, you can prepare it for DE. This means making 
 
 ```{r}
 deobj <- prep_for_de(se_filtered,
-  min_prop = 0.1,
-  max_prop = 0.9,
-  min_samples = 3
+    min_prop = 0.1,
+    max_prop = 0.9,
+    min_samples = 3
 )
 
 assay(deobj, "counts")[1:3, 1:6]
@@ -170,10 +170,10 @@ It is probably best to update the levels of your object, but if you don't, this 
 
 ```{r}
 de_results <- perform_de(deobj,
-  sample_col = "sample",
-  condition_col = "genotype",
-  condition_control = "Wildtype",
-  condition_treatment = "ADAR1KO"
+    sample_col = "sample",
+    condition_col = "genotype",
+    condition_control = "Wildtype",
+    condition_treatment = "ADAR1KO"
 )
 ```
 
@@ -187,8 +187,8 @@ de_results$sig_results[1:5, ]
 top_sites <- rownames(de_results$sig_results)[1:20]
 
 Heatmap(assay(se_filtered, "edit_freq")[top_sites, ],
-  col = viridis(100),
-  column_labels = se_filtered$genotype_treatment
+    col = viridis(100),
+    column_labels = se_filtered$genotype_treatment
 )
 ```
 

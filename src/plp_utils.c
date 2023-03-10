@@ -1,11 +1,16 @@
 #include <Rinternals.h>
+#include <ctype.h>
 #include <htslib/sam.h>
 #include <htslib/khash.h>
 #include <htslib/hts.h>
-
-#include <ctype.h>
-
 #include "plp_utils.h"
+
+void chkIntFn(void *dummy) {
+  R_CheckUserInterrupt();
+}
+int checkInterrupt() {
+  return (R_ToplevelExec(chkIntFn, NULL) == FALSE);
+}
 
 SEXP get_region(SEXP region){
 
@@ -397,6 +402,121 @@ char* get_aux_ztag(bam1_t *b, const char tag[2]){
   return(str);
 }
 
+
+void clear_str_set(strset_t s)
+{
+  khint_t k;
+  if(s){
+    for (k = kh_begin(s); k < kh_end(s); ++k){
+      if (kh_exist(s, k)) free((char*)kh_key(s, k));
+    }
+    kh_clear(strset, s);
+  }
+}
+
+void clear_str2int_hashmap(str2intmap_t vhash)
+{
+  khint_t k;
+  if(vhash){
+    for (k = kh_begin(vhash); k < kh_end(vhash); ++k){
+      if (kh_exist(vhash, k)) free((char*)kh_key(vhash, k));
+    }
+    kh_clear(str2intmap, vhash);
+  }
+}
+// Parse MD tag and enumerate types and number of mismatches
+// Determine if read passes n_mis and n_types thresholds
+//
+//
+// returns: -1 if no MD tag
+//           0 if read passes filter
+//           >0 with # of unique mismatches if doesn't pass
+//
+// based on cigar and MD parsing code from htsbox (written by Heng Li)
+// https://github.com/lh3/htsbox/blob/ffc1e8ad4f61291c676a323ed833ade3ee681f7c/samview.c#L117
+
+int parse_mismatches(bam1_t* b, const int pos, int n_types, int n_mis){
+  int ret = 0;
+  if(n_types < 1 && n_mis < 1){
+    return ret;
+  }
+  const uint32_t *cigar = bam_get_cigar(b);
+  int k, x, y, c;
+
+  uint8_t *pMD = 0;
+  char *p;
+  int nm = 0;
+
+  char vars[2];
+  vars[1] = '\0';
+  str2intmap_t vh;
+  vh = kh_init(str2intmap);
+
+  if ((pMD = bam_aux_get(b, "MD")) != 0) {
+    for (k = x = y = 0; k < b->core.n_cigar; ++k) {
+      int op = bam_cigar_op(cigar[k]);
+      int len = bam_cigar_oplen(cigar[k]);
+      if (op == BAM_CMATCH || op == BAM_CEQUAL || op == BAM_CDIFF) {
+        x += len, y += len;
+      } else if (op == BAM_CINS || op == BAM_CSOFT_CLIP)
+        y += len;
+    }
+
+    p = bam_aux2Z(pMD);
+
+    y = 0;
+    while (isdigit(*p)) {
+      y += strtol(p, &p, 10);
+      if (*p == 0) {
+        break;
+      } else if (*p == '^') { // deletion
+        ++p;
+        while (isalpha(*p)) ++p;
+      } else {
+        while (isalpha(*p)) {
+          if (y >= x) {
+            y = -1;
+            break;
+          }
+          c = y < b->core.l_qseq
+          ? seq_nt16_str[bam_seqi(bam_get_seq(b), y)]
+          : 'N';
+          nm += 1;
+
+          vars[0] = c;
+          char *var = strdup(vars);
+          int rval = 0;
+          kh_put(str2intmap, vh, var, &rval);
+          if(rval == -1){
+            REprintf("[raer internal] issue tabulating variants per read at, %s\n",
+                     bam_get_qname(b));
+            clear_str2int_hashmap(vh);
+            kh_destroy(str2intmap, vh);
+            return -1;
+          } else if (rval == 0){
+            free(var);
+          }
+          ++y, ++p;
+        }
+        if (y == -1) break;
+      }
+    }
+
+    if (x != y) {
+      REprintf("[raer internal] inconsistent MD for read '%s' (%d != %d); ignore MD\n",
+               bam_get_qname(b), x, y);
+      ret = -1;
+    } else {
+      if(kh_size(vh) >= n_types && nm >= n_mis){
+        ret = kh_size(vh);
+      }
+    }
+  }
+  clear_str2int_hashmap(vh);
+  kh_destroy(str2intmap, vh);
+  return ret;
+}
+
 /* from samtools bam_fastq.c
 
  * Reverse a string in place.
@@ -417,6 +537,56 @@ char *reverse(char *str)
   return str;
 }
 
+int8_t seq_comp_table[16] = { 0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15 };
+
+/* from samtools bam_fastq.c */
+/* return the read, reverse complemented if necessary */
+char *get_read(const bam1_t *rec)
+{
+  int len = rec->core.l_qseq + 1;
+  char *read = calloc(1, len);
+  char *seq = (char *)bam_get_seq(rec);
+  int n;
+
+  if (!read) return NULL;
+
+  for (n=0; n < rec->core.l_qseq; n++) {
+    if (rec->core.flag & BAM_FREVERSE) read[n] = seq_nt16_str[seq_comp_table[bam_seqi(seq,n)]];
+    else                               read[n] = seq_nt16_str[bam_seqi(seq,n)];
+  }
+  if (rec->core.flag & BAM_FREVERSE) reverse(read);
+  return read;
+}
+
+/* from samtools bam_view.c */
+int populate_lookup_from_file(strset_t lookup, char *fn)
+{
+  FILE *fp;
+  char buf[1024];
+  int ret = 0;
+  fp = fopen(fn, "r");
+  if (fp == NULL) {
+    REprintf("[raer internal] failed to open \"%s\" for reading", fn);
+    return -1;
+  }
+
+  while (ret != -1 && !feof(fp) && fscanf(fp, "%1023s", buf) > 0) {
+    char *d = strdup(buf);
+    if (d != NULL) {
+      kh_put(strset, lookup, d, &ret);
+      if (ret == 0) free(d); /* Duplicate */
+    } else {
+      ret = -1;
+    }
+  }
+  if (ferror(fp)) ret = -1;
+  fclose(fp);
+  if (ret == -1) {
+    REprintf("[raer internal] failed to read \"%s\"", fn);
+  }
+  return (ret != -1) ? 0 : -1;
+}
+
 unsigned char comp_base[256] = {
   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,
   16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,
@@ -435,3 +605,6 @@ unsigned char comp_base[256] = {
   224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239,
   240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
 };
+
+
+

@@ -2,9 +2,9 @@
 #include "Rdefines.h"
 #include "plp_data.h"
 
-/* The following code mostly is templated on the Rsamtools approach
+/* The following code is based on the Rsamtools approach
    to store and grow a c-level datastructure with bam/pileup data.
-   The main deviation is handling data from multiple bam files, and the fields stored.
+   The main deviation is handling data from multiple bam files and the fields stored.
    The datastructure grows per position across multiple files, in contrast to
    growing per region in rsamtools. On finish, the c-level datastucture will
    be converted to a SEXP, avoiding realloc'ing a SEXP during the pileup.
@@ -293,8 +293,9 @@ static const char *TMPL_ELT_NMS[] = {
 static const int N_TMPL_ELTS = sizeof(TMPL_ELT_NMS) / sizeof(const char *);
 
 /* Init a list of lists,
-   storing a list of pileup vectors from each bamfile.
-   Each element of the outer list is data from each bamfile
+ * first element is data populated across all bamfiles (to store in rowData)
+   The remaining list elements are pileup vectors from each bamfile.
+   Each element (after the first) of the outer list is data from each bamfile
    The inner list elements contains vectors of pileup data
    On return to R will be list of lists coerced into list of GRanges
  */
@@ -344,7 +345,7 @@ SEXP pileup_template() {
  return tmpl;
 }
 
-/* site data template */
+/* site data template, data stored across all bamfiles */
 SEXP sitedata_template() {
   int nout = 3;
   SEXP tmpl = PROTECT(NEW_LIST(nout));

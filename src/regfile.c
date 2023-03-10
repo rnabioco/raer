@@ -1,4 +1,4 @@
-#include <stdlib.h>             /* free */
+#include <stdlib.h>
 #include <htslib/regidx.h>
 #include "regfile.h"
 
