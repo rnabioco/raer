@@ -627,11 +627,11 @@ test_that("excluding multiallelics works", {
     res <- pileup_sites(bam2fn, fafn, param = fp, region = "DHFR:299-299")
     expect_equal(nrow(res), 0)
 
+
     fp <- FilterParam(report_multiallelic = FALSE)
     res <- pileup_sites(bam2fn, fafn, param = fp)
     n_og <- nrow(pileup_sites(bam2fn, fafn))
     expect_equal(nrow(res), n_og - 1)
-
 
     fp <- FilterParam(min_allelic_freq = 0.05)
     res <- pileup_sites(bam2fn, fafn, param = fp, region = "DHFR:299-299")
@@ -650,9 +650,15 @@ test_that("excluding multiallelics works", {
     expect_equal(nrow(res), 1)
     expect_equal(assay(res, "ALT")[1, 1], "G")
 
-
     fp <- FilterParam(min_allelic_freq = 0.0001)
     res <- pileup_sites(bam2fn, fafn, param = fp, region = "DHFR:299-299")
     expect_equal(nrow(res), 1)
     expect_equal(assay(res, "ALT")[1, 1], "T,G")
+})
+
+test_that("rowdata stats are reported", {
+  res <- pileup_sites(bamfn, fafn, sites)
+  rdcols <- colnames(rowData(res))
+  exp_cols <- c("REF", "rbpz", "vpb", "sor")
+  expect_equal(length(setdiff(rdcols, exp_cols)), 0)
 })

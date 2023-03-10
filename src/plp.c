@@ -244,6 +244,14 @@ typedef struct  {
   counts *mc;
 } pcounts;
 
+// library type insensitive strand counts
+typedef struct {
+  int ref_fwd;
+  int ref_rev;
+  int alt_fwd;
+  int alt_rev;
+} strcounts_t;
+
 // struct for storing per-site data for all samples
 typedef struct {
   int* p_ref_pos; // base position within read, (plus strand) scaled to 100 positions
@@ -252,6 +260,7 @@ typedef struct {
   int* m_alt_pos;
   int p_has_var; // 1 if any sample had a variant
   int m_has_var; // 1 if any sample had a variant
+  strcounts_t* s; // counts for strandedness test
 } pall_counts;
 
 static void clear_pall_counts(pall_counts *p){
@@ -259,6 +268,7 @@ static void clear_pall_counts(pall_counts *p){
   if(p->p_alt_pos) memset(p->p_alt_pos, 0, sizeof(int) * NBASE_POS);
   if(p->m_ref_pos) memset(p->m_ref_pos, 0, sizeof(int) * NBASE_POS);
   if(p->m_alt_pos) memset(p->m_alt_pos, 0, sizeof(int) * NBASE_POS);
+  if(p->s) memset(p->s, 0, sizeof(strcounts_t));
   p->p_has_var = p->m_has_var = 0;
 }
 
@@ -400,27 +410,30 @@ static int add_counts(PLP_DATA pd, int fi, counts *p, const char* ctig, int gpos
   return ret;
 }
 
-static int print_stats(FILE* fp, double s1, double s2,
+static int print_stats(FILE* fp, double s1, double s2, double s3,
                         const char* ctig, int pos, int ref, int strand){
   int ret = 0;
   ret = fprintf(fp,
-                "%s\t%i\t%c\t%c\t%g\t%g\n",
+                "%s\t%i\t%c\t%c\t%g\t%g\t%g\n",
                 ctig,
                 pos + 1,
                 strand,
                 ref,
                 s1,
-                s2);
+                s2,
+                s3);
   return ret;
 }
 
 
-static void add_stats(PLP_DATA pd, int idx, double s1, double s2){
+static void add_stats(PLP_DATA pd, int idx, double s1, double s2, double s3){
   // check if size is sufficient
   get_or_grow_PLP_DATA(pd, -1, SITE_DATA_LST);
   pd->sdat->rpbz[idx] = s1;
   pd->sdat->vdb[idx] = s2;
+  pd->sdat->sor[idx] = s3;
 }
+
 
 // -1 indicates error;
 static int calc_biases(pall_counts *pall, double* res){
@@ -428,10 +441,12 @@ static int calc_biases(pall_counts *pall, double* res){
   if(pall->p_has_var){
     res[0] = calc_mwu_biasZ(pall->p_ref_pos, pall->p_alt_pos, NBASE_POS, 0, 1);
     res[1] = calc_vdb(pall->p_alt_pos, NBASE_POS);
+    res[2] = calc_sor(pall->s->ref_fwd, pall->s->ref_rev, pall->s->alt_fwd, pall->s->alt_rev);
   }
   if(pall->m_has_var){
-    res[2] = calc_mwu_biasZ(pall->m_ref_pos, pall->m_alt_pos, NBASE_POS, 0, 1);
-    res[3] = calc_vdb(pall->m_alt_pos, NBASE_POS);
+    res[3] = calc_mwu_biasZ(pall->m_ref_pos, pall->m_alt_pos, NBASE_POS, 0, 1);
+    res[4] = calc_vdb(pall->m_alt_pos, NBASE_POS);
+    res[5] = calc_sor(pall->s->ref_fwd, pall->s->ref_rev, pall->s->alt_fwd, pall->s->alt_rev);
   }
   return 0;
 }
@@ -528,9 +543,9 @@ static int store_counts(PLP_DATA pd, pcounts *pc, const char* ctig,
       }
     }
     if(conf->in_memory){
-      add_stats(pd, pd->icnt, stats[0], stats[1]);
+      add_stats(pd, pd->icnt, stats[0], stats[1], stats[2]);
     } else {
-      ret = print_stats(pd->fps[0], stats[0], stats[1], ctig, gpos, pref, '+');
+      ret = print_stats(pd->fps[0], stats[0], stats[1], stats[2], ctig, gpos, pref, '+');
     }
     pd->icnt += 1;
   }
@@ -544,9 +559,9 @@ static int store_counts(PLP_DATA pd, pcounts *pc, const char* ctig,
       }
     }
     if(conf->in_memory){
-      add_stats(pd, pd->icnt, stats[2], stats[3]);
+      add_stats(pd, pd->icnt, stats[3], stats[4], stats[5]);
     } else {
-      ret = print_stats(pd->fps[0], stats[2], stats[3], ctig, gpos, mref, '-');
+      ret = print_stats(pd->fps[0], stats[3], stats[4], stats[5], ctig, gpos, mref, '-');
     }
     pd->icnt += 1;
   }
@@ -639,12 +654,10 @@ static int count_one_record(const bam_pileup1_t *p, pcounts *pc, mplp_conf_t *co
                             pall_counts *pall,  const char* ctig, int pos, int pref_b,
                             int mref_b, int read_base, int invert, int i){
   int hret = 0, rpos = 0;
-
   char mvar[2];
   char pvar[2];
   mvar[1] = '\0';
   pvar[1] = '\0';
-
   khiter_t k;
 
   rpos = get_relative_position(p);
@@ -945,9 +958,10 @@ static int run_pileup(char** cbampaths, const char** coutfns,
   pall->p_alt_pos = R_Calloc(NBASE_POS, int);
   pall->m_ref_pos = R_Calloc(NBASE_POS, int);
   pall->m_alt_pos = R_Calloc(NBASE_POS, int);
+  pall->s         = R_Calloc(1, strcounts_t);
   pall->p_has_var = pall->m_has_var = 0;
 
-  double *stats = R_Calloc(4, double);
+  double *stats = R_Calloc(6, double);
 
   if(!conf->in_memory) pd->fps = R_Calloc(conf->nfps, FILE*);
   for (i = 0; i < conf->nfps; ++i) {
@@ -1009,7 +1023,7 @@ static int run_pileup(char** cbampaths, const char** coutfns,
 
     // reset count structure
     clear_pall_counts(pall);
-    memset(stats, 0, sizeof(double) * 4);
+    memset(stats, 0, sizeof(double) * 6);
     for(i = 0; i < conf->nbam; ++i){
       clear_pcounts(&plpc[i]);
     }
@@ -1040,7 +1054,6 @@ static int run_pileup(char** cbampaths, const char** coutfns,
         : 'N';
         if(c == 'N') continue;
 
-        // store base counts based on library type and r1/r2 status
         int invert = invert_read_orientation(p->b, conf->libtype[i]);
         if(invert < 0){
           REprintf("[raer internal] invert read orientation failure %i\n", invert);
@@ -1067,12 +1080,12 @@ static int run_pileup(char** cbampaths, const char** coutfns,
           }
           continue;
         }
-
-        if(invert) c = (char)comp_base[(unsigned char)c];
+        int ci = c;
+        if(invert) ci = (char)comp_base[(unsigned char)c];
 
         // check read for >= mismatch different types and at least n_mm mismatches
         if(conf->n_mm_type > 0 || conf->n_mm > 0) {
-          if((invert && mref_b != c) || pref_b != c){
+          if((invert && mref_b != ci) || pref_b != ci){
             int m = parse_mismatches(p->b, pos, conf->n_mm_type, conf->n_mm);
               if(m == -1){
                 ret = -1;
@@ -1083,11 +1096,26 @@ static int run_pileup(char** cbampaths, const char** coutfns,
             }
         }
 
+
+        if(pref_b == c){
+          if(bam_is_rev(p->b)) {
+            pall->s->ref_rev += 1;
+          } else {
+            pall->s->ref_fwd += 1;
+          }
+        } else {
+          if(bam_is_rev(p->b)) {
+            pall->s->alt_rev += 1;
+          } else {
+            pall->s->alt_fwd += 1;
+          }
+        }
+
         // increment counts per sample
         int cret = count_one_record(p, &plpc[i], conf, pall,
                                     sam_hdr_tid2name(h, tid), pos,
                                     pref_b, mref_b,
-                                    c, invert, i);
+                                    ci, invert, i);
         if(cret < 0) {
           ret = -1;
           goto fail;

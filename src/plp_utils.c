@@ -370,6 +370,21 @@ int invert_read_orientation(bam1_t* b, int libtype) {
   return invert;
 }
 
+// StrandOddsRatio calculation from GATK based on code from
+// https://github.com/broadinstitute/gatk/blob/master/src/main/java/org/broadinstitute/hellbender/tools/walkers/annotator/StrandOddsRatio.java
+double calc_sor(int fwd_ref, int rev_ref, int fwd_alt, int rev_alt) {
+  double t00, t01, t11, t10, ratio, refRatio, altRatio, res;
+  // add pseudocount to avoid division by zero issues
+  t00 = (double) fwd_ref + 1;
+  t01 = (double) rev_ref + 1;
+  t11 = (double) fwd_alt + 1;
+  t10 = (double) rev_alt + 1;
+  ratio = (t00 / t01) * (t11 / t10) + (t01 / t00) * (t10 / t11);
+  refRatio = fmin(t00, t01) / fmax(t00, t01);
+  altRatio = fmin(t10, t11) / fmax(t10, t11);
+  res = log(ratio) + log(refRatio) - log(altRatio);
+  return res;
+}
 
 char* get_aux_ztag(bam1_t *b, const char tag[2]){
   char* str;

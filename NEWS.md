@@ -1,5 +1,8 @@
 # raer 0.99.0
 
+* added a strand bias stat `sor` using approach from GATK (StrandOddsRatio), and
+  a confidence score `calc_confidence()` from SAILOR pipeline.
+
 * 'N' bases in read or reference are ignored 
 
 * Removed outdated or unused functionality:

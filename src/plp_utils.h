@@ -17,6 +17,7 @@ int query_end(bam1_t *b);
 int read_base_quality(bam1_t* b, float pc, int mq);
 int invert_read_orientation(bam1_t* b, int libtype);
 int check_splice_overhang(bam1_t* b, int pos, int dist);
+double calc_sor(int fwd_ref, int rev_ref, int fwd_alt, int rev_alt);
 
 int parse_mismatches(bam1_t* b, const int pos, int n_types, int n_mis);
 

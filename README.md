@@ -52,7 +52,7 @@ rse
 #> metadata(0):
 #> assays(7): ALT nRef ... nC nG
 #> rownames(1695): SSR3_1_- SSR3_2_- ... DHFR_517_- DHFR_518_-
-#> rowData names(3): REF rbpz vpb
+#> rowData names(4): REF rbpz vpb sor
 #> colnames(2): ko wt
 #> colData names(1): sample
 assays(rse)
@@ -86,9 +86,9 @@ output of `pileup_sites()`.
 
 ``` r
 fp <- FilterParam(
-  only_keep_variants = TRUE,
-  library_type = "fr-first-strand",
-  min_depth = 2
+    only_keep_variants = TRUE,
+    library_type = "fr-first-strand",
+    min_depth = 2
 )
 
 rse <- pileup_sites(bams, fafn, param = fp)
@@ -98,7 +98,7 @@ rse
 #> metadata(0):
 #> assays(7): ALT nRef ... nC nG
 #> rownames(74): SSR3_102_- SSR3_125_- ... DHFR_430_- DHFR_513_-
-#> rowData names(3): REF rbpz vpb
+#> rowData names(4): REF rbpz vpb sor
 #> colnames(2): ko wt
 #> colData names(1): sample
 ```
