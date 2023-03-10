@@ -11,6 +11,7 @@ reference:
 - title: Calculations
   contents:
   - '`calc_AEI`'
+  - '`calc_confidence`'
   - '`calc_edit_frequency`'
 - title: Filtering
   contents:
