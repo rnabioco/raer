@@ -251,6 +251,7 @@ filter_clustered_variants <- function(se, txdb,
 #' @references
 #' Washburn MC, Kakaradov B, Sundararaman B, Wheeler E, Hoon S, Yeo GW, Hundley HA. The dsRBP and inactive editor ADR-1 utilizes dsRNA binding to regulate A-to-I RNA editing across the C. elegans transcriptome. Cell Rep. 2014 Feb 27;6(4):599-607. doi: 10.1016/j.celrep.2014.01.011. Epub 2014 Feb 6. PMID: 24508457; PMCID: PMC3959997.
 #'
+#' SAILOR pipeline: https://github.com/YeoLab/sailor
 #' @importFrom stats pbeta
 #' @export
 calc_confidence <- function(se,
