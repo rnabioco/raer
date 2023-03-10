@@ -431,7 +431,7 @@ static void add_stats(PLP_DATA pd, int idx, double s1, double s2, double s3){
   get_or_grow_PLP_DATA(pd, -1, SITE_DATA_LST);
   pd->sdat->rpbz[idx] = s1;
   pd->sdat->vdb[idx] = s2;
-  pd->sdat->fs[idx] = s3;
+  pd->sdat->sor[idx] = s3;
 }
 
 

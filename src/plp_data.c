@@ -34,7 +34,7 @@ PLP_DATA init_PLP_DATA(SEXP result, int n) {
   plpd->sdat = R_Calloc(1, _SITE_VECS);
   plpd->sdat->rpbz = R_Calloc(1, double);
   plpd->sdat->vdb = R_Calloc(1, double);
-  plpd->sdat->fs = R_Calloc(1, double);
+  plpd->sdat->sor = R_Calloc(1, double);
 
   plpd->BLOCKSIZE = BAM_INIT_SIZE;
   plpd->result = result;
@@ -50,7 +50,7 @@ int grow_PLP_DATA(PLP_DATA pd, int len)
 
   pd->sdat->rpbz = _Rs_Realloc(pd->sdat->rpbz, len, double);
   pd->sdat->vdb  = _Rs_Realloc(pd->sdat->vdb, len, double);
-  pd->sdat->fs   = _Rs_Realloc(pd->sdat->fs, len, double);
+  pd->sdat->sor  = _Rs_Realloc(pd->sdat->sor, len, double);
 
   for(i = 0; i < pd->nfiles; ++i){
     // skip first list element which will be site level data
@@ -135,8 +135,8 @@ void finish_PLP_DATA(PLP_DATA pd) {
   s = VECTOR_ELT(r, 2);
   s = Rf_lengthgets(s, pd->icnt);
   SET_VECTOR_ELT(r, 2, s);
-  memcpy(REAL(s), pd->sdat->fs, pd->icnt * sizeof(double));
-  R_Free(pd->sdat->fs);
+  memcpy(REAL(s), pd->sdat->sor, pd->icnt * sizeof(double));
+  R_Free(pd->sdat->sor);
 
 
   for(f_idx = 0; f_idx < pd->nfiles; ++f_idx){
@@ -356,7 +356,7 @@ SEXP sitedata_template() {
   SEXP names = PROTECT(NEW_CHARACTER(nout));
   SET_STRING_ELT(names, 0, mkChar("rbpz"));
   SET_STRING_ELT(names, 1, mkChar("vpb"));
-  SET_STRING_ELT(names, 2, mkChar("fs"));
+  SET_STRING_ELT(names, 2, mkChar("sor"));
   SET_ATTR(tmpl, R_NamesSymbol, names);
   UNPROTECT(2);
   return tmpl;

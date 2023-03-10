@@ -655,3 +655,10 @@ test_that("excluding multiallelics works", {
     expect_equal(nrow(res), 1)
     expect_equal(assay(res, "ALT")[1, 1], "T,G")
 })
+
+test_that("rowdata stats are reported", {
+  res <- pileup_sites(bamfn, fafn, sites)
+  rdcols <- colnames(rowData(res))
+  exp_cols <- c("REF", "rbpz", "vpb", "sor")
+  expect_equal(length(setdiff(rdcols, exp_cols)), 0)
+})
