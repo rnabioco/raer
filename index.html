@@ -127,7 +127,7 @@
 <span><span class="co">#&gt; metadata(0):</span></span>
 <span><span class="co">#&gt; assays(7): ALT nRef ... nC nG</span></span>
 <span><span class="co">#&gt; rownames(1695): SSR3_1_- SSR3_2_- ... DHFR_517_- DHFR_518_-</span></span>
-<span><span class="co">#&gt; rowData names(3): REF rbpz vpb</span></span>
+<span><span class="co">#&gt; rowData names(4): REF rbpz vpb sor</span></span>
 <span><span class="co">#&gt; colnames(2): ko wt</span></span>
 <span><span class="co">#&gt; colData names(1): sample</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span>
@@ -155,9 +155,9 @@
 <p>The <code><a href="reference/pileup_sites.html">FilterParam()</a></code> class holds multiple options for customizing the output of <code><a href="reference/pileup_sites.html">pileup_sites()</a></code>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pileup_sites.html">FilterParam</a></span><span class="op">(</span></span>
-<span>  only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  library_type <span class="op">=</span> <span class="st">"fr-first-strand"</span>,</span>
-<span>  min_depth <span class="op">=</span> <span class="fl">2</span></span>
+<span>    only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    library_type <span class="op">=</span> <span class="st">"fr-first-strand"</span>,</span>
+<span>    min_depth <span class="op">=</span> <span class="fl">2</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pileup_sites.html">pileup_sites</a></span><span class="op">(</span><span class="va">bams</span>, <span class="va">fafn</span>, param <span class="op">=</span> <span class="va">fp</span><span class="op">)</span></span>
@@ -167,7 +167,7 @@
 <span><span class="co">#&gt; metadata(0):</span></span>
 <span><span class="co">#&gt; assays(7): ALT nRef ... nC nG</span></span>
 <span><span class="co">#&gt; rownames(74): SSR3_102_- SSR3_125_- ... DHFR_430_- DHFR_513_-</span></span>
-<span><span class="co">#&gt; rowData names(3): REF rbpz vpb</span></span>
+<span><span class="co">#&gt; rowData names(4): REF rbpz vpb sor</span></span>
 <span><span class="co">#&gt; colnames(2): ko wt</span></span>
 <span><span class="co">#&gt; colData names(1): sample</span></span></code></pre></div>
 </div>

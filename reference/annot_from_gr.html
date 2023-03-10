@@ -173,20 +173,33 @@ annotations provided by the supplied GRanges object.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu">annot_from_gr</span><span class="op">(</span><span class="va">rse_adar_ifn</span>, <span class="va">gr</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>feature_set <span class="op">=</span> <span class="st">"feature"</span>, <span class="st">"id"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DataFrame with 74 rows and 5 columns</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    REF       rbpz        vpb feature_set          id</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            &lt;character&gt;  &lt;numeric&gt;  &lt;numeric&gt; &lt;character&gt; &lt;character&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_102_-           T   1.489645        Inf          NA          NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_125_-           C   0.356711        Inf          NA          NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_156_-           C   1.073919        Inf          NA          NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_176_-           A  -0.387238 0.00686469          NA          NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_198_-           A   1.040581        Inf          NA          NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ...                ...        ...        ...         ...         ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_397_-           A -1.5715051        Inf          NA          NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_399_-           G -0.1203878        Inf          NA          NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_423_-           T -0.0468703        Inf          NA          NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_430_-           A -1.5389404        Inf          NA          NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_513_-           T -0.7160074        Inf          NA          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DataFrame with 74 rows and 6 columns</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    REF       rbpz        vpb       sor feature_set</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            &lt;character&gt;  &lt;numeric&gt;  &lt;numeric&gt; &lt;numeric&gt; &lt;character&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_102_-           T   1.489645        Inf  1.403164          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_125_-           C   0.356711        Inf  0.165499          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_156_-           C   1.073919        Inf  1.442924          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_176_-           A  -0.387238 0.00686469  1.987570          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_198_-           A   1.040581        Inf  1.483784          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ...                ...        ...        ...       ...         ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_397_-           A -1.5715051        Inf   1.39896          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_399_-           G -0.1203878        Inf   0.09602          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_423_-           T -0.0468703        Inf   1.38985          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_430_-           A -1.5389404        Inf   1.39019          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_513_-           T -0.7160074        Inf   1.38637          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                     id</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            &lt;character&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_102_-          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_125_-          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_156_-          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_176_-          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_198_-          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ...                ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_397_-          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_399_-          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_423_-          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_430_-          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DHFR_513_-          NA</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

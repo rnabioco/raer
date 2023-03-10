@@ -303,7 +303,7 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): ALT nRef ... nC nG</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> rownames(7): DHFR_207_- DHFR_208_- ... DHFR_300_- DHFR_332_-</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(3): REF rbpz vpb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rbpz vpb sor</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(1): SRR5564269_Aligned.sortedByCoord.out.md.bam</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
 <span class="r-in"><span></span></span>
@@ -322,7 +322,7 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): ALT nRef ... nC nG</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> rownames(74): SSR3_102_- SSR3_125_- ... DHFR_430_- DHFR_513_-</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(3): REF rbpz vpb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rbpz vpb sor</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(6): KO1 KO2 ... WT2 WT3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
 <span class="r-in"><span></span></span>
@@ -343,7 +343,7 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> WT3         WT3          WT</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowRanges.html" class="external-link">rowRanges</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 74 ranges and 3 metadata columns:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 74 ranges and 4 metadata columns:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              seqnames    ranges strand |         REF       rbpz</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;  &lt;numeric&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3_102_-     SSR3       102      - |           T   2.611800</span>
@@ -357,19 +357,19 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR_423_-     DHFR       423      - |           T -0.0815516</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR_430_-     DHFR       430      - |           A -2.6781858</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR_513_-     DHFR       513      - |           T -1.2475213</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                      vpb</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3_102_- 2.21621e-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3_125_- 2.21621e-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3_156_- 2.21621e-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3_176_- 2.00523e-05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3_198_- 2.21621e-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          ...         ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR_397_-   0.0221621</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR_399_-   0.0221621</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR_423_-   0.0221621</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR_430_-   0.0221621</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR_513_-   0.0221621</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                      vpb       sor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                &lt;numeric&gt; &lt;numeric&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3_102_- 2.21621e-02  2.776147</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3_125_- 2.21621e-02  0.478641</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3_156_- 2.21621e-02  2.786335</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3_176_- 2.00523e-05  2.154124</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3_198_- 2.21621e-02  2.797103</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          ...         ...       ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR_397_-   0.0221621  2.775538</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR_399_-   0.0221621  0.306541</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR_423_-   0.0221621  2.773352</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR_430_-   0.0221621  2.773426</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR_513_-   0.0221621  2.772591</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   -------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   seqinfo: 3 sequences from an unspecified genome</span>
 <span class="r-in"><span></span></span>
@@ -382,7 +382,7 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): ALT nRef ... nC nG</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> rownames(74): SSR3_102_- SSR3_125_- ... DHFR_430_- DHFR_513_-</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(3): REF rbpz vpb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rbpz vpb sor</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(6): KO1 KO2 ... WT2 WT3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
 <span class="r-in"><span></span></span>
@@ -393,7 +393,7 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): ALT nRef ... nC nG</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> rownames(1166): SPCS3_1_+ SPCS3_2_+ ... DHFR_517_- DHFR_518_-</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(3): REF rbpz vpb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rbpz vpb sor</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(6): KO1 KO2 ... WT2 WT3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
 <span class="r-in"><span></span></span>
@@ -404,7 +404,7 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): ALT nRef ... nC nG</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> rownames(2): DHFR_100_- DHFR_101_-</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(3): REF rbpz vpb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rbpz vpb sor</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(6): KO1 KO2 ... WT2 WT3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
 </code></pre></div>

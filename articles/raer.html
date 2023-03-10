@@ -92,7 +92,7 @@ Riemondy</h4>
 Medicine<br><h4 data-toc-skip class="author">Kristen
 Wells-Wrasman</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-03-09</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-03-10</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/raer.Rmd" class="external-link"><code>vignettes/raer.Rmd</code></a></small>
       <div class="d-none name"><code>raer.Rmd</code></div>
@@ -138,9 +138,9 @@ alignments from chromosome 18.</p>
 <code class="sourceCode R"><span><span class="va">bam_files</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bams</span></span>
 <span><span class="va">bam_files</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   SRR5564260_dedup_sorted.bam </span></span>
-<span><span class="co">## "/tmp/RtmpzGwW3C/SRR5564260_dedup_sorted.bam" </span></span>
+<span><span class="co">## "/tmp/RtmpBSlfIB/SRR5564260_dedup_sorted.bam" </span></span>
 <span><span class="co">##                   SRR5564261_dedup_sorted.bam </span></span>
-<span><span class="co">## "/tmp/RtmpzGwW3C/SRR5564261_dedup_sorted.bam"</span></span></code></pre>
+<span><span class="co">## "/tmp/RtmpBSlfIB/SRR5564261_dedup_sorted.bam"</span></span></code></pre>
 <p>Next we’ll need a FASTA file to quantify the editing sites. We’ll use
 a FASTA file only containing chromosome 18 for this demo. The fasta can
 be compressed.</p>
@@ -148,7 +148,7 @@ be compressed.</p>
 <code class="sourceCode R"><span><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">fasta</span></span>
 <span><span class="va">fafn</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   chr18.fasta.bgz </span></span>
-<span><span class="co">## "/tmp/RtmpzGwW3C/chr18.fasta.bgz"</span></span></code></pre>
+<span><span class="co">## "/tmp/RtmpBSlfIB/chr18.fasta.bgz"</span></span></code></pre>
 <p>Lastly, we’ll use a BED file containing the coordinates of known
 human editing sites from the REDIPortal database. This file can also be
 optionally compressed.</p>
@@ -221,7 +221,7 @@ the <code>library-type</code> parameter. The <code>REF</code> and
 <span><span class="co">## assays(7): ALT nRef ... nC nG</span></span>
 <span><span class="co">## rownames(6287): chr18_168574_+ chr18_168577_+ ...</span></span>
 <span><span class="co">##   chr18_80172518_- chr18_80174441_-</span></span>
-<span><span class="co">## rowData names(3): REF rbpz vpb</span></span>
+<span><span class="co">## rowData names(4): REF rbpz vpb sor</span></span>
 <span><span class="co">## colnames(6): SRR5564260_dedup_sorted.bam</span></span>
 <span><span class="co">##   SRR5564261_dedup_sorted.bam ... SRR5564271_dedup_sorted.bam</span></span>
 <span><span class="co">##   SRR5564277_dedup_sorted.bam</span></span>
@@ -296,7 +296,7 @@ least 5 counts in each sample.</p>
 <span><span class="co">## assays(9): ALT nRef ... depth edit_freq</span></span>
 <span><span class="co">## rownames(608): chr18_204625_+ chr18_204626_+ ... chr18_80158602_-</span></span>
 <span><span class="co">##   chr18_80158603_-</span></span>
-<span><span class="co">## rowData names(3): REF rbpz vpb</span></span>
+<span><span class="co">## rowData names(4): REF rbpz vpb sor</span></span>
 <span><span class="co">## colnames(6): SRR5564260_dedup_sorted.bam</span></span>
 <span><span class="co">##   SRR5564261_dedup_sorted.bam ... SRR5564271_dedup_sorted.bam</span></span>
 <span><span class="co">##   SRR5564277_dedup_sorted.bam</span></span>
@@ -408,7 +408,7 @@ Session info
 <span><span class="co">## other attached packages:</span></span>
 <span><span class="co">##  [1] rtracklayer_1.59.1          viridis_0.6.2              </span></span>
 <span><span class="co">##  [3] viridisLite_0.4.1           ComplexHeatmap_2.15.0      </span></span>
-<span><span class="co">##  [5] DESeq2_1.39.7               SummarizedExperiment_1.29.1</span></span>
+<span><span class="co">##  [5] DESeq2_1.39.8               SummarizedExperiment_1.29.1</span></span>
 <span><span class="co">##  [7] Biobase_2.59.0              GenomicRanges_1.51.4       </span></span>
 <span><span class="co">##  [9] GenomeInfoDb_1.35.15        IRanges_2.33.0             </span></span>
 <span><span class="co">## [11] S4Vectors_0.37.4            BiocGenerics_0.45.0        </span></span>
@@ -427,13 +427,13 @@ Session info
 <span><span class="co">##  [17] htmltools_0.5.4          progress_1.2.2          </span></span>
 <span><span class="co">##  [19] curl_5.0.0               sass_0.4.5              </span></span>
 <span><span class="co">##  [21] bslib_0.4.2              desc_1.4.2              </span></span>
-<span><span class="co">##  [23] cachem_1.0.7             GenomicAlignments_1.35.0</span></span>
+<span><span class="co">##  [23] cachem_1.0.7             GenomicAlignments_1.35.1</span></span>
 <span><span class="co">##  [25] lifecycle_1.0.3          iterators_1.0.14        </span></span>
 <span><span class="co">##  [27] pkgconfig_2.0.3          Matrix_1.5-3            </span></span>
 <span><span class="co">##  [29] R6_2.5.1                 fastmap_1.1.1           </span></span>
 <span><span class="co">##  [31] GenomeInfoDbData_1.2.9   clue_0.3-64             </span></span>
 <span><span class="co">##  [33] digest_0.6.31            colorspace_2.1-0        </span></span>
-<span><span class="co">##  [35] AnnotationDbi_1.61.0     rprojroot_2.0.3         </span></span>
+<span><span class="co">##  [35] AnnotationDbi_1.61.1     rprojroot_2.0.3         </span></span>
 <span><span class="co">##  [37] textshaping_0.3.6        RSQLite_2.3.0           </span></span>
 <span><span class="co">##  [39] filelock_1.0.2           fansi_1.0.4             </span></span>
 <span><span class="co">##  [41] httr_1.4.5               compiler_4.3.0          </span></span>
