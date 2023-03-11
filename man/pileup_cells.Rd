@@ -20,7 +20,8 @@ pileup_cells(
 )
 }
 \arguments{
-\item{bamfile}{BAM file name}
+\item{bamfile}{a BAM file name (for 10x libraries), or a vector of bam file
+names (smart-seq2)}
 
 \item{sites}{a GRanges object containing sites to process. See examples for
 valid formatting.}
@@ -35,9 +36,10 @@ sites present in the listed chromosomes will be processed}
 
 \item{umi_tag}{tag in bam containing the UMI sequence}
 
-\item{cb_tag}{tag in bam containing the cell barcode sequence}
+\item{cb_tag}{tag in bam containing the cell-barcode sequence}
 
-\item{paired_end}{set to TRUE if data is paired end.}
+\item{paired_end}{set to TRUE if data is paired-end to prevent double counting
+overlapping read pairs.}
 
 \item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various filters to
 apply to reads and sites during pileup. Note that the \code{min_variant_reads}
@@ -60,19 +62,19 @@ Returns either a \code{SingleCellExperiment} or character vector of paths
 to the files produced.
 }
 \description{
-This function will perform a pileup operation at specified
+This function performs a pileup operation at specified
 sites, returning counts for Reference (e.g. unedited) or Alternate (e.g.
-editing) bases. Current functionality will process a 10x genomic's style
+edited) bases. \code{pileup_cells} can process either a 10x Genomic's style
 library, from a aligned bam file containing a tag with a cell-barcode and a
-tag with a UMI.
+tag with a UMI, or smart-seq style libraries without cell-barcodes.
 
 The \code{sites} parameter specifies sites to pileup. This must be a GRanges
 object with 1 base intervals, a strand (+ or -), and supplemented with
 metadata columns named \code{REF} and \code{ALT} containing the reference and
 alternate base to query. See examples for an example format.
 
-At each site, bases from overlapped reads will be examined, and counts of
-each ref and alt base enumerated for each cell barcode present. A single
+At each site, bases from overlapping reads will be examined, and counts of
+each ref and alt base enumerated for each cell-barcode present. A single
 base will be counted once for each UMI sequence present in each cell.
 }
 \examples{

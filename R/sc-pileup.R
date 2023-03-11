@@ -1,21 +1,22 @@
 #' Pileup sites per cell
 #'
-#' @description This function will perform a pileup operation at specified
+#' @description This function performs a pileup operation at specified
 #'   sites, returning counts for Reference (e.g. unedited) or Alternate (e.g.
-#'   editing) bases. Current functionality will process a 10x genomic's style
+#'   edited) bases. `pileup_cells` can process either a 10x Genomic's style
 #'   library, from a aligned bam file containing a tag with a cell-barcode and a
-#'   tag with a UMI.
+#'   tag with a UMI, or smart-seq style libraries without cell-barcodes.
 #'
 #'   The `sites` parameter specifies sites to pileup. This must be a GRanges
 #'   object with 1 base intervals, a strand (+ or -), and supplemented with
 #'   metadata columns named `REF` and `ALT` containing the reference and
 #'   alternate base to query. See examples for an example format.
 #'
-#'   At each site, bases from overlapped reads will be examined, and counts of
-#'   each ref and alt base enumerated for each cell barcode present. A single
+#'   At each site, bases from overlapping reads will be examined, and counts of
+#'   each ref and alt base enumerated for each cell-barcode present. A single
 #'   base will be counted once for each UMI sequence present in each cell.
 #'
-#' @param bamfile BAM file name
+#' @param bamfile a BAM file name (for 10x libraries), or a vector of bam file
+#' names (smart-seq2)
 #' @param sites a GRanges object containing sites to process. See examples for
 #'   valid formatting.
 #' @param output_directory Output directory for output files. Will be generated
@@ -30,8 +31,9 @@
 #'   (from any cell) must have a variant in order to report the site. The
 #'   default of 0 reports all sites present in the `sites` object.
 #' @param umi_tag tag in bam containing the UMI sequence
-#' @param cb_tag tag in bam containing the cell barcode sequence
-#' @param paired_end set to TRUE if data is paired end.
+#' @param cb_tag tag in bam containing the cell-barcode sequence
+#' @param paired_end set to TRUE if data is paired-end to prevent double counting
+#' overlapping read pairs.
 #' @param return_sce if `TRUE`, data is returned as a SingleCellExperiment, if
 #'   `FALSE` a character vector of the output files, specified by
 #'   `outfile_prefix`, will be returned.

@@ -28,7 +28,8 @@ BiocManager::install("rnabioco/raer")
 ## Quick start
 
 raer provides methods to compute per site read count summaries from BAM
-alignment files, either for known sites, or for all detected sites.
+alignment files, either for known editing sites, or for all detected
+sites.
 
 ``` r
 library(raer)
@@ -103,18 +104,70 @@ rse
 #> colData names(1): sample
 ```
 
+`pileup_cells()` provides support for quantifying editing sites in
+single cell libraries.
+
+``` r
+scbam_fn <- raer_example("5k_neuron_mouse_possort.bam")
+outdir <- tempdir("sc_editing")
+
+editing_sites <- GRanges(c("2:579:-",
+                           "2:625:-",
+                           "2:589:-"),
+                         REF = "A",
+                         ALT = "G")
+
+cbs <- c("CACCAAACAACAACAA-1", 
+         "TATTCCACACCCTCTA-1", 
+         "GACCTTCAGTTGTAAG-1")
+
+sce <- pileup_cells(scbam_fn, 
+                    sites = editing_sites,
+                    cell_barcodes = cbs,
+                    param = fp, 
+                    output_directory = outdir)
+sce
+#> class: SingleCellExperiment 
+#> dim: 3 3 
+#> metadata(0):
+#> assays(2): nRef nAlt
+#> rownames(3): 2:579_2_A_G 2:625_2_A_G 2:589_2_A_G
+#> rowData names(2): ref alt
+#> colnames(3): CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
+#> colData names(1): id
+#> reducedDimNames(0):
+#> mainExpName: NULL
+#> altExpNames(0):
+```
+
+``` r
+assays(sce)$nRef
+#> 3 x 3 sparse Matrix of class "dgCMatrix"
+#>             CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
+#> 2:579_2_A_G                  0                  0                  1
+#> 2:625_2_A_G                  0                  0                  0
+#> 2:589_2_A_G                  1                  1                  2
+assays(sce)$nAlt
+#> 3 x 3 sparse Matrix of class "dgCMatrix"
+#>             CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
+#> 2:579_2_A_G                  1                  1                  1
+#> 2:625_2_A_G                  1                  1                  1
+#> 2:589_2_A_G                  0                  0                  0
+```
+
 ## Related work
 
-raer functionality builds off of previous work:
+Core routines in `raer` are implemented using the `htslib` library and
+methods from `samtools` and `bcftools`. `raer` builds off of approaches
+from other rna editing detection tools:
 
-- Python package: [REDItools](https://github.com/BioinfoUNIBA/REDItools)
-  from [Picardi E, Pesole
-  G](https://doi.org/10.1093/bioinformatics/btt287)  
-- Java tool: [JACUSA2](https://github.com/dieterich-lab/JACUSA2) from
-  [Piechotta M et al](https://doi.org/10.1186/s12859-016-1432-8)  
-- Python-based pipeline:
-  [deNovo-Detect](https://github.com/a2iEditing/deNovo-Detect) from
+- [REDItools](https://github.com/BioinfoUNIBA/REDItools) from [Picardi
+  E, Pesole G](https://doi.org/10.1093/bioinformatics/btt287)  
+- [JACUSA2](https://github.com/dieterich-lab/JACUSA2) from [Piechotta M
+  et al](https://doi.org/10.1186/s12859-016-1432-8)  
+- [deNovo-Detect](https://github.com/a2iEditing/deNovo-Detect) from
   [Gabey O et al](https://doi.org/10.1038/s41467-022-28841-4)  
-- Java-based tool:
-  [RNAEditingIndexer](https://github.com/a2iEditing/RNAEditingIndexer)
-  from [Roth SH et al](https://doi.org/10.1038/s41592-019-0610-9)
+- [RNAEditingIndexer](https://github.com/a2iEditing/RNAEditingIndexer)
+  from [Roth SH et al](https://doi.org/10.1038/s41592-019-0610-9)  
+- [SAILOR](https://github.com/YeoLab/sailor) from [Washburn MC et
+  al](https://10.1016/j.celrep.2014.01.011)
