@@ -108,7 +108,7 @@
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
-<p>raer provides methods to compute per site read count summaries from BAM alignment files, either for known sites, or for all detected sites.</p>
+<p>raer provides methods to compute per site read count summaries from BAM alignment files, either for known editing sites, or for all detected sites.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rnabioco.github.io/raer">raer</a></span><span class="op">)</span></span>
 <span><span class="va">bam1fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"SRR5564269_Aligned.sortedByCoord.out.md.bam"</span><span class="op">)</span></span>
@@ -170,19 +170,71 @@
 <span><span class="co">#&gt; rowData names(4): REF rbpz vpb sor</span></span>
 <span><span class="co">#&gt; colnames(2): ko wt</span></span>
 <span><span class="co">#&gt; colData names(1): sample</span></span></code></pre></div>
+<p><code><a href="reference/pileup_cells.html">pileup_cells()</a></code> provides support for quantifying editing sites in single cell libraries.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">scbam_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"5k_neuron_mouse_possort.bam"</span><span class="op">)</span></span>
+<span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="st">"sc_editing"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">editing_sites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"2:579:-"</span>,</span>
+<span>                           <span class="st">"2:625:-"</span>,</span>
+<span>                           <span class="st">"2:589:-"</span><span class="op">)</span>,</span>
+<span>                         REF <span class="op">=</span> <span class="st">"A"</span>,</span>
+<span>                         ALT <span class="op">=</span> <span class="st">"G"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cbs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CACCAAACAACAACAA-1"</span>, </span>
+<span>         <span class="st">"TATTCCACACCCTCTA-1"</span>, </span>
+<span>         <span class="st">"GACCTTCAGTTGTAAG-1"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pileup_cells.html">pileup_cells</a></span><span class="op">(</span><span class="va">scbam_fn</span>, </span>
+<span>                    sites <span class="op">=</span> <span class="va">editing_sites</span>,</span>
+<span>                    cell_barcodes <span class="op">=</span> <span class="va">cbs</span>,</span>
+<span>                    param <span class="op">=</span> <span class="va">fp</span>, </span>
+<span>                    output_directory <span class="op">=</span> <span class="va">outdir</span><span class="op">)</span></span>
+<span><span class="va">sce</span></span>
+<span><span class="co">#&gt; class: SingleCellExperiment </span></span>
+<span><span class="co">#&gt; dim: 3 3 </span></span>
+<span><span class="co">#&gt; metadata(0):</span></span>
+<span><span class="co">#&gt; assays(2): nRef nAlt</span></span>
+<span><span class="co">#&gt; rownames(3): 2:579_2_A_G 2:625_2_A_G 2:589_2_A_G</span></span>
+<span><span class="co">#&gt; rowData names(2): ref alt</span></span>
+<span><span class="co">#&gt; colnames(3): CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1</span></span>
+<span><span class="co">#&gt; colData names(1): id</span></span>
+<span><span class="co">#&gt; reducedDimNames(0):</span></span>
+<span><span class="co">#&gt; mainExpName: NULL</span></span>
+<span><span class="co">#&gt; altExpNames(0):</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">nRef</span></span>
+<span><span class="co">#&gt; 3 x 3 sparse Matrix of class "dgCMatrix"</span></span>
+<span><span class="co">#&gt;             CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1</span></span>
+<span><span class="co">#&gt; 2:579_2_A_G                  0                  0                  1</span></span>
+<span><span class="co">#&gt; 2:625_2_A_G                  0                  0                  0</span></span>
+<span><span class="co">#&gt; 2:589_2_A_G                  1                  1                  2</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">nAlt</span></span>
+<span><span class="co">#&gt; 3 x 3 sparse Matrix of class "dgCMatrix"</span></span>
+<span><span class="co">#&gt;             CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1</span></span>
+<span><span class="co">#&gt; 2:579_2_A_G                  1                  1                  1</span></span>
+<span><span class="co">#&gt; 2:625_2_A_G                  1                  1                  1</span></span>
+<span><span class="co">#&gt; 2:589_2_A_G                  0                  0                  0</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="related-work">Related work<a class="anchor" aria-label="anchor" href="#related-work"></a>
 </h2>
-<p>raer functionality builds off of previous work:</p>
+<p>Core routines in <code>raer</code> are implemented using the <code>htslib</code> library and methods from <code>samtools</code> and <code>bcftools</code>. <code>raer</code> builds off of approaches from other rna editing detection tools:</p>
 <ul>
-<li>Python package: <a href="https://github.com/BioinfoUNIBA/REDItools" class="external-link">REDItools</a> from <a href="https://doi.org/10.1093/bioinformatics/btt287" class="external-link">Picardi E, Pesole G</a><br>
+<li>
+<a href="https://github.com/BioinfoUNIBA/REDItools" class="external-link">REDItools</a> from <a href="https://doi.org/10.1093/bioinformatics/btt287" class="external-link">Picardi E, Pesole G</a><br>
 </li>
-<li>Java tool: <a href="https://github.com/dieterich-lab/JACUSA2" class="external-link">JACUSA2</a> from <a href="https://doi.org/10.1186/s12859-016-1432-8" class="external-link">Piechotta M et al</a><br>
+<li>
+<a href="https://github.com/dieterich-lab/JACUSA2" class="external-link">JACUSA2</a> from <a href="https://doi.org/10.1186/s12859-016-1432-8" class="external-link">Piechotta M et al</a><br>
 </li>
-<li>Python-based pipeline: <a href="https://github.com/a2iEditing/deNovo-Detect" class="external-link">deNovo-Detect</a> from <a href="https://doi.org/10.1038/s41467-022-28841-4" class="external-link">Gabey O et al</a><br>
+<li>
+<a href="https://github.com/a2iEditing/deNovo-Detect" class="external-link">deNovo-Detect</a> from <a href="https://doi.org/10.1038/s41467-022-28841-4" class="external-link">Gabey O et al</a><br>
 </li>
-<li>Java-based tool: <a href="https://github.com/a2iEditing/RNAEditingIndexer" class="external-link">RNAEditingIndexer</a> from <a href="https://doi.org/10.1038/s41592-019-0610-9" class="external-link">Roth SH et al</a>
+<li>
+<a href="https://github.com/a2iEditing/RNAEditingIndexer" class="external-link">RNAEditingIndexer</a> from <a href="https://doi.org/10.1038/s41592-019-0610-9" class="external-link">Roth SH et al</a><br>
+</li>
+<li>
+<a href="https://github.com/YeoLab/sailor" class="external-link">SAILOR</a> from <a href="https://10.1016/j.celrep.2014.01.011" class="external-link">Washburn MC et al</a>
 </li>
 </ul>
 </div>
