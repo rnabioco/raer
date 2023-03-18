@@ -120,7 +120,7 @@ get_splice_sites <- function(txdb, slop = 4) {
 #' adjacent to splice sites removed.
 #'
 #' @importFrom GenomicFeatures intronsByTranscript
-#'
+#' @importFrom GenomeInfoDb keepSeqlevels
 #' @export
 filter_splice_variants <- function(rse, txdb,
                                    splice_site_dist = 4,
@@ -133,7 +133,8 @@ filter_splice_variants <- function(rse, txdb,
     if(length(shared_seqs) == 0) {
       cli::cli_abort("No shared seqnames found between txdb and rse")
     }
-    spl_sites <- keepSeqlevels(spl_sites, shared_seqs)
+    spl_sites <- spl_sites[seqnames(spl_sites) %in% shared_seqs, ]
+    spl_sites <- GenomeInfoDb::keepSeqlevels(spl_sites, shared_seqs)
     x <- rowRanges(rse)
     fo <- findOverlaps(x, spl_sites, type = "any",
                        ignore.strand = ignore.strand)
@@ -224,16 +225,21 @@ filter_clustered_variants <- function(rse, txdb,
     }
 
     if ("transcript" %in% regions) {
+        x_tx <- x
         shared_seqs <- intersect(seqnames(x), seqnames(seqinfo(txdb)))
         if(length(shared_seqs) == 0) {
           cli::cli_abort("No shared seqnames found between txdb and rse")
         }
-        x <- keepSeqlevels(x, shared_seqs)
-        tx_sites <- mapToTranscripts(x,
+        x_tx <- x
+        x_tx$id <- seq_along(x)
+        x_tx <- x_tx[seqnames(x_tx) %in% shared_seqs]
+        x_tx <- keepSeqlevels(x_tx, shared_seqs)
+        tx_sites <- mapToTranscripts(x_tx,
                                      txdb,
                                      extractor.fun = GenomicFeatures::exonsBy)
-        tx_sites$Var <- paste0(x[tx_sites$xHits]$REF,
-                               x[tx_sites$xHits]$ALT)
+        tx_sites$Var <- paste0(x_tx[tx_sites$xHits]$REF,
+                               x_tx[tx_sites$xHits]$ALT)
+        tx_sites$id <- x_tx[tx_sites$xHits]$id
         tx_sites <- sort(tx_sites)
         tx_extend <- trim(suppressWarnings(tx_sites + variant_dist))
 
@@ -247,7 +253,7 @@ filter_clustered_variants <- function(rse, txdb,
             }
         ))]
         tx_sites <- tx_sites[as.integer(to_drop)]
-        tx_keep <- setdiff(seq_along(x), unique(tx_sites$xHits))
+        tx_keep <- setdiff(seq_along(x), unique(tx_sites$id))
     } else {
       tx_keep <- seq_along(x)
     }
