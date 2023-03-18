@@ -1,20 +1,22 @@
 # raer 0.99.0
 
+* added tests for SummarizedExperiment filtering approaches 
+
 * added a strand bias stat `sor` using approach from GATK (StrandOddsRatio), and
   a confidence score `calc_confidence()` from SAILOR pipeline.
 
 * 'N' bases in read or reference are ignored 
 
 * Removed outdated or unused functionality:
-  - bed indexing (`indexBed` and related c code)
+  - bed indexing (`indexBed` and related C code)
   - bam tag indexing (`build_tag_index`, `show_tag_index`, `get_tag_bam`, )
   - bam tag index based single cell approach (`sc_editing`)
-  - bam tag indexing c code from bri (`src/bri/*`)
+  - bam tag indexing C code from bri (`src/bri/*`)
   - sparse matrix merging for `merge_pileups()`.
   - unneeded utilities (`filter_by_coverage`)
   - Remaining (and mostly unused) Rcpp code
   - Removed fastmap, Rcpp, zlibbioc, RColorBrewer, and BiocGenerics dependencies
-  - Removed system requirements for c libraries used by bri
+  - Removed system requirements for C libraries used by bri
   
 * The bed indexing used in `pileup_sites()` has been replaced with the region indexing approach from `pileup_cells()`. 
 
@@ -24,8 +26,7 @@
 
 * `pileup_cells()` gained functionality to process multiple smart-seq2 style bam files.
 
-* Changed `filterParam` argument in `pileup_sites` and `pileup_cells` to `param` for
-simplicity
+* Changed `filterParam` argument in `pileup_sites` and `pileup_cells` to `param` for simplicity.
 
 * Added `FilterParam` to exclude multi-allelic sites `report_multiallelic`, or exclude reporting a variant in the Var assay based on allelic frequency (`min_allelic_freq`).
 

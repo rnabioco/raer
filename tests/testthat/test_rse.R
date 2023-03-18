@@ -1,4 +1,5 @@
 library(GenomicRanges)
+library(GenomicFeatures)
 library(SummarizedExperiment)
 library(rtracklayer)
 
@@ -8,7 +9,6 @@ fafn <- raer_example("human.fasta")
 bedfn <- raer_example("regions.bed")
 sites <- import(bedfn)
 res <- pileup_sites(bamfn, fafn)
-
 
 test_that("annot_snps works", {
     if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
@@ -81,9 +81,6 @@ test_that("prep_for_de works",{
 })
 
 test_that("perform_de works",{
-  bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
-  bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
-  fafn <- raer_example("human.fasta")
 
   bams <- rep(c(bamfn, bam2fn), each = 3)
   sample_ids <- paste0(rep(c("KO", "WT"), each = 3), 1:3)
@@ -100,3 +97,88 @@ test_that("perform_de works",{
   ed <- assay(rse, "edit_freq")[sig_sites, 1] - assay(rse, "edit_freq")[sig_sites, 4]
   expect_true(all(sign(ed) == sign(res$sig_results$logFC[1:5])))
 })
+
+
+test_that("filter_multiallelic works",{
+  data(rse_adar_ifn)
+  x <- sum(grepl(",", assay(rse_adar_ifn, "ALT")))
+
+  expect_message(rse <- filter_multiallelic(rse_adar_ifn))
+  xx <- sum(grepl(",", assay(rse, "ALT")))
+
+  expect_true(x > xx && xx == 0)
+  expect_true("ALT" %in% names(rowData(rse)))
+})
+
+mock_txdb <- function(){
+  gr <- GRanges(c("DHFR:310-330:-",
+                  "DHFR:410-430:-",
+                  "SSR3:100-155:-",
+                  "SSR3:180-202:-"))
+  gr$source <- "raer"
+  gr$type <- "exon"
+  gr$source <- NA
+  gr$phase <- NA_integer_
+  gr$gene_id <- c(1,1,2,2)
+  gr$transcript_id <- rep(c("1.1","2.1"), each = 2)
+  makeTxDbFromGRanges(gr)
+}
+
+test_that("get_splice_sites and filtering works",{
+  txdb <- mock_txdb()
+  spl_sites <- get_splice_sites(txdb,
+                                slop = 3)
+  expect_true(all(width(spl_sites) == 6))
+  expect_error(get_splice_sites(spl_sites))
+
+  data(rse_adar_ifn)
+  expect_message(rse <- filter_splice_variants(rse_adar_ifn, txdb))
+  n_removed <- nrow(subsetByOverlaps(rse_adar_ifn, rse, invert = TRUE))
+  expect_equal(n_removed, 5L)
+  expect_true("DHFR_328_-" %in% rownames(rse_adar_ifn))
+  expect_false("DHFR_328_-" %in% rownames(rse))
+})
+
+test_that("removing clustered variants works",{
+  txdb <- mock_txdb()
+
+  data(rse_adar_ifn)
+  expect_message(rse <- filter_multiallelic(rse_adar_ifn))
+
+  gr <- rowRanges(rse)
+  nd <- distanceToNearest(gr)
+  gr1 <- gr[mcols(nd)$distance > 100]
+  expect_message(gr2 <- filter_clustered_variants(rse, txdb))
+  expect_true(identical(rowRanges(gr2), gr1))
+
+  # check that transcript based removal works
+  # DHFR_328 -> DHFR_423 overlaps 310-330 -> 410-430 splice
+  ex <- exons(txdb)
+  rse_ex <- subsetByOverlaps(rse, ex)
+
+  expect_message(
+    gr2 <- filter_clustered_variants(rse_ex,
+                                     txdb,
+                                     regions = "transcript",
+                                     variant_dist = 20)
+  )
+
+  expt <- rowRanges(subsetByOverlaps(rse_ex, gr2, invert = T))
+  ds <- distanceToNearest(mapToTranscripts(expt, txdb,
+                                           extractor.fun = exonsBy))
+  expect_true(all(mcols(ds)$distance < 20))
+
+  expect_message(
+    gr2 <- filter_clustered_variants(rse_ex, txdb,
+                                   variant_dist = 25)
+  )
+  expect_equal(length(gr2), 3L)
+})
+
+test_that("calc_confidence works", {
+  data(rse_adar_ifn)
+  rse <- calc_confidence(rse_adar_ifn)
+  expect_true("confidence" %in% names(rowData(rse)))
+  expect_true(identical(range(rowData(rse)$confidence), c(0, 1)))
+})
+

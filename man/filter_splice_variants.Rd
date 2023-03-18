@@ -4,10 +4,10 @@
 \alias{filter_splice_variants}
 \title{Filter out sites near splice sites}
 \usage{
-filter_splice_variants(se, txdb, splice_site_dist = 4, ignore.strand = FALSE)
+filter_splice_variants(rse, txdb, splice_site_dist = 4, ignore.strand = FALSE)
 }
 \arguments{
-\item{se}{\code{SummarizedExperiment::SummarizedExperiment} with editing sites}
+\item{rse}{\code{SummarizedExperiment::SummarizedExperiment} with editing sites}
 
 \item{txdb}{\code{GenomicFeatures::TxDb}}
 
@@ -27,10 +27,18 @@ splice junctions.
 \examples{
 if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
     data(rse_adar_ifn)
-    filter_splice_variants(
-        rse_adar_ifn,
-        TxDb.Hsapiens.UCSC.hg38.knownGene
-    )
+    gr <- GRanges(c("DHFR:310-330:-",
+                    "DHFR:410-415:-",
+                    "SSR3:100-155:-",
+                    "SSR3:180-190:-"))
+    gr$source <- "raer"
+    gr$type <- "exon"
+    gr$source <- NA
+    gr$phase <- NA_integer_
+    gr$gene_id <- c(1,1,2,2)
+    gr$transcript_id <- rep(c("1.1","2.1"), each = 2)
+    txdb <- makeTxDbFromGRanges(gr)
+    filter_splice_variants(rse_adar_ifn, txdb)
 }
 
 }
