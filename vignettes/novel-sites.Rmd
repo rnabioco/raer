@@ -140,7 +140,7 @@ rse <- filter_clustered_variants(rse, txdb, variant_dist = 100)
 rse
 ```
 
-Next, sites with 4bp of known splicing events will be excluded. These variants are low-confidence due to the possibility of mis-alignments. 
+Next, sites within 4bp of known splicing events will be excluded. These sites are low-confidence due to the possibility of mis-alignments near splicing events.
 
 ```{r}
 rse <- filter_splice_variants(rse, txdb)
