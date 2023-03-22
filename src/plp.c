@@ -980,7 +980,7 @@ static int run_pileup(char** cbampaths, const char** coutfns,
   int last_tid = -1;
   int n_iter = 0;
   while ((ret = bam_mplp64_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
-
+    ++n_iter;
     if (conf->reg && (pos < beg0 || pos >= end0)) continue; // not in of single region requested
 
     mplp_get_ref(data[0], tid, &ref, &ref_len); // not in of single region requested

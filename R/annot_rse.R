@@ -142,7 +142,7 @@ annot_from_gr <- function(obj, gr, cols_to_map, ...) {
         x <- aggregate(gr,
             overlaps,
             tmp = unstrsplit(
-                eval(parse(text = col)),
+                unique(eval(parse(text = col))),
                 ","
             ),
             drop = FALSE
