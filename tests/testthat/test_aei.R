@@ -1,4 +1,4 @@
-library(Rsamtools)
+suppressPackageStartupMessages(library(Rsamtools))
 bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")

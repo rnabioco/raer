@@ -52,6 +52,7 @@ Suggests:
     viridis,
     TxDb.Hsapiens.UCSC.hg38.knownGene,
     SNPlocs.Hsapiens.dbSNP144.GRCh38,
+    BSgenome.Hsapiens.NCBI.GRCh38,
     scater,
     SingleCellExperiment,
     AnnotationHub,

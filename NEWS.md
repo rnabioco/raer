@@ -1,5 +1,7 @@
 # raer 0.99.0
 
+* add option to query ref and alt SNP alleles 
+
 * added tests for SummarizedExperiment filtering approaches 
 
 * added a strand bias stat `sor` using approach from GATK (StrandOddsRatio), and

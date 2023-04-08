@@ -1,7 +1,11 @@
-library(GenomicRanges)
-library(GenomicFeatures)
-library(SummarizedExperiment)
-library(rtracklayer)
+
+pkgs <- c("GenomicRanges", "GenomicFeatures",
+          "SummarizedExperiment", "rtracklayer")
+
+msg <- lapply(pkgs, function(x) {
+  suppressPackageStartupMessages(library(x, character.only = TRUE))
+})
+
 
 bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
@@ -34,10 +38,18 @@ test_that("annot_snps works", {
 
         se <- SummarizedExperiment(matrix(seq_along(gr)))
         rowRanges(se) <- gr
-        rowData(se) <- gr
         res <- annot_snps(se, SNPlocs.Hsapiens.dbSNP144.GRCh38)
         expect_true(is(res, "RangedSummarizedExperiment"))
         expect_true("RefSNP_id" %in% colnames(mcols(res)))
+
+        if(require(BSgenome.Hsapiens.NCBI.GRCh38)){
+          res <- annot_snps(se,
+                            dbsnp = SNPlocs.Hsapiens.dbSNP144.GRCh38,
+                            genome = BSgenome.Hsapiens.NCBI.GRCh38)
+          expect_true(is(res, "RangedSummarizedExperiment"))
+          expect_true(all(c("RefSNP_id", "snp_ref_allele","snp_alt_alleles") %in%
+                        colnames(mcols(res))))
+        }
     }
 })
 

@@ -6,9 +6,14 @@ annot_snps.GRanges <- function(obj,
                                chrom = NULL,
                                col_to_aggr = "RefSNP_id",
                                drop = FALSE,
+                               genome = NULL,
                                ...) {
     if (!is(dbsnp, "ODLT_SNPlocs")) {
         cli::cli_abort("supplied dbSNP not valid SNP package, please install SNP db")
+    }
+
+    if(any(col_to_aggr %in% colnames(mcols(obj)))){
+      cli::cli_abort("supplied column name in col_to_aggr already exists in input")
     }
 
     if (!is.null(chrom)) {
@@ -30,7 +35,7 @@ annot_snps.GRanges <- function(obj,
     seqlevelsStyle(sites) <- snp_style
 
     # returns GPos for each snp
-    snps <- snpsByOverlaps(dbsnp, sites)
+    snps <- snpsByOverlaps(dbsnp, sites, genome = genome)
 
     # now annot if site is a SNP
     snp_overlaps <- findOverlaps(sites, snps, ignore.strand = TRUE)
@@ -39,14 +44,37 @@ annot_snps.GRanges <- function(obj,
         seqlevelsStyle(sites) <- in_style
         return(sites)
     }
-    mcols(sites)[col_to_aggr] <- aggregate(snps,
+
+    if(is.null(genome)){
+      mcols(sites)[col_to_aggr] <- aggregate(
+        snps,
         snp_overlaps,
-        snp = unstrsplit(
-            eval(parse(text = col_to_aggr)),
-            ","
-        ),
-        drop = FALSE
-    )$snp
+        snp = unstrsplit(eval(parse(text = col_to_aggr)), ","),
+        drop = FALSE)$snp
+    } else {
+      cols_exist <- any(c("snp_ref_allele", "snp_alt_alleles") %in%
+                          colnames(mcols(obj)))
+      if(cols_exist){
+        cli::cli_abort(
+          c("snp_ref_allele or snp_alt_alleles columns already exist in input")
+        )
+      }
+
+      # prent no visible binding for global variable note
+      alt_alleles <- ref_allele <- NULL
+      snps$alt_alleles <- unstrsplit(snps$alt_alleles)
+
+      snp_info <- aggregate(
+        snps,
+        snp_overlaps,
+        snp = unstrsplit(eval(parse(text = col_to_aggr)), ","),
+        ref_allele = unstrsplit(ref_allele, ","),
+        alt_alleles = unstrsplit(alt_alleles, ","),
+        drop = FALSE)
+      snp_info$grouping <- NULL
+      colnames(snp_info) <- c(col_to_aggr, "snp_ref_allele", "snp_alt_alleles")
+      mcols(sites) <- cbind(mcols(sites), snp_info)
+    }
 
     seqlevelsStyle(sites) <- in_style
 
@@ -65,13 +93,15 @@ annot_snps.SummarizedExperiment <- function(obj,
                                             chrom = NULL,
                                             col_to_aggr = "RefSNP_id",
                                             drop = FALSE,
+                                            genome = NULL,
                                             ...) {
     gr <- rowRanges(obj)
     res <- annot_snps.GRanges(gr,
         dbsnp,
         chrom = chrom,
         col_to_aggr = col_to_aggr,
-        drop = drop
+        drop = drop,
+        genome = genome
     )
 
     res <- cbind(mcols(gr), mcols(res))
@@ -98,9 +128,8 @@ annot_snps.SummarizedExperiment <- function(obj,
 #' library(SummarizedExperiment)
 #' data(rse_adar_ifn)
 #' gr <- GRanges(rep(c("SSR3", "SPCS3"), c(5, 15)),
-#'     IRanges(seq(1, 500, by = 25), width = 50),
-#'     strand = "+"
-#' )
+#'               IRanges(seq(1, 500, by = 25), width = 50),
+#'               strand = "+")
 #'
 #' gr$feature <- sample(1:100, size = 20)
 #' gr$id <- sample(LETTERS, size = 20)

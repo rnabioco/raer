@@ -14,6 +14,7 @@ annot_snps(obj, ...)
   chrom = NULL,
   col_to_aggr = "RefSNP_id",
   drop = FALSE,
+  genome = NULL,
   ...
 )
 
@@ -23,6 +24,7 @@ annot_snps(obj, ...)
   chrom = NULL,
   col_to_aggr = "RefSNP_id",
   drop = FALSE,
+  genome = NULL,
   ...
 )
 }
@@ -42,6 +44,10 @@ input. If multiple SNPs overlap these values will be concatenated
 as comma separated values.}
 
 \item{drop}{If TRUE, remove sites overlap SNPs}
+
+\item{genome}{A BSgenome object, which if supplied, will be used to provide
+additional "snp_ref_allele" and "snp_alt_alleles" columns containing the
+reference and alt allele sequences, with respect to the positive strand.}
 }
 \value{
 Either a GRanges or SummarizedExperiment object with
@@ -49,7 +55,7 @@ a new column "snp" added with information from "col_to_aggr"
 }
 \description{
 This function will annotate a GRanges or rowRanges of
-a SummarizedExperiment with SNP positions from a SNP package
+a SummarizedExperiment with SNPs from a SNP package.
 }
 \examples{
 if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
@@ -63,6 +69,7 @@ if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
         ),
         strand = "+"
     )
+    genome(gr) <- "GRCh38.p2"
     annot_snps(gr, SNPlocs.Hsapiens.dbSNP144.GRCh38)
 }
 }
