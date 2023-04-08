@@ -342,7 +342,7 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> WT2         WT2          WT</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> WT3         WT3          WT</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowRanges.html" class="external-link">rowRanges</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">rowRanges</span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 74 ranges and 4 metadata columns:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              seqnames    ranges strand |         REF       rbpz</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;  &lt;numeric&gt;</span>
@@ -374,7 +374,7 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   seqinfo: 3 sequences from an unspecified genome</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># specifying regions to query use GRanges object</span></span></span>
-<span class="r-in"><span><span class="va">sites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowRanges.html" class="external-link">rowRanges</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">sites</span> <span class="op">&lt;-</span> <span class="fu">rowRanges</span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu">pileup_sites</span><span class="op">(</span><span class="va">bams</span>, <span class="va">fafn</span>, sites <span class="op">=</span> <span class="va">sites</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rse</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> class: RangedSummarizedExperiment </span>

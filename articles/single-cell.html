@@ -88,7 +88,7 @@
                         <h4 data-toc-skip class="author">Kent
 Riemondy</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-03-22</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-04-08</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/single-cell.Rmd" class="external-link"><code>vignettes/single-cell.Rmd</code></a></small>
       <div class="d-none name"><code>single-cell.Rmd</code></div>
@@ -131,19 +131,19 @@ with other needed files can be downloaded using
 <span><span class="va">fns</span></span></code></pre></div>
 <pre><code><span><span class="co">## $bam</span></span>
 <span><span class="co">##                   10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam </span></span>
-<span><span class="co">## "/tmp/Rtmp3B4bGI/10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam" </span></span>
+<span><span class="co">## "/tmp/RtmpNXozyh/10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $bai</span></span>
 <span><span class="co">##                   10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam.bai </span></span>
-<span><span class="co">## "/tmp/Rtmp3B4bGI/10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam.bai" </span></span>
+<span><span class="co">## "/tmp/RtmpNXozyh/10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam.bai" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $edit_sites</span></span>
 <span><span class="co">##                   rediportal_chr16.bed.gz </span></span>
-<span><span class="co">## "/tmp/Rtmp3B4bGI/rediportal_chr16.bed.gz" </span></span>
+<span><span class="co">## "/tmp/RtmpNXozyh/rediportal_chr16.bed.gz" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $sce</span></span>
 <span><span class="co">##                   sce.rds </span></span>
-<span><span class="co">## "/tmp/Rtmp3B4bGI/sce.rds"</span></span></code></pre>
+<span><span class="co">## "/tmp/RtmpNXozyh/sce.rds"</span></span></code></pre>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bam_fn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bam</span></span>
 <span><span class="va">bed_fn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">edit_sites</span></span></code></pre></div>
@@ -267,7 +267,7 @@ chromosomes, by supplying a BiocParallel backend to the
 with an editing event, and add the editing information to the
 SingleCellExperiment as an <code><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp()</a></code>.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">e_sce</span> <span class="op">&lt;-</span> <span class="va">e_sce</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">e_sce</span><span class="op">)</span><span class="op">$</span><span class="va">nAlt</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">5</span>, <span class="op">]</span></span>
+<code class="sourceCode R"><span><span class="va">e_sce</span> <span class="op">&lt;-</span> <span class="va">e_sce</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">e_sce</span><span class="op">)</span><span class="op">$</span><span class="va">nAlt</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">5</span>, <span class="op">]</span></span>
 <span><span class="va">e_sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">e_sce</span>, replace_na <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">e_sce</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
 <p>With the editing sites added to the gene expression
@@ -275,7 +275,7 @@ SingleCellExperiment we can use plotting and other methods previously
 developed for single cell analysis. Here we’ll visualize editing sites
 with the highest edited read counts.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">to_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/order.html" class="external-link">order</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span>, <span class="st">"nAlt"</span><span class="op">)</span><span class="op">)</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">]</span></span>
+<code class="sourceCode R"><span><span class="va">to_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/order.html" class="external-link">order</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span>, <span class="st">"nAlt"</span><span class="op">)</span><span class="op">)</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">to_plot</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/scater/man/plot_reddim.html" class="external-link">plotUMAP</a></span><span class="op">(</span><span class="va">sce</span>, colour_by <span class="op">=</span> <span class="va">x</span>, by_exprs_values <span class="op">=</span> <span class="st">"nAlt"</span><span class="op">)</span></span>
@@ -339,14 +339,14 @@ Session info
 <span><span class="co">## [8] base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] rtracklayer_1.59.1          Rsamtools_2.15.2           </span></span>
-<span><span class="co">##  [3] Biostrings_2.67.0           XVector_0.39.0             </span></span>
-<span><span class="co">##  [5] scater_1.27.7               ggplot2_3.4.1              </span></span>
+<span><span class="co">##  [1] rtracklayer_1.59.1          Rsamtools_2.15.3           </span></span>
+<span><span class="co">##  [3] Biostrings_2.67.2           XVector_0.39.0             </span></span>
+<span><span class="co">##  [5] scater_1.27.8               ggplot2_3.4.2              </span></span>
 <span><span class="co">##  [7] scuttle_1.9.4               SingleCellExperiment_1.21.1</span></span>
 <span><span class="co">##  [9] SummarizedExperiment_1.29.1 Biobase_2.59.0             </span></span>
 <span><span class="co">## [11] GenomicRanges_1.51.4        GenomeInfoDb_1.35.16       </span></span>
 <span><span class="co">## [13] IRanges_2.33.0              S4Vectors_0.37.4           </span></span>
-<span><span class="co">## [15] BiocGenerics_0.45.2         MatrixGenerics_1.11.0      </span></span>
+<span><span class="co">## [15] BiocGenerics_0.45.3         MatrixGenerics_1.11.1      </span></span>
 <span><span class="co">## [17] matrixStats_0.63.0          raer_0.99.0                </span></span>
 <span><span class="co">## [19] BiocStyle_2.27.1           </span></span>
 <span><span class="co">## </span></span>
@@ -354,29 +354,29 @@ Session info
 <span><span class="co">##   [1] RColorBrewer_1.1-3        jsonlite_1.8.4           </span></span>
 <span><span class="co">##   [3] magrittr_2.0.3            ggbeeswarm_0.7.1         </span></span>
 <span><span class="co">##   [5] GenomicFeatures_1.51.4    farver_2.1.1             </span></span>
-<span><span class="co">##   [7] rmarkdown_2.20            fs_1.6.1                 </span></span>
+<span><span class="co">##   [7] rmarkdown_2.21            fs_1.6.1                 </span></span>
 <span><span class="co">##   [9] BiocIO_1.9.2              zlibbioc_1.45.0          </span></span>
 <span><span class="co">##  [11] ragg_1.2.5                vctrs_0.6.1              </span></span>
 <span><span class="co">##  [13] memoise_2.0.1             DelayedMatrixStats_1.21.0</span></span>
-<span><span class="co">##  [15] RCurl_1.98-1.10           htmltools_0.5.4          </span></span>
+<span><span class="co">##  [15] RCurl_1.98-1.12           htmltools_0.5.5          </span></span>
 <span><span class="co">##  [17] progress_1.2.2            curl_5.0.0               </span></span>
 <span><span class="co">##  [19] BiocNeighbors_1.17.1      sass_0.4.5               </span></span>
 <span><span class="co">##  [21] bslib_0.4.2               desc_1.4.2               </span></span>
 <span><span class="co">##  [23] cachem_1.0.7              GenomicAlignments_1.35.1 </span></span>
 <span><span class="co">##  [25] lifecycle_1.0.3           pkgconfig_2.0.3          </span></span>
-<span><span class="co">##  [27] rsvd_1.0.5                Matrix_1.5-3             </span></span>
+<span><span class="co">##  [27] rsvd_1.0.5                Matrix_1.5-4             </span></span>
 <span><span class="co">##  [29] R6_2.5.1                  fastmap_1.1.1            </span></span>
 <span><span class="co">##  [31] GenomeInfoDbData_1.2.10   digest_0.6.31            </span></span>
 <span><span class="co">##  [33] colorspace_2.1-0          AnnotationDbi_1.61.2     </span></span>
 <span><span class="co">##  [35] rprojroot_2.0.3           irlba_2.3.5.1            </span></span>
-<span><span class="co">##  [37] textshaping_0.3.6         RSQLite_2.3.0            </span></span>
-<span><span class="co">##  [39] beachmat_2.15.0           filelock_1.0.2           </span></span>
+<span><span class="co">##  [37] textshaping_0.3.6         RSQLite_2.3.1            </span></span>
+<span><span class="co">##  [39] beachmat_2.15.2           filelock_1.0.2           </span></span>
 <span><span class="co">##  [41] labeling_0.4.2            fansi_1.0.4              </span></span>
 <span><span class="co">##  [43] httr_1.4.5                compiler_4.3.0           </span></span>
 <span><span class="co">##  [45] bit64_4.0.5               withr_2.5.0              </span></span>
-<span><span class="co">##  [47] BiocParallel_1.33.10      viridis_0.6.2            </span></span>
+<span><span class="co">##  [47] BiocParallel_1.33.12      viridis_0.6.2            </span></span>
 <span><span class="co">##  [49] DBI_1.1.3                 highr_0.10               </span></span>
-<span><span class="co">##  [51] R.utils_2.12.2            biomaRt_2.55.1           </span></span>
+<span><span class="co">##  [51] R.utils_2.12.2            biomaRt_2.55.4           </span></span>
 <span><span class="co">##  [53] rappdirs_0.3.3            DelayedArray_0.25.0      </span></span>
 <span><span class="co">##  [55] rjson_0.2.21              tools_4.3.0              </span></span>
 <span><span class="co">##  [57] vipor_0.4.5               beeswarm_0.4.0           </span></span>
@@ -389,14 +389,14 @@ Session info
 <span><span class="co">##  [71] xml2_1.3.3                utf8_1.2.3               </span></span>
 <span><span class="co">##  [73] ggrepel_0.9.3             pillar_1.9.0             </span></span>
 <span><span class="co">##  [75] stringr_1.5.0             dplyr_1.1.1              </span></span>
-<span><span class="co">##  [77] BiocFileCache_2.7.2       lattice_0.20-45          </span></span>
+<span><span class="co">##  [77] BiocFileCache_2.7.2       lattice_0.21-8           </span></span>
 <span><span class="co">##  [79] bit_4.0.5                 tidyselect_1.2.0         </span></span>
 <span><span class="co">##  [81] knitr_1.42                gridExtra_2.3            </span></span>
-<span><span class="co">##  [83] bookdown_0.33             xfun_0.37                </span></span>
+<span><span class="co">##  [83] bookdown_0.33             xfun_0.38                </span></span>
 <span><span class="co">##  [85] pheatmap_1.0.12           stringi_1.7.12           </span></span>
 <span><span class="co">##  [87] yaml_2.3.7                evaluate_0.20            </span></span>
 <span><span class="co">##  [89] codetools_0.2-19          tibble_3.2.1             </span></span>
-<span><span class="co">##  [91] BiocManager_1.30.20       cli_3.6.0                </span></span>
+<span><span class="co">##  [91] BiocManager_1.30.20       cli_3.6.1                </span></span>
 <span><span class="co">##  [93] systemfonts_1.0.4         munsell_0.5.0            </span></span>
 <span><span class="co">##  [95] jquerylib_0.1.4           Rcpp_1.0.10              </span></span>
 <span><span class="co">##  [97] dbplyr_2.3.2              png_0.1-8                </span></span>
