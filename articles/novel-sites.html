@@ -88,7 +88,7 @@
                         <h4 data-toc-skip class="author">Kent
 Riemondy</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-04-08</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-04-13</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/novel-sites.Rmd" class="external-link"><code>vignettes/novel-sites.Rmd</code></a></small>
       <div class="d-none name"><code>novel-sites.Rmd</code></div>
@@ -98,8 +98,11 @@ Riemondy</h4>
     
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rnabioco.github.io/raer">raer</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/GenomicFeatures" class="external-link">GenomicFeatures</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rnabioco.github.io/raer">raer</a></span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: replacing previous import 'utils::findMatches' by</span></span>
+<span><span class="co">## 'S4Vectors::findMatches' when loading 'AnnotationDbi'</span></span></code></pre>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/GenomicFeatures" class="external-link">GenomicFeatures</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">rtracklayer</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">TxDb.Hsapiens.UCSC.hg38.knownGene</span><span class="op">)</span></span></code></pre></div>
@@ -116,33 +119,33 @@ this vignette. These files occupy ~100 Mb of space and contain
 alignments from the first 1MB of chromosome 4. By default these files
 are stored in a temporary directory. Change the <code>data_dir</code>
 variable to a valid file path to keep the files for reuse.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">fns</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_NA12878.html">download_NA12878</a></span><span class="op">(</span><span class="va">data_dir</span><span class="op">)</span></span>
 <span><span class="va">fns</span></span></code></pre></div>
 <pre><code><span><span class="co">## $bams</span></span>
 <span><span class="co">##                              ERR262996_dedup_chr4_sub.bam </span></span>
-<span><span class="co">##            "/tmp/RtmphWfc1V/ERR262996_dedup_chr4_sub.bam" </span></span>
+<span><span class="co">##            "/tmp/RtmpTCZQ6A/ERR262996_dedup_chr4_sub.bam" </span></span>
 <span><span class="co">##                   SRR1258218_Aligned.sorted.dedup_sub.bam </span></span>
-<span><span class="co">## "/tmp/RtmphWfc1V/SRR1258218_Aligned.sorted.dedup_sub.bam" </span></span>
+<span><span class="co">## "/tmp/RtmpTCZQ6A/SRR1258218_Aligned.sorted.dedup_sub.bam" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $bai</span></span>
 <span><span class="co">##                              ERR262996_dedup_chr4_sub.bam.bai </span></span>
-<span><span class="co">##            "/tmp/RtmphWfc1V/ERR262996_dedup_chr4_sub.bam.bai" </span></span>
+<span><span class="co">##            "/tmp/RtmpTCZQ6A/ERR262996_dedup_chr4_sub.bam.bai" </span></span>
 <span><span class="co">##                   SRR1258218_Aligned.sorted.dedup_sub.bam.bai </span></span>
-<span><span class="co">## "/tmp/RtmphWfc1V/SRR1258218_Aligned.sorted.dedup_sub.bam.bai" </span></span>
+<span><span class="co">## "/tmp/RtmpTCZQ6A/SRR1258218_Aligned.sorted.dedup_sub.bam.bai" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $fasta</span></span>
 <span><span class="co">##                   hg38_chr4.fa.bgz </span></span>
-<span><span class="co">## "/tmp/RtmphWfc1V/hg38_chr4.fa.bgz" </span></span>
+<span><span class="co">## "/tmp/RtmpTCZQ6A/hg38_chr4.fa.bgz" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $snps</span></span>
 <span><span class="co">##                   chr4snps.bed.gz </span></span>
-<span><span class="co">## "/tmp/RtmphWfc1V/chr4snps.bed.gz" </span></span>
+<span><span class="co">## "/tmp/RtmpTCZQ6A/chr4snps.bed.gz" </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $rmsk</span></span>
 <span><span class="co">##                   rmsk_hg38.tsv.gz </span></span>
-<span><span class="co">## "/tmp/RtmphWfc1V/rmsk_hg38.tsv.gz"</span></span></code></pre>
+<span><span class="co">## "/tmp/RtmpTCZQ6A/rmsk_hg38.tsv.gz"</span></span></code></pre>
 <p>Additionally we will use the following additional annotation
 resources:</p>
 <ul>
@@ -161,7 +164,7 @@ transcript models. Alternatively these can be generated from a
 <code>AnnotationHub()</code> for hg38. For space reasons these
 annotations for chr4 have been included as a text file.</li>
 </ul>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">txdb</span> <span class="op">&lt;-</span> <span class="va">TxDb.Hsapiens.UCSC.hg38.knownGene</span></span>
 <span></span>
 <span><span class="va">chr4snps</span> <span class="op">&lt;-</span> <span class="fu">import</span><span class="op">(</span><span class="va">fns</span><span class="op">$</span><span class="va">snps</span><span class="op">)</span></span>
@@ -174,13 +177,13 @@ annotations for chr4 have been included as a text file.</li>
 <p>The <code><a href="../reference/pileup_sites.html">pileup_sites()</a></code> function can accept multiple bam
 files, here we supply one from RNA-seq, and one from whole genome
 sequencing.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">wgs_bam</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bams</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">rna_bam</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bams</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
 <span><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">fasta</span></span></code></pre></div>
 <p>Filtering parameters for the <code><a href="../reference/pileup_sites.html">pileup_sites()</a></code> function can
 accept multiple arguments matched to the input bam files.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pileup_sites.html">FilterParam</a></span><span class="op">(</span></span>
 <span>    min_depth <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>    min_base_quality <span class="op">=</span> <span class="fl">30</span>,</span>
@@ -208,8 +211,8 @@ accept multiple arguments matched to the input bam files.</p>
 <span><span class="co">## dim: 546 2 </span></span>
 <span><span class="co">## metadata(0):</span></span>
 <span><span class="co">## assays(7): ALT nRef ... nC nG</span></span>
-<span><span class="co">## rownames(546): chr4_44338_- chr4_124820_+ ... chr4_990981_+</span></span>
-<span><span class="co">##   chr4_993342_+</span></span>
+<span><span class="co">## rownames(546): chr4-44338-- chr4-124820-+ ... chr4-990981-+</span></span>
+<span><span class="co">##   chr4-993342-+</span></span>
 <span><span class="co">## rowData names(4): REF rbpz vpb sor</span></span>
 <span><span class="co">## colnames(2): rna dna</span></span>
 <span><span class="co">## colData names(1): sample</span></span></code></pre>
@@ -219,7 +222,7 @@ DNA-seq data will be reported on the “+” strand, where as the RNA-seq
 data will be reported on either strand. We therefore use
 <code>subsetByOverlaps(..., ignore.strand = TRUE)</code> to retain sites
 passing these DNA-seq based filters independent of strand.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">to_keep</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"nRef"</span><span class="op">)</span><span class="op">[</span>, <span class="st">"dna"</span><span class="op">]</span> <span class="op">&gt;=</span> <span class="fl">5</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"ALT"</span><span class="op">)</span><span class="op">[</span>, <span class="st">"dna"</span><span class="op">]</span> <span class="op">==</span> <span class="st">"-"</span><span class="op">)</span></span>
 <span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/findOverlaps-methods.html" class="external-link">subsetByOverlaps</a></span><span class="op">(</span><span class="va">rse</span>, <span class="va">rse</span><span class="op">[</span><span class="va">to_keep</span>, <span class="op">]</span>, ignore.strand <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></code></pre></div>
@@ -233,80 +236,80 @@ multiple variants in the samples present in the
 the <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData()</a></code> to indicate the variant for each site, and
 will calculate an <code>allele_freq</code> assay with variant allele
 frequencies for each sample.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_multiallelic.html">filter_multiallelic</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #00BBBB;">ℹ</span> `filter_multiallelic()`: removed <span style="color: #0000BB;">0</span> sites from <span style="color: #0000BB;">198</span> (<span style="color: #0000BB;">198</span> remain)</span></span></code></pre>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## DataFrame with 198 rows and 5 columns</span></span>
 <span><span class="co">##                       REF      rbpz       vpb       sor         ALT</span></span>
 <span><span class="co">##               &lt;character&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;character&gt;</span></span>
-<span><span class="co">## chr4_124820_+           C -0.939623       Inf  1.410919           A</span></span>
-<span><span class="co">## chr4_125213_+           G -1.584745       Inf  0.367725           C</span></span>
-<span><span class="co">## chr4_126885_+           A  0.826528       Inf  2.271553           G</span></span>
-<span><span class="co">## chr4_126885_-           T       Inf       Inf  2.271553           C</span></span>
-<span><span class="co">## chr4_126955_+           A  1.584745       Inf  1.506342           G</span></span>
+<span><span class="co">## chr4-124820-+           C -0.939623       Inf  1.410919           A</span></span>
+<span><span class="co">## chr4-125213-+           G -1.584745       Inf  0.367725           C</span></span>
+<span><span class="co">## chr4-126885-+           A  0.826528       Inf  2.271553           G</span></span>
+<span><span class="co">## chr4-126885--           T       Inf       Inf  2.271553           C</span></span>
+<span><span class="co">## chr4-126955-+           A  1.584745       Inf  1.506342           G</span></span>
 <span><span class="co">## ...                   ...       ...       ...       ...         ...</span></span>
-<span><span class="co">## chr4_958447_+           C  0.694986       Inf  1.436657           A</span></span>
-<span><span class="co">## chr4_989824_+           C  0.144841       Inf  0.582285           T</span></span>
-<span><span class="co">## chr4_990589_+           A -1.640049       Inf  1.570697           C</span></span>
-<span><span class="co">## chr4_990981_+           C -0.925820       Inf  0.891998           T</span></span>
-<span><span class="co">## chr4_993342_+           A  1.498680       Inf  1.472727           G</span></span></code></pre>
+<span><span class="co">## chr4-958447-+           C  0.694986       Inf  1.436657           A</span></span>
+<span><span class="co">## chr4-989824-+           C  0.144841       Inf  0.582285           T</span></span>
+<span><span class="co">## chr4-990589-+           A -1.640049       Inf  1.570697           C</span></span>
+<span><span class="co">## chr4-990981-+           C -0.925820       Inf  0.891998           T</span></span>
+<span><span class="co">## chr4-993342-+           A  1.498680       Inf  1.472727           G</span></span></code></pre>
 <p>Next we’ll remove sites in simple repeat regions. We will add repeat
 information to the <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData()</a></code> using the
 <code><a href="../reference/annot_from_gr.html">annot_from_gr()</a></code> function.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/annot_from_gr.html">annot_from_gr</a></span><span class="op">(</span><span class="va">rse</span>, <span class="va">rmskhg38</span>, cols_to_map <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"repName"</span>, <span class="st">"repClass"</span>, <span class="st">"repFamily"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"repName"</span>, <span class="st">"repFamily"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">## DataFrame with 198 rows and 2 columns</span></span>
 <span><span class="co">##                   repName   repFamily</span></span>
 <span><span class="co">##               &lt;character&gt; &lt;character&gt;</span></span>
-<span><span class="co">## chr4_124820_+          NA          NA</span></span>
-<span><span class="co">## chr4_125213_+      MER21C        ERVL</span></span>
-<span><span class="co">## chr4_126885_+          NA          NA</span></span>
-<span><span class="co">## chr4_126885_-      AluSc5         Alu</span></span>
-<span><span class="co">## chr4_126955_+          NA          NA</span></span>
+<span><span class="co">## chr4-124820-+          NA          NA</span></span>
+<span><span class="co">## chr4-125213-+      MER21C        ERVL</span></span>
+<span><span class="co">## chr4-126885-+          NA          NA</span></span>
+<span><span class="co">## chr4-126885--      AluSc5         Alu</span></span>
+<span><span class="co">## chr4-126955-+          NA          NA</span></span>
 <span><span class="co">## ...                   ...         ...</span></span>
-<span><span class="co">## chr4_958447_+          NA          NA</span></span>
-<span><span class="co">## chr4_989824_+          NA          NA</span></span>
-<span><span class="co">## chr4_990589_+          NA          NA</span></span>
-<span><span class="co">## chr4_990981_+          NA          NA</span></span>
-<span><span class="co">## chr4_993342_+          NA          NA</span></span></code></pre>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<span><span class="co">## chr4-958447-+          NA          NA</span></span>
+<span><span class="co">## chr4-989824-+          NA          NA</span></span>
+<span><span class="co">## chr4-990589-+          NA          NA</span></span>
+<span><span class="co">## chr4-990981-+          NA          NA</span></span>
+<span><span class="co">## chr4-993342-+          NA          NA</span></span></code></pre>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="va">rse</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">repFamily</span> <span class="op"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Simple_repeat"</span>, <span class="st">"Low Complexity"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
 <p>Next we’ll remove sites adjacent to other sites with different
 variant types. For example if an A-&gt;G variant is located proximal to
 a C-&gt;T variant then the variants will be removed.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_clustered_variants.html">filter_clustered_variants</a></span><span class="op">(</span><span class="va">rse</span>, <span class="va">txdb</span>, variant_dist <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #00BBBB;">ℹ</span> `filter_clustered_variants()`: removed <span style="color: #0000BB;">47</span> sites from <span style="color: #0000BB;">197</span> (<span style="color: #0000BB;">150</span> remain)</span></span></code></pre>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: RangedSummarizedExperiment </span></span>
 <span><span class="co">## dim: 150 2 </span></span>
 <span><span class="co">## metadata(0):</span></span>
 <span><span class="co">## assays(9): ALT nRef ... depth edit_freq</span></span>
-<span><span class="co">## rownames(150): chr4_124820_+ chr4_125213_+ ... chr4_990981_+</span></span>
-<span><span class="co">##   chr4_993342_+</span></span>
+<span><span class="co">## rownames(150): chr4-124820-+ chr4-125213-+ ... chr4-990981-+</span></span>
+<span><span class="co">##   chr4-993342-+</span></span>
 <span><span class="co">## rowData names(8): REF rbpz ... repClass repFamily</span></span>
 <span><span class="co">## colnames(2): rna dna</span></span>
 <span><span class="co">## colData names(3): sample n_sites edit_idx</span></span></code></pre>
 <p>Next, sites within 4bp of known splicing events will be excluded.
 These sites are low-confidence due to the possibility of mis-alignments
 near splicing events.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_splice_variants.html">filter_splice_variants</a></span><span class="op">(</span><span class="va">rse</span>, <span class="va">txdb</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #00BBBB;">ℹ</span> `filter_splice_variants()`: removed <span style="color: #0000BB;">3</span> sites from <span style="color: #0000BB;">150</span> (<span style="color: #0000BB;">147</span> remain)</span></span></code></pre>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: RangedSummarizedExperiment </span></span>
 <span><span class="co">## dim: 147 2 </span></span>
 <span><span class="co">## metadata(0):</span></span>
 <span><span class="co">## assays(9): ALT nRef ... depth edit_freq</span></span>
-<span><span class="co">## rownames(147): chr4_124820_+ chr4_125213_+ ... chr4_990981_+</span></span>
-<span><span class="co">##   chr4_993342_+</span></span>
+<span><span class="co">## rownames(147): chr4-124820-+ chr4-125213-+ ... chr4-990981-+</span></span>
+<span><span class="co">##   chr4-993342-+</span></span>
 <span><span class="co">## rowData names(8): REF rbpz ... repClass repFamily</span></span>
 <span><span class="co">## colnames(2): rna dna</span></span>
 <span><span class="co">## colData names(3): sample n_sites edit_idx</span></span></code></pre>
@@ -315,98 +318,98 @@ SNPs. If using a SNPlocs package you can use the
 <code>annot_snp()</code> function. However we will use the
 <code><a href="../reference/annot_from_gr.html">annot_from_gr()</a></code> function to annotate using the prebuilt
 <code>chr4snps</code> object.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/annot_from_gr.html">annot_from_gr</a></span><span class="op">(</span><span class="va">rse</span>, <span class="va">chr4snps</span>, <span class="st">"name"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"name"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">## DataFrame with 147 rows and 1 column</span></span>
 <span><span class="co">##                       name</span></span>
 <span><span class="co">##                &lt;character&gt;</span></span>
-<span><span class="co">## chr4_124820_+ rs1553807640</span></span>
-<span><span class="co">## chr4_125213_+ rs1286128437</span></span>
-<span><span class="co">## chr4_126885_+           NA</span></span>
-<span><span class="co">## chr4_126885_-           NA</span></span>
-<span><span class="co">## chr4_126955_+           NA</span></span>
+<span><span class="co">## chr4-124820-+ rs1553807640</span></span>
+<span><span class="co">## chr4-125213-+ rs1286128437</span></span>
+<span><span class="co">## chr4-126885-+           NA</span></span>
+<span><span class="co">## chr4-126885--           NA</span></span>
+<span><span class="co">## chr4-126955-+           NA</span></span>
 <span><span class="co">## ...                    ...</span></span>
-<span><span class="co">## chr4_958447_+ rs1052651854</span></span>
-<span><span class="co">## chr4_989824_+   rs73219719</span></span>
-<span><span class="co">## chr4_990589_+           NA</span></span>
-<span><span class="co">## chr4_990981_+  rs116514520</span></span>
-<span><span class="co">## chr4_993342_+           NA</span></span></code></pre>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<span><span class="co">## chr4-958447-+ rs1052651854</span></span>
+<span><span class="co">## chr4-989824-+   rs73219719</span></span>
+<span><span class="co">## chr4-990589-+           NA</span></span>
+<span><span class="co">## chr4-990981-+  rs116514520</span></span>
+<span><span class="co">## chr4-993342-+           NA</span></span></code></pre>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="va">rse</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">name</span><span class="op">)</span>, <span class="op">]</span></span>
 <span><span class="va">rse</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: RangedSummarizedExperiment </span></span>
 <span><span class="co">## dim: 89 2 </span></span>
 <span><span class="co">## metadata(0):</span></span>
 <span><span class="co">## assays(9): ALT nRef ... depth edit_freq</span></span>
-<span><span class="co">## rownames(89): chr4_126885_+ chr4_126885_- ... chr4_990589_+</span></span>
-<span><span class="co">##   chr4_993342_+</span></span>
+<span><span class="co">## rownames(89): chr4-126885-+ chr4-126885-- ... chr4-990589-+</span></span>
+<span><span class="co">##   chr4-993342-+</span></span>
 <span><span class="co">## rowData names(9): REF rbpz ... repFamily name</span></span>
 <span><span class="co">## colnames(2): rna dna</span></span>
 <span><span class="co">## colData names(3): sample n_sites edit_idx</span></span></code></pre>
 <p>Lastly, we’ll further filter the edit sites to require that the
 editing frequency is &gt; 0.05 and that at least 2 reads support the
 editing site.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">to_keep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"edit_freq"</span><span class="op">)</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">&gt;</span> <span class="fl">0.05</span></span>
 <span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="va">rse</span><span class="op">[</span><span class="va">to_keep</span>, <span class="op">]</span></span>
 <span></span>
 <span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="va">rse</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"nAlt"</span><span class="op">)</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">&gt;=</span> <span class="fl">2</span><span class="op">]</span></span></code></pre></div>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">REF</span> <span class="op">==</span> <span class="st">"A"</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">ALT</span> <span class="op">==</span> <span class="st">"G"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">rowRanges</span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## GRanges object with 10 ranges and 9 metadata columns:</span></span>
 <span><span class="co">##                 seqnames    ranges strand |         REF       rbpz</span></span>
 <span><span class="co">##                    &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;  &lt;numeric&gt;</span></span>
-<span><span class="co">##   chr4_134353_+     chr4    134353      + |           A -1.1811989</span></span>
-<span><span class="co">##   chr4_378011_+     chr4    378011      + |           A -0.0481455</span></span>
-<span><span class="co">##   chr4_378018_+     chr4    378018      + |           A -0.3099735</span></span>
-<span><span class="co">##   chr4_378090_+     chr4    378090      + |           A  0.0000000</span></span>
-<span><span class="co">##   chr4_378362_+     chr4    378362      + |           A  0.2155896</span></span>
-<span><span class="co">##   chr4_378368_+     chr4    378368      + |           A  1.0966509</span></span>
-<span><span class="co">##   chr4_378409_+     chr4    378409      + |           A  0.7311006</span></span>
-<span><span class="co">##   chr4_380392_+     chr4    380392      + |           A  0.3325434</span></span>
-<span><span class="co">##   chr4_778739_-     chr4    778739      - |           A  0.5773503</span></span>
-<span><span class="co">##   chr4_778780_-     chr4    778780      - |           A -0.8660254</span></span>
+<span><span class="co">##   chr4-134353-+     chr4    134353      + |           A -1.1811989</span></span>
+<span><span class="co">##   chr4-378011-+     chr4    378011      + |           A -0.0481455</span></span>
+<span><span class="co">##   chr4-378018-+     chr4    378018      + |           A -0.3099735</span></span>
+<span><span class="co">##   chr4-378090-+     chr4    378090      + |           A  0.0000000</span></span>
+<span><span class="co">##   chr4-378362-+     chr4    378362      + |           A  0.2155896</span></span>
+<span><span class="co">##   chr4-378368-+     chr4    378368      + |           A  1.0966509</span></span>
+<span><span class="co">##   chr4-378409-+     chr4    378409      + |           A  0.7311006</span></span>
+<span><span class="co">##   chr4-380392-+     chr4    380392      + |           A  0.3325434</span></span>
+<span><span class="co">##   chr4-778739--     chr4    778739      - |           A  0.5773503</span></span>
+<span><span class="co">##   chr4-778780--     chr4    778780      - |           A -0.8660254</span></span>
 <span><span class="co">##                       vpb       sor         ALT     repName    repClass</span></span>
 <span><span class="co">##                 &lt;numeric&gt; &lt;numeric&gt; &lt;character&gt; &lt;character&gt; &lt;character&gt;</span></span>
-<span><span class="co">##   chr4_134353_+  0.100000 0.5273549           G        &lt;NA&gt;        &lt;NA&gt;</span></span>
-<span><span class="co">##   chr4_378011_+  0.840000 0.5508310           G       AluSc        SINE</span></span>
-<span><span class="co">##   chr4_378018_+  0.535497 1.0706105           G       AluSc        SINE</span></span>
-<span><span class="co">##   chr4_378090_+  0.700000 0.3231611           G       AluSc        SINE</span></span>
-<span><span class="co">##   chr4_378362_+  0.180000 0.0392207           G        &lt;NA&gt;        &lt;NA&gt;</span></span>
-<span><span class="co">##   chr4_378368_+  0.180000 0.2689899           G        &lt;NA&gt;        &lt;NA&gt;</span></span>
-<span><span class="co">##   chr4_378409_+  0.580000 0.8919980           G        &lt;NA&gt;        &lt;NA&gt;</span></span>
-<span><span class="co">##   chr4_380392_+  0.520000 0.4245653           G      AluSq2        SINE</span></span>
-<span><span class="co">##   chr4_778739_-  0.230191 0.6685414           G       AluSg        SINE</span></span>
-<span><span class="co">##   chr4_778780_-  0.303109 1.8855955           G       AluSg        SINE</span></span>
+<span><span class="co">##   chr4-134353-+  0.100000 0.5273549           G        &lt;NA&gt;        &lt;NA&gt;</span></span>
+<span><span class="co">##   chr4-378011-+  0.840000 0.5508310           G       AluSc        SINE</span></span>
+<span><span class="co">##   chr4-378018-+  0.535497 1.0706105           G       AluSc        SINE</span></span>
+<span><span class="co">##   chr4-378090-+  0.700000 0.3231611           G       AluSc        SINE</span></span>
+<span><span class="co">##   chr4-378362-+  0.180000 0.0392207           G        &lt;NA&gt;        &lt;NA&gt;</span></span>
+<span><span class="co">##   chr4-378368-+  0.180000 0.2689899           G        &lt;NA&gt;        &lt;NA&gt;</span></span>
+<span><span class="co">##   chr4-378409-+  0.580000 0.8919980           G        &lt;NA&gt;        &lt;NA&gt;</span></span>
+<span><span class="co">##   chr4-380392-+  0.520000 0.4245653           G      AluSq2        SINE</span></span>
+<span><span class="co">##   chr4-778739--  0.230191 0.6685414           G       AluSg        SINE</span></span>
+<span><span class="co">##   chr4-778780--  0.303109 1.8855955           G       AluSg        SINE</span></span>
 <span><span class="co">##                   repFamily        name</span></span>
 <span><span class="co">##                 &lt;character&gt; &lt;character&gt;</span></span>
-<span><span class="co">##   chr4_134353_+        &lt;NA&gt;        &lt;NA&gt;</span></span>
-<span><span class="co">##   chr4_378011_+         Alu        &lt;NA&gt;</span></span>
-<span><span class="co">##   chr4_378018_+         Alu        &lt;NA&gt;</span></span>
-<span><span class="co">##   chr4_378090_+         Alu        &lt;NA&gt;</span></span>
-<span><span class="co">##   chr4_378362_+        &lt;NA&gt;        &lt;NA&gt;</span></span>
-<span><span class="co">##   chr4_378368_+        &lt;NA&gt;        &lt;NA&gt;</span></span>
-<span><span class="co">##   chr4_378409_+        &lt;NA&gt;        &lt;NA&gt;</span></span>
-<span><span class="co">##   chr4_380392_+         Alu        &lt;NA&gt;</span></span>
-<span><span class="co">##   chr4_778739_-         Alu        &lt;NA&gt;</span></span>
-<span><span class="co">##   chr4_778780_-         Alu        &lt;NA&gt;</span></span>
+<span><span class="co">##   chr4-134353-+        &lt;NA&gt;        &lt;NA&gt;</span></span>
+<span><span class="co">##   chr4-378011-+         Alu        &lt;NA&gt;</span></span>
+<span><span class="co">##   chr4-378018-+         Alu        &lt;NA&gt;</span></span>
+<span><span class="co">##   chr4-378090-+         Alu        &lt;NA&gt;</span></span>
+<span><span class="co">##   chr4-378362-+        &lt;NA&gt;        &lt;NA&gt;</span></span>
+<span><span class="co">##   chr4-378368-+        &lt;NA&gt;        &lt;NA&gt;</span></span>
+<span><span class="co">##   chr4-378409-+        &lt;NA&gt;        &lt;NA&gt;</span></span>
+<span><span class="co">##   chr4-380392-+         Alu        &lt;NA&gt;</span></span>
+<span><span class="co">##   chr4-778739--         Alu        &lt;NA&gt;</span></span>
+<span><span class="co">##   chr4-778780--         Alu        &lt;NA&gt;</span></span>
 <span><span class="co">##   -------</span></span>
 <span><span class="co">##   seqinfo: 194 sequences from an unspecified genome</span></span></code></pre>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">data_dir</span><span class="op">)</span></span></code></pre></div>
 <details style="margin-bottom:10px;"><summary>
 Session info
-</summary><div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+</summary><div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## R Under development (unstable) (2023-03-16 r83996)</span></span>
+<pre><code><span><span class="co">## R version 4.3.0 beta (2023-04-06 r84184)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu (64-bit)</span></span>
 <span><span class="co">## Running under: Ubuntu 22.04.2 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
-<span><span class="co">## </span></span>
+<span><span class="co">## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## locale:</span></span>
 <span><span class="co">##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              </span></span>
@@ -434,56 +437,55 @@ Session info
 <span><span class="co">##  [8] Biobase_2.59.0                          </span></span>
 <span><span class="co">##  [9] GenomicRanges_1.51.4                    </span></span>
 <span><span class="co">## [10] GenomeInfoDb_1.35.16                    </span></span>
-<span><span class="co">## [11] IRanges_2.33.0                          </span></span>
-<span><span class="co">## [12] S4Vectors_0.37.4                        </span></span>
+<span><span class="co">## [11] IRanges_2.33.1                          </span></span>
+<span><span class="co">## [12] S4Vectors_0.37.5                        </span></span>
 <span><span class="co">## [13] BiocGenerics_0.45.3                     </span></span>
 <span><span class="co">## [14] raer_0.99.0                             </span></span>
 <span><span class="co">## [15] BiocStyle_2.27.1                        </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] tidyselect_1.2.0         dplyr_1.1.1             </span></span>
-<span><span class="co">##  [3] blob_1.2.4               R.utils_2.12.2          </span></span>
-<span><span class="co">##  [5] filelock_1.0.2           Biostrings_2.67.2       </span></span>
-<span><span class="co">##  [7] bitops_1.0-7             fastmap_1.1.1           </span></span>
-<span><span class="co">##  [9] RCurl_1.98-1.12          BiocFileCache_2.7.2     </span></span>
-<span><span class="co">## [11] GenomicAlignments_1.35.1 XML_3.99-0.14           </span></span>
-<span><span class="co">## [13] digest_0.6.31            lifecycle_1.0.3         </span></span>
-<span><span class="co">## [15] KEGGREST_1.39.0          RSQLite_2.3.1           </span></span>
-<span><span class="co">## [17] magrittr_2.0.3           compiler_4.3.0          </span></span>
-<span><span class="co">## [19] rlang_1.1.0              sass_0.4.5              </span></span>
-<span><span class="co">## [21] progress_1.2.2           tools_4.3.0             </span></span>
-<span><span class="co">## [23] utf8_1.2.3               yaml_2.3.7              </span></span>
-<span><span class="co">## [25] data.table_1.14.8        knitr_1.42              </span></span>
-<span><span class="co">## [27] prettyunits_1.1.1        curl_5.0.0              </span></span>
-<span><span class="co">## [29] bit_4.0.5                DelayedArray_0.25.0     </span></span>
-<span><span class="co">## [31] xml2_1.3.3               BiocParallel_1.33.12    </span></span>
-<span><span class="co">## [33] purrr_1.0.1              R.oo_1.25.0             </span></span>
-<span><span class="co">## [35] desc_1.4.2               grid_4.3.0              </span></span>
-<span><span class="co">## [37] fansi_1.0.4              biomaRt_2.55.4          </span></span>
-<span><span class="co">## [39] cli_3.6.1                rmarkdown_2.21          </span></span>
-<span><span class="co">## [41] crayon_1.5.2             ragg_1.2.5              </span></span>
-<span><span class="co">## [43] generics_0.1.3           httr_1.4.5              </span></span>
-<span><span class="co">## [45] rjson_0.2.21             DBI_1.1.3               </span></span>
-<span><span class="co">## [47] cachem_1.0.7             stringr_1.5.0           </span></span>
-<span><span class="co">## [49] zlibbioc_1.45.0          parallel_4.3.0          </span></span>
-<span><span class="co">## [51] BiocManager_1.30.20      XVector_0.39.0          </span></span>
-<span><span class="co">## [53] restfulr_0.0.15          vctrs_0.6.1             </span></span>
-<span><span class="co">## [55] Matrix_1.5-4             jsonlite_1.8.4          </span></span>
-<span><span class="co">## [57] bookdown_0.33            hms_1.1.3               </span></span>
-<span><span class="co">## [59] bit64_4.0.5              systemfonts_1.0.4       </span></span>
-<span><span class="co">## [61] jquerylib_0.1.4          glue_1.6.2              </span></span>
-<span><span class="co">## [63] pkgdown_2.0.7            codetools_0.2-19        </span></span>
-<span><span class="co">## [65] stringi_1.7.12           BiocIO_1.9.2            </span></span>
-<span><span class="co">## [67] tibble_3.2.1             pillar_1.9.0            </span></span>
-<span><span class="co">## [69] rappdirs_0.3.3           htmltools_0.5.5         </span></span>
-<span><span class="co">## [71] GenomeInfoDbData_1.2.10  BSgenome_1.67.4         </span></span>
-<span><span class="co">## [73] R6_2.5.1                 dbplyr_2.3.2            </span></span>
-<span><span class="co">## [75] textshaping_0.3.6        rprojroot_2.0.3         </span></span>
-<span><span class="co">## [77] evaluate_0.20            lattice_0.21-8          </span></span>
-<span><span class="co">## [79] R.methodsS3_1.8.2        png_0.1-8               </span></span>
-<span><span class="co">## [81] Rsamtools_2.15.3         memoise_2.0.1           </span></span>
-<span><span class="co">## [83] bslib_0.4.2              xfun_0.38               </span></span>
-<span><span class="co">## [85] fs_1.6.1                 pkgconfig_2.0.3</span></span></code></pre>
+<span><span class="co">##  [3] blob_1.2.4               filelock_1.0.2          </span></span>
+<span><span class="co">##  [5] Biostrings_2.67.2        bitops_1.0-7            </span></span>
+<span><span class="co">##  [7] fastmap_1.1.1            RCurl_1.98-1.12         </span></span>
+<span><span class="co">##  [9] BiocFileCache_2.7.2      GenomicAlignments_1.35.1</span></span>
+<span><span class="co">## [11] XML_3.99-0.14            digest_0.6.31           </span></span>
+<span><span class="co">## [13] lifecycle_1.0.3          KEGGREST_1.39.0         </span></span>
+<span><span class="co">## [15] RSQLite_2.3.1            magrittr_2.0.3          </span></span>
+<span><span class="co">## [17] compiler_4.3.0           rlang_1.1.0             </span></span>
+<span><span class="co">## [19] sass_0.4.5               progress_1.2.2          </span></span>
+<span><span class="co">## [21] tools_4.3.0              utf8_1.2.3              </span></span>
+<span><span class="co">## [23] yaml_2.3.7               data.table_1.14.8       </span></span>
+<span><span class="co">## [25] knitr_1.42               prettyunits_1.1.1       </span></span>
+<span><span class="co">## [27] curl_5.0.0               bit_4.0.5               </span></span>
+<span><span class="co">## [29] DelayedArray_0.25.0      xml2_1.3.3              </span></span>
+<span><span class="co">## [31] BiocParallel_1.33.12     purrr_1.0.1             </span></span>
+<span><span class="co">## [33] desc_1.4.2               grid_4.3.0              </span></span>
+<span><span class="co">## [35] fansi_1.0.4              biomaRt_2.55.4          </span></span>
+<span><span class="co">## [37] cli_3.6.1                rmarkdown_2.21          </span></span>
+<span><span class="co">## [39] crayon_1.5.2             ragg_1.2.5              </span></span>
+<span><span class="co">## [41] generics_0.1.3           httr_1.4.5              </span></span>
+<span><span class="co">## [43] rjson_0.2.21             DBI_1.1.3               </span></span>
+<span><span class="co">## [45] cachem_1.0.7             stringr_1.5.0           </span></span>
+<span><span class="co">## [47] zlibbioc_1.45.0          parallel_4.3.0          </span></span>
+<span><span class="co">## [49] BiocManager_1.30.20      XVector_0.39.0          </span></span>
+<span><span class="co">## [51] restfulr_0.0.15          vctrs_0.6.1             </span></span>
+<span><span class="co">## [53] Matrix_1.5-4             jsonlite_1.8.4          </span></span>
+<span><span class="co">## [55] bookdown_0.33            hms_1.1.3               </span></span>
+<span><span class="co">## [57] bit64_4.0.5              systemfonts_1.0.4       </span></span>
+<span><span class="co">## [59] jquerylib_0.1.4          glue_1.6.2              </span></span>
+<span><span class="co">## [61] pkgdown_2.0.7            codetools_0.2-19        </span></span>
+<span><span class="co">## [63] stringi_1.7.12           BiocIO_1.9.2            </span></span>
+<span><span class="co">## [65] tibble_3.2.1             pillar_1.9.0            </span></span>
+<span><span class="co">## [67] rappdirs_0.3.3           htmltools_0.5.5         </span></span>
+<span><span class="co">## [69] GenomeInfoDbData_1.2.10  BSgenome_1.67.4         </span></span>
+<span><span class="co">## [71] R6_2.5.1                 dbplyr_2.3.2            </span></span>
+<span><span class="co">## [73] textshaping_0.3.6        rprojroot_2.0.3         </span></span>
+<span><span class="co">## [75] evaluate_0.20            lattice_0.21-8          </span></span>
+<span><span class="co">## [77] png_0.1-8                Rsamtools_2.15.3        </span></span>
+<span><span class="co">## [79] memoise_2.0.1            bslib_0.4.2             </span></span>
+<span><span class="co">## [81] xfun_0.38                fs_1.6.1                </span></span>
+<span><span class="co">## [83] pkgconfig_2.0.3</span></span></code></pre>
 </details>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
