@@ -2,7 +2,6 @@
 #' @name raer
 
 #' @importFrom utils download.file
-#' @importFrom R.utils gzip
 #' @importFrom methods is new as
 #' @importFrom Biostrings vmatchPattern
 #' @importFrom GenomicAlignments readGAlignmentPairs

@@ -327,8 +327,6 @@ get_overlapping_snps <- function(gr,
 #'
 #' correct_strand(rse, genes)
 #'
-#' @importFrom stringr str_count
-#'
 #' @export
 correct_strand <- function(rse, genes_gr) {
     if (length(rse) == 0) {
@@ -342,7 +340,10 @@ correct_strand <- function(rse, genes_gr) {
 
     # drop non-genic and multi-strand (overlapping annotations)
     rse <- rse[!is.na(rowData(rse)$gene_strand), ]
-    rse <- rse[stringr::str_count(rowData(rse)$gene_strand, ",") == 0, ]
+
+    n_strands <- lengths(regmatches(rowData(rse)$gene_strand,
+                                    gregexpr(",", rowData(rse)$gene_strand)))
+    rse <- rse[n_strands == 0, ]
 
     flip_rows <- as.vector(strand(rse) != rowData(rse)$gene_strand)
 
@@ -352,7 +353,7 @@ correct_strand <- function(rse, genes_gr) {
     to_flip <- assay(rse, "ALT")[flip_rows, , drop = FALSE]
     flipped_variants <- apply(to_flip, c(1, 2), function(x) {
         vapply(
-            str_split(x, ","), function(y) {
+            strsplit(x, ","), function(y) {
                 paste0(unname(ALLELE_MAP[y]),
                     collapse = ","
                 )

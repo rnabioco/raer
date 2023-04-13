@@ -287,7 +287,6 @@ prep_for_de <- function(se,
 #'   editing results - sig_results: Filtered differenial editing (FDR < 0.05) -
 #'   model_matrix: The model matrix used for generating DE results
 #'
-#' @import stringr
 #' @importFrom stats model.matrix
 #' @export
 perform_de <- function(deobj, type = "edgeR", sample_col = "sample",

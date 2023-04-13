@@ -411,12 +411,15 @@ gr_to_regions <- function(gr) {
 }
 
 id_to_gr <- function(x, seq_info) {
-    xx <- str_split(x, ":", simplify = TRUE)
+    xx <- strsplit(x, ":")
+    xx <- t(simplify2array(xx, higher = FALSE))
+
     if (ncol(xx) != 2) {
         cli::cli_abort("unable to decode sites to rownames")
     }
     seqnms <- xx[, 1]
-    other_fields <- str_split(xx[, 2], "_", simplify = TRUE)
+    other_fields <- strsplit(xx[, 2], "_")
+    other_fields <- t(simplify2array(other_fields, higher = FALSE))
 
     if (ncol(other_fields) != 4) {
         stop("unable to decode sites to rownames")

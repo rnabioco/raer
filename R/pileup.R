@@ -1010,16 +1010,14 @@ cbind_sparse <- function(mats) {
     res
 }
 
-#' @importFrom stringr str_c
 site_names <- function(gr) {
     if (length(gr) == 0) {
         return(NULL)
     }
-    stringr::str_c(
+    paste(
         decode(seqnames(gr)),
-        "_",
         decode(start(gr)),
-        "_",
-        decode(strand(gr))
+        decode(strand(gr)),
+        sep = "-"
     )
 }

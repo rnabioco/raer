@@ -4,7 +4,6 @@ library(Biostrings)
 library(Rsamtools)
 library(rtracklayer)
 library(BiocParallel)
-library(stringr)
 library(rtracklayer)
 
 bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
@@ -380,7 +379,7 @@ test_that("writing reads with mismatches works", {
 
 
 seqs <- Rsamtools::scanFa(fout)
-ids <- unlist(lapply(str_split(names(seqs), "_"), function(x) paste0(x[1], "_", x[2])))
+ids <- unlist(lapply(strsplit(names(seqs), "_"), function(x) paste0(x[1], "_", x[2])))
 writeLines(ids, fout)
 test_that("excluding reads with mismatches works", {
     rse <- pileup_sites(bamfn, fafn, region = "DHFR:513-513")
