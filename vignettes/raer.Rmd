@@ -37,11 +37,10 @@ library(rtracklayer)
 
 In this vignette a public RNA-seq dataset will be analyzed,  [GSE99249](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE99249), which consists of ADAR1 mutants and control human cell lines, conditionally treated with Interferon-Beta. For simplicity we will examine the ADAR1 WT and KO samples both treated with IFN-B, with triplicate samples. 
 
-Aligned BAM files and other necessary files have been preprocessed for this vignette. These files occupy ~250 Mb of space and by default they are stored in a temporary directory. Change the `data_dir` variable to a valid file path to keep the files for reuse.
+Aligned BAM files and other necessary files have been preprocessed for this vignette. These files occupy ~250 Mb of space and they are stored in a `BiocFileCache`.
 
 ```{r}
-data_dir <- tempdir()
-fns <- download_GSE99249(data_dir)
+fns <- download_GSE99249()
 ```
 
 Next we'll collect a vector containing the paths to each BAM file These BAM files are a subset of the full BAM files, containing only alignments from chromosome 18.
@@ -190,10 +189,6 @@ Heatmap(assay(se_filtered, "edit_freq")[top_sites, ],
     col = viridis(100),
     column_labels = se_filtered$genotype_treatment
 )
-```
-
-```{r}
-unlink(data_dir)
 ```
 
 <details style="margin-bottom:10px;">

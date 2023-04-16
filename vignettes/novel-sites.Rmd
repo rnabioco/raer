@@ -33,11 +33,10 @@ This vignette will demonstrate how to identify novel RNA editing sites using the
 
 In this vignette a public RNA-seq and Whole-Genome sequencing dataset will be analyzed. High coverage whole-genome sequencing was conducted [ERR262997](https://www.ebi.ac.uk/ena/browser/view/ERR262997?show=reads) along with paired-end RNA-seq [SRR1258218](https://www.ebi.ac.uk/ena/browser/view/SRR1258218?show=reads). 
 
-Aligned BAM files and a genome fasta file have been preprocessed for this vignette. These files occupy ~100 Mb of space and contain alignments from the first 1MB of chromosome 4. By default these files are stored in a temporary directory. Change the `data_dir` variable to a valid file path to keep the files for reuse.
+Aligned BAM files and a genome fasta file have been preprocessed for this vignette. These files occupy ~100 Mb of space and contain alignments from the first 1MB of chromosome 4 and they are stored in a `BiocFileCache`.
 
 ```{r}
-data_dir <- tempdir()
-fns <- download_NA12878(data_dir)
+fns <- download_NA12878()
 fns
 ```
 
@@ -168,11 +167,6 @@ rse <- rse[assay(rse, "nAlt")[, 1] >= 2]
 ```{r}
 stopifnot(all(rowData(rse)$REF == "A" & rowData(rse)$ALT == "G"))
 rowRanges(rse)
-```
-
-
-```{r}
-unlink(data_dir)
 ```
 
 

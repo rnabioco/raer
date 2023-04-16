@@ -29,6 +29,7 @@ Imports:
     Rsamtools,
     BSgenome,
     Biostrings,
+    BiocFileCache,
     SummarizedExperiment,
     S4Vectors,
     GenomeInfoDb,

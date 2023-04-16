@@ -4,22 +4,22 @@
 \alias{download_GSE99249}
 \title{Download GSE99249 BAM files and related data}
 \usage{
-download_GSE99249(path)
+download_GSE99249(verbose = TRUE)
 }
 \arguments{
-\item{path}{path to directory to download data}
+\item{verbose}{report messages}
 }
 \value{
 A named list with paths to BAM files, a FASTA file and a bed
 file of known editing sites from hg38 chromosome 18.
 }
 \description{
-This function will download ~ 250 MB of data.
+This function will download ~ 250 MB of data and store files in a
+BiocFileCache.
 }
 \examples{
 \donttest{
-td <- tempdir()
-download_GSE99249(td)
+download_GSE99249()
 }
 
 }

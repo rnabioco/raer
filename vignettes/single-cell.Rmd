@@ -40,8 +40,7 @@ A subset of a human PBMC scRNA-seq dataset from 10x Genomics, along with other
 needed files can be downloaded using `download_human_pbmc()`.   
 
 ```{r}
-data_dir <- tempdir()
-fns <- download_human_pbmc(data_dir)
+fns <- download_human_pbmc()
 fns
 ```
 
