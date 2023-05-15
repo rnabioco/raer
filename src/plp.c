@@ -2,10 +2,13 @@
 #include <htslib/faidx.h>
 #include <htslib/khash.h>
 #include <htslib/hts_log.h>
+
 #include "regfile.h"
 #include "plp_utils.h"
 #include "plp_data.h"
-#include "bcftools/bcftools-ext.h"
+#include "ext/bcftools/bcftools-ext.h"
+#include "ext/samtools/samtools-ext.h"
+#include "ext/htsbox/htsbox-ext.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -14,127 +17,8 @@
 
 #define STRICT_R_HEADERS
 #define R_NO_REMAP
-
 #define NBASE_POS 100
-
-typedef struct {
-  int minq;
-  double pct;
-} read_qual_t;
-
-typedef struct {
-  double f5p;
-  double f3p;
-  int i5p;
-  int i3p;
-} trim_t;
-
-typedef struct {
-  int min_global_mq, flag, min_bq, min_depth, max_depth, output_reads;
-  int report_multiallelics, multi_itr, in_memory;
-  int nmer, splice_dist, indel_dist;
-  int n_mm_type, n_mm, min_overhang, min_var_reads;
-  int nbam, nfps;
-  double min_af;
-  int umi;
-  char *umi_tag;
-  int *min_mqs; // across all bam files
-  int *libtype; // across all bam files
-  int *only_keep_variants; // across all bam files
-  trim_t trim;
-  read_qual_t read_qual;
-  uint32_t keep_flag[2];
-  char *reg, *fai_fname, *output_fname;
-  faidx_t *fai;
-  regidx_t *reg_idx;
-  regitr_t *reg_itr;
-  strset_t rnames;
-  strset_t brhash;
-  FILE *reads_fp;
-} mplp_conf_t;
-
-typedef struct {
-  char *ref[2];
-  int ref_id[2];
-  hts_pos_t ref_len[2];
-} mplp_ref_t;
-
 #define MPLP_REF_INIT {{NULL,NULL},{-1,-1},{0,0}}
-
-typedef struct {
-  samFile *fp;
-  hts_itr_t *iter;
-  bam_hdr_t *h;
-  mplp_ref_t *ref;
-  const mplp_conf_t *conf;
-  hts_idx_t *idx;
-} mplp_aux_t;
-
-typedef struct {
-  int n;
-  int *n_plp, *m_plp;
-  bam_pileup1_t **plp;
-} mplp_pileup_t;
-
-/* from bam_plcmd.c */
-static int mplp_get_ref(mplp_aux_t *ma, int tid, char **ref, hts_pos_t *ref_len) {
-
-  mplp_ref_t *r = ma->ref;
-
-  //REprintf("get ref %d {%d/%p, %d/%p}\n", tid, r->ref_id[0], r->ref[0], r->ref_id[1], r->ref[1]);
-
-  if (!r || !ma->conf->fai) {
-    *ref = NULL;
-    return 0;
-  }
-
-  // Do we need to reference count this so multiple mplp_aux_t can
-  // track which references are in use?
-  // For now we just cache the last two. Sufficient?
-  if (tid == r->ref_id[0]) {
-    *ref = r->ref[0];
-    *ref_len = r->ref_len[0];
-    return 1;
-  }
-  if (tid == r->ref_id[1]) {
-    // Last, swap over
-    int tmp_id;
-    int tmp_len;
-    tmp_id  = r->ref_id[0];  r->ref_id[0]  = r->ref_id[1];  r->ref_id[1]  = tmp_id;
-    tmp_len = r->ref_len[0]; r->ref_len[0] = r->ref_len[1]; r->ref_len[1] = tmp_len;
-
-    char *tc;
-    tc = r->ref[0]; r->ref[0] = r->ref[1]; r->ref[1] = tc;
-    *ref = r->ref[0];
-    *ref_len = r->ref_len[0];
-    return 1;
-  }
-
-  // New, so migrate to old and load new
-  free(r->ref[1]);
-  r->ref[1]     = r->ref[0];
-  r->ref_id[1]  = r->ref_id[0];
-  r->ref_len[1] = r->ref_len[0];
-
-  r->ref_id[0] = tid;
-
-  r->ref[0] = faidx_fetch_seq64(ma->conf->fai,
-                              sam_hdr_tid2name(ma->h, r->ref_id[0]),
-                              0,
-                              INT_MAX,
-                              &r->ref_len[0]);
-  if (!r->ref[0]) {
-    r->ref[0] = NULL;
-    r->ref_id[0] = -1;
-    r->ref_len[0] = 0;
-    *ref = NULL;
-    return 0;
-  }
-
-  *ref = r->ref[0];
-  *ref_len = r->ref_len[0];
-  return 1;
-}
 
 static int check_read_exclude(strset_t br, bam1_t *b){
   char* key;
@@ -637,19 +521,6 @@ static int write_reads(bam1_t *b,  mplp_conf_t *conf, const char* ref, const int
   return 0;
 }
 
-// return -1 on error, otherwise position within 0-99 array.
-static int get_relative_position(const bam_pileup1_t *p){
-  int qs, qe, pos, alen, rpos;
-  qs = query_start(p->b);
-  if(qs < 0) return -1;
-  qe = p->b->core.l_qseq - query_end(p->b);
-  pos = p->qpos + 1 - qs;
-  alen = p->b->core.l_qseq - qs - qe;
-  rpos = (double) pos / (alen+1) * (NBASE_POS - 1);
-  if(rpos < 0 || rpos >= NBASE_POS) return -1;
-  return(rpos);
-}
-
 static int count_one_record(const bam_pileup1_t *p, pcounts *pc, mplp_conf_t *conf,
                             pall_counts *pall,  const char* ctig, int pos, int pref_b,
                             int mref_b, int read_base, int invert, int i){
@@ -660,7 +531,7 @@ static int count_one_record(const bam_pileup1_t *p, pcounts *pc, mplp_conf_t *co
   pvar[1] = '\0';
   khiter_t k;
 
-  rpos = get_relative_position(p);
+  rpos = get_relative_position(p, NBASE_POS);
   if(rpos < 0) return -1;
   if(invert){
     pc->mc->total += 1;

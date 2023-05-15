@@ -81,8 +81,7 @@ void free_hashmaps(cbumi_map_t cbhash, str2intmap_t cbidx) {
 
 }
 
-
-// struct for event filter params
+// pileup struct
 typedef struct {
   int min_mq, libtype, min_bq, max_depth;
   read_qual_t read_qual;
@@ -344,14 +343,14 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
   data[0] = calloc(1, sizeof(mplp_sc_aux_t));
   data[0]->fp = sam_open(bamfn, "rb");
   if ( !data[0]->fp ) {
-    Rf_error("failed to open %s: %s\n", bamfn, strerror(errno));
+    Rf_error("[raer interal] failed to open %s: %s\n", bamfn, strerror(errno));
   }
 
   data[0]->conf = conf;
 
   h = sam_hdr_read(data[0]->fp);
   if ( !h ) {
-    Rf_error("fail to read the header of %s\n", bamfn);
+    Rf_error("[raer interal] fail to read the header of %s\n", bamfn);
   }
 
   if(conf->qregion){
@@ -359,11 +358,11 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
     idx = sam_index_load(data[0]->fp, bamfn) ;
 
     if (idx == NULL) {
-      Rf_error("fail to load bamfile index for %s\n",bamfn);
+      Rf_error("[raer interal] fail to load bamfile index for %s\n", bamfn);
     }
 
     if ( (data[0]->iter=sam_itr_querys(idx, h, conf->qregion)) == 0) {
-      Rf_error("Fail to parse region '%s' with %s\n", conf->qregion, bamfn);
+      Rf_error("[raer interal] Fail to parse region '%s' with %s\n", conf->qregion, bamfn);
     }
 
     beg0 = data[0]->iter->beg;
@@ -383,14 +382,14 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
   bam_mplp_set_maxcnt(iter, conf->max_depth);
 
   if (!iter) {
-    REprintf("issue with iterator");
+    REprintf("[raer interal] issue with iterator");
     ret = -1;
     goto fail;
   }
 
   for (i = 0; i < 3; ++i) {
     if (conf->fps[i] == NULL) {
-      REprintf("Failed to open file outputfiles\n");
+      REprintf("[raer interal] Failed to open file outputfiles\n");
       ret = -1;
       goto fail;
     }
@@ -446,7 +445,7 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
         // store base counts based on library type and r1/r2 status
         int invert = invert_read_orientation(p->b, conf->libtype);
         if(invert < 0){
-          REprintf("[internal] invert read orientation failure %i\n", invert);
+          REprintf("[raer internal] invert read orientation failure %i\n", invert);
           ret = -1;
           goto fail;
         }
@@ -525,8 +524,8 @@ static int set_sc_mplp_conf(sc_mplp_conf_t *conf, int nbams,
   }
 
   conf->min_mq = (min_mapQ < 0) ? 0 : min_mapQ;
-  conf->min_bq = (min_baseQ < 0) ?  0 : min_baseQ;
-  conf->max_depth = (!max_depth) ?  10000: max_depth;
+  conf->min_bq = (min_baseQ < 0) ? 0 : min_baseQ;
+  conf->max_depth = (!max_depth) ? 10000: max_depth;
 
   if(b_flags){
     conf->keep_flag[0] = b_flags[0];

@@ -3,6 +3,9 @@
 
 #include <htslib/sam.h>
 #include <htslib/khash.h>
+#include <htslib/faidx.h>
+#include "regfile.h"
+//#include "samtools/samtools-ext.h"
 #include <Rinternals.h>
 
 SEXP get_region(SEXP region);
@@ -18,11 +21,7 @@ int read_base_quality(bam1_t* b, float pc, int mq);
 int invert_read_orientation(bam1_t* b, int libtype);
 int check_splice_overhang(bam1_t* b, int pos, int dist);
 double calc_sor(int fwd_ref, int rev_ref, int fwd_alt, int rev_alt);
-
-int parse_mismatches(bam1_t* b, const int pos, int n_types, int n_mis);
-
-char *reverse(char *str);
-char *get_read(const bam1_t *rec);
+int get_relative_position(const bam_pileup1_t *p, int nbase_positions);
 
 KHASH_SET_INIT_STR(strset)
 typedef khash_t(strset) *strset_t;
@@ -32,15 +31,53 @@ KHASH_MAP_INIT_STR(str2intmap, int)
 typedef khash_t(str2intmap) *str2intmap_t;
 void clear_str2int_hashmap(str2intmap_t vhash);
 
-int populate_lookup_from_file(strset_t lookup, char *fn);
-
 char *get_aux_ztag(bam1_t *b, const char tag[2]);
 extern unsigned char comp_base[256];
 
+typedef struct {
+  double f5p;
+  double f3p;
+  int i5p;
+  int i3p;
+} trim_t;
+
+typedef struct  {
+  int nmer, splice_dist, indel_dist, trim_5p_dist, trim_3p_dist;
+  int n_mm_type, n_mm, min_overhang, min_var_reads;
+} efilter;
+
+typedef struct {
+  int minq;
+  double pct;
+} read_qual_t;
+
+typedef struct {
+  int min_global_mq, flag, min_bq, min_depth, max_depth, output_reads;
+  int report_multiallelics, multi_itr, in_memory;
+  int nmer, splice_dist, indel_dist;
+  int n_mm_type, n_mm, min_overhang, min_var_reads;
+  int nbam, nfps;
+  double min_af;
+  int umi;
+  char *umi_tag;
+  int *min_mqs; // across all bam files
+  int *libtype; // across all bam files
+  int *only_keep_variants; // across all bam files
+  trim_t trim;
+  read_qual_t read_qual;
+  uint32_t keep_flag[2];
+  char *reg, *fai_fname, *output_fname;
+  faidx_t *fai;
+  regidx_t *reg_idx;
+  regitr_t *reg_itr;
+  strset_t rnames;
+  strset_t brhash;
+  FILE *reads_fp;
+} mplp_conf_t;
 
 //From https://stat.ethz.ch/pipermail/r-devel/2011-April/060702.html
 void chkIntFn(void *dummy) ;
-// this will call the above in a top-level context so it won't longjmp-out of your context
+// this will call the above in a top-level context so it won't longjmp-out of context
 int checkInterrupt();
 
 

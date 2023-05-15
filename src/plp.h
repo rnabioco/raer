@@ -4,22 +4,6 @@
 #include <Rinternals.h>
 #include <htslib/sam.h>
 
-typedef struct {
-  int n;
-  int *n_plp, *m_plp;
-  bam_pileup1_t **plp;
-} mplp_pileup_t;
-
-typedef struct  {
-  int nmer, splice_dist, indel_dist, trim_5p_dist, trim_3p_dist;
-  int n_mm_type, n_mm, min_overhang, min_var_reads;
-} efilter;
-
-typedef struct {
-  int minq;
-  double pct;
-} read_qual_t;
-
 SEXP pileup(char** cbampath,
             int n,
             char* fapath,
