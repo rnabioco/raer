@@ -10,7 +10,7 @@ static inline void free_regidx(void *payload){
   free(pld);
 }
 
-void load_payload(payload_t *pld, int strand, char* ref,
+static void load_payload(payload_t *pld, int strand, char* ref,
                   char* alt, int rowidx){
   pld->strand = strand;
   pld->alt = strdup(alt);
@@ -19,7 +19,7 @@ void load_payload(payload_t *pld, int strand, char* ref,
 }
 
 
-regidx_t *regidx_load_payload(char** chroms, int* pos, int* strand,
+static regidx_t *regidx_load_payload(char** chroms, int* pos, int* strand,
                               char** ref, char** alt, int* rowidx,
                               int n_sites){
 
@@ -40,7 +40,7 @@ regidx_t *regidx_load_payload(char** chroms, int* pos, int* strand,
   return idx;
 }
 
-regidx_t *regidx_load_simple(char** chroms, int* start, int* end, int n_sites){
+static regidx_t *regidx_load_simple(char** chroms, int* start, int* end, int n_sites){
 
   regidx_t *idx = regidx_init(NULL,NULL,NULL,0,NULL);
   if (!idx) Rf_error("[raer interal] init regidx failed\n");
@@ -57,7 +57,7 @@ regidx_t *regidx_load_simple(char** chroms, int* start, int* end, int n_sites){
   return idx;
 }
 
-regidx_t *parse_bed_gr(SEXP lst){
+static regidx_t *parse_bed_gr(SEXP lst){
   if(Rf_length(lst) != 3){
     Rf_error("'lst' must contain seqnames, start, and end");
   }
@@ -85,7 +85,7 @@ regidx_t *parse_bed_gr(SEXP lst){
 
 }
 
-regidx_t *parse_variant_gr(SEXP lst){
+static regidx_t *parse_variant_gr(SEXP lst){
   if(Rf_length(lst) != 6){
     Rf_error("'lst' must contain seqnames, pos, strand, ref, alt, and rowidx");
   }

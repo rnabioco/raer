@@ -32,8 +32,8 @@ typedef struct {
 } _PLP_DATA, *PLP_DATA;
 
 SEXP pileup_result_init(int n);
-SEXP pileup_template();
-SEXP sitedata_template();
+SEXP pileup_template(void);
+SEXP sitedata_template(void);
 
 PLP_DATA init_PLP_DATA(SEXP result, int n);
 
@@ -53,8 +53,8 @@ enum {
 
 /* From Rsamtools
  robust memory re-allocation */
-#define _Rs_Realloc(p, n, t)	(t *) _Rs_Realloc_impl(p, n, sizeof(t))
-void *_Rs_Realloc_impl(void *p, size_t n, size_t t);
+#define _rs_Realloc(p, n, t)	(t *) _rs_Realloc_impl(p, n, sizeof(t))
+void *_rs_Realloc_impl(void *p, size_t n, size_t t);
 
 #ifdef __cplusplus
 }

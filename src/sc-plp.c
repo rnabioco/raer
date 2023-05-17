@@ -10,20 +10,11 @@
 #include <string.h>
 
 #include "regfile.h"
-#include "plp.h"
+//#include "plp.h"
 #include "plp_utils.h"
 
-// data structure for storing cell barcodes and UMI information per site
-// cbmap:
-//   - hashmap with cellbarcode as key,
-//   - value is a cb_t struct:
-//    umi: hashset populated with UMIs as keys
-//    ref: number of UMIs supporting ref
-//    alt: number of UMIs supporting alt
-// This will be cleared at each site
-
 typedef struct  {
-  strset_t umi; // hashset mapping UMI to consensus calls
+  strset_t umi; // hashset storing umi sequences
   int ref; // # of UMIs supporting ref
   int alt; // # of UMIs supporting alt
 } cb_t;
@@ -31,7 +22,7 @@ typedef struct  {
 KHASH_MAP_INIT_STR(cbumimap, cb_t*)
 typedef khash_t(cbumimap) *cbumi_map_t;
 
-void clear_umi(strset_t uhash) {
+static void clear_umi(strset_t uhash) {
   khint_t k;
   if(!uhash) return;
   for (k = kh_begin(uhash); k < kh_end(uhash); ++k){
@@ -40,7 +31,7 @@ void clear_umi(strset_t uhash) {
   kh_clear(strset, uhash);
 }
 
-void clear_cb_umiset(cbumi_map_t cbhash) {
+static void clear_cb_umiset(cbumi_map_t cbhash) {
   khint_t k;
   cb_t *cdat;
   if(!cbhash) return;
@@ -58,7 +49,7 @@ static cb_t* init_umihash(){
   return cb ;
 }
 
-void free_hashmaps(cbumi_map_t cbhash, str2intmap_t cbidx) {
+static void free_hashmaps(cbumi_map_t cbhash, str2intmap_t cbidx) {
     khint_t k;
     cb_t *cdat;
     if(cbhash) {
@@ -81,7 +72,7 @@ void free_hashmaps(cbumi_map_t cbhash, str2intmap_t cbidx) {
 
 }
 
-// pileup struct
+// single cell pileup parameters
 typedef struct {
   int min_mq, libtype, min_bq, max_depth;
   read_qual_t read_qual;
@@ -117,8 +108,8 @@ typedef struct {
 
 /* return codes,
  * 0 = read passes,
- * 1 = read fails filter should be counted as bad read
- * 2 = read fails do no count as bad read
+ * 1 = read fails
+ * 2 = read fails due to refskip, deletion, overlapping mate
  */
 static int check_read_filters(const bam_pileup1_t *p, sc_mplp_conf_t *conf){
 
@@ -155,11 +146,13 @@ static int check_read_filters(const bam_pileup1_t *p, sc_mplp_conf_t *conf){
   return 0;
 }
 
-// -1 error in hashmap
-// 0 missing cb or umi
-// 1 umi is duplicate, or base/strand not in payload
-// 2 umi is reference
-// 3 umi is alternate
+/* return codes,
+ * -1 error in hashmap
+ * 0 missing cb or umi
+ * 1 umi is duplicate, or base/strand not in payload
+ * 2 umi is reference
+ * 3 umi is alternate
+ */
 static int count_record(bam1_t *b, sc_mplp_conf_t *conf, payload_t *pld,
                         unsigned char base, int strand, char* bamid){
   khiter_t k;
@@ -210,13 +203,14 @@ static int count_record(bam1_t *b, sc_mplp_conf_t *conf, payload_t *pld,
   return(1);
 }
 
-// write entry to sparse array-like format
-// col 1 = row index (site index)
-// col 2 = column index (barcode index)
-// col 3 = values for ref
-// col 4 = values for alt
-//
-// read into R as a 4 column matrix, then coerce to list of 2 sparseMatrices.
+/* write entry to sparse array-like format
+ * col 1 = row index (site index)
+ * col 2 = column index (barcode index)
+ * col 3 = values for ref
+ * col 4 = values for alt
+ *
+ * read into R as a 4 column matrix, then coerce to list of 2 sparseMatrices.
+ */
 static int write_counts(sc_mplp_conf_t *conf, payload_t *pld, const char* seqname, int pos){
   const char *cb;
   cb_t *cbdat;
@@ -330,7 +324,7 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
   hts_pos_t pos, beg0 = 0, end0 = INT32_MAX;
 
   const bam_pileup1_t **plp;
-  bam_mplp_t iter;
+  bam_mplp_t iter = NULL;
   bam_hdr_t *h = NULL;
 
   int nbam  = 1;
@@ -343,14 +337,18 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
   data[0] = calloc(1, sizeof(mplp_sc_aux_t));
   data[0]->fp = sam_open(bamfn, "rb");
   if ( !data[0]->fp ) {
-    Rf_error("[raer interal] failed to open %s: %s\n", bamfn, strerror(errno));
+    REprintf("[raer interal] failed to open %s: %s\n", bamfn, strerror(errno));
+    ret = -1;
+    goto fail;
   }
 
   data[0]->conf = conf;
 
   h = sam_hdr_read(data[0]->fp);
   if ( !h ) {
-    Rf_error("[raer interal] fail to read the header of %s\n", bamfn);
+    REprintf("[raer interal] fail to read the header of %s\n", bamfn);
+    ret = -1;
+    goto fail;
   }
 
   if(conf->qregion){
@@ -358,11 +356,15 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
     idx = sam_index_load(data[0]->fp, bamfn) ;
 
     if (idx == NULL) {
-      Rf_error("[raer interal] fail to load bamfile index for %s\n", bamfn);
+      REprintf("[raer interal] fail to load bamfile index for %s\n", bamfn);
+      ret = -1;
+      goto fail;
     }
 
     if ( (data[0]->iter=sam_itr_querys(idx, h, conf->qregion)) == 0) {
-      Rf_error("[raer interal] Fail to parse region '%s' with %s\n", conf->qregion, bamfn);
+      REprintf("[raer interal] Fail to parse region '%s' with %s\n", conf->qregion, bamfn);
+      ret = -1;
+      goto fail;
     }
 
     beg0 = data[0]->iter->beg;
@@ -482,7 +484,7 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
   }
 
   fail:
-    bam_mplp_destroy(iter);
+    if (iter) bam_mplp_destroy(iter);
     bam_hdr_destroy(h);
 
     for (i = 0; i < nbam; ++i) {
@@ -503,11 +505,13 @@ static int set_sc_mplp_conf(sc_mplp_conf_t *conf, int nbams,
                             int max_depth, int* b_flags, int* event_filters, int libtype,
                             int n_bcs, char** bcs, char* cbtag, char* umi,
                             int idx_skip, int pe, int min_counts){
-  int ret = 0;
   conf->is_ss2 = nbams > 1 ? 1 : 0;
 
   conf->fps = R_Calloc(n_outfns, FILE*);
-  if(conf->fps == NULL) Rf_error("[raer internal] unable to alloc");
+  if(conf->fps == NULL) {
+    REprintf("[raer internal] unable to alloc");
+    return(-1);
+  }
   conf->mtxfn = outfns[0];
   conf->sitesfn = outfns[1];
   conf->bcfn = outfns[2];
@@ -550,7 +554,8 @@ static int set_sc_mplp_conf(sc_mplp_conf_t *conf, int nbams,
       char *cb = strdup(bcs[i]);
       k = kh_put(str2intmap, conf->cbidx, cb, &hret);
       if(hret == -1 || hret == 2){
-        Rf_error("[raer internal] unable to populate barcode hashmap");
+        REprintf("[raer internal] unable to populate barcode hashmap");
+        return(-1);
       } else if (hret == 0) {
         free(cb); // was a duplicate cellbarcode
       } else {
@@ -568,13 +573,13 @@ static int set_sc_mplp_conf(sc_mplp_conf_t *conf, int nbams,
     conf->has_umi = 0;
     conf->umi_tag = NULL;
   }
-  conf->cb_tag = cbtag,
+  conf->cb_tag = cbtag;
   conf->idx_skip = idx_skip;
   conf->pe = pe;
   conf->min_counts = min_counts < 0 ? 0 : min_counts;
   conf->site_idx = 0;
 
-  return(ret);
+  return(0);
 }
 
 static void write_barcodes(FILE* fp, char** bcs, int n){
@@ -678,9 +683,6 @@ static void check_sc_plp_args(SEXP bampaths, SEXP qregion, SEXP lst,
 
 }
 
-
-
-
 SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
               SEXP barcodes, SEXP cbtag, SEXP event_filters, SEXP min_mapQ,
               SEXP max_depth, SEXP min_baseQ, SEXP read_bqual_filter,
@@ -692,7 +694,10 @@ SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
                     min_baseQ, read_bqual_filter, libtype,
                     b_flags, outfns, umi, index_skip, pe, min_counts);
 
-  int i;
+  regidx_t *idx = regidx_build(lst, 1);
+  if (!idx) Rf_error("Failed to build region index");
+
+  int i, ret = 0, res = 0;
   char ** cbampaths;
   int nbams = Rf_length(bampaths);
   cbampaths = (char**) R_alloc(sizeof( char *), nbams);
@@ -726,11 +731,6 @@ SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
   sc_mplp_conf_t ga;
   memset(&ga, 0, sizeof(sc_mplp_conf_t));
 
-  regidx_t *idx = regidx_build(lst, 1);
-  if (!idx) Rf_error("Failed to build region index");
-
-  int ret, res;
-
   ret = set_sc_mplp_conf(&ga, nbams, nout, coutfns,
                          cq_region, idx, INTEGER(min_mapQ)[0],
                          INTEGER(min_baseQ)[0], REAL(read_bqual_filter),
@@ -738,33 +738,34 @@ SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
                          INTEGER(event_filters), INTEGER(libtype)[0],
                          nbcs, bcs, c_cbtag, c_umi, LOGICAL(index_skip)[0],
                          LOGICAL(pe)[0], INTEGER(min_counts)[0]);
-
-  // write barcodes file, all barcodes will be reported in matrix
-  write_barcodes(ga.fps[2], bcs, nbcs);
-  // write sites, if all sites requested, otherwise write during pileup
-  if(ga.min_counts == 0) write_all_sites(&ga);
-  res = 1;
-  if(ga.is_ss2){
-    for(int i = 0; i < nbams; ++i){
-      res = run_scpileup(&ga, cbampaths[i], bcs[i]);
-      if(res < 0){
-        REprintf("[raer internal] error processing bamfile %s:", cbampaths[i]);
-        break;
+  if(ret >= 0){
+    // write barcodes file, all barcodes will be reported in matrix
+    write_barcodes(ga.fps[2], bcs, nbcs);
+    // write sites, if all sites requested, otherwise write during pileup
+    if(ga.min_counts == 0) write_all_sites(&ga);
+    if(ga.is_ss2){
+      for(i = 0; i < nbams; ++i){
+        res = run_scpileup(&ga, cbampaths[i], bcs[i]);
+        if(res < 0){
+          REprintf("[raer internal] error processing bamfile %s:", cbampaths[i]);
+          break;
+        }
       }
+    } else {
+      res = run_scpileup(&ga, cbampaths[0], NULL);
     }
-  } else {
-    res = run_scpileup(&ga, cbampaths[0], NULL);
   }
 
-  for(int i = 0; i < nout; ++i) {
+  for(i = 0; i < nout; ++i) {
     if(ga.fps[i]) fclose(ga.fps[i]);
   }
+
   if(ga.fps) R_Free(ga.fps);
   if(ga.reg_itr) regitr_destroy(ga.reg_itr);
   if(ga.reg_idx) regidx_destroy(ga.reg_idx);
   free_hashmaps(ga.cbmap, ga.cbidx);
 
-  if(res < 0) REprintf("error detected during pileup, %d\n", res);
+  if(res < 0) REprintf("[raer internal] error detected during pileup, %d\n", res);
 
   return ScalarInteger(res) ;
 }

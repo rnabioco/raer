@@ -70,7 +70,7 @@ int mplp_get_ref(mplp_aux_t *ma, int tid, char **ref, hts_pos_t *ref_len) {
  * From http://stackoverflow.com/questions/8534274/is-the-strrev-function-not-available-in-linux.
  * Author Sumit-naik: http://stackoverflow.com/users/4590926/sumit-naik
  */
-char *reverse(char *str)
+static char *reverse(char *str)
 {
   int i = strlen(str)-1,j=0;
   char ch;
@@ -84,7 +84,7 @@ char *reverse(char *str)
   return str;
 }
 
-int8_t seq_comp_table[16] = { 0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15 };
+static int8_t seq_comp_table[16] = { 0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15 };
 
 /* from samtools bam_fastq.c */
 /* return the read, reverse complemented if necessary */

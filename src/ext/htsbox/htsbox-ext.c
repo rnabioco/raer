@@ -14,7 +14,7 @@
 // based on cigar and MD parsing code from htsbox (written by Heng Li)
 // https://github.com/lh3/htsbox/blob/ffc1e8ad4f61291c676a323ed833ade3ee681f7c/samview.c#L117
 
-int parse_mismatches(bam1_t* b, const int pos, int n_types, int n_mis){
+int parse_mismatches(bam1_t* b, int n_types, int n_mis){
   int ret = 0;
   if(n_types < 1 && n_mis < 1){
     return ret;

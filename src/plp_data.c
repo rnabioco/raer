@@ -48,9 +48,9 @@ int grow_PLP_DATA(PLP_DATA pd, int len)
   int i,j;
   SEXP r, s;
 
-  pd->sdat->rpbz = _Rs_Realloc(pd->sdat->rpbz, len, double);
-  pd->sdat->vdb  = _Rs_Realloc(pd->sdat->vdb, len, double);
-  pd->sdat->sor  = _Rs_Realloc(pd->sdat->sor, len, double);
+  pd->sdat->rpbz = _rs_Realloc(pd->sdat->rpbz, len, double);
+  pd->sdat->vdb  = _rs_Realloc(pd->sdat->vdb, len, double);
+  pd->sdat->sor  = _rs_Realloc(pd->sdat->sor, len, double);
 
   for(i = 0; i < pd->nfiles; ++i){
     // skip first list element which will be site level data
@@ -60,47 +60,46 @@ int grow_PLP_DATA(PLP_DATA pd, int len)
         continue;
       switch (j) {
       case SEQNAME_IDX:
-        pd->pdat[i].seqnames = _Rs_Realloc(pd->pdat[i].seqnames, len, char *);
+        pd->pdat[i].seqnames = _rs_Realloc(pd->pdat[i].seqnames, len, char *);
         break;
       case POS_IDX:
-        pd->pdat[i].pos = _Rs_Realloc(pd->pdat[i].pos, len, int);
+        pd->pdat[i].pos = _rs_Realloc(pd->pdat[i].pos, len, int);
         break;
       case STRAND_IDX:
-        pd->pdat[i].strand = _Rs_Realloc(pd->pdat[i].strand, len, char *);
+        pd->pdat[i].strand = _rs_Realloc(pd->pdat[i].strand, len, char *);
         break;
       case REF_IDX:
-        pd->pdat[i].ref = _Rs_Realloc(pd->pdat[i].ref, len, char *);
+        pd->pdat[i].ref = _rs_Realloc(pd->pdat[i].ref, len, char *);
         break;
       case VAR_IDX:
-        pd->pdat[i].var = _Rs_Realloc(pd->pdat[i].var, len, char *);
+        pd->pdat[i].var = _rs_Realloc(pd->pdat[i].var, len, char *);
         break;
       case NREF_IDX:
-        pd->pdat[i].nref = _Rs_Realloc(pd->pdat[i].nref, len, int);
+        pd->pdat[i].nref = _rs_Realloc(pd->pdat[i].nref, len, int);
         break;
       case NVAR_IDX:
-        pd->pdat[i].nvar = _Rs_Realloc(pd->pdat[i].nvar, len, int);
+        pd->pdat[i].nvar = _rs_Realloc(pd->pdat[i].nvar, len, int);
         break;
       case NA_IDX:
-        pd->pdat[i].na = _Rs_Realloc(pd->pdat[i].na, len, int);
+        pd->pdat[i].na = _rs_Realloc(pd->pdat[i].na, len, int);
         break;
       case NT_IDX:
-        pd->pdat[i].nt = _Rs_Realloc(pd->pdat[i].nt, len, int);
+        pd->pdat[i].nt = _rs_Realloc(pd->pdat[i].nt, len, int);
         break;
       case NC_IDX:
-        pd->pdat[i].nc = _Rs_Realloc(pd->pdat[i].nc, len, int);
+        pd->pdat[i].nc = _rs_Realloc(pd->pdat[i].nc, len, int);
         break;
       case NG_IDX:
-        pd->pdat[i].ng = _Rs_Realloc(pd->pdat[i].ng, len, int);
+        pd->pdat[i].ng = _rs_Realloc(pd->pdat[i].ng, len, int);
         break;
       case NN_IDX:
-        pd->pdat[i].nn = _Rs_Realloc(pd->pdat[i].nn, len, int);
+        pd->pdat[i].nn = _rs_Realloc(pd->pdat[i].nn, len, int);
         break;
       case NX_IDX:
-        pd->pdat[i].nx = _Rs_Realloc(pd->pdat[i].nx, len, int);
+        pd->pdat[i].nx = _rs_Realloc(pd->pdat[i].nx, len, int);
         break;
       default:
         Rf_error("[raer internal] unhandled grow_PLP_DATA");
-      break;
       }
     }
   }
@@ -256,7 +255,6 @@ void finish_PLP_DATA(PLP_DATA pd) {
 
       default:
         Rf_error("[raer internal] unhandled finish_PLP_DATA");
-      break;
       }
     }
   }
@@ -363,7 +361,7 @@ SEXP sitedata_template() {
 }
 
 /* from Rsamtools */
-void *_Rs_Realloc_impl(void *p, size_t n, size_t t)
+void *_rs_Realloc_impl(void *p, size_t n, size_t t)
 {
   /* Realloc(p, 0, *) fails inappropriately */
   if (n == 0) {

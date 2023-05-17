@@ -165,13 +165,17 @@ int check_variant_fpos(bam1_t* b, int pos, double fdist_5p, double fdist_3p){
   // pos is 0-based query position
   // need to adjust to trim based on alignment start/end
   int qs, qe, ql, dist_5p, dist_3p;
+  double d5p, d3p;
   qs = query_start(b);
   qe = query_end(b);
   if(qs < 0 || qe < 0) return -1;
   ql = qe - qs;
   if(ql <= 0) return 1;
-  dist_5p = (int) floor(fdist_5p * ql);
-  dist_3p = (int) ceil(fdist_3p * ql);
+  d5p = floor(fdist_5p * ql);
+  dist_5p = (int) d5p;
+
+  d3p = ceil(fdist_3p * ql);
+  dist_3p = (int) d3p;
 
   if(!(b->core.flag&BAM_FREVERSE)){
     if(pos < (dist_5p + qs) || (qe - pos) <= dist_3p){
@@ -256,8 +260,8 @@ int check_splice_overhang(bam1_t* b, int pos, int dist){
       continue;
     }
   }
-  REprintf("[raer internal] site not found in read: %s %i %i %i\n",
-           bam_get_qname(b), pos, p_op, cl);
+  REprintf("[raer internal] site not found in read: %s %i\n",
+           bam_get_qname(b), pos);
   return -2;
 }
 

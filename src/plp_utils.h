@@ -78,7 +78,7 @@ typedef struct {
 //From https://stat.ethz.ch/pipermail/r-devel/2011-April/060702.html
 void chkIntFn(void *dummy) ;
 // this will call the above in a top-level context so it won't longjmp-out of context
-int checkInterrupt();
+int checkInterrupt(void);
 
 
 #endif
