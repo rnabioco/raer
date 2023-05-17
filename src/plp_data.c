@@ -16,7 +16,7 @@ PLP_DATA init_PLP_DATA(SEXP result, int n) {
   int i;
   PLP_DATA plpd = R_Calloc(1, _PLP_DATA);
   plpd->pdat = R_Calloc(n, _PLP_VECS);
-  for(i = 0; i < n; ++i){
+  for (i = 0; i < n; ++i) {
     plpd->pdat[i].na = R_Calloc(1, int);
     plpd->pdat[i].nt = R_Calloc(1, int);
     plpd->pdat[i].ng = R_Calloc(1, int);
@@ -52,7 +52,7 @@ int grow_PLP_DATA(PLP_DATA pd, int len)
   pd->sdat->vdb  = _rs_Realloc(pd->sdat->vdb, len, double);
   pd->sdat->sor  = _rs_Realloc(pd->sdat->sor, len, double);
 
-  for(i = 0; i < pd->nfiles; ++i){
+  for (i = 0; i < pd->nfiles; ++i) {
     // skip first list element which will be site level data
     r = VECTOR_ELT(pd->result, i + 1);
     for (j = 0; j < LENGTH(r); ++j) {
@@ -60,19 +60,19 @@ int grow_PLP_DATA(PLP_DATA pd, int len)
         continue;
       switch (j) {
       case SEQNAME_IDX:
-        pd->pdat[i].seqnames = _rs_Realloc(pd->pdat[i].seqnames, len, char *);
+        pd->pdat[i].seqnames = _rs_Realloc(pd->pdat[i].seqnames, len, char*);
         break;
       case POS_IDX:
         pd->pdat[i].pos = _rs_Realloc(pd->pdat[i].pos, len, int);
         break;
       case STRAND_IDX:
-        pd->pdat[i].strand = _rs_Realloc(pd->pdat[i].strand, len, char *);
+        pd->pdat[i].strand = _rs_Realloc(pd->pdat[i].strand, len, char*);
         break;
       case REF_IDX:
-        pd->pdat[i].ref = _rs_Realloc(pd->pdat[i].ref, len, char *);
+        pd->pdat[i].ref = _rs_Realloc(pd->pdat[i].ref, len, char*);
         break;
       case VAR_IDX:
-        pd->pdat[i].var = _rs_Realloc(pd->pdat[i].var, len, char *);
+        pd->pdat[i].var = _rs_Realloc(pd->pdat[i].var, len, char*);
         break;
       case NREF_IDX:
         pd->pdat[i].nref = _rs_Realloc(pd->pdat[i].nref, len, int);
@@ -138,7 +138,7 @@ void finish_PLP_DATA(PLP_DATA pd) {
   R_Free(pd->sdat->sor);
 
 
-  for(f_idx = 0; f_idx < pd->nfiles; ++f_idx){
+  for (f_idx = 0; f_idx < pd->nfiles; ++f_idx) {
     // skip first list element which has site level data
     r = VECTOR_ELT(pd->result, f_idx + 1);
 
@@ -282,13 +282,13 @@ SEXP get_or_grow_PLP_DATA(PLP_DATA pd, int len, int lst)
 /* names matching enum defined in plp_data.h
  * will be used as output column names
  */
-static const char *TMPL_ELT_NMS[] = {
+static const char* TMPL_ELT_NMS[] = {
   "seqname", "pos", "strand", "REF", "ALT", "nRef", "nAlt", "nA",
   "nT", "nC", "nG", "nN", "nX"
   /* "vtype", "value" */
 };
 
-static const int N_TMPL_ELTS = sizeof(TMPL_ELT_NMS) / sizeof(const char *);
+static const int N_TMPL_ELTS = sizeof(TMPL_ELT_NMS) / sizeof(const char*);
 
 /* Init a list of lists,
  * first element is data populated across all bamfiles (to store in rowData)
@@ -297,7 +297,7 @@ static const int N_TMPL_ELTS = sizeof(TMPL_ELT_NMS) / sizeof(const char *);
    The inner list elements contains vectors of pileup data
    On return to R will be list of lists coerced into list of GRanges
  */
-SEXP pileup_result_init(int n){
+SEXP pileup_result_init(int n) {
   n += 1;
   SEXP result = PROTECT(NEW_LIST(n));
 
@@ -320,27 +320,27 @@ SEXP pileup_result_init(int n){
 /* inner list template */
 SEXP pileup_template() {
 
- SEXP tmpl = PROTECT(NEW_LIST(N_TMPL_ELTS));
- SET_VECTOR_ELT(tmpl, SEQNAME_IDX, NEW_CHARACTER(0));
- SET_VECTOR_ELT(tmpl, POS_IDX, NEW_INTEGER(0));
- SET_VECTOR_ELT(tmpl, STRAND_IDX, NEW_CHARACTER(0));
- SET_VECTOR_ELT(tmpl, REF_IDX, NEW_CHARACTER(0));
- SET_VECTOR_ELT(tmpl, VAR_IDX, NEW_CHARACTER(0));
- SET_VECTOR_ELT(tmpl, NREF_IDX, NEW_INTEGER(0));
- SET_VECTOR_ELT(tmpl, NVAR_IDX, NEW_INTEGER(0));
- SET_VECTOR_ELT(tmpl, NA_IDX, NEW_INTEGER(0));
- SET_VECTOR_ELT(tmpl, NT_IDX, NEW_INTEGER(0));
- SET_VECTOR_ELT(tmpl, NC_IDX, NEW_INTEGER(0));
- SET_VECTOR_ELT(tmpl, NG_IDX, NEW_INTEGER(0));
- SET_VECTOR_ELT(tmpl, NN_IDX, NEW_INTEGER(0));
- SET_VECTOR_ELT(tmpl, NX_IDX, NEW_INTEGER(0));
+  SEXP tmpl = PROTECT(NEW_LIST(N_TMPL_ELTS));
+  SET_VECTOR_ELT(tmpl, SEQNAME_IDX, NEW_CHARACTER(0));
+  SET_VECTOR_ELT(tmpl, POS_IDX, NEW_INTEGER(0));
+  SET_VECTOR_ELT(tmpl, STRAND_IDX, NEW_CHARACTER(0));
+  SET_VECTOR_ELT(tmpl, REF_IDX, NEW_CHARACTER(0));
+  SET_VECTOR_ELT(tmpl, VAR_IDX, NEW_CHARACTER(0));
+  SET_VECTOR_ELT(tmpl, NREF_IDX, NEW_INTEGER(0));
+  SET_VECTOR_ELT(tmpl, NVAR_IDX, NEW_INTEGER(0));
+  SET_VECTOR_ELT(tmpl, NA_IDX, NEW_INTEGER(0));
+  SET_VECTOR_ELT(tmpl, NT_IDX, NEW_INTEGER(0));
+  SET_VECTOR_ELT(tmpl, NC_IDX, NEW_INTEGER(0));
+  SET_VECTOR_ELT(tmpl, NG_IDX, NEW_INTEGER(0));
+  SET_VECTOR_ELT(tmpl, NN_IDX, NEW_INTEGER(0));
+  SET_VECTOR_ELT(tmpl, NX_IDX, NEW_INTEGER(0));
 
- SEXP names = PROTECT(NEW_CHARACTER(N_TMPL_ELTS));
- for (int i = 0; i < N_TMPL_ELTS; ++i)
-   SET_STRING_ELT(names, i, mkChar(TMPL_ELT_NMS[i]));
- SET_ATTR(tmpl, R_NamesSymbol, names);
- UNPROTECT(2);
- return tmpl;
+  SEXP names = PROTECT(NEW_CHARACTER(N_TMPL_ELTS));
+  for (int i = 0; i < N_TMPL_ELTS; ++i)
+    SET_STRING_ELT(names, i, mkChar(TMPL_ELT_NMS[i]));
+  SET_ATTR(tmpl, R_NamesSymbol, names);
+  UNPROTECT(2);
+  return tmpl;
 }
 
 /* site data template, data stored across all bamfiles */
@@ -361,14 +361,14 @@ SEXP sitedata_template() {
 }
 
 /* from Rsamtools */
-void *_rs_Realloc_impl(void *p, size_t n, size_t t)
+void* _rs_Realloc_impl(void* p, size_t n, size_t t)
 {
   /* Realloc(p, 0, *) fails inappropriately */
   if (n == 0) {
     R_Free(p);
     p = NULL;
   } else {
-    p = R_chk_realloc((void *) p, (size_t) (n * t));
+    p = R_chk_realloc((void*) p, (size_t)(n * t));
   }
   return p;
 }

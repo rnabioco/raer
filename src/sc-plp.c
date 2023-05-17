@@ -20,12 +20,12 @@ typedef struct  {
 } cb_t;
 
 KHASH_MAP_INIT_STR(cbumimap, cb_t*)
-typedef khash_t(cbumimap) *cbumi_map_t;
+typedef khash_t(cbumimap)* cbumi_map_t;
 
 static void clear_umi(strset_t uhash) {
   khint_t k;
-  if(!uhash) return;
-  for (k = kh_begin(uhash); k < kh_end(uhash); ++k){
+  if (!uhash) return;
+  for (k = kh_begin(uhash); k < kh_end(uhash); ++k) {
     if (kh_exist(uhash, k)) free((char*)kh_key(uhash, k));
   }
   kh_clear(strset, uhash);
@@ -33,9 +33,9 @@ static void clear_umi(strset_t uhash) {
 
 static void clear_cb_umiset(cbumi_map_t cbhash) {
   khint_t k;
-  cb_t *cdat;
-  if(!cbhash) return;
-  for (k = kh_begin(cbhash); k < kh_end(cbhash); ++k){
+  cb_t* cdat;
+  if (!cbhash) return;
+  for (k = kh_begin(cbhash); k < kh_end(cbhash); ++k) {
     if (!kh_exist(cbhash, k)) continue;
     cdat = kh_value(cbhash, k);
     clear_umi(cdat->umi);
@@ -43,32 +43,32 @@ static void clear_cb_umiset(cbumi_map_t cbhash) {
   }
 }
 
-static cb_t* init_umihash(){
+static cb_t* init_umihash() {
   cb_t* cb = R_Calloc(1, cb_t);
   cb->umi = kh_init(strset);
   return cb ;
 }
 
 static void free_hashmaps(cbumi_map_t cbhash, str2intmap_t cbidx) {
-    khint_t k;
-    cb_t *cdat;
-    if(cbhash) {
-      for (k = kh_begin(cbhash); k < kh_end(cbhash); ++k){
-        if (!kh_exist(cbhash, k)) continue;
-        cdat = kh_value(cbhash, k);
-        clear_umi(cdat->umi);
-        kh_destroy(strset, cdat->umi);
-        free(cdat);
-      }
-      kh_destroy(cbumimap, cbhash);
+  khint_t k;
+  cb_t* cdat;
+  if (cbhash) {
+    for (k = kh_begin(cbhash); k < kh_end(cbhash); ++k) {
+      if (!kh_exist(cbhash, k)) continue;
+      cdat = kh_value(cbhash, k);
+      clear_umi(cdat->umi);
+      kh_destroy(strset, cdat->umi);
+      free(cdat);
     }
+    kh_destroy(cbumimap, cbhash);
+  }
 
-    if(cbidx) {
-      for (k = kh_begin(cbidx); k < kh_end(cbidx); ++k){
-        if (kh_exist(cbidx, k)) free((char*)kh_key(cbidx, k));
-      }
-      kh_destroy(str2intmap, cbidx);
+  if (cbidx) {
+    for (k = kh_begin(cbidx); k < kh_end(cbidx); ++k) {
+      if (kh_exist(cbidx, k)) free((char*)kh_key(cbidx, k));
     }
+    kh_destroy(str2intmap, cbidx);
+  }
 
 }
 
@@ -78,12 +78,12 @@ typedef struct {
   read_qual_t read_qual;
   uint32_t keep_flag[2];
   char* qregion;
-  regidx_t *reg_idx;
-  regitr_t *reg_itr;
+  regidx_t* reg_idx;
+  regitr_t* reg_itr;
   char* mtxfn;
   char* bcfn;
   char* sitesfn;
-  FILE **fps; // [0] = mtxfn, [1] = sitefn, [2] = bcfn;
+  FILE** fps; // [0] = mtxfn, [1] = sitefn, [2] = bcfn;
   efilter ef;
   str2intmap_t cbidx; // hashmap cellbarcode key -> column index value
   cbumi_map_t cbmap; // hashmap cellbarcode key -> cbumi_map_t as value
@@ -98,11 +98,11 @@ typedef struct {
 } sc_mplp_conf_t;
 
 typedef struct {
-  samFile *fp;
-  hts_itr_t *iter;
-  bam_hdr_t *h;
-  const sc_mplp_conf_t *conf;
-  hts_idx_t *idx;
+  samFile* fp;
+  hts_itr_t* iter;
+  bam_hdr_t* h;
+  const sc_mplp_conf_t* conf;
+  hts_idx_t* idx;
 } mplp_sc_aux_t;
 
 
@@ -111,37 +111,37 @@ typedef struct {
  * 1 = read fails
  * 2 = read fails due to refskip, deletion, overlapping mate
  */
-static int check_read_filters(const bam_pileup1_t *p, sc_mplp_conf_t *conf){
+static int check_read_filters(const bam_pileup1_t* p, sc_mplp_conf_t* conf) {
 
   // skip indel and ref skip ;
-  if(p->is_del || p->is_refskip) return(2) ;
+  if (p->is_del || p->is_refskip) return (2) ;
 
   // filter based on mapq
-  if (p->b->core.qual < conf->min_mq) return(1) ;
+  if (p->b->core.qual < conf->min_mq) return (1) ;
 
   // check base quality
   int bq = p->qpos < p->b->core.l_qseq
-  ? bam_get_qual(p->b)[p->qpos]
-  : 0;
+           ? bam_get_qual(p->b)[p->qpos]
+           : 0;
   if (bq < conf->min_bq) {
-    if(bq == 0) { // overlapping read pairs get base qualities set to 0 by mplp
-      return(2);
+    if (bq == 0) { // overlapping read pairs get base qualities set to 0 by mplp
+      return (2);
     } else {
-      return(1);
+      return (1);
     }
   }
 
   // check if pos is within x dist from 5' end of read, qpos is 0-based
-  if(check_variant_pos(p->b, p->qpos, conf->ef.trim_5p_dist, conf->ef.trim_3p_dist)) return(1);
+  if (check_variant_pos(p->b, p->qpos, conf->ef.trim_5p_dist, conf->ef.trim_3p_dist)) return (1);
 
   // check for splice in alignment nearby
-  if(conf->ef.splice_dist && dist_to_splice(p->b, p->qpos, conf->ef.splice_dist) >= 0) return(1);
+  if (conf->ef.splice_dist && dist_to_splice(p->b, p->qpos, conf->ef.splice_dist) >= 0) return (1);
 
   // check if site in splice overhang and > min_overhang
-  if(conf->ef.min_overhang && check_splice_overhang(p->b, p->qpos, conf->ef.min_overhang) > 0) return(1);
+  if (conf->ef.min_overhang && check_splice_overhang(p->b, p->qpos, conf->ef.min_overhang) > 0) return (1);
 
   // check if indel event nearby
-  if(conf->ef.indel_dist && dist_to_indel(p->b, p->qpos, conf->ef.indel_dist) >= 0) return(1);
+  if (conf->ef.indel_dist && dist_to_indel(p->b, p->qpos, conf->ef.indel_dist) >= 0) return (1);
 
   return 0;
 }
@@ -153,54 +153,60 @@ static int check_read_filters(const bam_pileup1_t *p, sc_mplp_conf_t *conf){
  * 2 umi is reference
  * 3 umi is alternate
  */
-static int count_record(bam1_t *b, sc_mplp_conf_t *conf, payload_t *pld,
-                        unsigned char base, int strand, char* bamid){
+static int count_record(bam1_t* b, sc_mplp_conf_t* conf, payload_t* pld,
+                        unsigned char base, int strand, char* bamid) {
   khiter_t k;
-  char *cb, *cb_cpy, *umi, *umi_val;
-  cb_t *cbdat;
+  char* cb, *cb_cpy, *umi, *umi_val;
+  cb_t* cbdat;
   int cret, uret;
-  if(conf->is_ss2){
+  if (conf->is_ss2) {
     cb = bamid;
   } else {
     cb = get_aux_ztag(b, conf->cb_tag);
-    if(cb == NULL) return(0);
+    if (cb == NULL) return (0);
   }
 
   cb_cpy = strdup(cb);
 
   k = kh_get(str2intmap, conf->cbidx, cb_cpy);
-  if(k == kh_end(conf->cbidx)) {free(cb_cpy); return(0);}
+  if (k == kh_end(conf->cbidx)) {
+    free(cb_cpy);
+    return (0);
+  }
 
   k = kh_put(cbumimap, conf->cbmap, cb_cpy, &cret);
-  if(cret < 0) {free(cb_cpy); return(-1);}
-  if(cret == 0) free(cb_cpy); // CB in hash already
-  if(cret == 1) kh_value(conf->cbmap, k) = init_umihash();
+  if (cret < 0) {
+    free(cb_cpy);
+    return (-1);
+  }
+  if (cret == 0) free(cb_cpy); // CB in hash already
+  if (cret == 1) kh_value(conf->cbmap, k) = init_umihash();
   cbdat = kh_value(conf->cbmap, k);
 
-  if(conf->has_umi){
+  if (conf->has_umi) {
     umi = get_aux_ztag(b, conf->umi_tag);
-    if(umi == NULL) return(0);
+    if (umi == NULL) return (0);
     umi_val = strdup(umi);
     kh_put(strset, cbdat->umi, umi_val, &uret);
     if (uret == 0) {
       free(umi_val);
-      return(1);
+      return (1);
     } else if (uret < 0) {
       free(umi_val);
-      return(-1);
+      return (-1);
     }
   }
 
-  if(pld->strand != strand) return(1);
-  if((unsigned char)*pld->ref == base){
+  if (pld->strand != strand) return (1);
+  if ((unsigned char)*pld->ref == base) {
     cbdat->ref += 1;
-    return(2);
-  } else if((unsigned char)*pld->alt == base) {
+    return (2);
+  } else if ((unsigned char)*pld->alt == base) {
     cbdat->alt += 1;
-    return(3);
+    return (3);
   }
 
-  return(1);
+  return (1);
 }
 
 /* write entry to sparse array-like format
@@ -211,42 +217,42 @@ static int count_record(bam1_t *b, sc_mplp_conf_t *conf, payload_t *pld,
  *
  * read into R as a 4 column matrix, then coerce to list of 2 sparseMatrices.
  */
-static int write_counts(sc_mplp_conf_t *conf, payload_t *pld, const char* seqname, int pos){
-  const char *cb;
-  cb_t *cbdat;
+static int write_counts(sc_mplp_conf_t* conf, payload_t* pld, const char* seqname, int pos) {
+  const char* cb;
+  cb_t* cbdat;
   int c_idx, r_idx, ret, n_rec = 0;
   khint_t k, j;
   for (k = kh_begin(conf->cbmap); k != kh_end(conf->cbmap); ++k) {
     if (!kh_exist(conf->cbmap, k)) continue;
     cb = kh_key(conf->cbmap, k);
     cbdat = kh_val(conf->cbmap, k);
-    if(cbdat->ref == 0 && cbdat->alt == 0) continue;
+    if (cbdat->ref == 0 && cbdat->alt == 0) continue;
 
     j = kh_get(str2intmap, conf->cbidx, cb);
-    if(j != kh_end(conf->cbidx)) {
+    if (j != kh_end(conf->cbidx)) {
       c_idx = kh_value(conf->cbidx, j);
     } else {
       REprintf("[raer internal] error retrieving CB %s %d\n", cb, j);
-      return(-1);
+      return (-1);
     }
 
     r_idx = conf->min_counts == 0 ? pld->idx : conf->site_idx;
     ret = fprintf(conf->fps[0], "%d\t%d\t%d\t%d\n", r_idx, c_idx, cbdat->ref, cbdat->alt);
-    if(ret < 0) return(-1);
+    if (ret < 0) return (-1);
     n_rec += 1;
   }
   // write site
-  if(conf->min_counts > 0){
+  if (conf->min_counts > 0) {
     ret = fprintf(conf->fps[1], "%s:%d_%d_%s_%s\n", seqname, pos + 1, pld->strand, pld->ref, pld->alt);
-    if(ret < 0) return(-1);
+    if (ret < 0) return (-1);
     conf->site_idx += 1;
   }
-  return(n_rec);
+  return (n_rec);
 }
 
 // read processing function for pileup
-static int screadaln(void *data, bam1_t *b) {
-  mplp_sc_aux_t *g = (mplp_sc_aux_t *)data;
+static int screadaln(void* data, bam1_t* b) {
+  mplp_sc_aux_t* g = (mplp_sc_aux_t*)data;
   int ret, skip = 0;
   uint32_t test_flag;
   char* cb;
@@ -262,11 +268,14 @@ static int screadaln(void *data, bam1_t *b) {
 
     // exclude read if it has no cb or cb not in requested cbs
     khiter_t k;
-    if(g->conf->cbidx && g->conf->cb_tag){
+    if (g->conf->cbidx && g->conf->cb_tag) {
       cb = get_aux_ztag(b, g->conf->cb_tag);
-      if(!cb) {skip = 1; continue;}
+      if (!cb) {
+        skip = 1;
+        continue;
+      }
       k = kh_get(str2intmap, g->conf->cbidx, cb);
-      if(k == kh_end(g->conf->cbidx)){
+      if (k == kh_end(g->conf->cbidx)) {
         skip = 1;
         continue;
       }
@@ -274,16 +283,19 @@ static int screadaln(void *data, bam1_t *b) {
 
     // test required and filter flags
     test_flag = (g->conf->keep_flag[0] & ~b->core.flag) |
-      (g->conf->keep_flag[1] & b->core.flag);
-    if (~test_flag & 2047u){ skip = 1; continue;}
+                (g->conf->keep_flag[1] & b->core.flag);
+    if (~test_flag & 2047u) {
+      skip = 1;
+      continue;
+    }
 
     // test overlap
     if (g->conf->reg_idx) {
       skip = !regidx_overlap(g->conf->reg_idx,
-                      sam_hdr_tid2name(g->h, b->core.tid),
-                      b->core.pos,
-                      bam_endpos(b),
-                      g->conf->reg_itr);
+                             sam_hdr_tid2name(g->h, b->core.tid),
+                             b->core.pos,
+                             bam_endpos(b),
+                             g->conf->reg_itr);
       if (skip) continue;
     }
 
@@ -291,19 +303,19 @@ static int screadaln(void *data, bam1_t *b) {
     // check mapping quality
     if (b->core.qual < g->conf->min_mq) {
       skip = 1;
-    } else if ((b->core.flag&BAM_FPAIRED) && !(b->core.flag&BAM_FPROPER_PAIR)){
+    } else if ((b->core.flag&BAM_FPAIRED) && !(b->core.flag&BAM_FPROPER_PAIR)) {
       skip = 1;
       // check if read quality is > x in at least y% of read
-    } else if(g->conf->read_qual.pct &&
-      g->conf->read_qual.minq &&
-      !read_base_quality(b, g->conf->read_qual.pct, g->conf->read_qual.minq)) {
+    } else if (g->conf->read_qual.pct &&
+               g->conf->read_qual.minq &&
+               !read_base_quality(b, g->conf->read_qual.pct, g->conf->read_qual.minq)) {
       skip = 1;
     }
   } while (skip);
   return ret;
 }
 
-static void set_event_filters(efilter* ef, int* event_filters){
+static void set_event_filters(efilter* ef, int* event_filters) {
   ef->trim_5p_dist = event_filters[0];
   ef->trim_3p_dist = event_filters[1];
   ef->splice_dist = event_filters[2];
@@ -315,17 +327,17 @@ static void set_event_filters(efilter* ef, int* event_filters){
   ef->min_var_reads = event_filters[8];
 }
 
-static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
+static int run_scpileup(sc_mplp_conf_t* conf, char* bamfn, char* bamid) {
 
   hts_set_log_level(HTS_LOG_ERROR);
 
-  mplp_sc_aux_t **data;
+  mplp_sc_aux_t** data;
   int i, tid, *n_plp, ret = 0;
   hts_pos_t pos, beg0 = 0, end0 = INT32_MAX;
 
-  const bam_pileup1_t **plp;
+  const bam_pileup1_t** plp;
   bam_mplp_t iter = NULL;
-  bam_hdr_t *h = NULL;
+  bam_hdr_t* h = NULL;
 
   int nbam  = 1;
   data = calloc(1, sizeof(mplp_sc_aux_t*));
@@ -336,7 +348,7 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
 
   data[0] = calloc(1, sizeof(mplp_sc_aux_t));
   data[0]->fp = sam_open(bamfn, "rb");
-  if ( !data[0]->fp ) {
+  if (!data[0]->fp) {
     REprintf("[raer interal] failed to open %s: %s\n", bamfn, strerror(errno));
     ret = -1;
     goto fail;
@@ -345,14 +357,14 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
   data[0]->conf = conf;
 
   h = sam_hdr_read(data[0]->fp);
-  if ( !h ) {
+  if (!h) {
     REprintf("[raer interal] fail to read the header of %s\n", bamfn);
     ret = -1;
     goto fail;
   }
 
-  if(conf->qregion){
-    hts_idx_t *idx = NULL;
+  if (conf->qregion) {
+    hts_idx_t* idx = NULL;
     idx = sam_index_load(data[0]->fp, bamfn) ;
 
     if (idx == NULL) {
@@ -361,7 +373,7 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
       goto fail;
     }
 
-    if ( (data[0]->iter=sam_itr_querys(idx, h, conf->qregion)) == 0) {
+    if ((data[0]->iter=sam_itr_querys(idx, h, conf->qregion)) == 0) {
       REprintf("[raer interal] Fail to parse region '%s' with %s\n", conf->qregion, bamfn);
       ret = -1;
       goto fail;
@@ -379,7 +391,7 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
 
   iter = bam_mplp_init(nbam, screadaln, (void**)data);
   // enable overlap detection
-  if(conf->pe) bam_mplp_init_overlaps(iter) ;
+  if (conf->pe) bam_mplp_init_overlaps(iter) ;
   // set max depth
   bam_mplp_set_maxcnt(iter, conf->max_depth);
 
@@ -405,20 +417,20 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
 
     // check user interrupt
     if (n_iter % 65536 == 0) {
-      if(checkInterrupt()) goto fail;
+      if (checkInterrupt()) goto fail;
     }
 
     // ensure position is in requested intervals
     // if so recover payload with information about strand and ref/var bases
     int ol;
-    payload_t *pld;
+    payload_t* pld;
     if (conf->reg_idx && tid >= 0) {
       ol = regidx_overlap(conf->reg_idx,
                           sam_hdr_tid2name(h, tid),
                           pos,
                           pos,
                           conf->reg_itr);
-      if(ol){
+      if (ol) {
         pld = regitr_payload(conf->reg_itr, payload_t*);
       } else {
         continue;
@@ -437,16 +449,16 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
       // iterate through reads that overlap position
       for (j = 0; j < n_plp[i]; ++j) {
 
-        const bam_pileup1_t *p = plp[i] + j;
+        const bam_pileup1_t* p = plp[i] + j;
 
         // get read base
         int c = p->qpos < p->b->core.l_qseq
-        ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
-        : 'N';
+                ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
+                : 'N';
 
         // store base counts based on library type and r1/r2 status
         int invert = invert_read_orientation(p->b, conf->libtype);
-        if(invert < 0){
+        if (invert < 0) {
           REprintf("[raer internal] invert read orientation failure %i\n", invert);
           ret = -1;
           goto fail;
@@ -454,13 +466,13 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
 
         // remove bad reads
         int rret = check_read_filters(p, conf);
-        if(rret > 0) continue;
+        if (rret > 0) continue;
 
-        if(invert) c = (char)comp_base[(unsigned char)c];
+        if (invert) c = (char)comp_base[(unsigned char)c];
         int strand = invert + 1; //invert is 0 if pos, 1 if neg.
 
         int cret = count_record(p->b, conf, pld, c, strand, bamid);
-        if(cret < 0) {
+        if (cret < 0) {
           ret = -1;
           REprintf("[raer internal] issue with counting records\n");
           goto fail;
@@ -471,10 +483,10 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
     }
 
     // write records
-    if(conf->min_counts == 0 || (conf->min_counts > 0 && n_counted >= conf->min_counts)){
+    if (conf->min_counts == 0 || (conf->min_counts > 0 && n_counted >= conf->min_counts)) {
 
       int wr = write_counts(conf, pld, sam_hdr_tid2name(h, tid), pos);
-      if(wr == -1){
+      if (wr == -1) {
         REprintf("[raer internal] error in writing output.");
         ret = -1;
         goto fail;
@@ -483,34 +495,36 @@ static int run_scpileup(sc_mplp_conf_t *conf, char* bamfn, char* bamid) {
     ++n_iter;
   }
 
-  fail:
-    if (iter) bam_mplp_destroy(iter);
-    bam_hdr_destroy(h);
+fail:
+  if (iter) bam_mplp_destroy(iter);
+  bam_hdr_destroy(h);
 
-    for (i = 0; i < nbam; ++i) {
-      sam_close(data[0]->fp);
-      if(data[0]->iter) hts_itr_destroy(data[0]->iter);
-      if(data[0]->idx) hts_idx_destroy(data[0]->idx);
-      free(data[0]);
-    }
-    free(data); free(plp); free(n_plp);
+  for (i = 0; i < nbam; ++i) {
+    sam_close(data[0]->fp);
+    if (data[0]->iter) hts_itr_destroy(data[0]->iter);
+    if (data[0]->idx) hts_idx_destroy(data[0]->idx);
+    free(data[0]);
+  }
+  free(data);
+  free(plp);
+  free(n_plp);
 
-    return ret;
+  return ret;
 }
 
 
-static int set_sc_mplp_conf(sc_mplp_conf_t *conf, int nbams,
+static int set_sc_mplp_conf(sc_mplp_conf_t* conf, int nbams,
                             int n_outfns, char** outfns, char* qregion, regidx_t* idx,
                             int min_mapQ, int min_baseQ, double* read_bqual_filter,
                             int max_depth, int* b_flags, int* event_filters, int libtype,
                             int n_bcs, char** bcs, char* cbtag, char* umi,
-                            int idx_skip, int pe, int min_counts){
+                            int idx_skip, int pe, int min_counts) {
   conf->is_ss2 = nbams > 1 ? 1 : 0;
 
   conf->fps = R_Calloc(n_outfns, FILE*);
-  if(conf->fps == NULL) {
+  if (conf->fps == NULL) {
     REprintf("[raer internal] unable to alloc");
-    return(-1);
+    return (-1);
   }
   conf->mtxfn = outfns[0];
   conf->sitesfn = outfns[1];
@@ -521,9 +535,9 @@ static int set_sc_mplp_conf(sc_mplp_conf_t *conf, int nbams,
   conf->fps[1] = fopen(R_ExpandFileName(conf->sitesfn), "w");
   conf->fps[2] = fopen(R_ExpandFileName(conf->bcfn), "w");
 
-  if(qregion) conf->qregion = qregion;
-  if(idx) {
-    conf->reg_idx = (regidx_t *)idx;
+  if (qregion) conf->qregion = qregion;
+  if (idx) {
+    conf->reg_idx = (regidx_t*)idx;
     conf->reg_itr = regitr_init(conf->reg_idx);
   }
 
@@ -531,12 +545,12 @@ static int set_sc_mplp_conf(sc_mplp_conf_t *conf, int nbams,
   conf->min_bq = (min_baseQ < 0) ? 0 : min_baseQ;
   conf->max_depth = (!max_depth) ? 10000: max_depth;
 
-  if(b_flags){
+  if (b_flags) {
     conf->keep_flag[0] = b_flags[0];
     conf->keep_flag[1] = b_flags[1];
   }
 
-  if(read_bqual_filter){
+  if (read_bqual_filter) {
     conf->read_qual.pct = read_bqual_filter[0];
     conf->read_qual.minq = (int)read_bqual_filter[1];
   }
@@ -547,15 +561,15 @@ static int set_sc_mplp_conf(sc_mplp_conf_t *conf, int nbams,
   conf->libtype = libtype;
   int hret = 0;
   khint_t k;
-  if(n_bcs > 0){
+  if (n_bcs > 0) {
     conf->cbmap = kh_init(cbumimap);
     conf->cbidx = kh_init(str2intmap);
-    for(int i = 0; i < n_bcs; ++i){
-      char *cb = strdup(bcs[i]);
+    for (int i = 0; i < n_bcs; ++i) {
+      char* cb = strdup(bcs[i]);
       k = kh_put(str2intmap, conf->cbidx, cb, &hret);
-      if(hret == -1 || hret == 2){
+      if (hret == -1 || hret == 2) {
         REprintf("[raer internal] unable to populate barcode hashmap");
-        return(-1);
+        return (-1);
       } else if (hret == 0) {
         free(cb); // was a duplicate cellbarcode
       } else {
@@ -566,7 +580,7 @@ static int set_sc_mplp_conf(sc_mplp_conf_t *conf, int nbams,
     conf->cbidx = NULL;
   }
 
-  if(umi){
+  if (umi) {
     conf->has_umi = 1;
     conf->umi_tag = umi;
   } else {
@@ -579,20 +593,20 @@ static int set_sc_mplp_conf(sc_mplp_conf_t *conf, int nbams,
   conf->min_counts = min_counts < 0 ? 0 : min_counts;
   conf->site_idx = 0;
 
-  return(0);
+  return (0);
 }
 
-static void write_barcodes(FILE* fp, char** bcs, int n){
-  for(int i = 0; i < n; ++i){
+static void write_barcodes(FILE* fp, char** bcs, int n) {
+  for (int i = 0; i < n; ++i) {
     fprintf(fp, "%s\n", bcs[i]);
   }
 }
 
-static int write_all_sites(sc_mplp_conf_t *conf){
-  if(!conf->reg_idx) return(-1);
-  regitr_t *itr = regitr_init(conf->reg_idx);
-  payload_t *pld;
-  while ( regitr_loop(itr) ){
+static int write_all_sites(sc_mplp_conf_t* conf) {
+  if (!conf->reg_idx) return (-1);
+  regitr_t* itr = regitr_init(conf->reg_idx);
+  payload_t* pld;
+  while (regitr_loop(itr)) {
     pld = regitr_payload(itr, payload_t*);
     fprintf(conf->fps[1], "%s:%d_%d_%s_%s\n",
             itr->seq,
@@ -602,7 +616,7 @@ static int write_all_sites(sc_mplp_conf_t *conf){
             pld->alt);
 
   }
-  return(1);
+  return (1);
 }
 
 
@@ -611,73 +625,73 @@ static void check_sc_plp_args(SEXP bampaths, SEXP qregion, SEXP lst,
                               SEXP min_mapQ, SEXP max_depth, SEXP min_baseQ,
                               SEXP read_bqual_filter, SEXP libtype, SEXP b_flags,
                               SEXP outfns, SEXP umi, SEXP index_skip, SEXP pe,
-                              SEXP min_counts){
+                              SEXP min_counts) {
 
-  if(!IS_CHARACTER(bampaths) || (LENGTH(bampaths) < 1)){
+  if (!IS_CHARACTER(bampaths) || (LENGTH(bampaths) < 1)) {
     Rf_error("'bampaths' must be character");
   }
 
-  if(!IS_CHARACTER(qregion) || (LENGTH(qregion) > 1)){
+  if (!IS_CHARACTER(qregion) || (LENGTH(qregion) > 1)) {
     Rf_error("'qregion' must be character of length 0 or 1");
   }
 
-  if(Rf_isNull(lst)){
+  if (Rf_isNull(lst)) {
     Rf_error("'lst' must be non-null");
   }
 
-  if(!IS_CHARACTER(barcodes) || (LENGTH(barcodes) < 1)){
+  if (!IS_CHARACTER(barcodes) || (LENGTH(barcodes) < 1)) {
     Rf_error("'barcodes' must be character");
   }
 
-  if((!IS_CHARACTER(cbtag) || (LENGTH(cbtag) > 1))){
-     Rf_error("'cbtag' must be character of length 0 or 1");
+  if ((!IS_CHARACTER(cbtag) || (LENGTH(cbtag) > 1))) {
+    Rf_error("'cbtag' must be character of length 0 or 1");
   }
 
-  if(!IS_INTEGER(event_filters) || (LENGTH(event_filters) != 9)){
+  if (!IS_INTEGER(event_filters) || (LENGTH(event_filters) != 9)) {
     Rf_error("'event_filters' must be integer of length 9");
   }
 
-  if(!IS_INTEGER(min_mapQ) || (LENGTH(min_mapQ) != 1)){
+  if (!IS_INTEGER(min_mapQ) || (LENGTH(min_mapQ) != 1)) {
     Rf_error("'min_mapQ' must be integer(1)");
   }
 
-  if(!IS_INTEGER(max_depth) || (LENGTH(max_depth) != 1)){
+  if (!IS_INTEGER(max_depth) || (LENGTH(max_depth) != 1)) {
     Rf_error("'max_depth' must be integer(1)");
   }
 
-  if(!IS_INTEGER(min_baseQ) || (LENGTH(min_baseQ) != 1)){
+  if (!IS_INTEGER(min_baseQ) || (LENGTH(min_baseQ) != 1)) {
     Rf_error("'min_baseQ' must be integer(1)");
   }
 
-  if(!IS_NUMERIC(read_bqual_filter) || (LENGTH(read_bqual_filter) != 2)){
+  if (!IS_NUMERIC(read_bqual_filter) || (LENGTH(read_bqual_filter) != 2)) {
     Rf_error("'read_bqual_filter' must be numeric of length 2");
   }
 
-  if(!IS_INTEGER(libtype) || (LENGTH(libtype) != 1)){
+  if (!IS_INTEGER(libtype) || (LENGTH(libtype) != 1)) {
     Rf_error("'lib_type' must be integer(1)");
   }
 
-  if(!IS_INTEGER(b_flags) || (LENGTH(b_flags) != 2)){
+  if (!IS_INTEGER(b_flags) || (LENGTH(b_flags) != 2)) {
     Rf_error("'b_flags' must be integer of length 2");
   }
 
-  if((!IS_CHARACTER(outfns) || (LENGTH(outfns) != 3))){
+  if ((!IS_CHARACTER(outfns) || (LENGTH(outfns) != 3))) {
     Rf_error("'outfns' must be character(3)");
   }
 
-  if((!IS_CHARACTER(umi) || (LENGTH(umi) > 1))){
+  if ((!IS_CHARACTER(umi) || (LENGTH(umi) > 1))) {
     Rf_error("'umi' must be character of length 0 or 1");
   }
 
-  if(!IS_LOGICAL(index_skip) || (LENGTH(index_skip) != 1)){
+  if (!IS_LOGICAL(index_skip) || (LENGTH(index_skip) != 1)) {
     Rf_error("'index_skip' must be logical(1)");
   }
 
-  if(!IS_LOGICAL(pe) || (LENGTH(pe) != 1)){
+  if (!IS_LOGICAL(pe) || (LENGTH(pe) != 1)) {
     Rf_error("'pe' must be logical(1)");
   }
 
-  if(!IS_INTEGER(min_counts) || (LENGTH(min_counts) != 1)){
+  if (!IS_INTEGER(min_counts) || (LENGTH(min_counts) != 1)) {
     Rf_error("'min_counts' must be integer(1)");
   }
 
@@ -694,39 +708,39 @@ SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
                     min_baseQ, read_bqual_filter, libtype,
                     b_flags, outfns, umi, index_skip, pe, min_counts);
 
-  regidx_t *idx = regidx_build(lst, 1);
+  regidx_t* idx = regidx_build(lst, 1);
   if (!idx) Rf_error("Failed to build region index");
 
   int i, ret = 0, res = 0;
-  char ** cbampaths;
+  char** cbampaths;
   int nbams = Rf_length(bampaths);
-  cbampaths = (char**) R_alloc(sizeof( char *), nbams);
-  for (i = 0; i < nbams; ++i){
-    cbampaths[i] = (char *) translateChar(STRING_ELT(bampaths, i));
+  cbampaths = (char**) R_alloc(sizeof(char*), nbams);
+  for (i = 0; i < nbams; ++i) {
+    cbampaths[i] = (char*) translateChar(STRING_ELT(bampaths, i));
   }
 
-  char * cq_region = LENGTH(query_region) == 0 ?
-                   NULL : (char *) translateChar(STRING_ELT(query_region, 0));
+  char* cq_region = LENGTH(query_region) == 0 ?
+                    NULL : (char*) translateChar(STRING_ELT(query_region, 0));
 
   char** coutfns;
   int nout = Rf_length(outfns);
-  coutfns = (char**) R_alloc(sizeof(char *), nout);
-  for (i = 0; i < nout; ++i){
-    coutfns[i] = (char *) translateChar(STRING_ELT(outfns, i));
+  coutfns = (char**) R_alloc(sizeof(char*), nout);
+  for (i = 0; i < nout; ++i) {
+    coutfns[i] = (char*) translateChar(STRING_ELT(outfns, i));
   }
 
   char** bcs;
   int nbcs = Rf_length(barcodes);
-  bcs = (char**) R_alloc(sizeof(char *), nbcs);
-  for (i = 0; i < nbcs; ++i){
-    bcs[i] = (char *) translateChar(STRING_ELT(barcodes, i));
+  bcs = (char**) R_alloc(sizeof(char*), nbcs);
+  for (i = 0; i < nbcs; ++i) {
+    bcs[i] = (char*) translateChar(STRING_ELT(barcodes, i));
   }
 
-  char * c_cbtag = LENGTH(cbtag) == 0 ?
-    NULL : (char *) translateChar(STRING_ELT(cbtag, 0));
+  char* c_cbtag = LENGTH(cbtag) == 0 ?
+                  NULL : (char*) translateChar(STRING_ELT(cbtag, 0));
 
-  char * c_umi = LENGTH(umi) == 0 ?
-    NULL : (char *) translateChar(STRING_ELT(umi, 0));
+  char* c_umi = LENGTH(umi) == 0 ?
+                NULL : (char*) translateChar(STRING_ELT(umi, 0));
 
   sc_mplp_conf_t ga;
   memset(&ga, 0, sizeof(sc_mplp_conf_t));
@@ -738,15 +752,15 @@ SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
                          INTEGER(event_filters), INTEGER(libtype)[0],
                          nbcs, bcs, c_cbtag, c_umi, LOGICAL(index_skip)[0],
                          LOGICAL(pe)[0], INTEGER(min_counts)[0]);
-  if(ret >= 0){
+  if (ret >= 0) {
     // write barcodes file, all barcodes will be reported in matrix
     write_barcodes(ga.fps[2], bcs, nbcs);
     // write sites, if all sites requested, otherwise write during pileup
-    if(ga.min_counts == 0) write_all_sites(&ga);
-    if(ga.is_ss2){
-      for(i = 0; i < nbams; ++i){
+    if (ga.min_counts == 0) write_all_sites(&ga);
+    if (ga.is_ss2) {
+      for (i = 0; i < nbams; ++i) {
         res = run_scpileup(&ga, cbampaths[i], bcs[i]);
-        if(res < 0){
+        if (res < 0) {
           REprintf("[raer internal] error processing bamfile %s:", cbampaths[i]);
           break;
         }
@@ -756,16 +770,16 @@ SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
     }
   }
 
-  for(i = 0; i < nout; ++i) {
-    if(ga.fps[i]) fclose(ga.fps[i]);
+  for (i = 0; i < nout; ++i) {
+    if (ga.fps[i]) fclose(ga.fps[i]);
   }
 
-  if(ga.fps) R_Free(ga.fps);
-  if(ga.reg_itr) regitr_destroy(ga.reg_itr);
-  if(ga.reg_idx) regidx_destroy(ga.reg_idx);
+  if (ga.fps) R_Free(ga.fps);
+  if (ga.reg_itr) regitr_destroy(ga.reg_itr);
+  if (ga.reg_idx) regidx_destroy(ga.reg_idx);
   free_hashmaps(ga.cbmap, ga.cbidx);
 
-  if(res < 0) REprintf("[raer internal] error detected during pileup, %d\n", res);
+  if (res < 0) REprintf("[raer internal] error detected during pileup, %d\n", res);
 
   return ScalarInteger(res) ;
 }

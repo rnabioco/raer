@@ -5,28 +5,28 @@
 #include <htslib/hts.h>
 #include "plp_utils.h"
 
-void chkIntFn(void *dummy) {
+void chkIntFn(void* dummy) {
   R_CheckUserInterrupt();
 }
 int checkInterrupt() {
   return (R_ToplevelExec(chkIntFn, NULL) == FALSE);
 }
 
-SEXP get_region(SEXP region){
+SEXP get_region(SEXP region) {
 
-  if(!Rf_isString(region) || (Rf_length(region) != 1)){
+  if (!Rf_isString(region) || (Rf_length(region) != 1)) {
     Rf_error("'region' must be character");
   }
 
-  char * cregion = (char *) translateChar(STRING_ELT(region, 0));
+  char* cregion = (char*) translateChar(STRING_ELT(region, 0));
 
   int beg, end;
-  const char *chr_pos ;
+  const char* chr_pos ;
   chr_pos = hts_parse_reg(cregion, &beg, &end) ;
-  if(!chr_pos){
+  if (!chr_pos) {
     Rf_error("could not parse region:%s", region);
   }
-  char *chr_name = (char*) malloc(chr_pos - cregion + 1);
+  char* chr_name = (char*) malloc(chr_pos - cregion + 1);
   memcpy(chr_name, cregion, chr_pos - cregion);
   chr_name[chr_pos - cregion] = '\0';
 
@@ -35,7 +35,7 @@ SEXP get_region(SEXP region){
   r_beg = PROTECT(Rf_ScalarInteger(beg));
   r_end = PROTECT(Rf_ScalarInteger(end));
 
-  const char *names[] = {"chrom", "start", "end", ""};
+  const char* names[] = {"chrom", "start", "end", ""};
   SEXP res = PROTECT(Rf_mkNamed(VECSXP, names));
   SET_VECTOR_ELT(res, 0, chr_name_r);
   SET_VECTOR_ELT(res, 1, r_beg);
@@ -50,21 +50,21 @@ SEXP get_region(SEXP region){
 // Based on pysam code Cython code
 // https://github.com/pysam-developers/pysam/blob/ef06e42ce98e4c81972a448ddab62289bf3ad22d/pysam/libcalignedsegment.pyx#L501
 
-int query_start(bam1_t *b){
-  const uint32_t *cigar = bam_get_cigar(b);
+int query_start(bam1_t* b) {
+  const uint32_t* cigar = bam_get_cigar(b);
   int start_offset = 0;
   int n_cigar = b->core.n_cigar;
   int i, op;
 
-  for (i = 0; i <  n_cigar; ++i){
+  for (i = 0; i <  n_cigar; ++i) {
     op = cigar[i] & BAM_CIGAR_MASK;
-    if (op == BAM_CHARD_CLIP){
-      if (start_offset != 0 && start_offset != b->core.l_qseq){
+    if (op == BAM_CHARD_CLIP) {
+      if (start_offset != 0 && start_offset != b->core.l_qseq) {
         REprintf("[raer internal] Invalid clipping in CIGAR string: %s\n",
                  bam_get_qname(b));
         return -1;
       }
-    } else if (op == BAM_CSOFT_CLIP){
+    } else if (op == BAM_CSOFT_CLIP) {
       start_offset += cigar[i] >> BAM_CIGAR_SHIFT;
     } else {
       break;
@@ -73,28 +73,28 @@ int query_start(bam1_t *b){
   return start_offset;
 }
 
-int query_end(bam1_t *b){
-  const uint32_t *cigar = bam_get_cigar(b);
+int query_end(bam1_t* b) {
+  const uint32_t* cigar = bam_get_cigar(b);
   int n_cigar = b->core.n_cigar;
   unsigned int i;
   int op;
   int end_offset = b->core.l_qseq;
 
-  if(end_offset == 0){
+  if (end_offset == 0) {
     REprintf("[raer internal] SEQ record missing from BAM file: %s\n",
              bam_get_qname(b));
     return -1;
   }
 
-  for (i = n_cigar; i-- > 0;){
+  for (i = n_cigar; i-- > 0;) {
     op = cigar[i] & BAM_CIGAR_MASK;
-    if (op == BAM_CHARD_CLIP){
-      if (end_offset != 0 && end_offset != b->core.l_qseq){
+    if (op == BAM_CHARD_CLIP) {
+      if (end_offset != 0 && end_offset != b->core.l_qseq) {
         REprintf("[raer internal] Invalid clipping in CIGAR string: %s\n",
                  bam_get_qname(b));
         return -1;
       }
-    } else if (op == BAM_CSOFT_CLIP){
+    } else if (op == BAM_CSOFT_CLIP) {
       end_offset -= cigar[i] >> BAM_CIGAR_SHIFT;
     } else {
       break;
@@ -104,29 +104,29 @@ int query_end(bam1_t *b){
   return end_offset;
 }
 
-int check_simple_repeat(char** ref, hts_pos_t* ref_len, int pos, int nmer){
+int check_simple_repeat(char** ref, hts_pos_t* ref_len, int pos, int nmer) {
   int start, n_pos;
   n_pos = (nmer * 2) - 1;
 
-  if(n_pos < 1 || nmer < 1 || *ref_len < nmer || pos < 0){
+  if (n_pos < 1 || nmer < 1 || *ref_len < nmer || pos < 0) {
     return 0;
   }
   start = pos - nmer + 1;
-  if(start < 0){
+  if (start < 0) {
     n_pos = n_pos + start;
     start = 0;
   }
   n_pos = ((n_pos + start) > *ref_len) ? (*ref_len - start): n_pos;
 
   // check for homopolymer using run-length-encoding approach
-  for (int i = 0;i < n_pos; ++i) {
+  for (int i = 0; i < n_pos; ++i) {
     // Count occurrences of current character
     int count = 1;
     while (i < n_pos - 1 && (*ref)[start + i] == (*ref)[start + i + 1]) {
       count++;
       i++;
     }
-    if(count >= nmer){
+    if (count >= nmer) {
       return 1;
     }
   }
@@ -135,20 +135,20 @@ int check_simple_repeat(char** ref, hts_pos_t* ref_len, int pos, int nmer){
 
 // check if query position is within dist from 5' or 3' end of alignment
 // pos = query position
-int check_variant_pos(bam1_t* b, int pos, int dist_5p, int dist_3p){
+int check_variant_pos(bam1_t* b, int pos, int dist_5p, int dist_3p) {
   // pos is 0-based query position
   // need to adjust to trim based on alignment start/end
   int qs, qe;
   qs = query_start(b);
   qe = query_end(b);
-  if(qs < 0 || qe < 0) return -1;
+  if (qs < 0 || qe < 0) return -1;
 
-  if(!(b->core.flag&BAM_FREVERSE)){
-    if(pos < (dist_5p + qs) || (qe - pos) <= dist_3p){
+  if (!(b->core.flag&BAM_FREVERSE)) {
+    if (pos < (dist_5p + qs) || (qe - pos) <= dist_3p) {
       return 1;
     }
   } else if (b->core.flag&(BAM_FREVERSE)) {
-    if((qe - pos) <= dist_5p || pos < (dist_3p + qs)){
+    if ((qe - pos) <= dist_5p || pos < (dist_3p + qs)) {
       return 1;
     }
   } else {
@@ -161,28 +161,28 @@ int check_variant_pos(bam1_t* b, int pos, int dist_5p, int dist_3p){
 
 // check if query position is within fractional dist from 5' or 3' end of alignment
 // pos = query position
-int check_variant_fpos(bam1_t* b, int pos, double fdist_5p, double fdist_3p){
+int check_variant_fpos(bam1_t* b, int pos, double fdist_5p, double fdist_3p) {
   // pos is 0-based query position
   // need to adjust to trim based on alignment start/end
   int qs, qe, ql, dist_5p, dist_3p;
   double d5p, d3p;
   qs = query_start(b);
   qe = query_end(b);
-  if(qs < 0 || qe < 0) return -1;
+  if (qs < 0 || qe < 0) return -1;
   ql = qe - qs;
-  if(ql <= 0) return 1;
+  if (ql <= 0) return 1;
   d5p = floor(fdist_5p * ql);
   dist_5p = (int) d5p;
 
   d3p = ceil(fdist_3p * ql);
   dist_3p = (int) d3p;
 
-  if(!(b->core.flag&BAM_FREVERSE)){
-    if(pos < (dist_5p + qs) || (qe - pos) <= dist_3p){
+  if (!(b->core.flag&BAM_FREVERSE)) {
+    if (pos < (dist_5p + qs) || (qe - pos) <= dist_3p) {
       return 1;
     }
   } else if (b->core.flag&(BAM_FREVERSE)) {
-    if((qe - pos) <= dist_5p || pos < (dist_3p + qs)){
+    if ((qe - pos) <= dist_5p || pos < (dist_3p + qs)) {
       return 1;
     }
   } else {
@@ -194,24 +194,24 @@ int check_variant_fpos(bam1_t* b, int pos, double fdist_5p, double fdist_3p){
 }
 
 // return -1 if no splice found
-int dist_to_splice(bam1_t* b, int pos, int dist){
+int dist_to_splice(bam1_t* b, int pos, int dist) {
   int n_cigar = b->core.n_cigar;
-  const uint32_t *cigar = bam_get_cigar(b);
+  const uint32_t* cigar = bam_get_cigar(b);
 
   int i, c, ip, sp, ep, idist;
   ip = 0;
   sp = pos - dist;
   ep = pos + dist;
-  for (i = 0; i < n_cigar; ++i){
+  for (i = 0; i < n_cigar; ++i) {
     c = bam_cigar_op(cigar[i]);
     // is a M, I, S, =, or other query consuming operation
-    if (bam_cigar_type(c)&1){
+    if (bam_cigar_type(c)&1) {
       ip += bam_cigar_oplen(cigar[i]);
       continue;
     }
 
-    if(c == BAM_CREF_SKIP){
-      if (ip >= sp && ip <= ep){
+    if (c == BAM_CREF_SKIP) {
+      if (ip >= sp && ip <= ep) {
         idist = ip - pos;
         idist = (idist < 0) ? -idist : idist;
         return idist;
@@ -226,27 +226,27 @@ int dist_to_splice(bam1_t* b, int pos, int dist){
 // -1 if overhand >= dist,
 // 0 if no flanking splice
 // or overlang length if less than dist
-int check_splice_overhang(bam1_t* b, int pos, int dist){
+int check_splice_overhang(bam1_t* b, int pos, int dist) {
   int n_cigar = b->core.n_cigar;
-  const uint32_t *cigar = bam_get_cigar(b);
+  const uint32_t* cigar = bam_get_cigar(b);
 
   int i, c, ip, cl, p_op, r;
   ip = 0;
   p_op = -1; // CIGAR macros are from 0-9,
-  for (i = 0; i < n_cigar; ++i){
+  for (i = 0; i < n_cigar; ++i) {
     c = bam_cigar_op(cigar[i]);
     cl = bam_cigar_oplen(cigar[i]);
-    if(c == BAM_CMATCH && pos >= ip && pos <= (cl + ip)) {
+    if (c == BAM_CMATCH && pos >= ip && pos <= (cl + ip)) {
       // site is in the 3' exon
-      if(i > 0 && p_op == BAM_CREF_SKIP){
+      if (i > 0 && p_op == BAM_CREF_SKIP) {
         r = cl >= dist ? -1 : cl;
         return r;
       }
       // site is in the 5' exon
-      if(i < n_cigar){
+      if (i < n_cigar) {
         ++i;
         c = bam_cigar_op(cigar[i]);
-        if(c == BAM_CREF_SKIP){
+        if (c == BAM_CREF_SKIP) {
           r = cl >= dist ? -1 : cl;
           return r;
         }
@@ -255,7 +255,7 @@ int check_splice_overhang(bam1_t* b, int pos, int dist){
       return 0;
     }
     p_op = c;
-    if (bam_cigar_type(c)&1){
+    if (bam_cigar_type(c)&1) {
       ip += cl;
       continue;
     }
@@ -266,25 +266,25 @@ int check_splice_overhang(bam1_t* b, int pos, int dist){
 }
 
 // return -1 if no indel found
-int dist_to_indel(bam1_t* b, int pos, int dist){
+int dist_to_indel(bam1_t* b, int pos, int dist) {
   int n_cigar = b->core.n_cigar;
-  const uint32_t *cigar = bam_get_cigar(b);
+  const uint32_t* cigar = bam_get_cigar(b);
 
   int i, c, read_pos, indel_start, indel_end, sp, ep, ldist, rdist, idist;
   read_pos = indel_start = indel_end = 0;
   sp = pos - dist;
   ep = pos + dist;
 
-  for (i = 0; i < n_cigar; ++i){
+  for (i = 0; i < n_cigar; ++i) {
     c = bam_cigar_op(cigar[i]);
 
     // is a M, I, S, =, or other query consuming operation
-    if (bam_cigar_type(c)&1){
-      if(c == BAM_CINS){
+    if (bam_cigar_type(c)&1) {
+      if (c == BAM_CINS) {
         indel_start = read_pos;
         indel_end = read_pos + bam_cigar_oplen(cigar[i]);
         //check range overlap
-        if (sp <= indel_end && indel_start <= ep){
+        if (sp <= indel_end && indel_start <= ep) {
           ldist = pos - indel_end;
           rdist = indel_start - pos;
           idist = (ldist > rdist) ? ldist : rdist;
@@ -294,8 +294,8 @@ int dist_to_indel(bam1_t* b, int pos, int dist){
       read_pos += bam_cigar_oplen(cigar[i]);
     }
 
-    if(c == BAM_CDEL){
-      if (read_pos >= sp && read_pos <= ep){
+    if (c == BAM_CDEL) {
+      if (read_pos >= sp && read_pos <= ep) {
         idist = read_pos - pos;
         idist = (idist < 0) ? -idist : idist;
         return idist;
@@ -307,18 +307,18 @@ int dist_to_indel(bam1_t* b, int pos, int dist){
 
 /* return 1 if read passes quality thresholds
  * otherwise return 0 */
-int read_base_quality(bam1_t* b, float pc, int mq){
+int read_base_quality(bam1_t* b, float pc, int mq) {
   int c, i, ret, lq;
   ret = lq = 0;
   double qual_pct;
 
-  if(!b->core.l_qseq){
+  if (!b->core.l_qseq) {
     return 0;
   }
 
-  for(i = 0; i < b->core.l_qseq; ++i){
+  for (i = 0; i < b->core.l_qseq; ++i) {
     c = bam_get_qual(b)[i];
-    if(c < mq){
+    if (c < mq) {
       lq += 1;
     }
   }
@@ -334,38 +334,38 @@ int invert_read_orientation(bam1_t* b, int libtype) {
   is_neg = bam_is_rev(b) ;
 
   int invert = 0;
-  if(libtype == 0){
+  if (libtype == 0) {
     invert = 0;
-  } else if (libtype == 1){
-    if(!(b->core.flag&BAM_FPAIRED)){
-      if(!(is_neg)) {
+  } else if (libtype == 1) {
+    if (!(b->core.flag&BAM_FPAIRED)) {
+      if (!(is_neg)) {
         invert = 1;
       }
     } else if (b->core.flag & (BAM_FREAD1)) {
-      if(!(is_neg)) {
+      if (!(is_neg)) {
         invert = 1;
       }
     } else if (b->core.flag & (BAM_FREAD2)) {
-      if(is_neg){
+      if (is_neg) {
         invert = 1;
       }
     }
-  } else if (libtype == 2){
-    if(!(b->core.flag&BAM_FPAIRED)){
-      if(is_neg) {
+  } else if (libtype == 2) {
+    if (!(b->core.flag&BAM_FPAIRED)) {
+      if (is_neg) {
         invert = 1;
       }
     } else if (b->core.flag & (BAM_FREAD1)) {
-      if(is_neg){
+      if (is_neg) {
         invert = 1;
       }
     } else if (b->core.flag & (BAM_FREAD2)) {
-      if(!(is_neg)) {
+      if (!(is_neg)) {
         invert = 1;
       }
     }
-  } else if (libtype == 3){
-    if(is_neg){
+  } else if (libtype == 3) {
+    if (is_neg) {
       invert = 1;
     }
   } else {
@@ -390,36 +390,36 @@ double calc_sor(int fwd_ref, int rev_ref, int fwd_alt, int rev_alt) {
   return res;
 }
 
-char* get_aux_ztag(bam1_t *b, const char tag[2]){
+char* get_aux_ztag(bam1_t* b, const char tag[2]) {
   char* str;
   uint8_t* val = bam_aux_get(b, tag) ;
-  if(val){
+  if (val) {
     str = bam_aux2Z(val);
   } else {
     str = NULL;
   }
-  return(str);
+  return (str);
 }
 
 // return -1 on error, otherwise position within 0-99 array.
-int get_relative_position(const bam_pileup1_t *p, int nbase_positions){
-  if(nbase_positions != 100) return -1;
+int get_relative_position(const bam_pileup1_t* p, int nbase_positions) {
+  if (nbase_positions != 100) return -1;
   int qs, qe, pos, alen, rpos;
   qs = query_start(p->b);
-  if(qs < 0) return -1;
+  if (qs < 0) return -1;
   qe = p->b->core.l_qseq - query_end(p->b);
   pos = p->qpos + 1 - qs;
   alen = p->b->core.l_qseq - qs - qe;
   rpos = (double) pos / (alen+1) * (nbase_positions - 1);
-  if(rpos < 0 || rpos >= nbase_positions) return -1;
-  return(rpos);
+  if (rpos < 0 || rpos >= nbase_positions) return -1;
+  return (rpos);
 }
 
 void clear_str_set(strset_t s)
 {
   khint_t k;
-  if(s){
-    for (k = kh_begin(s); k < kh_end(s); ++k){
+  if (s) {
+    for (k = kh_begin(s); k < kh_end(s); ++k) {
       if (kh_exist(s, k)) free((char*)kh_key(s, k));
     }
     kh_clear(strset, s);
@@ -429,8 +429,8 @@ void clear_str_set(strset_t s)
 void clear_str2int_hashmap(str2intmap_t vhash)
 {
   khint_t k;
-  if(vhash){
-    for (k = kh_begin(vhash); k < kh_end(vhash); ++k){
+  if (vhash) {
+    for (k = kh_begin(vhash); k < kh_end(vhash); ++k) {
       if (kh_exist(vhash, k)) free((char*)kh_key(vhash, k));
     }
     kh_clear(str2intmap, vhash);

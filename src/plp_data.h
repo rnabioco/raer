@@ -12,14 +12,14 @@ extern "C" {
 /* arrays of pileup data
    to be stored for each sample */
 typedef struct  {
-  int *pos, *nref, *nvar, *na, *nt, *nc, *ng, *nn, *nx;
-  char **seqnames, **strand, **ref, **var;
+  int* pos, *nref, *nvar, *na, *nt, *nc, *ng, *nn, *nx;
+  char** seqnames, ** strand, ** ref, ** var;
 } _PLP_VECS, *PLP_VECS;
 
 /* arrays of data to be stored across all samples
    to become rowData values in output */
 typedef struct  {
-  double *rpbz, *vdb, *sor;
+  double* rpbz, *vdb, *sor;
 } _SITE_VECS, *SITE_VECS;
 
 typedef struct {
@@ -27,7 +27,7 @@ typedef struct {
   PLP_VECS pdat;  /* structs to grow dynamically for each sample*/
   SITE_VECS sdat; /* struct to dynamically per site, across all samples */
   int icnt, ncnt, nfiles;
-  FILE **fps;
+  FILE** fps;
   SEXP result;  /* list to return to R, will be populated at end of pileup */
 } _PLP_DATA, *PLP_DATA;
 
@@ -54,7 +54,7 @@ enum {
 /* From Rsamtools
  robust memory re-allocation */
 #define _rs_Realloc(p, n, t)	(t *) _rs_Realloc_impl(p, n, sizeof(t))
-void *_rs_Realloc_impl(void *p, size_t n, size_t t);
+void* _rs_Realloc_impl(void* p, size_t n, size_t t);
 
 #ifdef __cplusplus
 }

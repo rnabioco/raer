@@ -5,10 +5,10 @@
 #include <htslib/regidx.h>
 
 typedef struct {
-  char *ref, *alt;
+  char* ref, *alt;
   int idx, strand;
 } payload_t;
 
-regidx_t *regidx_build(SEXP lst, int tbl);
+regidx_t* regidx_build(SEXP lst, int tbl);
 
 #endif
