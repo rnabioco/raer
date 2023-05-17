@@ -85,17 +85,17 @@
 #'
 #' @export
 pileup_cells <- function(bamfile,
-                         sites,
-                         cell_barcodes,
-                         output_directory,
-                         chroms = NULL,
-                         umi_tag = "UB",
-                         cb_tag = "CB",
-                         paired_end = FALSE,
-                         param = FilterParam(),
-                         BPPARAM = SerialParam(),
-                         return_sce = TRUE,
-                         verbose = FALSE) {
+    sites,
+    cell_barcodes,
+    output_directory,
+    chroms = NULL,
+    umi_tag = "UB",
+    cb_tag = "CB",
+    paired_end = FALSE,
+    param = FilterParam(),
+    BPPARAM = SerialParam(),
+    return_sce = TRUE,
+    verbose = FALSE) {
     if (length(bamfile) > 1) {
         process_nbam <- TRUE
         if (length(bamfile) != length(cell_barcodes)) {
@@ -342,9 +342,9 @@ read_sparray <- function(mtx_fn, sites_fn, bc_fn) {
 # Utilities -------------------------------------------------------
 
 get_sc_pileup <- function(bamfn, id, sites, barcodes,
-                          outfile_prefix, chrom,
-                          umi_tag, cb_tag, libtype_code,
-                          event_filters, fp, pe, verbose) {
+    outfile_prefix, chrom,
+    umi_tag, cb_tag, libtype_code,
+    event_filters, fp, pe, verbose) {
     if (length(chrom) > 0) {
         sites <- sites[seqnames(sites) %in% chrom, ]
     }

@@ -85,18 +85,18 @@
 #'
 #' @export
 pileup_sites <- function(bamfiles,
-                         fafile,
-                         sites = NULL,
-                         region = NULL,
-                         chroms = NULL,
-                         param = FilterParam(),
-                         outfile_prefix = NULL,
-                         reads = NULL,
-                         return_data = TRUE,
-                         BPPARAM = SerialParam(),
-                         bad_reads = NULL,
-                         umi_tag = NULL,
-                         verbose = FALSE) {
+    fafile,
+    sites = NULL,
+    region = NULL,
+    chroms = NULL,
+    param = FilterParam(),
+    outfile_prefix = NULL,
+    reads = NULL,
+    return_data = TRUE,
+    BPPARAM = SerialParam(),
+    bad_reads = NULL,
+    umi_tag = NULL,
+    verbose = FALSE) {
     if (is.null(names(bamfiles))) {
         sample_ids <- basename(bamfiles)
     } else {
@@ -687,14 +687,14 @@ setMethod(show, "FilterParam", function(object) {
 #' @export
 FilterParam <-
     function(max_depth = 1e4, min_depth = 1L, min_base_quality = 20L,
-             min_mapq = 0L, library_type = "fr-first-strand",
-             bam_flags = NULL, only_keep_variants = FALSE,
-             trim_5p = 0L, trim_3p = 0L, ftrim_5p = 0, ftrim_3p = 0,
-             indel_dist = 0L, splice_dist = 0L, min_splice_overhang = 0L,
-             homopolymer_len = 0L,
-             max_mismatch_type = c(0L, 0L), read_bqual = c(0.0, 0.0),
-             min_variant_reads = 0L, min_allelic_freq = 0,
-             report_multiallelic = TRUE) {
+    min_mapq = 0L, library_type = "fr-first-strand",
+    bam_flags = NULL, only_keep_variants = FALSE,
+    trim_5p = 0L, trim_3p = 0L, ftrim_5p = 0, ftrim_3p = 0,
+    indel_dist = 0L, splice_dist = 0L, min_splice_overhang = 0L,
+    homopolymer_len = 0L,
+    max_mismatch_type = c(0L, 0L), read_bqual = c(0.0, 0.0),
+    min_variant_reads = 0L, min_allelic_freq = 0,
+    report_multiallelic = TRUE) {
         stopifnot(isSingleNumber(max_depth))
         stopifnot(isSingleNumber(min_base_quality))
         stopifnot(isSingleNumber(min_depth))
@@ -839,10 +839,10 @@ gr_to_cregions <- function(gr) {
 #' @importFrom IRanges extractList
 #' @keywords internal
 merge_pileups <- function(plps,
-                          assay_cols = c("ALT", "nRef", "nAlt", "nA", "nT", "nC", "nG"),
-                          sample_names = NULL,
-                          fill_na = NULL,
-                          verbose = FALSE) {
+    assay_cols = c("ALT", "nRef", "nAlt", "nA", "nT", "nC", "nG"),
+    sample_names = NULL,
+    fill_na = NULL,
+    verbose = FALSE) {
     if (!is.list(plps)) {
         plps <- list(plps)
     }

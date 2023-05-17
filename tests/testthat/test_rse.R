@@ -1,9 +1,10 @@
-
-pkgs <- c("GenomicRanges", "GenomicFeatures",
-          "SummarizedExperiment", "rtracklayer")
+pkgs <- c(
+    "GenomicRanges", "GenomicFeatures",
+    "SummarizedExperiment", "rtracklayer"
+)
 
 msg <- lapply(pkgs, function(x) {
-  suppressPackageStartupMessages(library(x, character.only = TRUE))
+    suppressPackageStartupMessages(library(x, character.only = TRUE))
 })
 
 
@@ -42,13 +43,14 @@ test_that("annot_snps works", {
         expect_true(is(res, "RangedSummarizedExperiment"))
         expect_true("RefSNP_id" %in% colnames(mcols(res)))
 
-        if(require(BSgenome.Hsapiens.NCBI.GRCh38)){
-          res <- annot_snps(se,
-                            dbsnp = SNPlocs.Hsapiens.dbSNP144.GRCh38,
-                            genome = BSgenome.Hsapiens.NCBI.GRCh38)
-          expect_true(is(res, "RangedSummarizedExperiment"))
-          expect_true(all(c("RefSNP_id", "snp_ref_allele","snp_alt_alleles") %in%
-                        colnames(mcols(res))))
+        if (require(BSgenome.Hsapiens.NCBI.GRCh38)) {
+            res <- annot_snps(se,
+                dbsnp = SNPlocs.Hsapiens.dbSNP144.GRCh38,
+                genome = BSgenome.Hsapiens.NCBI.GRCh38
+            )
+            expect_true(is(res, "RangedSummarizedExperiment"))
+            expect_true(all(c("RefSNP_id", "snp_ref_allele", "snp_alt_alleles") %in%
+                colnames(mcols(res))))
         }
     }
 })
@@ -76,121 +78,125 @@ test_that("annot_from_gr works", {
 
 
 test_that("calc_edit_frequency works", {
-  data(rse_adar_ifn)
-  rse <- calc_edit_frequency(rse_adar_ifn)
-  expect_true("edit_freq" %in% assayNames(rse))
-  expect_true("depth" %in% assayNames(rse))
+    data(rse_adar_ifn)
+    rse <- calc_edit_frequency(rse_adar_ifn)
+    expect_true("edit_freq" %in% assayNames(rse))
+    expect_true("depth" %in% assayNames(rse))
 })
 
-test_that("prep_for_de works",{
-  data(rse_adar_ifn)
-  rse <- calc_edit_frequency(rse_adar_ifn)
-  dse <- prep_for_de(rse, min_samples = 1)
-  expect_true("counts" %in% assayNames(dse))
-  expect_equal(type(assay(dse)), "integer")
-  expect_equal(2 * ncol(rse), ncol(dse))
-  expect_equal(setdiff(c("ref", "alt"), dse$count), character(0))
+test_that("prep_for_de works", {
+    data(rse_adar_ifn)
+    rse <- calc_edit_frequency(rse_adar_ifn)
+    dse <- prep_for_de(rse, min_samples = 1)
+    expect_true("counts" %in% assayNames(dse))
+    expect_equal(type(assay(dse)), "integer")
+    expect_equal(2 * ncol(rse), ncol(dse))
+    expect_equal(setdiff(c("ref", "alt"), dse$count), character(0))
 })
 
-test_that("perform_de works",{
+test_that("perform_de works", {
+    bams <- rep(c(bamfn, bam2fn), each = 3)
+    sample_ids <- paste0(rep(c("KO", "WT"), each = 3), 1:3)
+    names(bams) <- sample_ids
 
-  bams <- rep(c(bamfn, bam2fn), each = 3)
-  sample_ids <- paste0(rep(c("KO", "WT"), each = 3), 1:3)
-  names(bams) <- sample_ids
+    fp <- FilterParam(only_keep_variants = TRUE)
+    rse <- pileup_sites(bams, fafn, param = fp)
+    rse$condition <- substr(rse$sample, 1, 2)
 
-  fp <- FilterParam(only_keep_variants = TRUE)
-  rse <- pileup_sites(bams, fafn, param = fp)
-  rse$condition <- substr(rse$sample, 1, 2)
-
-  rse <- calc_edit_frequency(rse)
-  dse <- prep_for_de(rse)
-  res <- perform_de(dse, condition_control = "WT", condition_treatment = "KO")
-  sig_sites <- rownames(res$sig_results)[1:5]
-  ed <- assay(rse, "edit_freq")[sig_sites, 1] - assay(rse, "edit_freq")[sig_sites, 4]
-  expect_true(all(sign(ed) == sign(res$sig_results$logFC[1:5])))
+    rse <- calc_edit_frequency(rse)
+    dse <- prep_for_de(rse)
+    res <- perform_de(dse, condition_control = "WT", condition_treatment = "KO")
+    sig_sites <- rownames(res$sig_results)[1:5]
+    ed <- assay(rse, "edit_freq")[sig_sites, 1] - assay(rse, "edit_freq")[sig_sites, 4]
+    expect_true(all(sign(ed) == sign(res$sig_results$logFC[1:5])))
 })
 
 
-test_that("filter_multiallelic works",{
-  data(rse_adar_ifn)
-  x <- sum(grepl(",", assay(rse_adar_ifn, "ALT")))
+test_that("filter_multiallelic works", {
+    data(rse_adar_ifn)
+    x <- sum(grepl(",", assay(rse_adar_ifn, "ALT")))
 
-  expect_message(rse <- filter_multiallelic(rse_adar_ifn))
-  xx <- sum(grepl(",", assay(rse, "ALT")))
+    expect_message(rse <- filter_multiallelic(rse_adar_ifn))
+    xx <- sum(grepl(",", assay(rse, "ALT")))
 
-  expect_true(x > xx && xx == 0)
-  expect_true("ALT" %in% names(rowData(rse)))
+    expect_true(x > xx && xx == 0)
+    expect_true("ALT" %in% names(rowData(rse)))
 })
 
-mock_txdb <- function(){
-  gr <- GRanges(c("DHFR:310-330:-",
-                  "DHFR:410-430:-",
-                  "SSR3:100-155:-",
-                  "SSR3:180-202:-"))
-  gr$source <- "raer"
-  gr$type <- "exon"
-  gr$source <- NA
-  gr$phase <- NA_integer_
-  gr$gene_id <- c(1,1,2,2)
-  gr$transcript_id <- rep(c("1.1","2.1"), each = 2)
-  makeTxDbFromGRanges(gr)
+mock_txdb <- function() {
+    gr <- GRanges(c(
+        "DHFR:310-330:-",
+        "DHFR:410-430:-",
+        "SSR3:100-155:-",
+        "SSR3:180-202:-"
+    ))
+    gr$source <- "raer"
+    gr$type <- "exon"
+    gr$source <- NA
+    gr$phase <- NA_integer_
+    gr$gene_id <- c(1, 1, 2, 2)
+    gr$transcript_id <- rep(c("1.1", "2.1"), each = 2)
+    makeTxDbFromGRanges(gr)
 }
 
-test_that("get_splice_sites and filtering works",{
-  txdb <- mock_txdb()
-  spl_sites <- get_splice_sites(txdb,
-                                slop = 3)
-  expect_true(all(width(spl_sites) == 6))
-  expect_error(get_splice_sites(spl_sites))
+test_that("get_splice_sites and filtering works", {
+    txdb <- mock_txdb()
+    spl_sites <- get_splice_sites(txdb,
+        slop = 3
+    )
+    expect_true(all(width(spl_sites) == 6))
+    expect_error(get_splice_sites(spl_sites))
 
-  data(rse_adar_ifn)
-  expect_message(rse <- filter_splice_variants(rse_adar_ifn, txdb))
-  n_removed <- nrow(subsetByOverlaps(rse_adar_ifn, rse, invert = TRUE))
-  expect_equal(n_removed, 5L)
-  expect_true("DHFR_328_-" %in% rownames(rse_adar_ifn))
-  expect_false("DHFR_328_-" %in% rownames(rse))
+    data(rse_adar_ifn)
+    expect_message(rse <- filter_splice_variants(rse_adar_ifn, txdb))
+    n_removed <- nrow(subsetByOverlaps(rse_adar_ifn, rse, invert = TRUE))
+    expect_equal(n_removed, 5L)
+    expect_true("DHFR_328_-" %in% rownames(rse_adar_ifn))
+    expect_false("DHFR_328_-" %in% rownames(rse))
 })
 
-test_that("removing clustered variants works",{
-  txdb <- mock_txdb()
+test_that("removing clustered variants works", {
+    txdb <- mock_txdb()
 
-  data(rse_adar_ifn)
-  expect_message(rse <- filter_multiallelic(rse_adar_ifn))
+    data(rse_adar_ifn)
+    expect_message(rse <- filter_multiallelic(rse_adar_ifn))
 
-  gr <- rowRanges(rse)
-  nd <- distanceToNearest(gr)
-  gr1 <- gr[mcols(nd)$distance > 100]
-  expect_message(gr2 <- filter_clustered_variants(rse, txdb))
-  expect_true(identical(rowRanges(gr2), gr1))
+    gr <- rowRanges(rse)
+    nd <- distanceToNearest(gr)
+    gr1 <- gr[mcols(nd)$distance > 100]
+    expect_message(gr2 <- filter_clustered_variants(rse, txdb))
+    expect_true(identical(rowRanges(gr2), gr1))
 
-  # check that transcript based removal works
-  # DHFR_328 -> DHFR_423 overlaps 310-330 -> 410-430 splice
-  ex <- exons(txdb)
-  rse_ex <- subsetByOverlaps(rse, ex)
+    # check that transcript based removal works
+    # DHFR_328 -> DHFR_423 overlaps 310-330 -> 410-430 splice
+    ex <- exons(txdb)
+    rse_ex <- subsetByOverlaps(rse, ex)
 
-  expect_message(
-    gr2 <- filter_clustered_variants(rse_ex,
-                                     txdb,
-                                     regions = "transcript",
-                                     variant_dist = 20)
-  )
+    expect_message(
+        gr2 <- filter_clustered_variants(rse_ex,
+            txdb,
+            regions = "transcript",
+            variant_dist = 20
+        )
+    )
 
-  expt <- rowRanges(subsetByOverlaps(rse_ex, gr2, invert = T))
-  ds <- distanceToNearest(mapToTranscripts(expt, txdb,
-                                           extractor.fun = exonsBy))
-  expect_true(all(mcols(ds)$distance < 20))
+    expt <- rowRanges(subsetByOverlaps(rse_ex, gr2, invert = T))
+    ds <- distanceToNearest(mapToTranscripts(expt, txdb,
+        extractor.fun = exonsBy
+    ))
+    expect_true(all(mcols(ds)$distance < 20))
 
-  expect_message(
-    gr2 <- filter_clustered_variants(rse_ex, txdb,
-                                   variant_dist = 25)
-  )
-  expect_equal(length(gr2), 3L)
+    expect_message(
+        gr2 <- filter_clustered_variants(rse_ex, txdb,
+            variant_dist = 25
+        )
+    )
+    expect_equal(length(gr2), 3L)
 })
 
 test_that("calc_confidence works", {
-  data(rse_adar_ifn)
-  rse <- calc_confidence(rse_adar_ifn)
-  expect_true("confidence" %in% names(rowData(rse)))
-  expect_true(identical(range(rowData(rse)$confidence), c(0, 1)))
+    data(rse_adar_ifn)
+    rse <- calc_confidence(rse_adar_ifn)
+    expect_true("confidence" %in% names(rowData(rse)))
+    expect_true(identical(range(rowData(rse)$confidence), c(0, 1)))
 })
-

@@ -40,12 +40,12 @@
 #' @importFrom Matrix colSums
 #' @export
 calc_edit_frequency <- function(se,
-                                edit_from = NULL,
-                                edit_to = NULL,
-                                drop = FALSE,
-                                replace_na = TRUE,
-                                edit_frequency = 0,
-                                min_count = 1) {
+    edit_from = NULL,
+    edit_to = NULL,
+    drop = FALSE,
+    replace_na = TRUE,
+    edit_frequency = 0,
+    min_count = 1) {
     # Set edit to and from for pre defined types
     if (is.null(edit_from) | is.null(edit_to)) {
         edit_from <- "Ref"
@@ -136,7 +136,7 @@ calc_edit_frequency <- function(se,
 #' @noRd
 #' @keywords internal
 count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
-                        edit_from = NULL, edit_to = NULL) {
+    edit_from = NULL, edit_to = NULL) {
     n_pass_filter <- Matrix::colSums((assay(se, "edit_freq") > edit_frequency) &
         ((assay(se, paste0("n", edit_from)) +
             assay(se, paste0("n", edit_to))) >=
@@ -195,11 +195,11 @@ count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
 #' dse
 #' @export
 prep_for_de <- function(se,
-                        type = "AI",
-                        edit_from = NULL, edit_to = NULL,
-                        min_prop = 0.1,
-                        max_prop = 0.9,
-                        min_samples = 3) {
+    type = "AI",
+    edit_from = NULL, edit_to = NULL,
+    min_prop = 0.1,
+    max_prop = 0.9,
+    min_samples = 3) {
     # Set edit to and from for pre defined types
     if (type == "AI") {
         edit_from <- "A"
@@ -290,9 +290,9 @@ prep_for_de <- function(se,
 #' @importFrom stats model.matrix
 #' @export
 perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
-                       condition_col = "condition",
-                       condition_control = NULL,
-                       condition_treatment = NULL) {
+    condition_col = "condition",
+    condition_control = NULL,
+    condition_treatment = NULL) {
     # Make sure all variables are present
     if (!sample_col %in% colnames(colData(deobj))) {
         cli::cli_abort(c(
@@ -364,7 +364,7 @@ perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
     } else if (type == "DESeq2") {
         results <- run_deseq2(deobj, condition_control, condition_treatment)
     } else {
-      cli::cli_abort(c(
+        cli::cli_abort(c(
             "Unrecognized type: '{type}'. type must be either edgeR",
             " or DESeq2."
         ))
@@ -393,7 +393,7 @@ perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
 #
 #
 run_deseq2 <- function(deobj, condition_control = NULL,
-                       condition_treatment = NULL) {
+    condition_treatment = NULL) {
     if (!requireNamespace("DESeq2", quietly = TRUE)) {
         cli::cli_abort("Package \"DESeq2\" needed to run differential analysis.")
     }
@@ -486,7 +486,7 @@ run_deseq2 <- function(deobj, condition_control = NULL,
 # @param condition_treatment The name of the treatment condition. This must be
 #   a variable in your condition_col of colData(deobj).
 run_edger <- function(deobj, condition_control = NULL,
-                      condition_treatment = NULL) {
+    condition_treatment = NULL) {
     if (!requireNamespace("edgeR", quietly = TRUE)) {
         cli::cli_abort("Package \"edgeR\" needed to run differential analysis.")
     }

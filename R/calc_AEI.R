@@ -53,13 +53,13 @@
 #'
 #' @export
 calc_AEI <- function(bam_fn,
-                     fasta_fn,
-                     alu_ranges = NULL,
-                     txdb = NULL,
-                     snp_db = NULL,
-                     param = FilterParam(),
-                     BPPARAM = SerialParam(),
-                     verbose = FALSE) {
+    fasta_fn,
+    alu_ranges = NULL,
+    txdb = NULL,
+    snp_db = NULL,
+    param = FilterParam(),
+    BPPARAM = SerialParam(),
+    verbose = FALSE) {
     chroms <- names(Rsamtools::scanBamHeader(bam_fn)[[1]]$targets)
 
     if (length(bam_fn) != 1) {
@@ -187,13 +187,13 @@ calc_AEI <- function(bam_fn,
 }
 
 .calc_AEI_per_chrom <- function(bam_fn,
-                                fasta_fn,
-                                alu_sites,
-                                chrom,
-                                param,
-                                snp_gr,
-                                genes_gr,
-                                verbose) {
+    fasta_fn,
+    alu_sites,
+    chrom,
+    param,
+    snp_gr,
+    genes_gr,
+    verbose) {
     if (verbose) {
         start <- Sys.time()
         cli::cli_progress_step("working on: {chrom}")
@@ -267,8 +267,8 @@ calc_AEI <- function(bam_fn,
 #'
 #' @export
 get_overlapping_snps <- function(gr,
-                                 snpDb,
-                                 output_file = NULL) {
+    snpDb,
+    output_file = NULL) {
     gr <- gr[seqnames(gr) %in% seqnames(snpDb)]
 
     # iterate through each contig, drop mcols (snpID) to reduce memory
@@ -341,8 +341,10 @@ correct_strand <- function(rse, genes_gr) {
     # drop non-genic and multi-strand (overlapping annotations)
     rse <- rse[!is.na(rowData(rse)$gene_strand), ]
 
-    n_strands <- lengths(regmatches(rowData(rse)$gene_strand,
-                                    gregexpr(",", rowData(rse)$gene_strand)))
+    n_strands <- lengths(regmatches(
+        rowData(rse)$gene_strand,
+        gregexpr(",", rowData(rse)$gene_strand)
+    ))
     rse <- rse[n_strands == 0, ]
 
     flip_rows <- as.vector(strand(rse) != rowData(rse)$gene_strand)

@@ -1,6 +1,6 @@
 pkgs <- c("GenomicRanges", "Rsamtools", "SingleCellExperiment")
 msg <- lapply(pkgs, function(x) {
-  suppressPackageStartupMessages(library(x, character.only = TRUE))
+    suppressPackageStartupMessages(library(x, character.only = TRUE))
 })
 
 bam_fn <- raer_example("5k_neuron_mouse_possort.bam")

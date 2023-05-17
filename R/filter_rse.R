@@ -102,16 +102,18 @@ get_splice_sites <- function(txdb, slop = 4) {
 #' @examples
 #' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
 #'     data(rse_adar_ifn)
-#'     gr <- GRanges(c("DHFR:310-330:-",
-#'                     "DHFR:410-415:-",
-#'                     "SSR3:100-155:-",
-#'                     "SSR3:180-190:-"))
+#'     gr <- GRanges(c(
+#'         "DHFR:310-330:-",
+#'         "DHFR:410-415:-",
+#'         "SSR3:100-155:-",
+#'         "SSR3:180-190:-"
+#'     ))
 #'     gr$source <- "raer"
 #'     gr$type <- "exon"
 #'     gr$source <- NA
 #'     gr$phase <- NA_integer_
-#'     gr$gene_id <- c(1,1,2,2)
-#'     gr$transcript_id <- rep(c("1.1","2.1"), each = 2)
+#'     gr$gene_id <- c(1, 1, 2, 2)
+#'     gr$transcript_id <- rep(c("1.1", "2.1"), each = 2)
 #'     txdb <- makeTxDbFromGRanges(gr)
 #'     filter_splice_variants(rse_adar_ifn, txdb)
 #' }
@@ -123,21 +125,25 @@ get_splice_sites <- function(txdb, slop = 4) {
 #' @importFrom GenomeInfoDb keepSeqlevels
 #' @export
 filter_splice_variants <- function(rse, txdb,
-                                   splice_site_dist = 4,
-                                   ignore.strand = FALSE) {
+    splice_site_dist = 4,
+    ignore.strand = FALSE) {
     n_in <- nrow(rse)
 
     spl_sites <- get_splice_sites(txdb, splice_site_dist)
-    shared_seqs <- intersect(seqnames(seqinfo(rse)),
-                             seqnames(seqinfo(spl_sites)))
-    if(length(shared_seqs) == 0) {
-      cli::cli_abort("No shared seqnames found between txdb and rse")
+    shared_seqs <- intersect(
+        seqnames(seqinfo(rse)),
+        seqnames(seqinfo(spl_sites))
+    )
+    if (length(shared_seqs) == 0) {
+        cli::cli_abort("No shared seqnames found between txdb and rse")
     }
     spl_sites <- spl_sites[seqnames(spl_sites) %in% shared_seqs, ]
     spl_sites <- GenomeInfoDb::keepSeqlevels(spl_sites, shared_seqs)
     x <- rowRanges(rse)
-    fo <- findOverlaps(x, spl_sites, type = "any",
-                       ignore.strand = ignore.strand)
+    fo <- findOverlaps(x, spl_sites,
+        type = "any",
+        ignore.strand = ignore.strand
+    )
     to_keep <- setdiff(seq_along(x), unique(queryHits(fo)))
 
     n_filt <- length(to_keep)
@@ -168,16 +174,18 @@ filter_splice_variants <- function(rse, txdb,
 #' @examples
 #' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
 #'     data(rse_adar_ifn)
-#'     gr <- GRanges(c("DHFR:310-330:-",
-#'                     "DHFR:410-415:-",
-#'                     "SSR3:100-155:-",
-#'                     "SSR3:180-190:-"))
+#'     gr <- GRanges(c(
+#'         "DHFR:310-330:-",
+#'         "DHFR:410-415:-",
+#'         "SSR3:100-155:-",
+#'         "SSR3:180-190:-"
+#'     ))
 #'     gr$source <- "raer"
 #'     gr$type <- "exon"
 #'     gr$source <- NA
 #'     gr$phase <- NA_integer_
-#'     gr$gene_id <- c(1,1,2,2)
-#'     gr$transcript_id <- rep(c("1.1","2.1"), each = 2)
+#'     gr$gene_id <- c(1, 1, 2, 2)
+#'     gr$transcript_id <- rep(c("1.1", "2.1"), each = 2)
 #'     txdb <- makeTxDbFromGRanges(gr)
 #'
 #'     rse <- filter_multiallelic(rse_adar_ifn)
@@ -193,8 +201,8 @@ filter_splice_variants <- function(rse, txdb,
 #' @importFrom GenomicFeatures mapToTranscripts
 #' @export
 filter_clustered_variants <- function(rse, txdb,
-                                      regions = c("transcript", "genome"),
-                                      variant_dist = 100) {
+    regions = c("transcript", "genome"),
+    variant_dist = 100) {
     if (!is(txdb, "TxDb")) {
         cli::cli_abort("txdb must be a TxDb object")
     }
@@ -221,24 +229,27 @@ filter_clustered_variants <- function(rse, txdb,
 
         gn_keep <- as.integer(to_keep)
     } else {
-      gn_keep <- seq_along(x)
+        gn_keep <- seq_along(x)
     }
 
     if ("transcript" %in% regions) {
         x_tx <- x
         shared_seqs <- intersect(seqnames(x), seqnames(seqinfo(txdb)))
-        if(length(shared_seqs) == 0) {
-          cli::cli_abort("No shared seqnames found between txdb and rse")
+        if (length(shared_seqs) == 0) {
+            cli::cli_abort("No shared seqnames found between txdb and rse")
         }
         x_tx <- x
         x_tx$id <- seq_along(x)
         x_tx <- x_tx[seqnames(x_tx) %in% shared_seqs]
         x_tx <- keepSeqlevels(x_tx, shared_seqs)
         tx_sites <- mapToTranscripts(x_tx,
-                                     txdb,
-                                     extractor.fun = GenomicFeatures::exonsBy)
-        tx_sites$Var <- paste0(x_tx[tx_sites$xHits]$REF,
-                               x_tx[tx_sites$xHits]$ALT)
+            txdb,
+            extractor.fun = GenomicFeatures::exonsBy
+        )
+        tx_sites$Var <- paste0(
+            x_tx[tx_sites$xHits]$REF,
+            x_tx[tx_sites$xHits]$ALT
+        )
         tx_sites$id <- x_tx[tx_sites$xHits]$id
         tx_sites <- sort(tx_sites)
         tx_extend <- trim(suppressWarnings(tx_sites + variant_dist))
@@ -255,7 +266,7 @@ filter_clustered_variants <- function(rse, txdb,
         tx_sites <- tx_sites[as.integer(to_drop)]
         tx_keep <- setdiff(seq_along(x), unique(tx_sites$id))
     } else {
-      tx_keep <- seq_along(x)
+        tx_keep <- seq_along(x)
     }
 
     x <- x[intersect(gn_keep, tx_keep), ]
@@ -302,29 +313,29 @@ filter_clustered_variants <- function(rse, txdb,
 #' @importFrom stats pbeta
 #' @export
 calc_confidence <- function(se,
-                            edit_to = "G",
-                            edit_from = "A",
-                            per_sample = FALSE,
-                            exp_fraction = 0.01){
-  if(length(exp_fraction) != 1) {
-    cli::cli_abort("exp_fraction must be numeric(1)")
-  }
-  edit_to <- paste0("n", edit_to)
-  edit_from <- paste0("n", edit_from)
-  alt <- assay(se, edit_to)
-  ref <- assay(se, edit_from)
-  if(per_sample){
-    nc <- ncol(se)
-    res <- vapply(seq_len(nc), function(i){
-      1 - pbeta(exp_fraction, alt[, i], ref[, i])
-    },  FUN.VALUE = numeric(nrow(se)))
-    colnames(res) <- colnames(se)
-    assays(se)$confidence <- res
-  } else {
-    alt <- rowSums(alt)
-    ref <- rowSums(ref)
-    res <- 1 - pbeta(exp_fraction, alt, ref)
-    rowData(se)$confidence <- res
-  }
-  se
+    edit_to = "G",
+    edit_from = "A",
+    per_sample = FALSE,
+    exp_fraction = 0.01) {
+    if (length(exp_fraction) != 1) {
+        cli::cli_abort("exp_fraction must be numeric(1)")
+    }
+    edit_to <- paste0("n", edit_to)
+    edit_from <- paste0("n", edit_from)
+    alt <- assay(se, edit_to)
+    ref <- assay(se, edit_from)
+    if (per_sample) {
+        nc <- ncol(se)
+        res <- vapply(seq_len(nc), function(i) {
+            1 - pbeta(exp_fraction, alt[, i], ref[, i])
+        }, FUN.VALUE = numeric(nrow(se)))
+        colnames(res) <- colnames(se)
+        assays(se)$confidence <- res
+    } else {
+        alt <- rowSums(alt)
+        ref <- rowSums(ref)
+        res <- 1 - pbeta(exp_fraction, alt, ref)
+        rowData(se)$confidence <- res
+    }
+    se
 }

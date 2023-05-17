@@ -86,21 +86,28 @@ rse
 scbam_fn <- raer_example("5k_neuron_mouse_possort.bam")
 outdir <- tempdir("sc_editing")
 
-editing_sites <- GRanges(c("2:579:-",
-                           "2:625:-",
-                           "2:589:-"),
-                         REF = "A",
-                         ALT = "G")
+editing_sites <- GRanges(
+    c(
+        "2:579:-",
+        "2:625:-",
+        "2:589:-"
+    ),
+    REF = "A",
+    ALT = "G"
+)
 
-cbs <- c("CACCAAACAACAACAA-1", 
-         "TATTCCACACCCTCTA-1", 
-         "GACCTTCAGTTGTAAG-1")
+cbs <- c(
+    "CACCAAACAACAACAA-1",
+    "TATTCCACACCCTCTA-1",
+    "GACCTTCAGTTGTAAG-1"
+)
 
-sce <- pileup_cells(scbam_fn, 
-                    sites = editing_sites,
-                    cell_barcodes = cbs,
-                    param = fp, 
-                    output_directory = outdir)
+sce <- pileup_cells(scbam_fn,
+    sites = editing_sites,
+    cell_barcodes = cbs,
+    param = fp,
+    output_directory = outdir
+)
 sce
 ```
 

@@ -17,7 +17,6 @@
 #' @importFrom utils relist
 #' @export
 download_GSE99249 <- function(verbose = TRUE) {
-
     baseURL <- "https://raer-test-data.s3.us-west-2.amazonaws.com/GSE99249/"
 
     bam_fns <- c(
@@ -60,7 +59,6 @@ download_GSE99249 <- function(verbose = TRUE) {
 #'
 #' @export
 download_NA12878 <- function(verbose = TRUE) {
-
     baseURL <- "https://raer-test-data.s3.us-west-2.amazonaws.com/NA12878/"
 
     bam_fns <- c(
@@ -119,31 +117,33 @@ download_human_pbmc <- function(verbose = TRUE) {
 
 #' @importFrom BiocFileCache bfcquery bfcadd bfcneedsupdate bfcdownload bfcrpath
 .add_files <- function(fls, urls, bfc, verbose = TRUE) {
-  bam_suffixes <- c(".bai", ".bam")
-  stopifnot((length(fls) == length(urls)) && (length(fls) > 0))
+    bam_suffixes <- c(".bai", ".bam")
+    stopifnot((length(fls) == length(urls)) && (length(fls) > 0))
 
-  fls_paths <- unlist(lapply(seq_along(fls), function(i) {
-    fl <- fls[i]
-    fl_url <- urls[i]
-    is_bam <- any(vapply(bam_suffixes, endsWith, x = fl, logical(1)))
-    rid <- BiocFileCache::bfcquery(bfc, fl, "rname")$rid
-    if (!length(rid)) {
-        if(verbose) {
-            cli::cli_alert_info("Downloading file: {fl}")
+    fls_paths <- unlist(lapply(seq_along(fls), function(i) {
+        fl <- fls[i]
+        fl_url <- urls[i]
+        is_bam <- any(vapply(bam_suffixes, endsWith, x = fl, logical(1)))
+        rid <- BiocFileCache::bfcquery(bfc, fl, "rname")$rid
+        if (!length(rid)) {
+            if (verbose) {
+                cli::cli_alert_info("Downloading file: {fl}")
+            }
+            rid <- names(BiocFileCache::bfcadd(bfc,
+                fl,
+                fpath = fl_url,
+                fname = ifelse(is_bam,
+                    "exact",
+                    "unique"
+                )
+            ))
         }
-        rid <- names(BiocFileCache::bfcadd(bfc,
-                                           fl,
-                                           fpath = fl_url,
-                                           fname = ifelse(is_bam,
-                                                          "exact",
-                                                          "unique")))
-    }
-    if (!isFALSE(any(BiocFileCache::bfcneedsupdate(bfc, rid)))){
-      BiocFileCache::bfcdownload(bfc, rid)
-    }
-    BiocFileCache::bfcrpath(bfc, rids = rid[1])
-  }))
-  fls_paths
+        if (!isFALSE(any(BiocFileCache::bfcneedsupdate(bfc, rid)))) {
+            BiocFileCache::bfcdownload(bfc, rid)
+        }
+        BiocFileCache::bfcrpath(bfc, rids = rid[1])
+    }))
+    fls_paths
 }
 
 #' @importFrom BiocFileCache BiocFileCache
