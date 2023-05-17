@@ -6,12 +6,11 @@ RHTSLIB_CPPFLAGS=$(shell "${R_HOME}/bin${R_ARCH_BIN}/Rscript" -e \
 PKG_LIBS=$(RHTSLIB_LIBS)
 PKG_CPPFLAGS=$(RHTSLIB_CPPFLAGS)
 
-SOURCES = $(wildcard ext/*/*.c)
-OBJECTS = regfile.o plp.o plp_data.o plp_utils.o init.o sc-plp.o $(SOURCES:.c=.o)
+SOURCES = $(wildcard *.c ext/*/*.c)
+OBJECTS = $(SOURCES:.c=.o)
 
-.PHONY: all clean
+.PHONY: clean
 
 all: $(SHLIB)
 
-clean:
-	rm -f ext/*/*-ext.o
+clean: rm -f $(OBJECTS)

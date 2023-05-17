@@ -35,16 +35,18 @@ transcriptome coordinate space.
 \examples{
 if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
     data(rse_adar_ifn)
-    gr <- GRanges(c("DHFR:310-330:-",
-                    "DHFR:410-415:-",
-                    "SSR3:100-155:-",
-                    "SSR3:180-190:-"))
+    gr <- GRanges(c(
+        "DHFR:310-330:-",
+        "DHFR:410-415:-",
+        "SSR3:100-155:-",
+        "SSR3:180-190:-"
+    ))
     gr$source <- "raer"
     gr$type <- "exon"
     gr$source <- NA
     gr$phase <- NA_integer_
-    gr$gene_id <- c(1,1,2,2)
-    gr$transcript_id <- rep(c("1.1","2.1"), each = 2)
+    gr$gene_id <- c(1, 1, 2, 2)
+    gr$transcript_id <- rep(c("1.1", "2.1"), each = 2)
     txdb <- makeTxDbFromGRanges(gr)
 
     rse <- filter_multiallelic(rse_adar_ifn)
