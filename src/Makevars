@@ -9,8 +9,6 @@ PKG_CPPFLAGS=$(RHTSLIB_CPPFLAGS)
 SOURCES = $(wildcard *.c ext/*/*.c)
 OBJECTS = $(SOURCES:.c=.o)
 
-.PHONY: clean
-
-all: $(SHLIB)
-
-clean: rm -f $(OBJECTS)
+all:
+	@$(MAKE) $(SHLIB)
+	@rm -f $(OBJECTS)
