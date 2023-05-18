@@ -840,8 +840,6 @@ static int run_pileup(char** cbampaths, const char** coutfns,
     goto fail;
   }
 
-
-
   if (!conf->in_memory) pd->fps = R_Calloc(conf->nfps, FILE*);
   for (i = 0; i < conf->nfps; ++i) {
     if (!conf->in_memory) {
@@ -863,12 +861,13 @@ static int run_pileup(char** cbampaths, const char** coutfns,
     if (conf->reg && (pos < beg0 || pos >= end0)) continue; // not in of single region requested
 
     mplp_get_ref(data[0], tid, &ref, &ref_len); // not in of single region requested
+
     if (tid < 0) break;
 
     // check user interrupt, using a 2^k value is faster
     if (n_iter % 262144 == 0) {
-      if (checkInterrupt()) {
-        REprintf("[raer internal] user interrupt detected");
+      if(checkInterrupt()){
+        REprintf("[raer internal] user interrupt detected, exiting\n");
         ret = -1;
         goto fail;
       }

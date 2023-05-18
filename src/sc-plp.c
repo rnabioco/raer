@@ -10,7 +10,6 @@
 #include <string.h>
 
 #include "regfile.h"
-//#include "plp.h"
 #include "plp_utils.h"
 
 typedef struct  {
@@ -752,6 +751,7 @@ SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
                          INTEGER(event_filters), INTEGER(libtype)[0],
                          nbcs, bcs, c_cbtag, c_umi, LOGICAL(index_skip)[0],
                          LOGICAL(pe)[0], INTEGER(min_counts)[0]);
+
   if (ret >= 0) {
     // write barcodes file, all barcodes will be reported in matrix
     write_barcodes(ga.fps[2], bcs, nbcs);

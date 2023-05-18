@@ -10,5 +10,4 @@ SOURCES = $(wildcard *.c ext/*/*.c)
 OBJECTS = $(SOURCES:.c=.o)
 
 all:
-	@$(MAKE) $(SHLIB)
 	@rm -f $(OBJECTS)

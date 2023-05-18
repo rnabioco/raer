@@ -260,6 +260,7 @@ int check_splice_overhang(bam1_t* b, int pos, int dist) {
       continue;
     }
   }
+
   REprintf("[raer internal] site not found in read: %s %i\n",
            bam_get_qname(b), pos);
   return -2;
