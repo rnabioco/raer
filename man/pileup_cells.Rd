@@ -9,18 +9,19 @@ pileup_cells(
   sites,
   cell_barcodes,
   output_directory,
-  bam_flags = NULL,
   chroms = NULL,
   umi_tag = "UB",
   cb_tag = "CB",
-  fp = FilterParam(),
+  paired_end = FALSE,
+  param = FilterParam(),
   BPPARAM = SerialParam(),
   return_sce = TRUE,
   verbose = FALSE
 )
 }
 \arguments{
-\item{bamfile}{BAM file name}
+\item{bamfile}{a BAM file name (for 10x libraries), or a vector of bam file
+names (smart-seq2)}
 
 \item{sites}{a GRanges object containing sites to process. See examples for
 valid formatting.}
@@ -30,17 +31,17 @@ valid formatting.}
 \item{output_directory}{Output directory for output files. Will be generated
 if it doesn't exist.}
 
-\item{bam_flags}{bam flags to filter or keep, use \code{\link[Rsamtools:ScanBamParam-class]{Rsamtools::scanBamFlag()}}
-to generate}
-
 \item{chroms}{A character vector of chromosomes to process, if supplied, only
 sites present in the listed chromosomes will be processed}
 
 \item{umi_tag}{tag in bam containing the UMI sequence}
 
-\item{cb_tag}{tag in bam containing the cell barcode sequence}
+\item{cb_tag}{tag in bam containing the cell-barcode sequence}
 
-\item{fp}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various filters to
+\item{paired_end}{set to TRUE if data is paired-end to prevent double counting
+overlapping read pairs.}
+
+\item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various filters to
 apply to reads and sites during pileup. Note that the \code{min_variant_reads}
 parameter, if set > 0, specifies the number of variant reads at a site
 required in order to report a site. E.g. if set to 2, then at least 2 reads
@@ -61,19 +62,19 @@ Returns either a \code{SingleCellExperiment} or character vector of paths
 to the files produced.
 }
 \description{
-This function will perform a pileup operation at specified
+This function performs a pileup operation at specified
 sites, returning counts for Reference (e.g. unedited) or Alternate (e.g.
-editing) bases. Current functionality will process a 10x genomic's style
+edited) bases. \code{pileup_cells} can process either a 10x Genomic's style
 library, from a aligned bam file containing a tag with a cell-barcode and a
-tag with a UMI.
+tag with a UMI, or smart-seq style libraries without cell-barcodes.
 
 The \code{sites} parameter specifies sites to pileup. This must be a GRanges
 object with 1 base intervals, a strand (+ or -), and supplemented with
-metadata columns named \code{ref} and \code{alt} containing the reference and
+metadata columns named \code{REF} and \code{ALT} containing the reference and
 alternate base to query. See examples for an example format.
 
-At each site, bases from overlapped reads will be examined, and counts of
-each ref and alt base enumerated for each cell barcode present. A single
+At each site, bases from overlapping reads will be examined, and counts of
+each ref and alt base enumerated for each cell-barcode present. A single
 base will be counted once for each UMI sequence present in each cell.
 }
 \examples{
@@ -81,20 +82,34 @@ library(Rsamtools)
 library(GenomicRanges)
 bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
 
-gr <- GRanges(c("2:579:-", "2:625:-", "2:645:-","2:589:-", "2:601:-"))
-gr$ref <- c(rep("A", 4), "T")
-gr$alt <- c(rep("G", 4), "C")
+gr <- GRanges(c("2:579:-", "2:625:-", "2:645:-", "2:589:-", "2:601:-"))
+gr$REF <- c(rep("A", 4), "T")
+gr$ALT <- c(rep("G", 4), "C")
 
 cbs <- unique(scanBam(bam_fn, param = ScanBamParam(tag = "CB"))[[1]]$tag$CB)
 cbs <- na.omit(cbs)
 
 outdir <- tempdir()
 bai <- indexBam(bam_fn)
-on.exit(unlink(outdir, bai))
+on.exit(unlink(c(outdir, bai)))
 
 fp <- FilterParam(library_type = "fr-second-strand")
-sce <- pileup_cells(bam_fn, gr, cbs, outdir, fp = fp)
+sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
 sce
+
+# example of processing multiple smart-seq2 style libraries
+
+many_small_bams <- rep(bam_fn, 10)
+bam_ids <- LETTERS[1:10]
+pileup_cells(many_small_bams,
+    sites = gr,
+    cell_barcodes = bam_ids,
+    cb_tag = NULL,
+    umi_tag = NULL,
+    paired_end = TRUE,
+    outdir,
+    param = fp
+)
 
 }
 \seealso{

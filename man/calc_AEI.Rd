@@ -10,7 +10,7 @@ calc_AEI(
   alu_ranges = NULL,
   txdb = NULL,
   snp_db = NULL,
-  filterParam = FilterParam(),
+  param = FilterParam(),
   BPPARAM = SerialParam(),
   verbose = FALSE
 )
@@ -20,9 +20,8 @@ calc_AEI(
 
 \item{fasta_fn}{fasta}
 
-\item{alu_ranges}{GRanges or the name of a BEDfile with regions to query for
-calculating the AEI, typically ALU repeats. If a BED file is supplied it
-will not be filtered by the txdb option.}
+\item{alu_ranges}{GRanges with regions to query for
+calculating the AEI, typically ALU repeats.}
 
 \item{txdb}{A txdb object, if supplied, will be used to subset the alu_ranges
 to those found overlapping genes. Alternatively a GRanges object with gene
@@ -33,10 +32,9 @@ will be used to exclude polymorphic positions prior to calculating the AEI.
 If \code{calc_AEI()} will be used many times, one could save some time by first
 identifying SNPs that overlap the supplied alu_ranges, and passing these as
 a GRanges to snp_db rather than supplying all known SNPs (see
-\code{\link[=get_overlapping_snps]{get_overlapping_snps()}}). Combined with using a bedfile for alu_ranges can
-also will save time.}
+\code{\link[=get_overlapping_snps]{get_overlapping_snps()}}).}
 
-\item{filterParam}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
+\item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
 filters to apply to reads and sites during pileup.}
 
 \item{BPPARAM}{A \link{BiocParallelParam} object for specifying parallel options

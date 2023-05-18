@@ -13,3 +13,4 @@
 ^codecov\.yml$
 ^data-raw$
 ^man/figures/raer-logo\.ai$
+^notes.md

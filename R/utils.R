@@ -1,59 +1,3 @@
-
-is_null_extptr <- function(pointer) {
-  stopifnot(is(pointer, "externalptr"))
-  .Call(".isnull", pointer)
-}
-
-
-#' Read in tabix indexed file as a data.frame
-#'
-#' @param filename path to tabix file
-#' @param region samtools region query string (i.e. chr1:100-1000)
-#' @param numeric_cols columns to convert to numeric as a integer vector (one-based index)
-#' @param col_names column names in the output data.frame
-
-#' @examples
-#' bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
-#' fafn <- system.file("extdata", "human.fasta", package = "raer")
-#' plp_fn <- tempfile()
-#' fns <- pileup_sites(bamfn, fafn, return_data = FALSE, outfile_prefix = plp_fn)
-#' plp <- fns[2]
-#' head(read_tabix(plp))
-#'
-#' read_tabix(plp, region = "SPCS3:498-500")
-#'
-#' get_tabix_chroms(plp)
-#'
-#' unlink(c(fns, plp_fn, plp, paste0(plp, ".tbi")))
-#' @export
-#' @keywords internal
-read_tabix <- function(filename,
-                       region = ".",
-                       numeric_cols = c(2, 6:12),
-                       col_names = PILEUP_COLS) {
-  filename <- path.expand(filename)
-  # returned as a list to avoid stringsAsFactors
-  df <- cread_tabix(filename, region)
-  numeric_cols <- intersect(c("start", "end", "pos"), colnames(df))
-  if (!is.null(numeric_cols)) {
-    for (i in numeric_cols) {
-      df[[i]] <- as.numeric(df[[i]])
-    }
-  }
-  colnames(df) <- col_names
-
-  df
-}
-
-#' List chromosomes in a tabix index
-#' @param filename path to indexed tabix file
-#'
-#' @rdname read_tabix
-#' @export
-get_tabix_chroms <- function(filename) {
-  list_tabix_chroms(path.expand(filename))
-}
-
 #' Provide working directory for raer example files.
 #'
 #' @param path path to file
@@ -61,48 +5,147 @@ get_tabix_chroms <- function(filename) {
 #' @examples
 #' raer_example("human.fasta")
 #'
+#' @return Character vector will path to an internal package file.
 #' @export
 raer_example <- function(path) {
-  system.file("extdata", path, package = "raer", mustWork = TRUE)
-}
-
-
-#' Copy of VariantTools::extractCoverageForPositions
-#' Authors: Michael Lawrence, Jeremiah Degenhardt, Robert Gentleman
-#' @param cov coverage produced by [GenomicAlignments::coverage()]
-#' @param pos GRanges containing editing sites
-#' @importFrom GenomeInfoDb `seqlevels<-` seqlevels
-getCoverageAtPositions <- function(cov, pos) {
-  if (length(setdiff(seqlevels(pos), names(cov))) > 0L) {
-    stop("Some seqlevels are missing from coverage")
-  }
-  if (any(width(pos) > 1L)) {
-    stop("Some ranges are of width > 1")
-  }
-  seqlevels(pos) <- names(cov)
-  ord <- order(seqnames(pos))
-  ans <- integer(length(pos))
-  ans[ord] <- unlist(mapply(function(v, p) {
-    runValue(v)[findRun(p, v)]
-  }, cov, split(start(pos), seqnames(pos)), SIMPLIFY = FALSE), use.names = FALSE)
-  ans
+    system.file("extdata", path, package = "raer", mustWork = TRUE)
 }
 
 # transpose a list
 # https://stackoverflow.com/questions/30164803/fastest-way-to-transpose-a-list-in-r-rcpp
 t_lst <- function(x) {
-  split(unlist(x), sequence(lengths(x)))
+    split(unlist(x), sequence(lengths(x)))
 }
 
-# split a vector into bins of n,
-# the last chunk can  be variable in size
-split_vec <- function(x, n) split(x, ceiling(seq_along(x) / n))
+check_tag <- function(x) {
+    if (length(x) != 1 && nchar(x) != 2) {
+        stop("supplied tag must by nchar of 2: ", x)
+    }
+}
+
+chunk_vec <- function(x, n) {
+    if (n == 1) {
+        res <- list(`1` = x)
+        return(res)
+    }
+    split(x, cut(seq_along(x), n, labels = FALSE))
+}
 
 
 # flatten top list, keeping names from inner list
 unlist_w_names <- function(x) {
-  nms <- unlist(lapply(x, names))
-  res <- unlist(x, use.names = FALSE)
-  names(res) <- nms
-  res
+    nms <- unlist(lapply(x, names))
+    res <- unlist(x, use.names = FALSE)
+    names(res) <- nms
+    res
 }
+
+#' Find regions with oligodT mispriming
+#'
+#' @description OligodT will prime at A-rich regions in an RNA. Reverse transcription
+#' from these internal priming sites will install an oligodT sequence at the 3' end
+#' of the cDNA. Sequence variants within these internal priming sites are enriched
+#' for variants converting the genomic sequence to the A encoded by the oligodT primer.
+#' Trimming poly(A) from the 3' ends of reads reduces but does not eliminate these signals
+#'
+#' This function will identify regions that are enriched for mispriming events. Reads
+#' that were trimmed to remove poly(A) (encoded in the pa tag by 10x genomics) are
+#' identified. The aligned 3' positions of these reads are counted, and sites passing
+#' thresholds (at least 2 reads) are retained as possible sites of mispriming. Be default
+#' regions 5 bases upstream and 20 bases downstream of these putative mispriming sites
+#' are returned.
+#'
+#' @param bamfile path to bamfile
+#' @param fafile path to fasta file
+#' @param pos_5p distance 5' of mispriming site to define mispriming region
+#' @param pos_3p distance 3' of mispriming site to define mispriming region
+#' @param min_reads minimum required number of reads at a mispriming site
+#' @param tag bam tag containing number of poly(A) bases trimmed
+#' @param tag_values range of values required for read to be considered
+#' @param n_reads_per_chunk number of reads to process in memory, see
+#' [`Rsamtools::BamFile()`]
+#' @param verbose if true report progress
+#'
+#' @importFrom Rsamtools ScanBamParam BamFile
+#' @importFrom GenomicAlignments readGAlignments
+#' @importFrom IRanges grouplengths
+#' @importFrom S4Vectors aggregate
+#' @examples
+#' bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
+#' fa_fn <- raer_example("mouse_tiny.fasta")
+#' find_mispriming_sites(bam_fn, fa_fn)
+#'
+#' @export
+find_mispriming_sites <- function(bamfile, fafile, pos_5p = 5, pos_3p = 20,
+                                  min_reads = 2, tag = "pa", tag_values = 3:300,
+                                  n_reads_per_chunk = 1e6, verbose = TRUE){
+    tg_lst <- list(tag_values)
+    names(tg_lst) <- tag
+    sbp <- Rsamtools::ScanBamParam(tagFilter = tg_lst,tag = tag)
+    bf <- Rsamtools::BamFile(bamfile, yieldSize = n_reads_per_chunk)
+    open(bf)
+    pa_pks <- GRanges()
+    repeat {
+        # should only return reads with pa tag set
+        galn <- readGAlignments(bf, param = sbp)
+
+        if (length(galn) == 0) break
+        gr <- as(galn, "GRanges")
+        if(verbose) {
+            s_ivl <- gr[1]
+            e_ivl <- gr[length(gr)]
+            message("working on ", s_ivl, " to ", e_ivl)
+        }
+
+        # count # of overlapping reads
+        ans <- merge_pa_peaks(gr)
+        pa_pks <- c(pa_pks, ans)
+    }
+    close(bf)
+    # merge again, handle edge cases between yieldsizes
+    ans <- reduce(pa_pks, with.revmap = TRUE)
+    mcols(ans) <- S4Vectors::aggregate(pa_pks, mcols(ans)$revmap,
+                                       mean_pal = mean(pa_pks$mean_pal),
+                                       n_reads = sum(pa_pks$n_reads),
+                                       drop = FALSE)
+
+    # keep reads above threshold, slop, and merge adjacent misprimed regions
+    ans <- ans[ans$n_reads >= min_reads]
+    ans <- resize(ans, pos_3p + width(ans))
+    ans <- resize(ans, pos_5p + width(ans), fix = "end")
+
+    res <- reduce(ans, with.revmap = TRUE)
+    mcols(res) <- S4Vectors::aggregate(ans, mcols(res)$revmap,
+                                       n_reads = sum(ans$n_reads),
+                                       drop = FALSE)
+    res$n_regions <- IRanges::grouplengths(res$grouping)
+    res$grouping <- NULL
+    res <- pa_seq_context(res, fafile)
+    res
+}
+
+merge_pa_peaks <- function(gr) {
+    # get 3' end of read
+    start(gr[strand(gr) == "+"]) <- end(gr[strand(gr) == "+"])
+    end(gr[strand(gr) == "-"]) <- start(gr[strand(gr) == "-"])
+
+    # merge and count reads within merged ivls
+    ans <- reduce(gr, with.revmap = TRUE)
+    mcols(ans) <- S4Vectors::aggregate(gr, mcols(ans)$revmap,
+                                       mean_pal = mean(gr$pa),
+                                       drop = FALSE)
+    mcols(ans)$n_reads <- IRanges::grouplengths(ans$grouping)
+    ans
+}
+
+#' @importFrom Rsamtools FaFile scanFa
+#' @importFrom Biostrings letterFrequency reverseComplement
+pa_seq_context <- function(gr, fafile){
+    fa <- Rsamtools::FaFile(fafile)
+    seqs <- Rsamtools::scanFa(fa, gr)
+    seqs[strand(gr) == "-"] <- Biostrings::reverseComplement(seqs[strand(gr) == "-"])
+    a_prop <- Biostrings::letterFrequency(seqs, "A") / width(gr)
+    mcols(gr)$A_freq <- a_prop[, 1]
+    gr
+}
+

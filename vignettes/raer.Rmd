@@ -31,17 +31,16 @@ library(SummarizedExperiment)
 library(DESeq2)
 library(ComplexHeatmap)
 library(viridis)
-library(stringr)
+library(rtracklayer)
 ```
 
 
 In this vignette a public RNA-seq dataset will be analyzed,  [GSE99249](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE99249), which consists of ADAR1 mutants and control human cell lines, conditionally treated with Interferon-Beta. For simplicity we will examine the ADAR1 WT and KO samples both treated with IFN-B, with triplicate samples. 
 
-Aligned BAM files and other necessary files have been preprocessed for this vignette. These files occupy ~250 Mb of space and by default they are stored in a temporary directory. Change the `data_dir` variable to a valid file path to keep the files for reuse.
+Aligned BAM files and other necessary files have been preprocessed for this vignette. These files occupy ~250 Mb of space and they are stored in a `BiocFileCache`.
 
 ```{r}
-data_dir <- tempdir()
-fns <- download_GSE99249(data_dir)
+fns <- download_GSE99249()
 ```
 
 Next we'll collect a vector containing the paths to each BAM file These BAM files are a subset of the full BAM files, containing only alignments from chromosome 18.
@@ -61,8 +60,8 @@ fafn
 Lastly, we'll use a BED file containing the coordinates of known human editing sites from the REDIPortal database. This file can also be optionally compressed.
 
 ```{r}
-bedfn <- fns$bed
-bedfn
+sites <- import(fns$bed)
+sites
 ```
 
 ## Generate editing site read counts 
@@ -73,20 +72,20 @@ Internally, `pileup_sites()` will generate pileups in memory. However, these fil
 
 ```{r}
 fp <- FilterParam(
-  only_keep_variants = TRUE,
-  trim_5p = 5,
-  trim_3p = 5,
-  min_base_quality = 30L,
-  min_mapq = 255L,
-  library_type = "fr-first-strand",
-  min_splice_overhang = 10
+    only_keep_variants = TRUE,
+    trim_5p = 5,
+    trim_3p = 5,
+    min_base_quality = 30L,
+    min_mapq = 255L,
+    library_type = "fr-first-strand",
+    min_splice_overhang = 10
 )
 
 rse <- pileup_sites(bam_files,
-  fafile = fafn,
-  bedfile = bedfn,
-  region = "chr18",
-  filterParam = fp
+    fafile = fafn,
+    sites = sites,
+    region = "chr18",
+    param = fp
 )
 ```
 
@@ -94,7 +93,7 @@ rse <- pileup_sites(bam_files,
 Pileups data is stored in a `summarizedExperiment` object, which permits comparisons across each sample. The `rowData()` and `rowRanges()` slots can be populated with information related to each editing site, and similarly the `colData()` slot can be used to store sample metadata. The summarizedExperiment object can also interface with other derivative classes, such as `singleCellExperiment()`. 
 
 
-The base counts are counted in a stand specific fashion depending on the `library-type` parameter. The `Ref` and `Var` bases are in reference to the strand. 
+The base counts are counted in a stand specific fashion depending on the `library-type` parameter. The `REF` and `ALT` bases are in reference to the strand. 
 
 ```{r}
 rse
@@ -104,19 +103,19 @@ Next we will add sample metadata to the `summarizedExperiment`, which will be us
 
 ```{r}
 colData(rse)$genotype_treatment <- rep(
-  c(
-    "ADAR1KO Interferon beta",
-    "Wildtype Interferon beta"
-  ),
-  each = 3
+    c(
+        "ADAR1KO Interferon beta",
+        "Wildtype Interferon beta"
+    ),
+    each = 3
 )
 
 colData(rse)$genotype <- rep(
-  c(
-    "ADAR1KO",
-    "Wildtype"
-  ),
-  each = 3
+    c(
+        "ADAR1KO",
+        "Wildtype"
+    ),
+    each = 3
 )
 colData(rse)
 ```
@@ -128,9 +127,9 @@ We next use the `calc_edit_frequency` function to identify the percent of edits 
 
 ```{r}
 se_filtered <- calc_edit_frequency(rse,
-  edit_from = "A",
-  edit_to = "G",
-  drop = TRUE
+    edit_from = "A",
+    edit_to = "G",
+    drop = TRUE
 )
 ```
 
@@ -139,7 +138,7 @@ We can next subset the `summarizedExperiment` object to exclude low frequency ed
 ```{r}
 has_editing <- rowSums(assay(se_filtered, "edit_freq") > 0) >= 1
 has_depth <- rowSums(((assay(se_filtered, "nRef") +
-  assay(se_filtered, "nVar")) >= 5)) == ncol(se_filtered)
+    assay(se_filtered, "nAlt")) >= 5)) == ncol(se_filtered)
 
 se_filtered <- se_filtered[has_editing & has_depth, ]
 se_filtered
@@ -149,9 +148,9 @@ Once the object has been filtered, you can prepare it for DE. This means making 
 
 ```{r}
 deobj <- prep_for_de(se_filtered,
-  min_prop = 0.1,
-  max_prop = 0.9,
-  min_samples = 3
+    min_prop = 0.1,
+    max_prop = 0.9,
+    min_samples = 3
 )
 
 assay(deobj, "counts")[1:3, 1:6]
@@ -167,15 +166,13 @@ For the samples, you can leave as is or combine so the same sample name shows up
 
 It is probably best to update the levels of your object, but if you don't, this will still work.
 
-To run using `DESeq2`, set `type = DESeq2` in the `de_results` function. This function requires you to specify what your control and treatment are from your condition column of your `deobj`. `edgeR` is also supported. 
 
 ```{r}
 de_results <- perform_de(deobj,
-  type = "DESeq2",
-  sample_col = "sample",
-  condition_col = "genotype",
-  condition_control = "Wildtype",
-  condition_treatment = "ADAR1KO"
+    sample_col = "sample",
+    condition_col = "genotype",
+    condition_control = "Wildtype",
+    condition_treatment = "ADAR1KO"
 )
 ```
 
@@ -189,13 +186,9 @@ de_results$sig_results[1:5, ]
 top_sites <- rownames(de_results$sig_results)[1:20]
 
 Heatmap(assay(se_filtered, "edit_freq")[top_sites, ],
-  col = viridis(100),
-  column_labels = se_filtered$genotype_treatment
+    col = viridis(100),
+    column_labels = se_filtered$genotype_treatment
 )
-```
-
-```{r}
-unlink(data_dir)
 ```
 
 <details style="margin-bottom:10px;">

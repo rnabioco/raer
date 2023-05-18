@@ -32,13 +32,13 @@ suppressPackageStartupMessages(library("GenomicRanges"))
 bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")
 fp <- FilterParam(library_type = "genomic-unstranded")
-rse <- pileup_sites(bamfn, fafn, filterParam = fp)
+rse <- pileup_sites(bamfn, fafn, param = fp)
 
 genes <- GRanges(c(
-  "DHFR:200-400:+",
-  "SPCS3:100-200:-",
-  "SSR3:3-10:-",
-  "SSR3:6-12:+"
+    "DHFR:200-400:+",
+    "SPCS3:100-200:-",
+    "SSR3:3-10:-",
+    "SSR3:6-12:+"
 ))
 
 correct_strand(rse, genes)

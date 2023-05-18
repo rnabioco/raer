@@ -9,18 +9,17 @@ extern "C" {
 
 /* largely templated from Rsamtools approach (scanBam) */
 
-
 /* arrays of pileup data
    to be stored for each sample */
 typedef struct  {
-  int *pos, *nref, *nvar, *na, *nt, *nc, *ng, *nn, *nx;
-  char **seqnames, **strand, **ref, **var;
+  int* pos, *nref, *nvar, *na, *nt, *nc, *ng, *nn, *nx;
+  char** seqnames, ** strand, ** ref, ** var;
 } _PLP_VECS, *PLP_VECS;
 
 /* arrays of data to be stored across all samples
    to become rowData values in output */
 typedef struct  {
-  double *rpbz, *vdb;
+  double* rpbz, *vdb, *sor;
 } _SITE_VECS, *SITE_VECS;
 
 typedef struct {
@@ -28,14 +27,13 @@ typedef struct {
   PLP_VECS pdat;  /* structs to grow dynamically for each sample*/
   SITE_VECS sdat; /* struct to dynamically per site, across all samples */
   int icnt, ncnt, nfiles;
-  FILE **fps;
+  FILE** fps;
   SEXP result;  /* list to return to R, will be populated at end of pileup */
 } _PLP_DATA, *PLP_DATA;
 
 SEXP pileup_result_init(int n);
-
-SEXP pileup_template();
-SEXP sitedata_template();
+SEXP pileup_template(void);
+SEXP sitedata_template(void);
 
 PLP_DATA init_PLP_DATA(SEXP result, int n);
 
@@ -52,12 +50,11 @@ enum {
 enum {
   SITE_DATA_LST = 0, PLP_DATA_LST
 };
+
 /* From Rsamtools
  robust memory re-allocation */
-
-#define _Rs_Realloc(p, n, t)	(t *) _Rs_Realloc_impl(p, n, sizeof(t))
-
-void *_Rs_Realloc_impl(void *p, size_t n, size_t t);
+#define _rs_Realloc(p, n, t)	(t *) _rs_Realloc_impl(p, n, sizeof(t))
+void* _rs_Realloc_impl(void* p, size_t n, size_t t);
 
 #ifdef __cplusplus
 }

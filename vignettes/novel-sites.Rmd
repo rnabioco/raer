@@ -33,11 +33,10 @@ This vignette will demonstrate how to identify novel RNA editing sites using the
 
 In this vignette a public RNA-seq and Whole-Genome sequencing dataset will be analyzed. High coverage whole-genome sequencing was conducted [ERR262997](https://www.ebi.ac.uk/ena/browser/view/ERR262997?show=reads) along with paired-end RNA-seq [SRR1258218](https://www.ebi.ac.uk/ena/browser/view/SRR1258218?show=reads). 
 
-Aligned BAM files and a genome fasta file have been preprocessed for this vignette. These files occupy ~100 Mb of space and contain alignments from the first 1MB of chromosome 4. By default these files are stored in a temporary directory. Change the `data_dir` variable to a valid file path to keep the files for reuse.
+Aligned BAM files and a genome fasta file have been preprocessed for this vignette. These files occupy ~100 Mb of space and contain alignments from the first 1MB of chromosome 4 and they are stored in a `BiocFileCache`.
 
 ```{r}
-data_dir <- tempdir()
-fns <- download_NA12878(data_dir)
+fns <- download_NA12878()
 fns
 ```
 
@@ -54,8 +53,8 @@ chr4snps <- import(fns$snps)
 
 rmskhg38 <- read.table(fns$rmsk)
 rmskhg38 <- makeGRangesFromDataFrame(rmskhg38,
-  keep.extra.columns = TRUE,
-  starts.in.df.are.0based = TRUE
+    keep.extra.columns = TRUE,
+    starts.in.df.are.0based = TRUE
 )
 ```
 
@@ -72,25 +71,25 @@ Filtering parameters for the `pileup_sites()` function can accept multiple argum
 
 ```{r}
 fp <- FilterParam(
-  min_nucleotide_depth = 1,
-  min_base_quality = 30,
-  min_mapq = c(255, 30),
-  library_type = c("fr-first-strand", "genomic-unstranded"),
-  trim_5p = 5,
-  trim_3p = 5,
-  indel_dist = 4,
-  homopolymer_len = 6,
-  max_mismatch_type = c(3, 3),
-  min_read_bqual = c(0.25, 20),
-  only_keep_variants = c(TRUE, FALSE)
+    min_depth = 1,
+    min_base_quality = 30,
+    min_mapq = c(255, 30),
+    library_type = c("fr-first-strand", "genomic-unstranded"),
+    trim_5p = 5,
+    trim_3p = 5,
+    indel_dist = 4,
+    homopolymer_len = 6,
+    max_mismatch_type = c(3, 3),
+    read_bqual = c(0.25, 20),
+    only_keep_variants = c(TRUE, FALSE)
 )
 
 bams <- c(rna_bam, wgs_bam)
 names(bams) <- c("rna", "dna")
 rse <- pileup_sites(bams,
-  fafile = fafn,
-  chrom = "chr4",
-  filterParam = fp
+    fafile = fafn,
+    chrom = "chr4",
+    param = fp
 )
 
 rse
@@ -104,13 +103,13 @@ strand. We therefore use `subsetByOverlaps(..., ignore.strand = TRUE)` to retain
 passing these DNA-seq based filters independent of strand. 
 
 ```{r}
-to_keep <- (assay(rse, "nRef")[, "dna"] >= 5 & assay(rse, "Var")[, "dna"] == "-")
+to_keep <- (assay(rse, "nRef")[, "dna"] >= 5 & assay(rse, "ALT")[, "dna"] == "-")
 rse <- subsetByOverlaps(rse, rse[to_keep, ], ignore.strand = TRUE)
 nrow(rse)
 ```
 
 Next we filter to remove any multi-allelic sites. These sites are stored as comma-separated
-strings in the `Var` assay (e.g. `AG,AC`). Non-variant sites are stored as `-`. 
+strings in the `ALT` assay (e.g. `G,C`). Non-variant sites are stored as `-`. 
 `filter_multiallelic()` will remove any sites that have multiple variants in the samples present in the `summarizedExperiment` object. It will add a new column to the `rowData()` to indicate the variant for each site, and will calculate an `allele_freq` assay with variant allele frequencies for each sample. 
 
 ```{r}
@@ -140,7 +139,7 @@ rse <- filter_clustered_variants(rse, txdb, variant_dist = 100)
 rse
 ```
 
-Next, sites with 4bp of known splicing events will be excluded. These variants are low-confidence due to the possibility of mis-alignments. 
+Next, sites within 4bp of known splicing events will be excluded. These sites are low-confidence due to the possibility of mis-alignments near splicing events.
 
 ```{r}
 rse <- filter_splice_variants(rse, txdb)
@@ -161,18 +160,13 @@ Lastly, we'll further filter the edit sites to require that the editing frequenc
 to_keep <- assay(rse, "edit_freq")[, 1] > 0.05
 rse <- rse[to_keep, ]
 
-rse <- rse[assay(rse, "nVar")[, 1] >= 2]
+rse <- rse[assay(rse, "nAlt")[, 1] >= 2]
 ```
 
 
 ```{r}
-stopifnot(all(rowData(rse)$Var == "AG"))
+stopifnot(all(rowData(rse)$REF == "A" & rowData(rse)$ALT == "G"))
 rowRanges(rse)
-```
-
-
-```{r}
-unlink(data_dir)
 ```
 
 

@@ -4,10 +4,10 @@
 \alias{download_human_pbmc}
 \title{Download 10x PMBC bam file and related data}
 \usage{
-download_human_pbmc(path)
+download_human_pbmc(verbose = TRUE)
 }
 \arguments{
-\item{path}{path to directory to download data}
+\item{verbose}{report messages}
 }
 \value{
 A named list with paths to bam file, fasta file,
@@ -15,12 +15,12 @@ bed file of editing_sites, and an .rds file with a
 SingleCellExperiment
 }
 \description{
-This function will download < 1 GB of data.
+This function will download < 1 GB of data and store files in a
+BiocFileCache.
 }
 \examples{
-\dontrun{
-td <- tempdir()
-download_human_pbmc(td)
+\donttest{
+download_human_pbmc()
 }
 
 }

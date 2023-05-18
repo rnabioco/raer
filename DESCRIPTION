@@ -15,38 +15,34 @@ Authors@R: c(
     )
 Description: Toolkit for identification and statistical testing 
     of RNA editing signals from within R. Provides support for identifying
-    sites from bulk-RNA-seq, single cell RNA-seq datasets, and general methods 
-    for extraction of allelic read counts from alignment files. 
+    sites from bulk-RNA and single cell RNA-seq datasets, and general methods 
+    for extraction of allelic read counts from alignment files. Facilitates annotation
+    and exploratory analysis of editing signals using Bioconductor packages and resources.
 License: MIT + file LICENSE
 Imports: 
     stats,
     utils,
+    tools,
     methods,
-    Rcpp,
-    zlibbioc,
     data.table,
-    R.utils,
     GenomicRanges,
     IRanges,
     Rsamtools,
     BSgenome,
     Biostrings,
+    BiocFileCache,
     SummarizedExperiment,
     S4Vectors,
-    BiocGenerics,
     GenomeInfoDb,
     GenomicAlignments,
     GenomicFeatures,
     BiocParallel,
     rtracklayer,
-    stringr,
-    fastmap,
     Matrix,
     cli
 Suggests:
     testthat (>= 3.0.0),
     knitr,
-    RColorBrewer,
     DESeq2,
     edgeR,
     limma,
@@ -56,19 +52,15 @@ Suggests:
     viridis,
     TxDb.Hsapiens.UCSC.hg38.knownGene,
     SNPlocs.Hsapiens.dbSNP144.GRCh38,
+    BSgenome.Hsapiens.NCBI.GRCh38,
     scater,
     SingleCellExperiment,
     AnnotationHub,
     covr
 LinkingTo: 
-    Rcpp,
     Rhtslib (>= 2.0.0)
-SystemRequirements: 
-    C++11, 
-    GNU make, 
-    libbz2, 
-    liblzma,
-    libcurl
+SystemRequirements:
+    GNU make
 VignetteBuilder: knitr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -82,11 +74,12 @@ biocViews:
     Sequencing,
     Coverage,
     Epitranscriptomics,
-    Annotation
+    FeatureExtraction,
+    Annotation,
+    Alignment
 Config/Needs/website:
     pkgdown,
     rnabioco/rbitemplate
 Config/testthat/edition: 3
 Depends: 
-    R (>= 2.10)
-LazyData: true
+  R (>= 3.5.0)

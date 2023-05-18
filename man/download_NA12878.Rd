@@ -4,22 +4,22 @@
 \alias{download_NA12878}
 \title{Download NA12878 BAM files and related data}
 \usage{
-download_NA12878(path)
+download_NA12878(verbose = TRUE)
 }
 \arguments{
-\item{path}{path to directory to download data}
+\item{verbose}{report messages}
 }
 \value{
 A named list with paths to an RNA-seq and WGS BAM file, and a FASTA file
 from hg38 chromosome 4.
 }
 \description{
-This function will download ~ 5 GB of data.
+This function will download ~100MB of data and store files in a
+BiocFileCache.
 }
 \examples{
-\dontrun{
-td <- tempdir()
-download_NA12878(td)
+\donttest{
+download_NA12878()
 }
 
 }

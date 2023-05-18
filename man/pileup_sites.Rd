@@ -8,17 +8,14 @@
 pileup_sites(
   bamfiles,
   fafile,
-  bedfile = NULL,
+  sites = NULL,
   region = NULL,
   chroms = NULL,
-  filterParam = FilterParam(),
+  param = FilterParam(),
   outfile_prefix = NULL,
-  bedidx = NULL,
-  bam_flags = NULL,
   reads = NULL,
   return_data = TRUE,
   BPPARAM = SerialParam(),
-  use_index = FALSE,
   bad_reads = NULL,
   umi_tag = NULL,
   verbose = FALSE
@@ -26,10 +23,11 @@ pileup_sites(
 
 FilterParam(
   max_depth = 10000,
+  min_depth = 1L,
   min_base_quality = 20L,
   min_mapq = 0L,
-  min_nucleotide_depth = 1L,
   library_type = "fr-first-strand",
+  bam_flags = NULL,
   only_keep_variants = FALSE,
   trim_5p = 0L,
   trim_3p = 0L,
@@ -37,12 +35,13 @@ FilterParam(
   ftrim_3p = 0,
   indel_dist = 0L,
   splice_dist = 0L,
+  min_splice_overhang = 0L,
   homopolymer_len = 0L,
   max_mismatch_type = c(0L, 0L),
-  min_read_bqual = c(0, 0),
-  min_splice_overhang = 0L,
+  read_bqual = c(0, 0),
   min_variant_reads = 0L,
-  ignore_query_Ns = FALSE
+  min_allelic_freq = 0,
+  report_multiallelic = TRUE
 )
 }
 \arguments{
@@ -52,23 +51,19 @@ the colData will be populated with the basename of the bamfile.}
 
 \item{fafile}{path to fasta file}
 
-\item{bedfile}{path to bed file with sites or regions to query}
+\item{sites}{a GRanges object containing regions or sites to process.}
 
-\item{region}{samtools region query string (i.e. chr1:100-1000)}
+\item{region}{samtools region query string (i.e. chr1:100-1000). Can be combined
+with sites, in which case sites will be filtered to keep only sites within the
+region.}
 
-\item{chroms}{chromosomes to process, not to be used with region}
+\item{chroms}{chromosomes to process, not to be used with region.}
 
-\item{filterParam}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
+\item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
 filters to apply to reads and sites during pileup.}
 
 \item{outfile_prefix}{Output prefix for tabix indexed files. If \code{NULL}, no
 files will be produced.}
-
-\item{bedidx}{A BedFile object, if supplied, pileup will use index generated
-by \code{\link[=indexBed]{indexBed()}}}
-
-\item{bam_flags}{bam flags to filter or keep, use \code{\link[Rsamtools:ScanBamParam-class]{Rsamtools::scanBamFlag()}}
-to generate}
 
 \item{reads}{if supplied a fasta file will be written with reads that pass
 filters and contain variants}
@@ -81,13 +76,6 @@ if \code{FALSE} a character vector of tabix-index files, specified by
 processing occurs per chromosome, so is disabled when run on a single
 region.}
 
-\item{use_index}{if TRUE regions supplied in the \code{bedfile} will be queried
-using the bam file index. By default (FALSE) all alignments are queried via
-streaming and regions in the bedfile are used to select the sites to keep.
-Using the index can be much faster when querying a small number of sites in
-large bamfiles. With many sites in the bedfile , or with small bamfiles,
-this option may be slower than streaming.}
-
 \item{bad_reads}{a textfile containing read names to exclude from pileup.
 Readnames should be formated as readid_1 or readid_2 or readid for paired
 end first read paired-end second read or single end data.}
@@ -99,17 +87,20 @@ reads with the same UMI sequence will only be counted once per position.}
 
 \item{max_depth}{maximum read depth considered at each site}
 
+\item{min_depth}{min read depth needed to report site}
+
 \item{min_base_quality}{min base quality score to consider read for pileup}
 
 \item{min_mapq}{minimum required MAPQ score, can be a vector of values
 for each bam file}
 
-\item{min_nucleotide_depth}{min read depth needed to report site}
-
 \item{library_type}{read orientation, one of fr-first-strand,
 fr-second-strand, unstranded, and genomic-unstranded. Can supply as a vector to specify for each
 input bam. Unstranded library type will be reported based on read alignment.
 genomic-unstranded will report all variants w.r.t the + strand.}
+
+\item{bam_flags}{bam flags to filter or keep, use \code{\link[Rsamtools:ScanBamParam-class]{Rsamtools::scanBamFlag()}}
+to generate.}
 
 \item{only_keep_variants}{if TRUE, then only variant sites will be reported
 (FALSE by default), can be a vector for each input bamfile}
@@ -128,6 +119,9 @@ distance from indel event in the read}
 \item{splice_dist}{Exclude read if site occurs within given
 distance from splicing event in the read}
 
+\item{min_splice_overhang}{Exclude read if site is located adjacent to splice
+site with an overhang of less than given length.}
+
 \item{homopolymer_len}{Exclude site if occurs within homopolymer of given
 length}
 
@@ -136,17 +130,18 @@ length}
 must be supplied as a integer vector of length 2. e.g.
 c(X, Y).}
 
-\item{min_read_bqual}{Exclude read if more than X percent of the bases have
+\item{read_bqual}{Exclude read if more than X percent of the bases have
 base qualities less than Y. Numeric vector of length 2. e.g. c(0.25, 20)}
-
-\item{min_splice_overhang}{Exclude read if site is located adjacent to splice
-site with an overhang of less than given length.}
 
 \item{min_variant_reads}{Required number of reads containing a variant for a site
 to be reported. Calculated per bam file, such that if 1 bam file has >= min_variant_reads,
 then the site will be reported.}
 
-\item{ignore_query_Ns}{ignored for now}
+\item{min_allelic_freq}{minimum allelic frequency required for a variant to be
+reported in ALT assays.}
+
+\item{report_multiallelic}{if TRUE, report sites with multiple variants passing
+filters. If FALSE, site will not be reported.}
 }
 \value{
 A RangedSummarizedExperiment or a
@@ -169,22 +164,18 @@ fafn <- raer_example("human.fasta")
 
 rse <- pileup_sites(bamfn, fafn)
 
-fp <- FilterParam(only_keep_variants = TRUE, min_nucleotide_depth = 55)
-pileup_sites(bamfn, fafn, filterParam = fp)
+fp <- FilterParam(only_keep_variants = TRUE, min_depth = 55)
+pileup_sites(bamfn, fafn, param = fp)
 
 
 # using multiple bam files
-
-bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
-bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
-fafn <- raer_example("human.fasta")
 
 bams <- rep(c(bamfn, bam2fn), each = 3)
 sample_ids <- paste0(rep(c("KO", "WT"), each = 3), 1:3)
 names(bams) <- sample_ids
 
 fp <- FilterParam(only_keep_variants = TRUE)
-rse <- pileup_sites(bams, fafn, filterParam = fp)
+rse <- pileup_sites(bams, fafn, param = fp)
 rse
 
 rse$condition <- substr(rse$sample, 1, 2)
@@ -194,6 +185,16 @@ colData(rse)
 
 rowRanges(rse)
 
+# specifying regions to query use GRanges object
+sites <- rowRanges(rse)
+rse <- pileup_sites(bams, fafn, sites = sites)
+rse
+
+rse <- pileup_sites(bams, fafn, chroms = c("SPCS3", "DHFR"))
+rse
+
+rse <- pileup_sites(bams, fafn, region = "DHFR:100-101")
+rse
 }
 \seealso{
 Other pileup: 
