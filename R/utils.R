@@ -68,6 +68,7 @@ unlist_w_names <- function(x) {
 #'
 #' @importFrom Rsamtools ScanBamParam BamFile
 #' @importFrom GenomicAlignments readGAlignments
+#' @importFrom GenomicRanges reduce
 #' @importFrom IRanges grouplengths
 #' @importFrom S4Vectors aggregate
 #' @examples
@@ -87,7 +88,7 @@ find_mispriming_sites <- function(bamfile, fafile, pos_5p = 5, pos_3p = 20,
     pa_pks <- GRanges()
     repeat {
         # should only return reads with pa tag set
-        galn <- readGAlignments(bf, param = sbp)
+        galn <- GenomicAlignments::readGAlignments(bf, param = sbp)
 
         if (length(galn) == 0) break
         gr <- as(galn, "GRanges")
@@ -103,7 +104,7 @@ find_mispriming_sites <- function(bamfile, fafile, pos_5p = 5, pos_3p = 20,
     }
     close(bf)
     # merge again, handle edge cases between yieldsizes
-    ans <- reduce(pa_pks, with.revmap = TRUE)
+    ans <- GenomicRanges::reduce(pa_pks, with.revmap = TRUE)
     mcols(ans) <- S4Vectors::aggregate(pa_pks, mcols(ans)$revmap,
                                        mean_pal = mean(pa_pks$mean_pal),
                                        n_reads = sum(pa_pks$n_reads),
@@ -111,10 +112,13 @@ find_mispriming_sites <- function(bamfile, fafile, pos_5p = 5, pos_3p = 20,
 
     # keep reads above threshold, slop, and merge adjacent misprimed regions
     ans <- ans[ans$n_reads >= min_reads]
+    if(length(ans) == 0) {
+        return(empty_mispriming_record())
+    }
     ans <- resize(ans, pos_3p + width(ans))
     ans <- resize(ans, pos_5p + width(ans), fix = "end")
 
-    res <- reduce(ans, with.revmap = TRUE)
+    res <- GenomicRanges::reduce(ans, with.revmap = TRUE)
     mcols(res) <- S4Vectors::aggregate(ans, mcols(res)$revmap,
                                        n_reads = sum(ans$n_reads),
                                        drop = FALSE)
@@ -124,13 +128,25 @@ find_mispriming_sites <- function(bamfile, fafile, pos_5p = 5, pos_3p = 20,
     res
 }
 
+empty_mispriming_record <- function() {
+    col_types <- list(
+        n_reads = integer(),
+        n_regions = integer(),
+        A_freq = numeric()
+    )
+    df <- do.call(data.frame, col_types)
+    gr <- GRanges(c(seqnames = NULL, ranges = NULL, strand = NULL))
+    mcols(gr) <- df
+    gr
+}
+
 merge_pa_peaks <- function(gr) {
     # get 3' end of read
     start(gr[strand(gr) == "+"]) <- end(gr[strand(gr) == "+"])
     end(gr[strand(gr) == "-"]) <- start(gr[strand(gr) == "-"])
 
     # merge and count reads within merged ivls
-    ans <- reduce(gr, with.revmap = TRUE)
+    ans <- GenomicRanges::reduce(gr, with.revmap = TRUE)
     mcols(ans) <- S4Vectors::aggregate(gr, mcols(ans)$revmap,
                                        mean_pal = mean(gr$pa),
                                        drop = FALSE)
