@@ -66,6 +66,12 @@ unlist_w_names <- function(x) {
 #' [`Rsamtools::BamFile()`]
 #' @param verbose if true report progress
 #'
+#' @returns A GenomicsRanges containing regions enriched for putative mispriming
+#' events. The `n_reads` column specifies the number of polyA trimmed reads
+#' overlapping the mispriming region. The `n_regions` column specifies the number
+#' overlapping independent regions found in each chunk (dictated by `n_reads_per_chunk`).
+#' The `A_freq` column indicates the frequency of A bases within the region.
+#'
 #' @importFrom Rsamtools ScanBamParam BamFile
 #' @importFrom GenomicAlignments readGAlignments
 #' @importFrom GenomicRanges reduce

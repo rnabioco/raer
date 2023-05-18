@@ -36,6 +36,13 @@ find_mispriming_sites(
 
 \item{verbose}{if true report progress}
 }
+\value{
+A GenomicsRanges containing regions enriched for putative mispriming
+events. The \code{n_reads} column specifies the number of polyA trimmed reads
+overlapping the mispriming region. The \code{n_regions} column specifies the number
+overlapping independent regions found in each chunk (dictated by \code{n_reads_per_chunk}).
+The \code{A_freq} column indicates the frequency of A bases within the region.
+}
 \description{
 OligodT will prime at A-rich regions in an RNA. Reverse transcription
 from these internal priming sites will install an oligodT sequence at the 3' end
