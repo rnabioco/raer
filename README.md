@@ -33,6 +33,8 @@ sites.
 
 ``` r
 library(raer)
+#> Warning: replacing previous import 'utils::findMatches' by
+#> 'S4Vectors::findMatches' when loading 'AnnotationDbi'
 bam1fn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")
@@ -52,7 +54,8 @@ rse
 #> dim: 1695 2 
 #> metadata(0):
 #> assays(7): ALT nRef ... nC nG
-#> rownames(1695): SSR3_1_- SSR3_2_- ... DHFR_517_- DHFR_518_-
+#> rownames(1695): site_SSR3_1_2 site_SSR3_2_2 ... site_DHFR_517_2
+#>   site_DHFR_518_2
 #> rowData names(4): REF rbpz vpb sor
 #> colnames(2): ko wt
 #> colData names(1): sample
@@ -69,17 +72,17 @@ colData(rse)
 
 ``` r
 assays(rse)$nRef[1:4, ]
-#>          ko wt
-#> SSR3_1_- 13 12
-#> SSR3_2_- 14 12
-#> SSR3_3_- 14 12
-#> SSR3_4_- 15 12
+#>               ko wt
+#> site_SSR3_1_2 13 12
+#> site_SSR3_2_2 14 12
+#> site_SSR3_3_2 14 12
+#> site_SSR3_4_2 15 12
 assays(rse)$nAlt[1:4, ]
-#>          ko wt
-#> SSR3_1_-  0  0
-#> SSR3_2_-  0  0
-#> SSR3_3_-  0  0
-#> SSR3_4_-  0  0
+#>               ko wt
+#> site_SSR3_1_2  0  0
+#> site_SSR3_2_2  0  0
+#> site_SSR3_3_2  0  0
+#> site_SSR3_4_2  0  0
 ```
 
 The `FilterParam()` class holds multiple options for customizing the
@@ -98,7 +101,8 @@ rse
 #> dim: 74 2 
 #> metadata(0):
 #> assays(7): ALT nRef ... nC nG
-#> rownames(74): SSR3_102_- SSR3_125_- ... DHFR_430_- DHFR_513_-
+#> rownames(74): site_SSR3_102_2 site_SSR3_125_2 ... site_DHFR_430_2
+#>   site_DHFR_513_2
 #> rowData names(4): REF rbpz vpb sor
 #> colnames(2): ko wt
 #> colData names(1): sample
@@ -111,30 +115,37 @@ single cell libraries.
 scbam_fn <- raer_example("5k_neuron_mouse_possort.bam")
 outdir <- tempdir("sc_editing")
 
-editing_sites <- GRanges(c("2:579:-",
-                           "2:625:-",
-                           "2:589:-"),
-                         REF = "A",
-                         ALT = "G")
+editing_sites <- GRanges(
+    c(
+        "2:579:-",
+        "2:625:-",
+        "2:589:-"
+    ),
+    REF = "A",
+    ALT = "G"
+)
 
-cbs <- c("CACCAAACAACAACAA-1", 
-         "TATTCCACACCCTCTA-1", 
-         "GACCTTCAGTTGTAAG-1")
+cbs <- c(
+    "CACCAAACAACAACAA-1",
+    "TATTCCACACCCTCTA-1",
+    "GACCTTCAGTTGTAAG-1"
+)
 
-sce <- pileup_cells(scbam_fn, 
-                    sites = editing_sites,
-                    cell_barcodes = cbs,
-                    param = fp, 
-                    output_directory = outdir)
+sce <- pileup_cells(scbam_fn,
+    sites = editing_sites,
+    cell_barcodes = cbs,
+    param = fp,
+    output_directory = outdir
+)
 sce
 #> class: SingleCellExperiment 
 #> dim: 3 3 
 #> metadata(0):
 #> assays(2): nRef nAlt
-#> rownames(3): 2:579_2_A_G 2:625_2_A_G 2:589_2_A_G
-#> rowData names(2): ref alt
+#> rownames(3): site_2_579_2 site_2_625_2 site_2_589_2
+#> rowData names(2): REF ALT
 #> colnames(3): CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
-#> colData names(1): id
+#> colData names(0):
 #> reducedDimNames(0):
 #> mainExpName: NULL
 #> altExpNames(0):
@@ -143,16 +154,16 @@ sce
 ``` r
 assays(sce)$nRef
 #> 3 x 3 sparse Matrix of class "dgCMatrix"
-#>             CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
-#> 2:579_2_A_G                  0                  0                  1
-#> 2:625_2_A_G                  0                  0                  0
-#> 2:589_2_A_G                  1                  1                  2
+#>              CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
+#> site_2_579_2                  0                  0                  1
+#> site_2_625_2                  0                  0                  0
+#> site_2_589_2                  1                  1                  2
 assays(sce)$nAlt
 #> 3 x 3 sparse Matrix of class "dgCMatrix"
-#>             CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
-#> 2:579_2_A_G                  1                  1                  1
-#> 2:625_2_A_G                  1                  1                  1
-#> 2:589_2_A_G                  0                  0                  0
+#>              CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
+#> site_2_579_2                  1                  1                  1
+#> site_2_625_2                  1                  1                  1
+#> site_2_589_2                  0                  0                  0
 ```
 
 ## Related work

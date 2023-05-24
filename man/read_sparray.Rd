@@ -2,9 +2,9 @@
 % Please edit documentation in R/sc-pileup.R
 \name{read_sparray}
 \alias{read_sparray}
-\title{Read tables produced by pileup_cells()}
+\title{Read sparseMatrix produced by pileup_cells()}
 \usage{
-read_sparray(mtx_fn, sites_fn, bc_fn)
+read_sparray(mtx_fn, sites_fn, bc_fn, site_format = c("coordinate", "index"))
 }
 \arguments{
 \item{mtx_fn}{.mtx.gz file path}
@@ -12,12 +12,17 @@ read_sparray(mtx_fn, sites_fn, bc_fn)
 \item{sites_fn}{sites.txt.gz file path}
 
 \item{bc_fn}{bcs.txt.gz file path}
+
+\item{site_format}{one of \code{coordinate} or \code{index}, \code{coordinate} will populate
+a SingleCellExperiment with rowRanges and rownames corresponind to genomic
+intervals, whereas `index`` will only add row indicies to the rownames.}
 }
 \value{
-a list of \code{sparseMatrix}, of \code{NULL} if mtx_fn is empty
+a \code{SingleCellExperiment} object populated with \code{nRef} and \code{nAlt}
+assays.
 }
 \description{
-Read in tables produced by \code{pileup_cells()}, which are an
+Read in tables produced by \code{pileup_cells()} which are an
 extension of the matrixMarket sparse matrix format to store values for more
 than 1 matrix.
 
@@ -27,6 +32,27 @@ The .mtx.gz files are formatted with columns:
 \item column index (0 based)
 \item values for sparseMatrix #1 (nRef)
 \item values for sparseMatrix #2 (nAlt)
-N) values for sparseMatrix ... (...) ununsed for now
 }
+}
+\examples{
+library(Rsamtools)
+library(GenomicRanges)
+bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
+
+gr <- GRanges(c("2:579:-", "2:625:-", "2:645:-", "2:589:-", "2:601:-"))
+gr$REF <- c(rep("A", 4), "T")
+gr$ALT <- c(rep("G", 4), "C")
+
+cbs <- unique(scanBam(bam_fn, param = ScanBamParam(tag = "CB"))[[1]]$tag$CB)
+cbs <- na.omit(cbs)
+
+outdir <- tempdir()
+bai <- indexBam(bam_fn)
+on.exit(unlink(c(outdir, bai)))
+
+fp <- FilterParam(library_type = "fr-second-strand")
+mtx_fns <- pileup_cells(bam_fn, gr, cbs, outdir,  return_sce = FALSE)
+sce <- read_sparray(mtx_fns[1], mtx_fns[2], mtx_fns[3])
+sce
+
 }

@@ -41,8 +41,18 @@
 #' @param BPPARAM BiocParallel instance. Parallel computation occurs across
 #'   chromosomes.
 #'
-#' @returns Returns either a `SingleCellExperiment` or character vector of paths
-#'   to the files produced.
+#' @returns Returns either a [SingleCellExperiment] or character vector of paths
+#'   to the sparseMatrix files produced. The [SingleCellExperiment] object is
+#'   populated with two assays, `nRef` and `nAlt`, which represent base counts
+#'   for the reference and alternate alleles. The [rowRanges()] will contain the
+#'   genomic interval for each site, along with `REF` and `ALT` columns. The
+#'   rownames will be populated with the format
+#'   `site_[seqnames]_[position(1-based)]_[strand]`, with `strand` being encoded
+#'   as 1 = +, 2 = -, and 3 = *.
+#'
+#'   If `return_sce` is `FALSE` then a character vector of paths to the
+#'   sparseMatrix files (`barcodes.txt.gz`, `sites.txt.gz`, `counts.mtx.gz`),
+#'   will be returned. These files can be imported using [read_sparray()].
 #'
 #' @examples
 #' library(Rsamtools)
@@ -96,6 +106,7 @@ pileup_cells <- function(bamfile,
     BPPARAM = SerialParam(),
     return_sce = TRUE,
     verbose = FALSE) {
+
     if (length(bamfile) > 1) {
         process_nbam <- TRUE
         if (length(bamfile) != length(cell_barcodes)) {
@@ -189,6 +200,7 @@ pileup_cells <- function(bamfile,
 
     if (verbose) cli::cli_alert("Beginning pileup")
     if (process_nbam) {
+        # operate in parallel over each bam
         nwrkers <- BiocParallel::bpworkers(BPPARAM)
         tmp_bamfns <- chunk_vec(bamfile, nwrkers)
         tmp_cbs <- chunk_vec(cell_barcodes, nwrkers)
@@ -213,6 +225,7 @@ pileup_cells <- function(bamfile,
             SIMPLIFY = FALSE
         )
     } else {
+        # operate in parallel over each chromosome
         tmp_plp_files <- bpmapply(get_sc_pileup,
             chrom = chroms_to_process,
             id = chroms_to_process,
@@ -238,22 +251,20 @@ pileup_cells <- function(bamfile,
 
     if (verbose) cli::cli_alert("pileup completed, binding matrices")
 
+    on.exit(unlink(unlist(tmp_plp_files)))
     tmp_plp_files <- Filter(function(x) length(x) > 0, tmp_plp_files)
-    sps <- lapply(tmp_plp_files, function(x) {
-        read_sparray(x[1], x[2], x[3])
+
+    sces <- lapply(tmp_plp_files, function(x) {
+        read_sparray(x[1], x[2], x[3], site_format = "index")
     })
-    sps <- sps[!unlist(lapply(sps, is.null))]
-    sp_assays <- list(
-        nRef = lapply(sps, function(x) x[[1]]),
-        nAlt = lapply(sps, function(x) x[[2]])
-    )
 
-    outfns <- c("barcodes.txt.gz", "sites.txt.gz", "counts.mtx.gz")
+    sces <- Filter(function(x) length(x) > 0, sces)
+
+    outfns <- c("counts.mtx.gz", "sites.txt.gz", "barcodes.txt.gz")
     outfns <- file.path(output_directory, outfns)
-    names(outfns) <- c("bc", "sites", "counts")
+    names(outfns) <- c("counts", "sites", "bc")
 
-    sp_assays <- Filter(function(x) length(x) > 0, sp_assays)
-    if (length(sp_assays) == 0) {
+    if (length(sces) == 0) {
         warning("no sites reported in output")
         if (return_sce) {
             res <- SingleCellExperiment::SingleCellExperiment()
@@ -263,39 +274,24 @@ pileup_cells <- function(bamfile,
         return(res)
     }
 
-    if (process_nbam) {
-        sp_assays <- lapply(sp_assays, function(x) {
-            xx <- do.call(cbind, x)
-            writeLines(colnames(xx), outfns["bc"])
-            writeLines(rownames(xx), outfns["sites"])
-            Matrix::writeMM(xx, outfns["counts"])
-            xx
-        })
-    } else {
-        sp_assays <- lapply(sp_assays, function(x) {
-            xx <- do.call(rbind, x)
-            writeLines(colnames(xx), outfns["bc"])
-            writeLines(rownames(xx), outfns["sites"])
-            Matrix::writeMM(xx, outfns["counts"])
-            xx
-        })
-    }
+    sce <- do.call(rbind, sces)
+    ridx <- as.integer(rownames(sce))
+    rowRanges(sce) <- sites[ridx]
+    rownames(sce) <- site_names(rowRanges(sce))
 
-    unlink(unlist(tmp_plp_files))
+    write_sparray(sce, outfns["counts"], outfns["sites"], outfns["bc"], ridx)
 
     if (return_sce) {
-        res <- SingleCellExperiment::SingleCellExperiment(sp_assays)
-        res$id <- colnames(res)
-        rowRanges(res) <- id_to_gr(rownames(res), seq_info)
+        res <- sce
     } else {
         res <- outfns
     }
     res
 }
 
-#' Read tables produced by pileup_cells()
+#' Read sparseMatrix produced by pileup_cells()
 #'
-#' @description Read in tables produced by `pileup_cells()`, which are an
+#' @description Read in tables produced by `pileup_cells()` which are an
 #'   extension of the matrixMarket sparse matrix format to store values for more
 #'   than 1 matrix.
 #'
@@ -304,40 +300,155 @@ pileup_cells <- function(bamfile,
 #' 2) column index (0 based)
 #' 3) values for sparseMatrix #1 (nRef)
 #' 4) values for sparseMatrix #2 (nAlt)
-#' N) values for sparseMatrix ... (...) ununsed for now
 #'
 #' @param mtx_fn .mtx.gz file path
 #' @param sites_fn sites.txt.gz file path
 #' @param bc_fn bcs.txt.gz file path
+#' @param site_format one of `coordinate` or `index`, `coordinate` will populate
+#' a SingleCellExperiment with rowRanges and rownames corresponind to genomic
+#' intervals, whereas `index`` will only add row indicies to the rownames.
+#' @returns a `SingleCellExperiment` object populated with `nRef` and `nAlt`
+#' assays.
 #'
-#' @returns a list of `sparseMatrix`, of `NULL` if mtx_fn is empty
+#' @examples
+#' library(Rsamtools)
+#' library(GenomicRanges)
+#' bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
+#'
+#' gr <- GRanges(c("2:579:-", "2:625:-", "2:645:-", "2:589:-", "2:601:-"))
+#' gr$REF <- c(rep("A", 4), "T")
+#' gr$ALT <- c(rep("G", 4), "C")
+#'
+#' cbs <- unique(scanBam(bam_fn, param = ScanBamParam(tag = "CB"))[[1]]$tag$CB)
+#' cbs <- na.omit(cbs)
+#'
+#' outdir <- tempdir()
+#' bai <- indexBam(bam_fn)
+#' on.exit(unlink(c(outdir, bai)))
+#'
+#' fp <- FilterParam(library_type = "fr-second-strand")
+#' mtx_fns <- pileup_cells(bam_fn, gr, cbs, outdir,  return_sce = FALSE)
+#' sce <- read_sparray(mtx_fns[1], mtx_fns[2], mtx_fns[3])
+#' sce
 #'
 #' @importFrom data.table fread
 #' @importFrom Matrix sparseMatrix
+#' @importFrom SingleCellExperiment SingleCellExperiment
+#' @importFrom R.utils gzip
 #' @export
-read_sparray <- function(mtx_fn, sites_fn, bc_fn) {
+read_sparray <- function(mtx_fn, sites_fn, bc_fn,
+                         site_format = c("coordinate", "index")) {
+
     if (!file.size(mtx_fn) > 0) {
-        return(NULL)
+        return(SingleCellExperiment::SingleCellExperiment())
     }
 
-    rnames <- readLines(sites_fn)
+    rnames <- data.table::fread(sites_fn,
+                                sep = "\t",
+                                col.names = c("index", "seqnames", "start",
+                                              "strand", "REF", "ALT"),
+                                colClasses = c("integer", "character", "integer",
+                                               "integer", "character", "character"),
+                                data.table = FALSE)
+    site_format <- match.arg(site_format)
+    if(site_format == "index") {
+        rnames <- rnames$index
+    } else if (site_format == "coordinate") {
+        rnames <- rnames[, -1]
+        rnames$strand <- c("+", "-")[rnames$strand]
+        gr <- makeGRangesFromDataFrame(rnames,
+                                       end.field = "start",
+                                       keep.extra.columns = TRUE)
+        rnames <- site_names(gr)
+    }
+
     cnames <- readLines(bc_fn)
-    dt <- data.table::fread(mtx_fn, sep = "\t", colClasses = "integer")
+    n_skip <- ifelse(startsWith(readLines(mtx_fn, n = 1), "%%%"), 3, 0)
 
-    if (ncol(dt) < 3) stop("malformed sparseMatrix")
+    dt <- data.table::fread(mtx_fn,
+                            sep = " ",
+                            colClasses = "integer",
+                            skip = n_skip,
+                            header = FALSE)
+    sp_mtx_names <- c("nRef", "nAlt")
+    n_sp_cols <- 2 + length(sp_mtx_names)
 
-    sp_idx <- 3:ncol(dt)
-    lapply(sp_idx, function(x) {
-        sparseMatrix(
+    if (ncol(dt) != n_sp_cols) cli::cli_abort("malformed sparseMatrix")
+
+    sp_idxs <- 3:n_sp_cols
+    sps <- lapply(sp_idxs, function(x) {
+        sm <- sparseMatrix(
             i = dt[[1]],
             j = dt[[2]],
             x = dt[[x]],
-            index1 = FALSE,
             dims = c(length(rnames), length(cnames)),
-            dimnames = list(rnames, cnames)
         )
     })
+    names(sps) <- sp_mtx_names
+    res <- SingleCellExperiment::SingleCellExperiment(sps)
+    colnames(res) <- cnames
+    if(site_format == "coordinate") {
+        rowRanges(res) <- gr
+    }
+    rownames(res) <- rnames
+    res
 }
+
+write_sparray <- function(sce, mtx_fn, sites_fn, bc_fn, r_index) {
+    if(!all(c("nRef", "nAlt") %in% assayNames(sce))) {
+        cli::cli_abort("missing required asssays nRef or nAlt")
+    }
+    nref <- assay(sce, "nRef")
+    nalt <- assay(sce, "nAlt")
+
+    if(!is(nref, 'sparseMatrix')) {
+        cli::cli_abort("nRef must be a sparseMatrix")
+    }
+
+    if(!is(nalt, 'sparseMatrix')) {
+        cli::cli_abort("nAlt must be a sparseMatrix")
+    }
+
+    nref_trpl <- summary(nref)
+    nalt_trpl <- summary(nalt)
+    conforms <- identical(dim(nref_trpl), dim(nalt_trpl))
+    if(!conforms){
+        cli::cli_abort("nRef and nAlt sparseMatrices triplet dimensions differ")
+    }
+
+    writeLines(
+        c("%%% raer MatrixMarket-like matrix coordinate integer general",
+          paste("%%% ", nref@Dim[1], nref@Dim[2], length(nref@x)),
+          "%%% x y nRef nAlt"),
+        gzfile(mtx_fn))
+
+    mtx <- matrix(0L, nrow = dim(nref_trpl)[1], ncol = 4L)
+    mtx <- cbind(nref_trpl, nalt = nalt_trpl$x)
+
+    data.table::fwrite(mtx, mtx_fn,
+                       append = TRUE,
+                       sep = " ",
+                       row.names = FALSE,
+                       col.names = FALSE)
+
+    sites <- data.frame(
+        r_index,
+        seqnames(sce),
+        start(sce),
+        as.integer(strand(sce)),
+        rowData(sce)$REF,
+        rowData(sce)$ALT
+    )
+
+    data.table::fwrite(sites, sites_fn,
+                       sep = "\t",
+                       row.names = FALSE,
+                       col.names = FALSE)
+
+    writeLines(colnames(sce), gzfile(bc_fn))
+}
+
+
 
 # Utilities -------------------------------------------------------
 
@@ -399,7 +510,7 @@ gr_to_regions <- function(gr) {
         cli::cli_alert_warning("missing strand not found in input, coercing strand to '+'")
         strand(gr) <- "+"
     }
-    gr$idx <- seq(0, nr - 1) # is zero-based index
+    gr$idx <- seq(1, nr) # is one-based index
     list(
         as.character(seqnames(gr)),
         as.integer(start(gr)),
@@ -411,28 +522,32 @@ gr_to_regions <- function(gr) {
 }
 
 id_to_gr <- function(x, seq_info) {
-    xx <- strsplit(x, ":")
-    xx <- t(simplify2array(xx, higher = FALSE))
+    xx <- sub("^site_", "", x)
+    xx <- strsplit(xx, "_")
 
-    if (ncol(xx) != 2) {
+    xx <- lapply(xx, function(x) {
+        l <- length(x)
+        c(seqnames = paste(x[1:(l - 4)], collapse = ""),
+             start = x[[l - 3]],
+             strand = x[[l - 2]],
+             ref = x[[l - 1]],
+             alt = x[[l]])
+    })
+    xx <- do.call(rbind, xx)
+
+    if (ncol(xx) != 5) {
         cli::cli_abort("unable to decode sites to rownames")
     }
-    seqnms <- xx[, 1]
-    other_fields <- strsplit(xx[, 2], "_")
-    other_fields <- t(simplify2array(other_fields, higher = FALSE))
 
-    if (ncol(other_fields) != 4) {
-        stop("unable to decode sites to rownames")
-    }
-
-    gr <- GRanges(seqnms,
+    gr <- GRanges(
+        seqnames = xx[, 1],
         IRanges(
-            start = as.integer(other_fields[, 1]),
+            start = as.integer(xx[, 2]),
             width = 1L
         ),
-        strand = c("+", "-")[as.integer(other_fields[, 2])],
-        ref = other_fields[, 3],
-        alt = other_fields[, 4],
+        strand = c("+", "-")[as.integer(xx[, 3])],
+        ref = xx[, 4],
+        alt = xx[, 5],
         seqinfo = seq_info
     )
     names(gr) <- x

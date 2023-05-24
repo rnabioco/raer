@@ -11,8 +11,8 @@
 #' @param se A SummarizedExperiment object created by `merge_pileups`
 #' @param edit_from This should be a nucleotide (A, C, G, or T)
 #'   corresponding to the nucleotide you expect in the reference. Ex. for A to I
-#'   editing events, this would be "A". If NULL, then editing frequencies will be
-#'   calculated using the `nAlt` and `nRef` values.
+#'   editing events, this would be "A". If NULL, then editing frequencies will
+#'   be calculated using the `nAlt` and `nRef` values.
 #' @param edit_to This should be a nucleotide (A, C, G, or T) and should
 #'   correspond to the nucleotide you expect after the editing event. Ex. for A
 #'   to I editing events, this would be "G". If NULL, then editing frequencies
@@ -28,7 +28,8 @@
 #'   of editing sites detected.
 #'
 #' @return
-#' `SummarizedExperiment::SummarizedExperiment` supplemented with `edit_freq` assay.
+#' `SummarizedExperiment::SummarizedExperiment` supplemented with
+#' `edit_freq` assay.
 #'
 #' @examples
 #' library(SummarizedExperiment)
@@ -205,8 +206,10 @@ prep_for_de <- function(se,
         edit_from <- "A"
         edit_to <- "G"
     } else if (is.null(edit_from) | is.null(edit_to)) {
-        cli::cli_abort("If not using a pre built type 'AI', `edit_from` and `edit_to` must be set")
-    } else if (!(edit_from %in% c("A", "C", "G", "T")) | !(edit_to %in% c("A", "C", "G", "T"))) {
+        cli::cli_abort("If not using a pre built type 'AI',",
+                        "`edit_from` and `edit_to` must be set")
+    } else if (!(edit_from %in% c("A", "C", "G", "T")) |
+               !(edit_to %in% c("A", "C", "G", "T"))) {
         cli::cli_abort("`edit_to` and `edit_from` must be nucleotides!")
     }
 
@@ -395,7 +398,7 @@ perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
 run_deseq2 <- function(deobj, condition_control = NULL,
     condition_treatment = NULL) {
     if (!requireNamespace("DESeq2", quietly = TRUE)) {
-        cli::cli_abort("Package \"DESeq2\" needed to run differential analysis.")
+        cli::cli_abort("Package \"DESeq2\" needed for differential editing.")
     }
 
     design <- ~ 0 + condition:sample + condition:count
@@ -426,7 +429,8 @@ run_deseq2 <- function(deobj, condition_control = NULL,
         design = design
     )
 
-    # We don't want size factors because we are looking at ratios within a sample
+    # We don't want size factors because we are
+    # looking at ratios within a sample
     DESeq2::sizeFactors(dds) <- rep(1, nrow(colData(deobj)))
 
     # TODO - figure out what modeling is best, also try local
@@ -469,9 +473,10 @@ run_deseq2 <- function(deobj, condition_control = NULL,
 
 # Perform differential editing with edgeR
 #
-# @description Uses edgeR to perform differential editing analysis. This will work for
-# simple designs that have 1 treatment and 1 control. For more complex designs,
-# we suggest you perform your own. It will test if your sample column makes the
+# @description Uses edgeR to perform differential editing analysis.
+# This will work for simple designs that have 1 treatment and 1 control. For
+# more complex designs, we suggest you perform your own. It will test if your
+# sample column makes the
 # model matrix not full rank. If that happens, the model matrix will be
 # modified to be full rank. This is not intended to be called directly by the
 # user, instead, this should be called by `perform_de`
@@ -503,7 +508,8 @@ run_edger <- function(deobj, condition_control = NULL,
         design <- design[, !grepl("countref", colnames(design))]
     }
 
-    dge <- edgeR::DGEList(assay(deobj, "counts"), lib.size = rep(1, ncol(deobj)))
+    dge <- edgeR::DGEList(assay(deobj, "counts"),
+                          lib.size = rep(1, ncol(deobj)))
     dge <- edgeR::estimateDisp(dge)
     fit <- edgeR::glmFit(dge, design)
 
@@ -520,8 +526,11 @@ run_edger <- function(deobj, condition_control = NULL,
 
     # TODO add other possible return values and return as a list.
     # This finds editing specific to the condition
-    treatment_vs_control <- edgeR::glmLRT(fit, contrast = (alt_treatment - ref_treatment) -
-        (alt_control - ref_control))
+    treatment_vs_control <- edgeR::glmLRT(fit,
+                                          contrast = (
+                                              alt_treatment - ref_treatment) -
+                                              (alt_control - ref_control)
+                                          )
 
     treatment_vs_control <- edgeR::topTags(treatment_vs_control,
         n = nrow(treatment_vs_control)

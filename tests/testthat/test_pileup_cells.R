@@ -94,3 +94,34 @@ test_that("if multiple bams are supplied, require nbam # of barcodes", {
         outdir, param = fp
     ))
 })
+
+test_that("output files are generated", {
+    sce <- pileup_cells(bam_fn, gr, cbs, outdir)
+    mtx_fns <- file.path(outdir,
+                         c("counts.mtx.gz",
+                           "sites.txt.gz",
+                           "barcodes.txt.gz"))
+    expect_true(all(file.exists(mtx_fns)))
+    are_gzipped <- lapply(mtx_fns, function(x){
+        fo <- file(x)
+        xx <- summary(fo)$class == "gzfile"
+        close(fo)
+        xx
+    }) |>
+        unlist()
+    expect_true(all(are_gzipped))
+})
+
+test_that("read_sparray reconstructs rse from output files", {
+    sce <- pileup_cells(bam_fn, gr, cbs, outdir)
+    mtx_fns <- file.path(outdir,
+                         c("counts.mtx.gz",
+                           "sites.txt.gz",
+                           "barcodes.txt.gz"))
+    sp_sce <- read_sparray(mtx_fns[1], mtx_fns[2], mtx_fns[3], "coordinate")
+    expect_true(identical(sce, sp_sce))
+
+    sp_sce <- read_sparray(mtx_fns[1], mtx_fns[2], mtx_fns[3], "index")
+    expect_equal(rownames(sp_sce), as.character(1:5))
+    expect_true(all(elementNROWS(rowRanges(sp_sce)) == 0))
+})

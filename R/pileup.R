@@ -6,10 +6,10 @@
 #'   library_type parameters can be specified for each input files.
 #'
 #' @param bamfiles character vector of paths to 1 or more bam files. If named,
-#' the names will be included in the colData of the RangedSummarizedExperiment, otherwise
-#' the colData will be populated with the basename of the bamfile.
+#' the names will be included in the colData of the [RangedSummarizedExperiment], otherwise
+#' the [colData] will be populated with the basename of the bamfile.
 #' @param fafile path to fasta file
-#' @param sites a GRanges object containing regions or sites to process.
+#' @param sites a [GRanges] object containing regions or sites to process.
 #' @param region samtools region query string (i.e. chr1:100-1000). Can be combined
 #' with sites, in which case sites will be filtered to keep only sites within the
 #' region.
@@ -33,8 +33,33 @@
 #'   region.
 #' @param verbose if TRUE, then report progress and warnings.
 #'
-#' @returns A RangedSummarizedExperiment or a
-#'   vector of the output tabixed file names if `return_data` is FALSE.
+#' @returns A [RangedSummarizedExperiment] or a
+#'   vector of the output tabix'ed file names if `return_data` is FALSE.
+#'   The [RangedSummarizedExperiment] object is populated with multiple assays:
+#'   * `ALT`:  Alternate base(s) found at each position
+#'   * `nRef`: # of reads supporting the reference base
+#'   * `nAlt`: # of reads supporting an alternate base
+#'   * `nA`: # of reads with A
+#'   * `nT`: # of reads with T
+#'   * `nC`: # of reads with C
+#'   * `nG`: # of reads with G
+#'
+#'   The [rowRanges()] contains the genomic interval for each site, along with:
+#'   * `REF`: The reference base
+#'   * `rpbz`: Mann-Whitney U test of Read Position Bias from bcftools,
+#'     extreme negative or positive values indicate more bias.
+#'   * `vdb`: Variant Distance Bias for filtering splice-site artefacts from
+#'     bcftools, lower values indicate more bias.
+#'   * `sor` Strand Odds Ratio Score, strand bias estimated by the Symmetric
+#'     Odds Ratio test, based on GATK code. Higher values indicate more bias.
+#'
+#'   The rownames will be populated with the format
+#'   `site_[seqnames]_[position(1-based)]_[strand]`, with `strand` being encoded
+#'   as 1 = +, 2 = -, and 3 = *.
+#'
+#'   If `return_data` is `FALSE` then a character vector of paths to the
+#'   pileup files will be returned. These files can be imported using
+#'   `read_pileup()`.
 #'
 #' @examples
 #' library(SummarizedExperiment)
@@ -427,10 +452,16 @@ read_pileup <- function(tbx_fn, region = NULL) {
 
     # quick method to convert vector of character strings into data.frame
     if (length(tbx_vals) == 1) {
+        nc <- lengths(regmatches(tbx_vals, gregexpr("\t", tbx_vals, fixed = TRUE)))
+
         # handle length 1 character vectors, which will not work with fread
         from <- data.frame(t(strsplit(tbx_vals, "\t")[[1]]))
         colnames(from) <- paste0("V", seq_len(ncol(from)))
-        from[c(2, 6:12)] <- as.numeric(from[c(2, 6:12)])
+        if(nc == 7) {
+            from[c(2, 5:nc)] <- as.numeric(from[c(2, 5:nc)])
+        } else {
+            from[c(2, 6:nc)] <- as.numeric(from[c(2, 6:nc)])
+        }
     } else {
         from <- data.table::fread(
             text = tbx_vals,
@@ -442,12 +473,15 @@ read_pileup <- function(tbx_fn, region = NULL) {
     }
 
     plp_cols <- c("ALT", "nRef", "nAlt", "nA", "nT", "nC", "nG", "nN", "nX")
-    rowData_cols <- c("rpbz", "vdb")
-    if (ncol(from) == 6) {
+    rowData_cols <- c("rpbz", "vdb", "sor")
+    if (ncol(from) ==  (4 + length(rowData_cols))) {
         cols <- rowData_cols
-    } else {
+    } else if (ncol(from) == (4 + length(plp_cols))) {
         cols <- plp_cols
+    } else {
+        cli::cli_abort("unknown pileup file format")
     }
+
     colnames(from)[4:ncol(from)] <- c("REF", cols)
 
     GenomicRanges::GRanges(
@@ -570,7 +604,11 @@ setMethod(show, "FilterParam", function(object) {
 })
 
 
-.encode_libtype <- function(library_type, n_files) {
+.encode_libtype <- function(library_type = c("genomic-unstranded",
+                                             "fr-first-strand",
+                                             "fr-second-strand",
+                                             "unstranded"),
+                            n_files) {
     # encode libtype as integer
     # 0 = genomic-unstranded  all reads on + strand
     # 1 = fr-first-strand     strand based on R1/antisense, R2/sense
@@ -649,8 +687,8 @@ setMethod(show, "FilterParam", function(object) {
 #' @param min_base_quality min base quality score to consider read for pileup
 #' @param min_mapq minimum required MAPQ score, can be a vector of values
 #' for each bam file
-#' @param library_type read orientation, one of fr-first-strand,
-#' fr-second-strand, unstranded, and genomic-unstranded. Can supply as a vector to specify for each
+#' @param library_type read orientation, one of `fr-first-strand`,
+#' `fr-second-strand`, `unstranded`, and `genomic-unstranded`. Can supply as a vector to specify for each
 #' input bam. Unstranded library type will be reported based on read alignment.
 #' genomic-unstranded will report all variants w.r.t the + strand.
 #' @param only_keep_variants if TRUE, then only variant sites will be reported
@@ -838,6 +876,7 @@ gr_to_cregions <- function(gr) {
 #' @import SummarizedExperiment
 #' @importFrom IRanges extractList
 #' @keywords internal
+#' @noRd
 merge_pileups <- function(plps,
     assay_cols = c("ALT", "nRef", "nAlt", "nA", "nT", "nC", "nG"),
     sample_names = NULL,
@@ -1015,9 +1054,10 @@ site_names <- function(gr) {
         return(NULL)
     }
     paste(
+        "site",
         decode(seqnames(gr)),
         decode(start(gr)),
-        decode(strand(gr)),
-        sep = "-"
+        as.integer(strand(gr)),
+        sep = "_"
     )
 }

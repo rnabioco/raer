@@ -658,6 +658,6 @@ test_that("excluding multiallelics works", {
 test_that("rowdata stats are reported", {
     res <- pileup_sites(bamfn, fafn, sites)
     rdcols <- colnames(rowData(res))
-    exp_cols <- c("REF", "rbpz", "vpb", "sor")
+    exp_cols <- c("REF", "rpbz", "vdb", "sor")
     expect_equal(length(setdiff(rdcols, exp_cols)), 0)
 })
