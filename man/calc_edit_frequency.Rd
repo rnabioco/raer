@@ -19,8 +19,8 @@ calc_edit_frequency(
 
 \item{edit_from}{This should be a nucleotide (A, C, G, or T)
 corresponding to the nucleotide you expect in the reference. Ex. for A to I
-editing events, this would be "A". If NULL, then editing frequencies will be
-calculated using the \code{nAlt} and \code{nRef} values.}
+editing events, this would be "A". If NULL, then editing frequencies will
+be calculated using the \code{nAlt} and \code{nRef} values.}
 
 \item{edit_to}{This should be a nucleotide (A, C, G, or T) and should
 correspond to the nucleotide you expect after the editing event. Ex. for A
@@ -41,7 +41,8 @@ number of sites is stored as n_sites in the colData.}
 of editing sites detected.}
 }
 \value{
-\code{SummarizedExperiment::SummarizedExperiment} supplemented with \code{edit_freq} assay.
+\code{SummarizedExperiment::SummarizedExperiment} supplemented with
+\code{edit_freq} assay.
 }
 \description{
 Adds editing frequencies to an existing

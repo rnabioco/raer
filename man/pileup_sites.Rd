@@ -46,12 +46,12 @@ FilterParam(
 }
 \arguments{
 \item{bamfiles}{character vector of paths to 1 or more bam files. If named,
-the names will be included in the colData of the RangedSummarizedExperiment, otherwise
-the colData will be populated with the basename of the bamfile.}
+the names will be included in the colData of the \link{RangedSummarizedExperiment}, otherwise
+the \link{colData} will be populated with the basename of the bamfile.}
 
 \item{fafile}{path to fasta file}
 
-\item{sites}{a GRanges object containing regions or sites to process.}
+\item{sites}{a \link{GRanges} object containing regions or sites to process.}
 
 \item{region}{samtools region query string (i.e. chr1:100-1000). Can be combined
 with sites, in which case sites will be filtered to keep only sites within the
@@ -94,8 +94,8 @@ reads with the same UMI sequence will only be counted once per position.}
 \item{min_mapq}{minimum required MAPQ score, can be a vector of values
 for each bam file}
 
-\item{library_type}{read orientation, one of fr-first-strand,
-fr-second-strand, unstranded, and genomic-unstranded. Can supply as a vector to specify for each
+\item{library_type}{read orientation, one of \code{fr-first-strand},
+\code{fr-second-strand}, \code{unstranded}, and \code{genomic-unstranded}. Can supply as a vector to specify for each
 input bam. Unstranded library type will be reported based on read alignment.
 genomic-unstranded will report all variants w.r.t the + strand.}
 
@@ -144,8 +144,37 @@ reported in ALT assays.}
 filters. If FALSE, site will not be reported.}
 }
 \value{
-A RangedSummarizedExperiment or a
-vector of the output tabixed file names if \code{return_data} is FALSE.
+A \link{RangedSummarizedExperiment} or a
+vector of the output tabix'ed file names if \code{return_data} is FALSE.
+The \link{RangedSummarizedExperiment} object is populated with multiple assays:
+\itemize{
+\item \code{ALT}:  Alternate base(s) found at each position
+\item \code{nRef}: # of reads supporting the reference base
+\item \code{nAlt}: # of reads supporting an alternate base
+\item \code{nA}: # of reads with A
+\item \code{nT}: # of reads with T
+\item \code{nC}: # of reads with C
+\item \code{nG}: # of reads with G
+}
+
+The \code{\link[=rowRanges]{rowRanges()}} contains the genomic interval for each site, along with:
+\itemize{
+\item \code{REF}: The reference base
+\item \code{rpbz}: Mann-Whitney U test of Read Position Bias from bcftools,
+extreme negative or positive values indicate more bias.
+\item \code{vdb}: Variant Distance Bias for filtering splice-site artefacts from
+bcftools, lower values indicate more bias.
+\item \code{sor} Strand Odds Ratio Score, strand bias estimated by the Symmetric
+Odds Ratio test, based on GATK code. Higher values indicate more bias.
+}
+
+The rownames will be populated with the format
+\verb{site_[seqnames]_[position(1-based)]_[strand]}, with \code{strand} being encoded
+as 1 = +, 2 = -, and 3 = *.
+
+If \code{return_data} is \code{FALSE} then a character vector of paths to the
+pileup files will be returned. These files can be imported using
+\code{read_pileup()}.
 }
 \description{
 Generate base counts using pileup

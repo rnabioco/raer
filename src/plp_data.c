@@ -352,8 +352,8 @@ SEXP sitedata_template() {
   SET_VECTOR_ELT(tmpl, 2, NEW_NUMERIC(0));
 
   SEXP names = PROTECT(NEW_CHARACTER(nout));
-  SET_STRING_ELT(names, 0, mkChar("rbpz"));
-  SET_STRING_ELT(names, 1, mkChar("vpb"));
+  SET_STRING_ELT(names, 0, mkChar("rpbz"));
+  SET_STRING_ELT(names, 1, mkChar("vdb"));
   SET_STRING_ELT(names, 2, mkChar("sor"));
   SET_ATTR(tmpl, R_NamesSymbol, names);
   UNPROTECT(2);

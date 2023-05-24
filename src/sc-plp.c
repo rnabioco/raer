@@ -236,13 +236,13 @@ static int write_counts(sc_mplp_conf_t* conf, payload_t* pld, const char* seqnam
     }
 
     r_idx = conf->min_counts == 0 ? pld->idx : conf->site_idx;
-    ret = fprintf(conf->fps[0], "%d\t%d\t%d\t%d\n", r_idx, c_idx, cbdat->ref, cbdat->alt);
+    ret = fprintf(conf->fps[0], "%d %d %d %d\n", r_idx, c_idx, cbdat->ref, cbdat->alt);
     if (ret < 0) return (-1);
     n_rec += 1;
   }
   // write site
   if (conf->min_counts > 0) {
-    ret = fprintf(conf->fps[1], "%s:%d_%d_%s_%s\n", seqname, pos + 1, pld->strand, pld->ref, pld->alt);
+    ret = fprintf(conf->fps[1], "%d\t%s\t%d\t%d\t%s\t%s\n", pld->idx, seqname, pos + 1, pld->strand, pld->ref, pld->alt);
     if (ret < 0) return (-1);
     conf->site_idx += 1;
   }
@@ -563,6 +563,7 @@ static int set_sc_mplp_conf(sc_mplp_conf_t* conf, int nbams,
   if (n_bcs > 0) {
     conf->cbmap = kh_init(cbumimap);
     conf->cbidx = kh_init(str2intmap);
+
     for (int i = 0; i < n_bcs; ++i) {
       char* cb = strdup(bcs[i]);
       k = kh_put(str2intmap, conf->cbidx, cb, &hret);
@@ -572,7 +573,8 @@ static int set_sc_mplp_conf(sc_mplp_conf_t* conf, int nbams,
       } else if (hret == 0) {
         free(cb); // was a duplicate cellbarcode
       } else {
-        kh_value(conf->cbidx, k) = i;
+        // storing cb index as 1-based (for compatibility with matrix-market format)
+        kh_value(conf->cbidx, k) = i + 1;
       }
     }
   } else {
@@ -590,7 +592,7 @@ static int set_sc_mplp_conf(sc_mplp_conf_t* conf, int nbams,
   conf->idx_skip = idx_skip;
   conf->pe = pe;
   conf->min_counts = min_counts < 0 ? 0 : min_counts;
-  conf->site_idx = 0;
+  conf->site_idx = 1;
 
   return (0);
 }
@@ -607,7 +609,8 @@ static int write_all_sites(sc_mplp_conf_t* conf) {
   payload_t* pld;
   while (regitr_loop(itr)) {
     pld = regitr_payload(itr, payload_t*);
-    fprintf(conf->fps[1], "%s:%d_%d_%s_%s\n",
+    fprintf(conf->fps[1], "%d\t%s\t%d\t%d\t%s\t%s\n",
+            pld->idx,
             itr->seq,
             (int)itr->beg+1,
             pld->strand,

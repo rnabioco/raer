@@ -32,6 +32,7 @@ Imports:
     Biostrings,
     BiocFileCache,
     SummarizedExperiment,
+    SingleCellExperiment,
     S4Vectors,
     GenomeInfoDb,
     GenomicAlignments,
@@ -39,6 +40,7 @@ Imports:
     BiocParallel,
     rtracklayer,
     Matrix,
+    R.utils,
     cli
 Suggests:
     testthat (>= 3.0.0),
@@ -54,7 +56,6 @@ Suggests:
     SNPlocs.Hsapiens.dbSNP144.GRCh38,
     BSgenome.Hsapiens.NCBI.GRCh38,
     scater,
-    SingleCellExperiment,
     AnnotationHub,
     covr
 LinkingTo: 
