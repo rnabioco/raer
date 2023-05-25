@@ -70,9 +70,6 @@ typedef struct {
   faidx_t* fai;
   regidx_t* reg_idx;
   regitr_t* reg_itr;
-  strset_t rnames;
-  strset_t brhash;
-  FILE* reads_fp;
 } mplp_conf_t;
 
 //From https://stat.ethz.ch/pipermail/r-devel/2011-April/060702.html

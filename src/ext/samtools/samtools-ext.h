@@ -27,7 +27,5 @@ typedef struct {
 } mplp_pileup_t;
 
 int mplp_get_ref(mplp_aux_t *ma, int tid, char **ref, hts_pos_t *ref_len);
-char *get_read(const bam1_t *rec);
-int populate_lookup_from_file(strset_t lookup, char *fn);
 
 #endif

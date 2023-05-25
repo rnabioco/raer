@@ -18,45 +18,6 @@
 #define NBASE_POS 100
 #define MPLP_REF_INIT {{NULL,NULL},{-1,-1},{0,0}}
 
-static int check_read_exclude(strset_t br, bam1_t* b) {
-  char* key;
-  char c;
-  size_t len = strlen(bam_get_qname(b));
-
-  if (!((b)->core.flag&BAM_FPAIRED)) {
-    key = malloc(len + 1);
-    if (!key) {
-      REprintf("[raer internal] malloc failed\n");
-      return -1;
-    }
-    strcpy(key, bam_get_qname(b));
-    key[len] = '\0';
-    c = '0';
-  } else {
-    key = malloc(len + 2 + 1);
-    if (!key) {
-      REprintf("[raer internal] malloc failed\n");
-      return -1;
-    }
-    if ((b)->core.flag&BAM_FREAD1) {
-      c = '1' ;
-    } else {
-      c = '2';
-    }
-    strcpy(key, bam_get_qname(b));
-    key[len] = '_';
-    key[len + 1] = c;
-    key[len + 2] = '\0';
-  }
-
-  if (!key || kh_get(strset, br, key) != kh_end(br)) {
-    free(key);
-    return 1;
-  }
-  if (key) free(key);
-  return 0;
-}
-
 // read processing function for pileup
 static int readaln(void* data, bam1_t* b) {
   mplp_aux_t* g = (mplp_aux_t*)data;
@@ -70,15 +31,6 @@ static int readaln(void* data, bam1_t* b) {
     if (b->core.tid < 0 || (b->core.flag&BAM_FUNMAP)) {
       skip = 1;
       continue;
-    }
-
-    // exclude reads in the "bad read hash"
-    // should only occur if 1 bamfile is passed
-    if (g->conf->brhash) {
-      int v = check_read_exclude(g->conf->brhash, b);
-      if (v < 0) break;
-      skip = v;
-      if (skip) continue;
     }
 
     // test required and filter flags
@@ -464,75 +416,6 @@ static int store_counts(PLP_DATA pd, pcounts* pc, const char* ctig,
   return ret;
 }
 
-
-static int write_fasta(bam1_t* b, mplp_conf_t* conf, const char* ref, char read, int pos) {
-  if (!conf->reads_fp) {
-    return -1;
-  }
-  char* seq;
-  seq = get_read(b);
-  fprintf(conf->reads_fp,
-          ">%s_%c_%s_%i\n",
-          bam_get_qname(b),
-          read,
-          ref,
-          pos) ;
-  fprintf(conf->reads_fp, "%s\n", seq);
-  free(seq);
-  return 0;
-}
-
-// add/check for readname (with 1 or 2 appended if paired) to hash table
-// if unique write to bam file
-static int write_reads(bam1_t* b,  mplp_conf_t* conf, const char* ref, const int pos) {
-
-  char* key;
-  char c;
-  size_t len = strlen(bam_get_qname(b));
-
-  if (!((b)->core.flag&BAM_FPAIRED)) {
-    key = malloc(len + 1);
-    if (!key) {
-      REprintf("[raer internal] malloc failed\n");
-      return -1;
-    }
-    strcpy(key, bam_get_qname(b));
-    key[len] = '\0';
-    c = '0';
-  } else {
-    key = malloc(len + 2 + 1);
-    if (!key) {
-      REprintf("[raer internal] malloc failed\n");
-      return -1;
-    }
-    if ((b)->core.flag&BAM_FREAD1) {
-      c = '1' ;
-    } else {
-      c = '2';
-    }
-    strcpy(key, bam_get_qname(b));
-    key[len] = '_';
-    key[len + 1] = c;
-    key[len + 2] = '\0';
-  }
-
-  // try to add read to cache, check if already present
-  // key will be freed upon cleanup of hashtable
-  int rret;
-  kh_put(strset, conf->rnames, key, &rret);
-  if (rret == 1) {
-    int ret = 0;
-    ret = write_fasta(b, conf, ref, c, pos + 1);
-    if (ret < 0) {
-      REprintf("[raer internal] malloc failed\n");
-      return -1;
-    }
-  } else {
-    free(key);
-  }
-  return 0;
-}
-
 static int count_one_record(const bam_pileup1_t* p, pcounts* pc, mplp_conf_t* conf,
                             pall_counts* pall,  const char* ctig, int pos, int pref_b,
                             int mref_b, int read_base, int invert, int i) {
@@ -566,13 +449,6 @@ static int count_one_record(const bam_pileup1_t* p, pcounts* pc, mplp_conf_t* co
         kh_value(pc->mc->var, k) = 1;
       }
 
-      if (i == 0 && conf->output_reads) {
-        int wret = write_reads(p->b, conf, ctig, pos);
-        if (wret != 0) {
-          REprintf("[raer internal] writing mismatched reads failed\n");
-          return -1;
-        }
-      }
       pc->mc->nv += 1;
       pall->m_alt_pos[rpos] += 1;
       pall->m_has_var = 1;
@@ -615,13 +491,6 @@ static int count_one_record(const bam_pileup1_t* p, pcounts* pc, mplp_conf_t* co
         kh_value(pc->pc->var, k) = 1;
       }
 
-      if (i == 0 && conf->output_reads) {
-        int wret = write_reads(p->b, conf, ctig, pos);
-        if (wret != 0) {
-          REprintf("[raer internal] writing mismatched reads failed\n");
-          return -1;
-        }
-      }
       pc->pc->nv += 1;
       pall->p_alt_pos[rpos] += 1;
       pall->p_has_var = 1;
@@ -854,13 +723,13 @@ static int run_pileup(char** cbampaths, const char** coutfns,
     }
   }
 
-  int last_tid = -1;
   int n_iter = 0;
   while ((ret = bam_mplp64_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
     ++n_iter;
-    if (conf->reg && (pos < beg0 || pos >= end0)) continue; // not in of single region requested
 
-    mplp_get_ref(data[0], tid, &ref, &ref_len); // not in of single region requested
+    if (conf->reg && (pos < beg0 || pos >= end0)) continue;
+
+    mplp_get_ref(data[0], tid, &ref, &ref_len);
 
     if (tid < 0) break;
 
@@ -883,13 +752,6 @@ static int run_pileup(char** cbampaths, const char** coutfns,
       if (!ol) continue;
     }
 
-    // if writing out reads with mismatches, clear out hash table of read names at each chromosome,
-    if (tid != last_tid && conf->output_reads) {
-      if (kh_size(conf->rnames)) {
-        clear_str_set(conf->rnames);
-      }
-      last_tid = tid;
-    }
     // get reference base on +/- strand
     int pref_b, mref_b;
     pref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
@@ -1071,8 +933,7 @@ fail:
 static void check_plp_args(SEXP bampaths, SEXP n, SEXP fapath, SEXP region,
                            SEXP int_args, SEXP dbl_args, SEXP lgl_args,
                            SEXP libtype, SEXP only_keep_variants, SEXP min_mapQ,
-                           SEXP in_mem, SEXP outfns,
-                           SEXP reads_fn, SEXP mismatches_fn, SEXP umi) {
+                           SEXP in_mem, SEXP outfns, SEXP umi) {
   if (!IS_INTEGER(n) || (LENGTH(n) != 1)) {
     Rf_error("'n' must be integer(1)");
   }
@@ -1125,14 +986,6 @@ static void check_plp_args(SEXP bampaths, SEXP n, SEXP fapath, SEXP region,
     Rf_error("'outfns' must be character vector equal in length to number of bam files + 1");
   }
 
-  if (!IS_CHARACTER(reads_fn) || (LENGTH(reads_fn) > 1)) {
-    Rf_error("'reads_fn' must be character of length 0 or 1");
-  }
-
-  if (!IS_CHARACTER(mismatches_fn) || (LENGTH(mismatches_fn) > 1)) {
-    Rf_error("'mismatches_fn' must be character of length 0 or 1");
-  }
-
   if (!IS_CHARACTER(umi) || (LENGTH(umi) > 1)) {
     Rf_error("'umi' must be character of length 0 or 1");
   }
@@ -1143,8 +996,7 @@ static int set_mplp_conf(mplp_conf_t* conf, int n_bams,
                          char* fafn, char* qregion, regidx_t* idx,
                          int* i_args, double* d_args, int* b_args,
                          int* libtypes, int* keep_variants, int* min_mapqs,
-                         int in_memory, char* reads_fn, char* mismatches_fn,
-                         char* umi) {
+                         int in_memory, char* umi) {
   int ret = 0;
   if (n_bams <= 0) {
     REprintf("[raer internal] invalid bam input");
@@ -1217,35 +1069,6 @@ static int set_mplp_conf(mplp_conf_t* conf, int n_bams,
 
   conf->in_memory = in_memory;
 
-  if (reads_fn) {
-    conf->output_reads = 1;
-    conf->reads_fp = fopen(R_ExpandFileName(reads_fn), "w");
-    if (!conf->reads_fp) {
-      REprintf("[raer internal ]failed to open %s: %s\n",
-               R_ExpandFileName(reads_fn), strerror(errno));
-      return -1;
-    }
-    conf->rnames = kh_init(strset);
-  }
-
-  if (mismatches_fn) {
-    int chk = 0;
-    if (n_bams > 1) {
-      REprintf("[raer internal] exclude bad reads only works with 1 input bam");
-      return -1;
-    }
-    conf->brhash = kh_init(strset);
-    if (conf->brhash == NULL) {
-      REprintf("[raer internal] issue building mismatches hash");
-      return -1;
-    }
-    chk = populate_lookup_from_file(conf->brhash, mismatches_fn);
-    if (chk < 0) {
-      REprintf("[raer internal] issue building mismatches hash");
-      return -1;
-    }
-  }
-
   if (umi) {
     conf->umi = 1;
     conf->umi_tag = umi;
@@ -1257,13 +1080,12 @@ static int set_mplp_conf(mplp_conf_t* conf, int n_bams,
 SEXP pileup(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP lst,
             SEXP int_args, SEXP dbl_args, SEXP lgl_args,
             SEXP libtype, SEXP only_keep_variants, SEXP min_mapQ,
-            SEXP in_mem,  SEXP outfns,
-            SEXP reads_fn, SEXP mismatches_fn, SEXP umi) {
+            SEXP in_mem,  SEXP outfns, SEXP umi) {
 
   check_plp_args(bampaths, n, fapath, region,
                  int_args, dbl_args, lgl_args,
                  libtype, only_keep_variants, min_mapQ,
-                 in_mem, outfns,  reads_fn, mismatches_fn, umi);
+                 in_mem, outfns, umi);
 
   regidx_t* idx = NULL;
   if (!Rf_isNull(lst) && Rf_length(VECTOR_ELT(lst, 0)) > 0) {
@@ -1281,12 +1103,6 @@ SEXP pileup(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP lst,
 
   char* cregion = LENGTH(region) == 0 ?
                   NULL : (char*) translateChar(STRING_ELT(region, 0));
-
-  char* creads_fn = LENGTH(reads_fn) == 0 ?
-                    NULL : (char*) translateChar(STRING_ELT(reads_fn, 0));
-
-  char* cmismatches_fn = LENGTH(mismatches_fn) == 0 ?
-                         NULL : (char*) translateChar(STRING_ELT(mismatches_fn, 0));
 
   char* umi_tag = LENGTH(umi) == 0 ?
                   NULL : (char*) translateChar(STRING_ELT(umi, 0));
@@ -1308,7 +1124,7 @@ SEXP pileup(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP lst,
   ret = set_mplp_conf(&ga, nbam, cfafn, cregion, idx,
                       INTEGER(int_args), REAL(dbl_args), LOGICAL(lgl_args),
                       INTEGER(libtype), LOGICAL(only_keep_variants), INTEGER(min_mapQ),
-                      LOGICAL(in_mem)[0], creads_fn, cmismatches_fn, umi_tag);
+                      LOGICAL(in_mem)[0], umi_tag);
   SEXP result;
   result = PROTECT(pileup_result_init(nbam));
   PLP_DATA pd;
@@ -1321,19 +1137,7 @@ SEXP pileup(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP lst,
   if (ga.fai) fai_destroy(ga.fai);
   if (ga.reg_itr) regitr_destroy(ga.reg_itr);
   if (ga.reg_idx) regidx_destroy(ga.reg_idx);
-  if (ga.output_reads) {
-    clear_str_set(ga.rnames);
-    kh_destroy(strset, ga.rnames);
-    fclose(ga.reads_fp);
-  }
 
-  if (cmismatches_fn) {
-    khint_t k;
-    for (k = 0; k < kh_end(ga.brhash); ++k) {
-      if (kh_exist(ga.brhash, k)) free((char*)kh_key(ga.brhash, k));
-    }
-    kh_destroy(strset, ga.brhash);
-  }
   UNPROTECT(1);
   if (ret < 0) Rf_error("[raer internal] error detected during pileup");
   if (!ga.in_memory) {

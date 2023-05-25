@@ -13,10 +13,8 @@ pileup_sites(
   chroms = NULL,
   param = FilterParam(),
   outfile_prefix = NULL,
-  reads = NULL,
   return_data = TRUE,
   BPPARAM = SerialParam(),
-  bad_reads = NULL,
   umi_tag = NULL,
   verbose = FALSE
 )
@@ -65,9 +63,6 @@ filters to apply to reads and sites during pileup.}
 \item{outfile_prefix}{Output prefix for tabix indexed files. If \code{NULL}, no
 files will be produced.}
 
-\item{reads}{if supplied a fasta file will be written with reads that pass
-filters and contain variants}
-
 \item{return_data}{if \code{TRUE}, data is returned as a RangedSummarizedExperiment,
 if \code{FALSE} a character vector of tabix-index files, specified by
 \code{outfile_prefix}, will be returned.}
@@ -75,10 +70,6 @@ if \code{FALSE} a character vector of tabix-index files, specified by
 \item{BPPARAM}{A \link{BiocParallel} class to control parallel execution. Parallel
 processing occurs per chromosome, so is disabled when run on a single
 region.}
-
-\item{bad_reads}{a textfile containing read names to exclude from pileup.
-Readnames should be formated as readid_1 or readid_2 or readid for paired
-end first read paired-end second read or single end data.}
 
 \item{umi_tag}{The bam tag containing a UMI sequence. If supplied, multiple
 reads with the same UMI sequence will only be counted once per position.}

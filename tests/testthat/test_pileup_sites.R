@@ -370,34 +370,6 @@ test_that("filtering for indel events works", {
         assay(bsites, "nAlt")[1], 1)
 })
 
-fout <- tempfile(fileext = ".fa")
-test_that("writing reads with mismatches works", {
-    rse <- pileup_sites(bamfn, fafn, reads = fout)
-    seqs <- Rsamtools::scanFa(fout)
-    expect_false(any(duplicated(names(seqs))))
-})
-
-
-seqs <- Rsamtools::scanFa(fout)
-ids <- unlist(lapply(strsplit(names(seqs), "_"), function(x) paste0(x[1], "_", x[2])))
-writeLines(ids, fout)
-test_that("excluding reads with mismatches works", {
-    rse <- pileup_sites(bamfn, fafn, region = "DHFR:513-513")
-    rse2 <- pileup_sites(bamfn, fafn,
-        region = "DHFR:513-513",
-        bad_reads = fout
-    )
-    expect_true(nrow(rse) == 1)
-    expect_true(nrow(rse2) == 1)
-    expect_true(assay(rse2, "nAlt") == 0)
-
-    rse <- pileup_sites(bamfn, fafn)
-    rse2 <- pileup_sites(bamfn, fafn, bad_reads = fout)
-    expect_true(nrow(rse2) > 0)
-    expect_true(colSums(assay(rse, "nAlt")) -
-        colSums(assay(rse2, "nAlt")) > 0)
-})
-
 test_that("filtering for read-level mismatches works", {
     rse <- pileup_sites(bamfn, fafn,
         param = FilterParam(
@@ -497,7 +469,7 @@ test_that("limiting chromosomes works", {
     }
 })
 
-unlink(c(bout, fout))
+unlink(bout)
 
 
 ####### Other bam files

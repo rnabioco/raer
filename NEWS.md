@@ -1,5 +1,7 @@
 # raer 0.99.0
 
+* Dropped minimally used `bad_reads` and `reads` parameters from `pileup_sites()`
+
 * Added utility to screen scRNA-seq bam files for regions with oligo-dT mispriming (`find_mispriming_sites()`).
 
 * add option to query ref and alt SNP alleles 

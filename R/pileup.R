@@ -16,11 +16,6 @@
 #' @param chroms chromosomes to process, not to be used with region.
 #' @param param object of class [FilterParam()] which specify various
 #'   filters to apply to reads and sites during pileup.
-#' @param reads if supplied a fasta file will be written with reads that pass
-#'   filters and contain variants
-#' @param bad_reads a textfile containing read names to exclude from pileup.
-#'   Readnames should be formated as readid_1 or readid_2 or readid for paired
-#'   end first read paired-end second read or single end data.
 #' @param umi_tag The bam tag containing a UMI sequence. If supplied, multiple
 #'   reads with the same UMI sequence will only be counted once per position.
 #' @param return_data if `TRUE`, data is returned as a RangedSummarizedExperiment,
@@ -116,10 +111,8 @@ pileup_sites <- function(bamfiles,
     chroms = NULL,
     param = FilterParam(),
     outfile_prefix = NULL,
-    reads = NULL,
     return_data = TRUE,
     BPPARAM = SerialParam(),
-    bad_reads = NULL,
     umi_tag = NULL,
     verbose = FALSE) {
     if (is.null(names(bamfiles))) {
@@ -230,22 +223,6 @@ pileup_sites <- function(bamfiles,
         cli::cli_abort("No chromosomes requested are found in bam file")
     }
 
-    if (!is.null(reads)) {
-        if (!is.character(reads) | length(reads) != 1) {
-            cli::cli_abort("reads must be a character vector of length 1")
-        }
-    } else {
-        reads <- character()
-    }
-
-    if (!is.null(bad_reads)) {
-        if (!is.character(bad_reads) | length(bad_reads) != 1) {
-            cli::cli_abort("bad_reads must be a character vector of length 1")
-        }
-    } else {
-        bad_reads <- character()
-    }
-
     if (!is.null(umi_tag)) {
         if (nchar(umi_tag) != 2) {
             cli::cli_abort("umi_tag must be a character(1) with nchar of 2 ")
@@ -284,7 +261,7 @@ pileup_sites <- function(bamfiles,
             ".pileup", bamfiles, as.integer(n_files), fafile, region,
             sites, fp[["int_args"]], fp[["numeric_args"]], fp[["lgl_args"]],
             fp[["library_type"]], fp[["only_keep_variants"]], fp[["min_mapq"]],
-            in_memory, outfiles, reads, bad_reads, umi_tag
+            in_memory, outfiles, umi_tag
         )
 
         if (!in_memory) {
@@ -329,7 +306,7 @@ pileup_sites <- function(bamfiles,
                 ".pileup", bamfiles, as.integer(n_files), fafile, ctig,
                 sites, fp[["int_args"]], fp[["numeric_args"]],
                 fp[["lgl_args"]], fp[["library_type"]], fp[["only_keep_variants"]],
-                fp[["min_mapq"]], in_memory, tmp_outfiles, reads, bad_reads, umi_tag
+                fp[["min_mapq"]], in_memory, tmp_outfiles, umi_tag
             )
 
             if (!in_memory) {
@@ -432,7 +409,6 @@ read_pileup <- function(tbx_fn, region = NULL) {
 
     # using Rsamtools read in tabix file
     # note that file is read in as a list of character vectors
-    # consider using our own read_tabix function if this is a bottleneck
     if (!is.null(region)) {
         ivl_vals <- get_region(region)
         # note that samtools will return a larger INT than IRANGES can handle
