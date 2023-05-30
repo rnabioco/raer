@@ -5,7 +5,7 @@
 \title{Calculate the Adenosine Editing Index (AEI)}
 \usage{
 calc_AEI(
-  bam_fn,
+  bam_fns,
   fasta_fn,
   alu_ranges = NULL,
   txdb = NULL,
@@ -16,22 +16,26 @@ calc_AEI(
 )
 }
 \arguments{
-\item{bam_fn}{bam file}
+\item{bam_fns}{character vector of paths to indexed bam files. If a named
+character vector is supplied the names will be used in the output.}
 
-\item{fasta_fn}{fasta}
+\item{fasta_fn}{fasta filename}
 
-\item{alu_ranges}{GRanges with regions to query for
+\item{alu_ranges}{\link{GRanges} with regions to query for
 calculating the AEI, typically ALU repeats.}
 
-\item{txdb}{A txdb object, if supplied, will be used to subset the alu_ranges
-to those found overlapping genes. Alternatively a GRanges object with gene
-coordinates.}
+\item{txdb}{A \link{TxDb} object, if supplied, will be used to subset the alu_ranges
+to those found overlapping genes. Alternatively a \link{GRanges} object with gene
+coordinates.  If the \code{library_type} specified by
+\code{FilterParam}, is \code{unstranded} or \code{genomic-unstranded}, then the \link{TxDb} will
+be used to correct the strandness relative to the reference and is a required
+parameter.}
 
-\item{snp_db}{either a SNPlocs package, GPos, or GRanges object. If supplied,
+\item{snp_db}{either a \link{SNPlocs}, \link{GPos}, or \link{GRanges} object. If supplied,
 will be used to exclude polymorphic positions prior to calculating the AEI.
-If \code{calc_AEI()} will be used many times, one could save some time by first
-identifying SNPs that overlap the supplied alu_ranges, and passing these as
-a GRanges to snp_db rather than supplying all known SNPs (see
+If \code{calc_AEI()} will be used many times, one will save time by first
+identifying SNPs that overlap the supplied \code{alu_ranges}, and passing these as
+a \link{GRanges} to \code{snp_db} rather than supplying all known SNPs (see
 \code{\link[=get_overlapping_snps]{get_overlapping_snps()}}).}
 
 \item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
@@ -43,10 +47,12 @@ for operating over chromosomes.}
 \item{verbose}{report progress on each chromosome?}
 }
 \value{
-A named list with the AEI index computed for all allelic
-combinations. If correctly computed the signal from the A_G index should be
-higher than other alleles (T_C), which are most likely derived from noise
-or polymorphisms.
+A named list containing:
+\itemize{
+\item \code{AEI}:  a matrix of AEI index values computed for all allelic
+combinations, one row for each supplied bam file.
+\item \code{AEI_per_chrom}: a data.frame containing values computed for each chromosome
+}
 }
 \description{
 The Adenosine Editing Index describes the magnitude of A-to-I
@@ -59,10 +65,17 @@ summary AEI metric.
 }
 \examples{
 suppressPackageStartupMessages(library(Rsamtools))
-bamfn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
+
+bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
+bams <- c(bamfn, bam2fn)
+names(bams) <- c("ADAR1KO", "WT")
+
 fafn <- raer_example("human.fasta")
-dummy_alu_ranges <- scanFaIndex(fafn)
-calc_AEI(bamfn, fafn, dummy_alu_ranges)
+mock_alu_ranges <- scanFaIndex(fafn)
+
+res <- calc_AEI(bams, fafn, mock_alu_ranges)
+res$AEI
 
 }
 \references{
