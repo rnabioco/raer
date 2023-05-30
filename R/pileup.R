@@ -95,7 +95,8 @@
 #'
 #' rse <- pileup_sites(bams, fafn, region = "DHFR:100-101")
 #' rse
-#' @importFrom Rsamtools bgzip indexTabix TabixFile scanTabix scanFaIndex
+#' @importFrom Rsamtools bgzip indexTabix TabixFile
+#' @importFrom Rsamtools scanTabix scanFaIndex seqinfo BamFile
 #' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges
 #' @importFrom GenomeInfoDb seqlevels seqinfo seqlengths
@@ -167,7 +168,7 @@ pileup_sites <- function(bamfiles,
         plp_outfns <- outfiles[2:length(outfiles)]
     }
 
-    contigs <- GenomeInfoDb::seqinfo(Rsamtools::BamFile(bamfiles[1]))
+    contigs <- Rsamtools::seqinfo(Rsamtools::BamFile(bamfiles[1]))
     contig_info <- GenomeInfoDb::seqlengths(contigs)
 
     if (is.null(chroms)) {

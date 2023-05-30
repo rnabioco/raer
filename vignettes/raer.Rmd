@@ -9,6 +9,7 @@ date: '`r Sys.Date()`'
 output:
   BiocStyle::html_document
 package: raer 
+bibliography: ref.bib  
 vignette: >
   %\VignetteIndexEntry{Introduction}
   %\VignetteEngine{knitr::rmarkdown}
@@ -47,6 +48,7 @@ Next we'll collect a vector containing the paths to each BAM file These BAM file
 
 ```{r}
 bam_files <- fns$bams
+names(bam_files) <- sub("_dedup_sorted.bam", "", basename(bam_files))
 bam_files[1:2]
 ```
 
@@ -185,9 +187,69 @@ de_results$sig_results[1:5, ]
 ```{r, fig.height=7, fig.width=5}
 top_sites <- rownames(de_results$sig_results)[1:20]
 
-Heatmap(assay(se_filtered, "edit_freq")[top_sites, ],
-    col = viridis(100),
-    column_labels = se_filtered$genotype_treatment
+Heatmap(assay(se_filtered, "edit_freq")[top_sites, ], 
+        name = "editing frequency",
+        col = viridis(100),
+        column_labels = se_filtered$genotype_treatment
+)
+```
+
+
+## Examine overall editing activites using the Alu Editing Index
+
+For some studies it may be informative to assess the overall ADAR editing activity rather
+than examining individual editing sites. The **Alu Editing Index** (AEI), developed 
+by @Roth2019-yu, is a metric that summarizes that amount of editing occurring 
+at ALU elements which account for the vast majority of A-to-I editing (> 99%) in humans.
+
+`raer` provides `calc_AEI()` to calculate the AEI metric. Many of the same parameters used 
+for `pileup_sites()` are available in `calc_AEI()`. 
+
+First we will use the `AnnotationHub` to obtain coordinates for ALU elements. Then we will use a `SNPlocs` package to identify SNPs overlapping the ALU elements from the dbSNP database, which will be excluded from the AEI calculation. The SNPlocs coordinates are `NCBI` based, whereas the `ALU` elements are based on `hg38`, we will therefore convert between the two as needed to obtain SNP and ALU element coordinates based on `hg38`. 
+
+
+
+```{r}
+library(AnnotationHub)
+library(SNPlocs.Hsapiens.dbSNP144.GRCh38)
+
+ah <- AnnotationHub()
+rmsk_hg38 <- ah[["AH99003"]]
+
+alus <- rmsk_hg38[rmsk_hg38$repFamily == "Alu" & seqnames(rmsk_hg38) == "chr18", ]
+alus <- keepStandardChromosomes(alus) 
+seqlevelsStyle(alus) <- "NCBI"
+genome(alus) <- "GRCh38.p2"
+
+alu_snps <- get_overlapping_snps(alus, SNPlocs.Hsapiens.dbSNP144.GRCh38)
+
+seqlevelsStyle(alu_snps) <- "UCSC"
+alu_snps[1:3, ]
+
+seqlevelsStyle(alus) <- "UCSC"
+alus[1:3, ]
+```
+
+`calc_AEI()` will return a matrix containing the AEI calculated for all allelic combinations and a more detailed table containing values for each chromosome.
+
+```{r}
+alu_index <- calc_AEI(bam_fn = bam_files, 
+                      fasta_fn = fafn, 
+                      snp_db = alu_snps,
+                      alu_ranges = alus, 
+                      param = fp)
+names(alu_index)
+```
+
+The AEI in wild-type samples is highest for `A-to-G`, as expected, and sharply 
+reduced in the `ADAR1KO` samples. 
+
+```{r}
+Heatmap(alu_index$AEI, 
+        name = "AEI",
+        col = viridis(100), 
+        row_labels = rse$genotype_treatment[match(rownames(alu_index$AEI),
+                                                  rse$sample)]
 )
 ```
 

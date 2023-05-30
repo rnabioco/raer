@@ -61,7 +61,7 @@ annot_snps.GRanges <- function(obj,
             )
         }
 
-        # prent no visible binding for global variable note
+        # prevent no visible binding for global variable note
         alt_alleles <- ref_allele <- NULL
         snps$alt_alleles <- unstrsplit(snps$alt_alleles)
 
