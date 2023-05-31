@@ -104,21 +104,21 @@ rse
 Next we will add sample metadata to the `summarizedExperiment`, which will be used to conduct differential editing analysis. 
 
 ```{r}
-colData(rse)$genotype_treatment <- rep(
+colData(rse)$genotype_treatment <- factor(rep(
     c(
         "ADAR1KO Interferon beta",
         "Wildtype Interferon beta"
     ),
     each = 3
-)
+))
 
-colData(rse)$genotype <- rep(
+colData(rse)$genotype <- factor(rep(
     c(
         "ADAR1KO",
         "Wildtype"
     ),
     each = 3
-)
+))
 colData(rse)
 ```
 
@@ -170,7 +170,8 @@ It is probably best to update the levels of your object, but if you don't, this 
 
 
 ```{r}
-de_results <- perform_de(deobj,
+de_results <- perform_de(deobj, 
+    type = "DESeq2",
     sample_col = "sample",
     condition_col = "genotype",
     condition_control = "Wildtype",

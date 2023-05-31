@@ -174,9 +174,9 @@ count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
 #'   correspond to the nucleotide you expect after the editing event. Ex. for A
 #'   to I editing events, this would be "G". If type is not "AI", both edit from
 #'   and edit_to must be set.
-#' @param min_prop OPTIONAL the min proporation of reads edited at a site. At
+#' @param min_prop OPTIONAL the min proportion of reads edited at a site. At
 #'   least min_samples need to pass this to keep the site. Default is 0.1.
-#' @param max_prop OPTIONAL the max proporation of reads edited at a site. At
+#' @param max_prop OPTIONAL the max proportion of reads edited at a site. At
 #'   least min_samples need to pass this to keep the site. Default is 0.9.
 #' @param min_samples OPTIONAL the minimum number of samples passing the cutoffs
 #'   to keep a site. Default is 3.
@@ -249,11 +249,10 @@ prep_for_de <- function(se,
 #'   control. For more complex designs, we suggest you perform your own.
 #'
 #'   At the moment, this function will only find editing events specific to the
-#'   treatment, but it will be pretty straight forward to add other possible
-#'   return values.
+#'   treatment.
 #'
 #' @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
-#' @param type OPTIONAL if edgeR or DESeq should be run. Default is edgeR
+#' @param type OPTIONAL if edgeR or DESeq2 should be run. Default is edgeR
 #' @param sample_col OPTIONAL the name of the column from colData(deobj) that
 #'   contains your sample information. Default is sample. If you do not have a
 #'   column named "sample", you must provide the appropriate sample column
@@ -285,14 +284,15 @@ prep_for_de <- function(se,
 #' res <- perform_de(dse, condition_control = "WT", condition_treatment = "KO")
 #' res$sig_results[1:5, ]
 #'
-#' @returns A named list - de_obj: The edgeR or deseq object used for
-#'   differential editing analysis - results_full: Unfiltered differenital
-#'   editing results - sig_results: Filtered differenial editing (FDR < 0.05) -
-#'   model_matrix: The model matrix used for generating DE results
+#' @returns A named list:
+#'   - `de_obj`: The `edgeR` or `deseq` object used for differential editing analysis
+#'   - `results_full`: Unfiltered differential editing results
+#'   - `sig_results`: Filtered differential editing (FDR < 0.05)
+#'   - `model_matrix`: The model matrix used for generating DE results
 #'
 #' @importFrom stats model.matrix
 #' @export
-perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
+perform_de <- function(deobj, type = c("edgeR", "DESeq2"), sample_col = "sample",
     condition_col = "condition",
     condition_control = NULL,
     condition_treatment = NULL) {
@@ -362,16 +362,18 @@ perform_de <- function(deobj, type = "edgeR", sample_col = "sample",
             " options from your experiment are: {cond_options}"
         ))
     }
+    type <- match.arg(type)
     if (type == "edgeR") {
-        results <- run_edger(deobj, condition_control, condition_treatment)
+        de_fun <- run_edger
     } else if (type == "DESeq2") {
-        results <- run_deseq2(deobj, condition_control, condition_treatment)
+        de_fun <- run_deseq2
     } else {
         cli::cli_abort(c(
             "Unrecognized type: '{type}'. type must be either edgeR",
             " or DESeq2."
         ))
     }
+    results <- de_fun(deobj, condition_control, condition_treatment)
     results
 }
 

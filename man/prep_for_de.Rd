@@ -33,10 +33,10 @@ correspond to the nucleotide you expect after the editing event. Ex. for A
 to I editing events, this would be "G". If type is not "AI", both edit from
 and edit_to must be set.}
 
-\item{min_prop}{OPTIONAL the min proporation of reads edited at a site. At
+\item{min_prop}{OPTIONAL the min proportion of reads edited at a site. At
 least min_samples need to pass this to keep the site. Default is 0.1.}
 
-\item{max_prop}{OPTIONAL the max proporation of reads edited at a site. At
+\item{max_prop}{OPTIONAL the max proportion of reads edited at a site. At
 least min_samples need to pass this to keep the site. Default is 0.9.}
 
 \item{min_samples}{OPTIONAL the minimum number of samples passing the cutoffs

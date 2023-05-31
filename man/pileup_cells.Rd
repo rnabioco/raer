@@ -101,7 +101,6 @@ cbs <- na.omit(cbs)
 
 outdir <- tempdir()
 bai <- indexBam(bam_fn)
-on.exit(unlink(c(outdir, bai)))
 
 fp <- FilterParam(library_type = "fr-second-strand")
 sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
@@ -120,6 +119,8 @@ pileup_cells(many_small_bams,
     outdir,
     param = fp
 )
+
+unlink(c(outdir, bai))
 
 }
 \seealso{

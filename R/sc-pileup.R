@@ -68,7 +68,6 @@
 #'
 #' outdir <- tempdir()
 #' bai <- indexBam(bam_fn)
-#' on.exit(unlink(c(outdir, bai)))
 #'
 #' fp <- FilterParam(library_type = "fr-second-strand")
 #' sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
@@ -87,6 +86,8 @@
 #'     outdir,
 #'     param = fp
 #' )
+#'
+#' unlink(c(outdir, bai))
 #'
 #' @importFrom GenomeInfoDb  seqinfo seqlengths
 #' @importFrom Rsamtools ScanBamParam scanBamFlag
@@ -324,12 +325,13 @@ pileup_cells <- function(bamfile,
 #'
 #' outdir <- tempdir()
 #' bai <- indexBam(bam_fn)
-#' on.exit(unlink(c(outdir, bai)))
 #'
 #' fp <- FilterParam(library_type = "fr-second-strand")
 #' mtx_fns <- pileup_cells(bam_fn, gr, cbs, outdir,  return_sce = FALSE)
 #' sce <- read_sparray(mtx_fns[1], mtx_fns[2], mtx_fns[3])
 #' sce
+#'
+#' unlink(c(outdir, bai))
 #'
 #' @importFrom data.table fread
 #' @importFrom Matrix sparseMatrix

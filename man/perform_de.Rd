@@ -6,7 +6,7 @@
 \usage{
 perform_de(
   deobj,
-  type = "edgeR",
+  type = c("edgeR", "DESeq2"),
   sample_col = "sample",
   condition_col = "condition",
   condition_control = NULL,
@@ -16,7 +16,7 @@ perform_de(
 \arguments{
 \item{deobj}{A SummarizedExperiment object prepared for de by \code{prep_for_de}}
 
-\item{type}{OPTIONAL if edgeR or DESeq should be run. Default is edgeR}
+\item{type}{OPTIONAL if edgeR or DESeq2 should be run. Default is edgeR}
 
 \item{sample_col}{OPTIONAL the name of the column from colData(deobj) that
 contains your sample information. Default is sample. If you do not have a
@@ -34,10 +34,13 @@ variable in your condition_col of colData(deobj). No default provided.}
 a variable in your condition_col of colData(deobj).}
 }
 \value{
-A named list - de_obj: The edgeR or deseq object used for
-differential editing analysis - results_full: Unfiltered differenital
-editing results - sig_results: Filtered differenial editing (FDR < 0.05) -
-model_matrix: The model matrix used for generating DE results
+A named list:
+\itemize{
+\item \code{de_obj}: The \code{edgeR} or \code{deseq} object used for differential editing analysis
+\item \code{results_full}: Unfiltered differential editing results
+\item \code{sig_results}: Filtered differential editing (FDR < 0.05)
+\item \code{model_matrix}: The model matrix used for generating DE results
+}
 }
 \description{
 Uses either edgeR or DESeq2 to perform differential editing
@@ -45,8 +48,7 @@ analysis. This will work for simple designs that have 1 treatment and 1
 control. For more complex designs, we suggest you perform your own.
 
 At the moment, this function will only find editing events specific to the
-treatment, but it will be pretty straight forward to add other possible
-return values.
+treatment.
 }
 \examples{
 library(SummarizedExperiment)

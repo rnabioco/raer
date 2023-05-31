@@ -49,7 +49,7 @@ for operating over chromosomes.}
 \value{
 A named list containing:
 \itemize{
-\item \code{AEI}:  a matrix of AEI index values computed for all allelic
+\item \code{AEI}: a matrix of AEI index values computed for all allelic
 combinations, one row for each supplied bam file.
 \item \code{AEI_per_chrom}: a data.frame containing values computed for each chromosome
 }
