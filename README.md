@@ -13,8 +13,6 @@ coverage](https://codecov.io/gh/rnabioco/raer/branch/main/graph/badge.svg)](http
 raer facilitates analysis of RNA adenosine editing in the
 [Bioconductor](https://bioconductor.org/) ecosystem.
 
-🚧 **raer is under active development and functionality may change** 🚧
-
 ## Installation
 
 You can install the development version of raer from
@@ -33,8 +31,6 @@ sites.
 
 ``` r
 library(raer)
-#> Warning: replacing previous import 'utils::findMatches' by
-#> 'S4Vectors::findMatches' when loading 'AnnotationDbi'
 bam1fn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")
@@ -56,7 +52,7 @@ rse
 #> assays(7): ALT nRef ... nC nG
 #> rownames(1695): site_SSR3_1_2 site_SSR3_2_2 ... site_DHFR_517_2
 #>   site_DHFR_518_2
-#> rowData names(4): REF rbpz vpb sor
+#> rowData names(4): REF rpbz vdb sor
 #> colnames(2): ko wt
 #> colData names(1): sample
 assays(rse)
@@ -103,7 +99,7 @@ rse
 #> assays(7): ALT nRef ... nC nG
 #> rownames(74): site_SSR3_102_2 site_SSR3_125_2 ... site_DHFR_430_2
 #>   site_DHFR_513_2
-#> rowData names(4): REF rbpz vpb sor
+#> rowData names(4): REF rpbz vdb sor
 #> colnames(2): ko wt
 #> colData names(1): sample
 ```

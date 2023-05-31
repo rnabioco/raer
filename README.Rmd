@@ -23,8 +23,6 @@ knitr::opts_chunk$set(
 raer facilitates analysis of RNA adenosine editing in the
 [Bioconductor](https://bioconductor.org/) ecosystem.
 
-🚧 **raer is under active development and functionality may change** 🚧
-
 ## Installation
 
 You can install the development version of raer from [GitHub](https://github.com/rnabioco/raer) with:
