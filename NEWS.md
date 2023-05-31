@@ -32,7 +32,13 @@ been changed to `A` and `G` respectively.
 
 # raer 0.99.0
 
+<<<<<<< HEAD
 * added support for processing multiple BAM files with `calc_AEI()`. 
+=======
+* added method to count base occuring most frequently when counting UMIs with `pileup_cells()`. 
+
+* added support for processing multiple bam files with `calc_AEI()`. 
+>>>>>>> a456b1e (enmuerate consensus (majority) base per umi rather than first encountered for pileup_cells)
 
 * Dropped minimally used `bad_reads` and `reads` parameters from `pileup_sites()`
 

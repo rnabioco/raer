@@ -21,6 +21,8 @@ cbs <- na.omit(cbs)
 
 outdir <- tempdir()
 on.exit(unlink(outdir))
+fp <- FilterParam(library_type = "fr-second-strand")
+sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
 
 test_that("basic functionality works", {
     fp <- FilterParam(library_type = "fr-second-strand", min_depth = 0)

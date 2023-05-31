@@ -12,8 +12,18 @@
 #include "regfile.h"
 #include "plp_utils.h"
 
+typedef struct umi_bases_t {
+    int ref;
+    int alt;
+    int oth;
+} umi_bases_t ;
+
+// hashmap with UMI seq as key pointing to a struct storing base counts
+KHASH_MAP_INIT_STR(umimap, umi_bases_t*)
+typedef khash_t(umimap)* umimap_t;
+
 typedef struct  {
-  strset_t umi; // hashset storing umi sequences
+  umimap_t umi; // hashmap storing umi sequences, and base count array
   int ref; // # of UMIs supporting ref
   int alt; // # of UMIs supporting alt
 } cb_t;
@@ -21,13 +31,20 @@ typedef struct  {
 KHASH_MAP_INIT_STR(cbumimap, cb_t*)
 typedef khash_t(cbumimap)* cbumi_map_t;
 
-static void clear_umi(strset_t uhash) {
+
+static void clear_umi(umimap_t uhash) {
   khint_t k;
+  umi_bases_t* ub;
+
   if (!uhash) return;
   for (k = kh_begin(uhash); k < kh_end(uhash); ++k) {
-    if (kh_exist(uhash, k)) free((char*)kh_key(uhash, k));
+    if (kh_exist(uhash, k)) {
+        free((char*)kh_key(uhash, k));
+        ub = (umi_bases_t*) kh_val(uhash, k);
+        if(ub) free(ub);
+    }
   }
-  kh_clear(strset, uhash);
+  kh_clear(umimap, uhash);
 }
 
 static void clear_cb_umiset(cbumi_map_t cbhash) {
@@ -44,7 +61,7 @@ static void clear_cb_umiset(cbumi_map_t cbhash) {
 
 static cb_t* init_umihash() {
   cb_t* cb = R_Calloc(1, cb_t);
-  cb->umi = kh_init(strset);
+  cb->umi = kh_init(umimap);
   return cb ;
 }
 
@@ -56,7 +73,7 @@ static void free_hashmaps(cbumi_map_t cbhash, str2intmap_t cbidx) {
       if (!kh_exist(cbhash, k)) continue;
       cdat = kh_value(cbhash, k);
       clear_umi(cdat->umi);
-      kh_destroy(strset, cdat->umi);
+      kh_destroy(umimap, cdat->umi);
       free(cdat);
     }
     kh_destroy(cbumimap, cbhash);
@@ -157,6 +174,8 @@ static int count_record(bam1_t* b, sc_mplp_conf_t* conf, payload_t* pld,
   khiter_t k;
   char* cb, *cb_cpy, *umi, *umi_val;
   cb_t* cbdat;
+  umi_bases_t* ucounts;
+
   int cret, uret;
   if (conf->is_ss2) {
     cb = bamid;
@@ -164,6 +183,8 @@ static int count_record(bam1_t* b, sc_mplp_conf_t* conf, payload_t* pld,
     cb = get_aux_ztag(b, conf->cb_tag);
     if (cb == NULL) return (0);
   }
+
+  if (pld->strand != strand) return (1);
 
   cb_cpy = strdup(cb);
 
@@ -186,26 +207,63 @@ static int count_record(bam1_t* b, sc_mplp_conf_t* conf, payload_t* pld,
     umi = get_aux_ztag(b, conf->umi_tag);
     if (umi == NULL) return (0);
     umi_val = strdup(umi);
-    kh_put(strset, cbdat->umi, umi_val, &uret);
-    if (uret == 0) {
-      free(umi_val);
-      return (1);
-    } else if (uret < 0) {
+    k = kh_put(umimap, cbdat->umi, umi_val, &uret);
+
+    if (uret < 0) {
       free(umi_val);
       return (-1);
     }
-  }
+    if (uret == 0) free(umi_val); // umi in hash already
+    if (uret == 1) kh_value(cbdat->umi, k) = R_Calloc(1, umi_bases_t);
 
-  if (pld->strand != strand) return (1);
-  if ((unsigned char)*pld->ref == base) {
-    cbdat->ref += 1;
-    return (2);
-  } else if ((unsigned char)*pld->alt == base) {
-    cbdat->alt += 1;
-    return (3);
-  }
+    ucounts = kh_value(cbdat->umi, k);
 
+    if ((unsigned char)*pld->ref == base) {
+        ucounts->ref++;
+        return (2);
+    } else if ((unsigned char)*pld->alt == base) {
+        ucounts->alt++;
+        return (3);
+    } else {
+        ucounts->oth++;
+        return(1);
+    }
+  } else {
+      if ((unsigned char)*pld->ref == base) {
+          cbdat->ref++;
+          return (2);
+      } else if ((unsigned char)*pld->alt == base) {
+          cbdat->alt++;
+          return (3);
+      }
+  }
   return (1);
+}
+
+static int count_consensus_bases(cb_t* cbmap) {
+  khint_t k;
+  umi_bases_t* uc;
+
+  for (k = kh_begin(cbmap->umi); k != kh_end(cbmap->umi); ++k) {
+    if (!kh_exist(cbmap->umi, k)) continue;
+    uc = kh_val(cbmap->umi, k);
+    if(!uc) continue;
+
+    // umi supports other bases
+    if((uc->oth > uc->alt) && (uc->oth > uc->ref)) continue;
+
+    // probably shouldn't happen
+    if((uc->alt == 0) && (uc->ref == 0)) continue;
+
+    // in case of ties, report as alt
+    if(uc->alt >= uc->ref) {
+        cbmap->alt++;
+    } else {
+        cbmap->ref++;
+    }
+  }
+
+  return(0);
 }
 
 /* write entry to sparse array-like format
@@ -221,11 +279,11 @@ static int write_counts(sc_mplp_conf_t* conf, payload_t* pld, const char* seqnam
   cb_t* cbdat;
   int c_idx, r_idx, ret, n_rec = 0;
   khint_t k, j;
+
   for (k = kh_begin(conf->cbmap); k != kh_end(conf->cbmap); ++k) {
     if (!kh_exist(conf->cbmap, k)) continue;
     cb = kh_key(conf->cbmap, k);
     cbdat = kh_val(conf->cbmap, k);
-    if (cbdat->ref == 0 && cbdat->alt == 0) continue;
 
     j = kh_get(str2intmap, conf->cbidx, cb);
     if (j != kh_end(conf->cbidx)) {
@@ -235,11 +293,23 @@ static int write_counts(sc_mplp_conf_t* conf, payload_t* pld, const char* seqnam
       return (-1);
     }
 
+    if (conf->has_umi) {
+      if(!cbdat->umi) {
+          REprintf("[raer internal] no bases found for CB %s %d\n", cb, j);
+          return (-1);
+      }
+      if(count_consensus_bases(cbdat) < 0) {
+          REprintf("[raer internal] error calculating consensus base for umi\n");
+          return (-1);
+      }
+    }
+    if (cbdat->ref == 0 && cbdat->alt == 0) continue;
     r_idx = conf->min_counts == 0 ? pld->idx : conf->site_idx;
     ret = fprintf(conf->fps[0], "%d %d %d %d\n", r_idx, c_idx, cbdat->ref, cbdat->alt);
     if (ret < 0) return (-1);
     n_rec += 1;
   }
+
   // write site
   if (conf->min_counts > 0) {
     ret = fprintf(conf->fps[1], "%d\t%s\t%d\t%d\t%s\t%s\n", pld->idx, seqname, pos + 1, pld->strand, pld->ref, pld->alt);
