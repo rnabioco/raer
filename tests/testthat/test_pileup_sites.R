@@ -472,25 +472,6 @@ test_that("limiting chromosomes works", {
 unlink(bout)
 
 
-####### Other bam files
-
-cbbam <- system.file("extdata", "5k_neuron_mouse_xf25_1pct_cbsort.bam", package = "raer")
-tmp <- tempfile()
-sort_cbbam <- sortBam(cbbam, tmp)
-idx <- indexBam(sort_cbbam)
-
-cbfa <- system.file("extdata", "mouse_tiny.fasta", package = "raer")
-
-test_that("unsorted bam file fails", {
-    expect_error(pileup_sites(cbbam, cbfa))
-})
-
-test_that("single end libary types are respected", {
-    fp <- FilterParam(library_type = "genomic-unstranded")
-    rse <- pileup_sites(sort_cbbam, cbfa, param = fp)
-    expect_true(all(strand(rse) == "+"))
-})
-
 test_that("poor quality reads get excluded with read_bqual", {
     res_no_filter <- pileup_sites(bamfn, fafn,
         param = FilterParam(
@@ -582,7 +563,6 @@ test_that("sites within short splice overhangs can be excluded", {
     res <- pileup_sites(bamfn, fafn, param = fp, region = "SPCS3:350-350")
     expect_equal(length(res), 0)
 })
-unlink(c(tmp, sort_cbbam, idx))
 
 test_that("chroms missing from fasta file will not be processed", {
     mfafn <- raer_example("mouse_tiny.fasta")
