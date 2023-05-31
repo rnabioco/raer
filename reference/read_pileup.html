@@ -95,10 +95,9 @@ data.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># first table contains site information, second table pileup count</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">plp</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu">read_pileup</span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>number of items to replace is not a multiple of replacement length</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 6 ranges and 4 metadata columns:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       seqnames    ranges strand |         REF       ALT      nRef</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       seqnames    ranges strand |         REF      rpbz       vdb</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;numeric&gt; &lt;numeric&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [1]     SSR3         1      - |           C         0         0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [2]     SSR3         2      - |           A         0         0</span>
@@ -106,7 +105,7 @@ data.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [4]     SSR3         4      - |           A         0         0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [5]     SSR3         5      - |           G         0         0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [6]     SSR3         6      - |           T         0         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            nAlt</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             sor</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;numeric&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [1]         0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [2]         0</span>

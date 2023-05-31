@@ -69,10 +69,8 @@
 <span>  chroms <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  param <span class="op">=</span> <span class="fu">FilterParam</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  outfile_prefix <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  reads <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  return_data <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  BPPARAM <span class="op">=</span> <span class="fu">SerialParam</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  bad_reads <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  umi_tag <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
@@ -105,8 +103,8 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>bamfiles</dt>
 <dd><p>character vector of paths to 1 or more bam files. If named,
-the names will be included in the colData of the RangedSummarizedExperiment, otherwise
-the colData will be populated with the basename of the bamfile.</p></dd>
+the names will be included in the colData of the <a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html" class="external-link">RangedSummarizedExperiment</a>, otherwise
+the <a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a> will be populated with the basename of the bamfile.</p></dd>
 
 
 <dt>fafile</dt>
@@ -114,7 +112,7 @@ the colData will be populated with the basename of the bamfile.</p></dd>
 
 
 <dt>sites</dt>
-<dd><p>a GRanges object containing regions or sites to process.</p></dd>
+<dd><p>a <a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a> object containing regions or sites to process.</p></dd>
 
 
 <dt>region</dt>
@@ -137,11 +135,6 @@ filters to apply to reads and sites during pileup.</p></dd>
 files will be produced.</p></dd>
 
 
-<dt>reads</dt>
-<dd><p>if supplied a fasta file will be written with reads that pass
-filters and contain variants</p></dd>
-
-
 <dt>return_data</dt>
 <dd><p>if <code>TRUE</code>, data is returned as a RangedSummarizedExperiment,
 if <code>FALSE</code> a character vector of tabix-index files, specified by
@@ -152,12 +145,6 @@ if <code>FALSE</code> a character vector of tabix-index files, specified by
 <dd><p>A BiocParallel class to control parallel execution. Parallel
 processing occurs per chromosome, so is disabled when run on a single
 region.</p></dd>
-
-
-<dt>bad_reads</dt>
-<dd><p>a textfile containing read names to exclude from pileup.
-Readnames should be formated as readid_1 or readid_2 or readid for paired
-end first read paired-end second read or single end data.</p></dd>
 
 
 <dt>umi_tag</dt>
@@ -187,8 +174,8 @@ for each bam file</p></dd>
 
 
 <dt>library_type</dt>
-<dd><p>read orientation, one of fr-first-strand,
-fr-second-strand, unstranded, and genomic-unstranded. Can supply as a vector to specify for each
+<dd><p>read orientation, one of <code>fr-first-strand</code>,
+<code>fr-second-strand</code>, <code>unstranded</code>, and <code>genomic-unstranded</code>. Can supply as a vector to specify for each
 input bam. Unstranded library type will be reported based on read alignment.
 genomic-unstranded will report all variants w.r.t the + strand.</p></dd>
 
@@ -271,8 +258,30 @@ filters. If FALSE, site will not be reported.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>A RangedSummarizedExperiment or a
-vector of the output tabixed file names if <code>return_data</code> is FALSE.</p>
+<p>A <a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html" class="external-link">RangedSummarizedExperiment</a> or a
+vector of the output tabix'ed file names if <code>return_data</code> is FALSE.
+The <a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html" class="external-link">RangedSummarizedExperiment</a> object is populated with multiple assays:</p><ul><li><p><code>ALT</code>:  Alternate base(s) found at each position</p></li>
+<li><p><code>nRef</code>: # of reads supporting the reference base</p></li>
+<li><p><code>nAlt</code>: # of reads supporting an alternate base</p></li>
+<li><p><code>nA</code>: # of reads with A</p></li>
+<li><p><code>nT</code>: # of reads with T</p></li>
+<li><p><code>nC</code>: # of reads with C</p></li>
+<li><p><code>nG</code>: # of reads with G</p></li>
+</ul><p>The <code>rowRanges()</code> contains the genomic interval for each site, along with:</p><ul><li><p><code>REF</code>: The reference base</p></li>
+<li><p><code>rpbz</code>: Mann-Whitney U test of Read Position Bias from bcftools,
+extreme negative or positive values indicate more bias.</p></li>
+<li><p><code>vdb</code>: Variant Distance Bias for filtering splice-site artefacts from
+bcftools, lower values indicate more bias.</p></li>
+<li><p><code>sor</code> Strand Odds Ratio Score, strand bias estimated by the Symmetric
+Odds Ratio test, based on GATK code. Higher values indicate more bias.</p></li>
+</ul><p>The rownames will be populated with the format
+<code>site_[seqnames]_[position(1-based)]_[strand]</code>, with <code>strand</code> being encoded
+as 1 = +, 2 = -, and 3 = *.</p>
+
+
+<p>If <code>return_data</code> is <code>FALSE</code> then a character vector of paths to the
+pileup files will be returned. These files can be imported using
+<code><a href="read_pileup.html">read_pileup()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -302,8 +311,9 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> dim: 7 1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): ALT nRef ... nC nG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(7): DHFR-207-- DHFR-208-- ... DHFR-300-- DHFR-332--</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rbpz vpb sor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(7): site_DHFR_207_2 site_DHFR_208_2 ... site_DHFR_300_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_DHFR_332_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rpbz vdb sor</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(1): SRR5564269_Aligned.sortedByCoord.out.md.bam</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
 <span class="r-in"><span></span></span>
@@ -321,8 +331,9 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> dim: 74 6 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): ALT nRef ... nC nG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(74): SSR3-102-- SSR3-125-- ... DHFR-430-- DHFR-513--</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rbpz vpb sor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(74): site_SSR3_102_2 site_SSR3_125_2 ... site_DHFR_430_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_DHFR_513_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rpbz vdb sor</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(6): KO1 KO2 ... WT2 WT3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
 <span class="r-in"><span></span></span>
@@ -344,32 +355,32 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">rowRanges</span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 74 ranges and 4 metadata columns:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              seqnames    ranges strand |         REF       rbpz</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;  &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3-102--     SSR3       102      - |           T   2.611800</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3-125--     SSR3       125      - |           C   0.623238</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3-156--     SSR3       156      - |           C   1.875144</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3-176--     SSR3       176      - |           A  -0.676423</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3-198--     SSR3       198      - |           A   1.817678</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          ...      ...       ...    ... .         ...        ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR-397--     DHFR       397      - |           A -2.7341600</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR-399--     DHFR       399      - |           G -0.2094944</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR-423--     DHFR       423      - |           T -0.0815516</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR-430--     DHFR       430      - |           A -2.6781858</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR-513--     DHFR       513      - |           T -1.2475213</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                      vpb       sor</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                &lt;numeric&gt; &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3-102-- 2.21621e-02  2.776147</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3-125-- 2.21621e-02  0.478641</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3-156-- 2.21621e-02  2.786335</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3-176-- 2.00523e-05  2.154124</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SSR3-198-- 2.21621e-02  2.797103</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          ...         ...       ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR-397--   0.0221621  2.775538</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR-399--   0.0221621  0.306541</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR-423--   0.0221621  2.773352</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR-430--   0.0221621  2.773426</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   DHFR-513--   0.0221621  2.772591</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   seqnames    ranges strand |         REF       rpbz</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                      &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;  &lt;numeric&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_SSR3_102_2     SSR3       102      - |           T   2.611800</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_SSR3_125_2     SSR3       125      - |           C   0.623238</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_SSR3_156_2     SSR3       156      - |           C   1.875144</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_SSR3_176_2     SSR3       176      - |           A  -0.676423</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_SSR3_198_2     SSR3       198      - |           A   1.817678</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               ...      ...       ...    ... .         ...        ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_DHFR_397_2     DHFR       397      - |           A -2.7341600</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_DHFR_399_2     DHFR       399      - |           G -0.2094944</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_DHFR_423_2     DHFR       423      - |           T -0.0815516</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_DHFR_430_2     DHFR       430      - |           A -2.6781858</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_DHFR_513_2     DHFR       513      - |           T -1.2475213</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                           vdb       sor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                     &lt;numeric&gt; &lt;numeric&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_SSR3_102_2 2.21621e-02  2.776147</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_SSR3_125_2 2.21621e-02  0.478641</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_SSR3_156_2 2.21621e-02  2.786335</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_SSR3_176_2 2.00523e-05  2.154124</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_SSR3_198_2 2.21621e-02  2.797103</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               ...         ...       ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_DHFR_397_2   0.0221621  2.775538</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_DHFR_399_2   0.0221621  0.306541</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_DHFR_423_2   0.0221621  2.773352</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_DHFR_430_2   0.0221621  2.773426</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_DHFR_513_2   0.0221621  2.772591</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   -------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   seqinfo: 3 sequences from an unspecified genome</span>
 <span class="r-in"><span></span></span>
@@ -381,8 +392,9 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> dim: 74 6 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): ALT nRef ... nC nG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(74): SSR3-102-- SSR3-125-- ... DHFR-430-- DHFR-513--</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rbpz vpb sor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(74): site_SSR3_102_2 site_SSR3_125_2 ... site_DHFR_430_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_DHFR_513_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rpbz vdb sor</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(6): KO1 KO2 ... WT2 WT3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
 <span class="r-in"><span></span></span>
@@ -392,8 +404,9 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> dim: 1166 6 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): ALT nRef ... nC nG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(1166): SPCS3-1-+ SPCS3-2-+ ... DHFR-517-- DHFR-518--</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rbpz vpb sor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(1166): site_SPCS3_1_1 site_SPCS3_2_1 ... site_DHFR_517_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_DHFR_518_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rpbz vdb sor</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(6): KO1 KO2 ... WT2 WT3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
 <span class="r-in"><span></span></span>
@@ -403,8 +416,8 @@ library_type parameters can be specified for each input files.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> dim: 2 6 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): ALT nRef ... nC nG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(2): DHFR-100-- DHFR-101--</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rbpz vpb sor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(2): site_DHFR_100_2 site_DHFR_101_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rpbz vdb sor</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(6): KO1 KO2 ... WT2 WT3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
 </code></pre></div>

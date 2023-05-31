@@ -177,8 +177,19 @@ chromosomes.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>Returns either a <code>SingleCellExperiment</code> or character vector of paths
-to the files produced.</p>
+<p>Returns either a SingleCellExperiment or character vector of paths
+to the sparseMatrix files produced. The SingleCellExperiment object is
+populated with two assays, <code>nRef</code> and <code>nAlt</code>, which represent base counts
+for the reference and alternate alleles. The <code>rowRanges()</code> will contain the
+genomic interval for each site, along with <code>REF</code> and <code>ALT</code> columns. The
+rownames will be populated with the format
+<code>site_[seqnames]_[position(1-based)]_[strand]</code>, with <code>strand</code> being encoded
+as 1 = +, 2 = -, and 3 = *.</p>
+
+
+<p>If <code>return_sce</code> is <code>FALSE</code> then a character vector of paths to the
+sparseMatrix files (<code>barcodes.txt.gz</code>, <code>sites.txt.gz</code>, <code>counts.mtx.gz</code>),
+will be returned. These files can be imported using <code><a href="read_sparray.html">read_sparray()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -201,17 +212,23 @@ to the files produced.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bai</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/scanBam.html" class="external-link">indexBam</a></span><span class="op">(</span><span class="va">bam_fn</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/on.exit.html" class="external-link">on.exit</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="va">bai</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="pileup_sites.html">FilterParam</a></span><span class="op">(</span>library_type <span class="op">=</span> <span class="st">"fr-second-strand"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu">pileup_cells</span><span class="op">(</span><span class="va">bam_fn</span>, <span class="va">gr</span>, <span class="va">cbs</span>, <span class="va">outdir</span>, param <span class="op">=</span> <span class="va">fp</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> BiocParallel errors</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span>   1 remote errors, element index: 1</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span>   0 unevaluated and other errors</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span>   first remote error:</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> Error in (function (bamfn, id, sites, barcodes, outfile_prefix, chrom, : pileup failed</span>
 <span class="r-in"><span><span class="va">sce</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in eval(expr, envir, enclos):</span> object 'sce' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> class: SingleCellExperiment </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> dim: 5 556 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> assays(2): nRef nAlt</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(5): site_2_579_2 site_2_625_2 site_2_645_2 site_2_589_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_2_601_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(2): REF ALT</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colnames(556): TGGAACTCAAGCTGTT-1 TACTTCAGTAACCCTA-1 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   TGTACAGTCTTCGTGC-1 TGTTGAGGTGACTGAG-1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colData names(0):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> reducedDimNames(0):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mainExpName: NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> altExpNames(0):</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># example of processing multiple smart-seq2 style libraries</span></span></span>
 <span class="r-in"><span></span></span>
@@ -230,14 +247,16 @@ to the files produced.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> dim: 5 10 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assays(2): nRef nAlt</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(5): 2:579_2_A_G 2:625_2_A_G 2:645_2_A_G 2:589_2_A_G</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   2:601_2_T_C</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(2): ref alt</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(5): site_2_579_2 site_2_625_2 site_2_645_2 site_2_589_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_2_601_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(2): REF ALT</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(10): A B ... I J</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): id</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colData names(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> reducedDimNames(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mainExpName: NULL</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> altExpNames(0):</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="va">bai</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

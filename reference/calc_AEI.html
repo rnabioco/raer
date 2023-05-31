@@ -80,7 +80,7 @@ summary AEI metric.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">calc_AEI</span><span class="op">(</span></span>
-<span>  <span class="va">bam_fn</span>,</span>
+<span>  <span class="va">bam_fns</span>,</span>
 <span>  <span class="va">fasta_fn</span>,</span>
 <span>  alu_ranges <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  txdb <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -93,31 +93,35 @@ summary AEI metric.</p>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
-    <dl><dt>bam_fn</dt>
-<dd><p>bam file</p></dd>
+    <dl><dt>bam_fns</dt>
+<dd><p>character vector of paths to indexed bam files. If a named
+character vector is supplied the names will be used in the output.</p></dd>
 
 
 <dt>fasta_fn</dt>
-<dd><p>fasta</p></dd>
+<dd><p>fasta filename</p></dd>
 
 
 <dt>alu_ranges</dt>
-<dd><p>GRanges with regions to query for
+<dd><p><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a> with regions to query for
 calculating the AEI, typically ALU repeats.</p></dd>
 
 
 <dt>txdb</dt>
-<dd><p>A txdb object, if supplied, will be used to subset the alu_ranges
-to those found overlapping genes. Alternatively a GRanges object with gene
-coordinates.</p></dd>
+<dd><p>A TxDb object, if supplied, will be used to subset the alu_ranges
+to those found overlapping genes. Alternatively a <a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a> object with gene
+coordinates.  If the <code>library_type</code> specified by
+<code>FilterParam</code>, is <code>unstranded</code> or <code>genomic-unstranded</code>, then the TxDb will
+be used to correct the strandness relative to the reference and is a required
+parameter.</p></dd>
 
 
 <dt>snp_db</dt>
-<dd><p>either a SNPlocs package, GPos, or GRanges object. If supplied,
+<dd><p>either a <a href="https://rdrr.io/pkg/BSgenome/man/SNPlocs-class.html" class="external-link">SNPlocs</a>, <a href="https://rdrr.io/pkg/GenomicRanges/man/GPos-class.html" class="external-link">GPos</a>, or <a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a> object. If supplied,
 will be used to exclude polymorphic positions prior to calculating the AEI.
-If <code>calc_AEI()</code> will be used many times, one could save some time by first
-identifying SNPs that overlap the supplied alu_ranges, and passing these as
-a GRanges to snp_db rather than supplying all known SNPs (see
+If <code>calc_AEI()</code> will be used many times, one will save time by first
+identifying SNPs that overlap the supplied <code>alu_ranges</code>, and passing these as
+a <a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a> to <code>snp_db</code> rather than supplying all known SNPs (see
 <code><a href="get_overlapping_snps.html">get_overlapping_snps()</a></code>).</p></dd>
 
 
@@ -139,11 +143,10 @@ for operating over chromosomes.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>A named list with the AEI index computed for all allelic
-combinations. If correctly computed the signal from the A_G index should be
-higher than other alleles (T_C), which are most likely derived from noise
-or polymorphisms.</p>
-    </div>
+<p>A named list containing:</p><ul><li><p><code>AEI</code>: a matrix of AEI index values computed for all allelic
+combinations, one row for each supplied bam file.</p></li>
+<li><p><code>AEI_per_chrom</code>: a data.frame containing values computed for each chromosome</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Roth, S.H., Levanon, E.Y. &amp; Eisenberg, E. Genome-wide
@@ -154,46 +157,23 @@ quantification of ADAR adenosine-to-inosine RNA editing activity. Nat Methods
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/Rsamtools" class="external-link">Rsamtools</a></span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">bamfn</span> <span class="op">&lt;-</span> <span class="fu"><a href="raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"SRR5564277_Aligned.sortedByCoord.out.md.bam"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">bamfn</span> <span class="op">&lt;-</span> <span class="fu"><a href="raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"SRR5564269_Aligned.sortedByCoord.out.md.bam"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">bam2fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"SRR5564277_Aligned.sortedByCoord.out.md.bam"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">bams</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">bam2fn</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">bams</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ADAR1KO"</span>, <span class="st">"WT"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="fu"><a href="raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"human.fasta"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">dummy_alu_ranges</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/scanFa.html" class="external-link">scanFaIndex</a></span><span class="op">(</span><span class="va">fafn</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">calc_AEI</span><span class="op">(</span><span class="va">bamfn</span>, <span class="va">fafn</span>, <span class="va">dummy_alu_ranges</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $A_C</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $A_G</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.298586</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $A_T</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1292293</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $C_A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.2142033</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $C_G</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.01650982</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $C_T</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.2635046</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $G_A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.3170769</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $G_C</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $G_T</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $T_A</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $T_C</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.0116198</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $T_G</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.0116198</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span><span class="va">mock_alu_ranges</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/scanFa.html" class="external-link">scanFaIndex</a></span><span class="op">(</span><span class="va">fafn</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">calc_AEI</span><span class="op">(</span><span class="va">bams</span>, <span class="va">fafn</span>, <span class="va">mock_alu_ranges</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">AEI</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                A_C       A_G       A_T       C_A        C_G       C_T</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ADAR1KO 0.00927902 0.1019746 0.0278319 0.1237964 0.00000000 0.1100564</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> WT      0.00000000 2.2985864 0.1292293 0.2142033 0.01650982 0.2635046</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               G_A        G_C        G_T       T_A        T_C        T_G</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ADAR1KO 0.2364360 0.01247194 0.04986909 0.0108272 0.03247456 0.03247456</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> WT      0.3170769 0.00000000 0.00000000 0.0000000 0.01161980 0.01161980</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

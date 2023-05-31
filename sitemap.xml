@@ -67,6 +67,9 @@
     <loc>https://rnabioco.github.io/raer/reference/filter_splice_variants.html</loc>
   </url>
   <url>
+    <loc>https://rnabioco.github.io/raer/reference/find_mispriming_sites.html</loc>
+  </url>
+  <url>
     <loc>https://rnabioco.github.io/raer/reference/get_overlapping_snps.html</loc>
   </url>
   <url>
@@ -74,9 +77,6 @@
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/merge_pileups.html</loc>
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/perform_de.html</loc>

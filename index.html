@@ -111,6 +111,8 @@
 <p>raer provides methods to compute per site read count summaries from BAM alignment files, either for known editing sites, or for all detected sites.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rnabioco.github.io/raer">raer</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: replacing previous import 'utils::findMatches' by</span></span>
+<span><span class="co">#&gt; 'S4Vectors::findMatches' when loading 'AnnotationDbi'</span></span>
 <span><span class="va">bam1fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"SRR5564269_Aligned.sortedByCoord.out.md.bam"</span><span class="op">)</span></span>
 <span><span class="va">bam2fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"SRR5564277_Aligned.sortedByCoord.out.md.bam"</span><span class="op">)</span></span>
 <span><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"human.fasta"</span><span class="op">)</span></span>
@@ -126,7 +128,8 @@
 <span><span class="co">#&gt; dim: 1695 2 </span></span>
 <span><span class="co">#&gt; metadata(0):</span></span>
 <span><span class="co">#&gt; assays(7): ALT nRef ... nC nG</span></span>
-<span><span class="co">#&gt; rownames(1695): SSR3_1_- SSR3_2_- ... DHFR_517_- DHFR_518_-</span></span>
+<span><span class="co">#&gt; rownames(1695): site_SSR3_1_2 site_SSR3_2_2 ... site_DHFR_517_2</span></span>
+<span><span class="co">#&gt;   site_DHFR_518_2</span></span>
 <span><span class="co">#&gt; rowData names(4): REF rbpz vpb sor</span></span>
 <span><span class="co">#&gt; colnames(2): ko wt</span></span>
 <span><span class="co">#&gt; colData names(1): sample</span></span>
@@ -141,17 +144,17 @@
 <span><span class="co">#&gt; wt          wt</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">nRef</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="op">]</span></span>
-<span><span class="co">#&gt;          ko wt</span></span>
-<span><span class="co">#&gt; SSR3_1_- 13 12</span></span>
-<span><span class="co">#&gt; SSR3_2_- 14 12</span></span>
-<span><span class="co">#&gt; SSR3_3_- 14 12</span></span>
-<span><span class="co">#&gt; SSR3_4_- 15 12</span></span>
+<span><span class="co">#&gt;               ko wt</span></span>
+<span><span class="co">#&gt; site_SSR3_1_2 13 12</span></span>
+<span><span class="co">#&gt; site_SSR3_2_2 14 12</span></span>
+<span><span class="co">#&gt; site_SSR3_3_2 14 12</span></span>
+<span><span class="co">#&gt; site_SSR3_4_2 15 12</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">nAlt</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="op">]</span></span>
-<span><span class="co">#&gt;          ko wt</span></span>
-<span><span class="co">#&gt; SSR3_1_-  0  0</span></span>
-<span><span class="co">#&gt; SSR3_2_-  0  0</span></span>
-<span><span class="co">#&gt; SSR3_3_-  0  0</span></span>
-<span><span class="co">#&gt; SSR3_4_-  0  0</span></span></code></pre></div>
+<span><span class="co">#&gt;               ko wt</span></span>
+<span><span class="co">#&gt; site_SSR3_1_2  0  0</span></span>
+<span><span class="co">#&gt; site_SSR3_2_2  0  0</span></span>
+<span><span class="co">#&gt; site_SSR3_3_2  0  0</span></span>
+<span><span class="co">#&gt; site_SSR3_4_2  0  0</span></span></code></pre></div>
 <p>The <code><a href="reference/pileup_sites.html">FilterParam()</a></code> class holds multiple options for customizing the output of <code><a href="reference/pileup_sites.html">pileup_sites()</a></code>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pileup_sites.html">FilterParam</a></span><span class="op">(</span></span>
@@ -166,7 +169,8 @@
 <span><span class="co">#&gt; dim: 74 2 </span></span>
 <span><span class="co">#&gt; metadata(0):</span></span>
 <span><span class="co">#&gt; assays(7): ALT nRef ... nC nG</span></span>
-<span><span class="co">#&gt; rownames(74): SSR3_102_- SSR3_125_- ... DHFR_430_- DHFR_513_-</span></span>
+<span><span class="co">#&gt; rownames(74): site_SSR3_102_2 site_SSR3_125_2 ... site_DHFR_430_2</span></span>
+<span><span class="co">#&gt;   site_DHFR_513_2</span></span>
 <span><span class="co">#&gt; rowData names(4): REF rbpz vpb sor</span></span>
 <span><span class="co">#&gt; colnames(2): ko wt</span></span>
 <span><span class="co">#&gt; colData names(1): sample</span></span></code></pre></div>
@@ -175,46 +179,53 @@
 <code class="sourceCode R"><span><span class="va">scbam_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"5k_neuron_mouse_possort.bam"</span><span class="op">)</span></span>
 <span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="st">"sc_editing"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">editing_sites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"2:579:-"</span>,</span>
-<span>                           <span class="st">"2:625:-"</span>,</span>
-<span>                           <span class="st">"2:589:-"</span><span class="op">)</span>,</span>
-<span>                         REF <span class="op">=</span> <span class="st">"A"</span>,</span>
-<span>                         ALT <span class="op">=</span> <span class="st">"G"</span><span class="op">)</span></span>
+<span><span class="va">editing_sites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>        <span class="st">"2:579:-"</span>,</span>
+<span>        <span class="st">"2:625:-"</span>,</span>
+<span>        <span class="st">"2:589:-"</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    REF <span class="op">=</span> <span class="st">"A"</span>,</span>
+<span>    ALT <span class="op">=</span> <span class="st">"G"</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">cbs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CACCAAACAACAACAA-1"</span>, </span>
-<span>         <span class="st">"TATTCCACACCCTCTA-1"</span>, </span>
-<span>         <span class="st">"GACCTTCAGTTGTAAG-1"</span><span class="op">)</span></span>
+<span><span class="va">cbs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="st">"CACCAAACAACAACAA-1"</span>,</span>
+<span>    <span class="st">"TATTCCACACCCTCTA-1"</span>,</span>
+<span>    <span class="st">"GACCTTCAGTTGTAAG-1"</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pileup_cells.html">pileup_cells</a></span><span class="op">(</span><span class="va">scbam_fn</span>, </span>
-<span>                    sites <span class="op">=</span> <span class="va">editing_sites</span>,</span>
-<span>                    cell_barcodes <span class="op">=</span> <span class="va">cbs</span>,</span>
-<span>                    param <span class="op">=</span> <span class="va">fp</span>, </span>
-<span>                    output_directory <span class="op">=</span> <span class="va">outdir</span><span class="op">)</span></span>
+<span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pileup_cells.html">pileup_cells</a></span><span class="op">(</span><span class="va">scbam_fn</span>,</span>
+<span>    sites <span class="op">=</span> <span class="va">editing_sites</span>,</span>
+<span>    cell_barcodes <span class="op">=</span> <span class="va">cbs</span>,</span>
+<span>    param <span class="op">=</span> <span class="va">fp</span>,</span>
+<span>    output_directory <span class="op">=</span> <span class="va">outdir</span></span>
+<span><span class="op">)</span></span>
 <span><span class="va">sce</span></span>
 <span><span class="co">#&gt; class: SingleCellExperiment </span></span>
 <span><span class="co">#&gt; dim: 3 3 </span></span>
 <span><span class="co">#&gt; metadata(0):</span></span>
 <span><span class="co">#&gt; assays(2): nRef nAlt</span></span>
-<span><span class="co">#&gt; rownames(3): 2:579_2_A_G 2:625_2_A_G 2:589_2_A_G</span></span>
-<span><span class="co">#&gt; rowData names(2): ref alt</span></span>
+<span><span class="co">#&gt; rownames(3): site_2_579_2 site_2_625_2 site_2_589_2</span></span>
+<span><span class="co">#&gt; rowData names(2): REF ALT</span></span>
 <span><span class="co">#&gt; colnames(3): CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1</span></span>
-<span><span class="co">#&gt; colData names(1): id</span></span>
+<span><span class="co">#&gt; colData names(0):</span></span>
 <span><span class="co">#&gt; reducedDimNames(0):</span></span>
 <span><span class="co">#&gt; mainExpName: NULL</span></span>
 <span><span class="co">#&gt; altExpNames(0):</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">nRef</span></span>
 <span><span class="co">#&gt; 3 x 3 sparse Matrix of class "dgCMatrix"</span></span>
-<span><span class="co">#&gt;             CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1</span></span>
-<span><span class="co">#&gt; 2:579_2_A_G                  0                  0                  1</span></span>
-<span><span class="co">#&gt; 2:625_2_A_G                  0                  0                  0</span></span>
-<span><span class="co">#&gt; 2:589_2_A_G                  1                  1                  2</span></span>
+<span><span class="co">#&gt;              CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1</span></span>
+<span><span class="co">#&gt; site_2_579_2                  0                  0                  1</span></span>
+<span><span class="co">#&gt; site_2_625_2                  0                  0                  0</span></span>
+<span><span class="co">#&gt; site_2_589_2                  1                  1                  2</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">nAlt</span></span>
 <span><span class="co">#&gt; 3 x 3 sparse Matrix of class "dgCMatrix"</span></span>
-<span><span class="co">#&gt;             CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1</span></span>
-<span><span class="co">#&gt; 2:579_2_A_G                  1                  1                  1</span></span>
-<span><span class="co">#&gt; 2:625_2_A_G                  1                  1                  1</span></span>
-<span><span class="co">#&gt; 2:589_2_A_G                  0                  0                  0</span></span></code></pre></div>
+<span><span class="co">#&gt;              CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1</span></span>
+<span><span class="co">#&gt; site_2_579_2                  1                  1                  1</span></span>
+<span><span class="co">#&gt; site_2_625_2                  1                  1                  1</span></span>
+<span><span class="co">#&gt; site_2_589_2                  0                  0                  0</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="related-work">Related work<a class="anchor" aria-label="anchor" href="#related-work"></a>
