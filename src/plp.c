@@ -67,12 +67,21 @@ static int readaln(void* data, bam1_t* b) {
   return ret;
 }
 
+typedef struct basequals_t {
+    int b[5]; // sum of base counts 'ATCGN'
+    int q[5]; // sum of qual scores 'ATCGN'
+} basequals_t ;
+
+// hashmap with UMI seq as key pointing to a struct storing base counts
+KHASH_MAP_INIT_STR(umi2bq, basequals_t*)
+    typedef khash_t(umi2bq)* umi2bq_t;
+
 // structs for holding counts
 typedef struct {
   int total, nr, nv, na, nt, ng, nc, nn, nx;
   int ref_b;
   str2intmap_t var;
-  strset_t umi;
+  umi2bq_t umi;
 } counts;
 
 typedef struct  {

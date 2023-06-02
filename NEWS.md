@@ -1,3 +1,7 @@
+# reaer 0.99.6 
+
+* added method to count base occurring most frequently when counting UMIs with `pileup_cells()`. 
+
 # raer 0.99.5
 
 * `pileup_cells()` now allows for multiple alleles to be queried at a site.
@@ -32,13 +36,12 @@ been changed to `A` and `G` respectively.
 
 # raer 0.99.0
 
-<<<<<<< HEAD
 * added support for processing multiple BAM files with `calc_AEI()`. 
-=======
+
 * added method to count base occuring most frequently when counting UMIs with `pileup_cells()`. 
 
 * added support for processing multiple bam files with `calc_AEI()`. 
->>>>>>> a456b1e (enmuerate consensus (majority) base per umi rather than first encountered for pileup_cells)
+
 
 * Dropped minimally used `bad_reads` and `reads` parameters from `pileup_sites()`
 
@@ -80,7 +83,6 @@ been changed to `A` and `G` respectively.
 
 * The `bedindex` parameter for `pileup_sites` has been removed. This option is not needed
 at the user level and is planned to be replaced by the regional indexing used in `pileup_cells()`.
->>>>>>> main
 
 * Added `FilterParam` option to trim reads based on fractional distance from 5' (`ftrim_5p`) or 3' end (`ftrim_3p`).
 

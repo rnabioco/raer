@@ -32,6 +32,16 @@ typedef khash_t(str2intmap)* str2intmap_t;
 void clear_str2int_hashmap(str2intmap_t vhash);
 
 char* get_aux_ztag(bam1_t* b, const char tag[2]);
+
+extern const char nt5_str[5];
+
+// get base as character
+#define nt5_char(i) (nt5_str[i])
+
+// get 0,1,2,3 index from 4bit encoded base
+#define nt16_idx(i) (seq_nt16_int[i])
+
+
 extern unsigned char comp_base[256];
 
 typedef struct {
