@@ -5,52 +5,44 @@
 \title{Make summarized experiment object for DE}
 \usage{
 prep_for_de(
-  se,
-  type = "AI",
-  edit_from = NULL,
-  edit_to = NULL,
-  min_prop = 0.1,
-  max_prop = 0.9,
-  min_samples = 3
+  rse,
+  edit_from = "A",
+  edit_to = "G",
+  min_prop = 0,
+  max_prop = 1,
+  min_samples = 1
 )
 }
 \arguments{
-\item{se}{A SummarizedExperiment object}
+\item{rse}{A \link{RangedSummarizedExperiment} object}
 
-\item{type}{OPTIONAL the type of editing event to add. Currently, only A to I
-is supported ("AI") which is the default, but your own custom can be added
-by setting this to "none".}
+\item{edit_from}{This should correspond to a nucleotide or assay
+(\code{A}, \code{C}, \code{G}, \code{T}, \code{Ref}, or \code{Alt}) you expect in the reference. Ex. for A to I
+editing events, this would be \code{A}.}
 
-\item{edit_from}{OPTIONAL if not using a pre-built type, you can specify your
-own editing. This should be a nucleotide (A, C, G, or T) and should
-correspond to the nucleotide you expect in the reference. Ex. for A to I
-editing events, this would be "A". If type is not "AI", both edit from and
-edit_to must be set.}
+\item{edit_to}{This should correspond to a nucleotide or assay
+(\code{A}, \code{C}, \code{G}, \code{T}, \code{Ref}, or \code{Alt}) you expect in the editing site. Ex. for A
+to I editing events, this would be \code{G}.}
 
-\item{edit_to}{OPTIONAL if not using a pre-built type, you can specify your
-own editing. This should be a nucleotide (A, C, G, or T) and should
-correspond to the nucleotide you expect after the editing event. Ex. for A
-to I editing events, this would be "G". If type is not "AI", both edit from
-and edit_to must be set.}
+\item{min_prop}{The minimum required proportion of reads edited at a site. At
+least \code{min_samples} need to pass this to keep the site.}
 
-\item{min_prop}{OPTIONAL the min proportion of reads edited at a site. At
-least min_samples need to pass this to keep the site. Default is 0.1.}
+\item{max_prop}{The maximum allowable proportion of reads edited at a site. At
+least \code{min_samples} need to pass this to keep the site.}
 
-\item{max_prop}{OPTIONAL the max proportion of reads edited at a site. At
-least min_samples need to pass this to keep the site. Default is 0.9.}
-
-\item{min_samples}{OPTIONAL the minimum number of samples passing the cutoffs
-to keep a site. Default is 3.}
+\item{min_samples}{The minimum number of samples passing the \code{min_prop} and
+\code{max_prop} cutoffs to keep a site.}
 }
 \value{
-\code{SummarizedExperiment::SummarizedExperiment} for use with edgeR or
-DESeq2. Contains a counts assay with a matrix formatted with 2 columns
-per sample (ref and alt counts).
+\link{RangedSummarizedExperiment} for use with \code{edgeR} or
+\code{DESeq2}. Contains a \code{counts} assay with a matrix formatted
+with 2 columns per sample (ref and alt counts).
 }
 \description{
-Generates a SummarizedExperiment object for use with edgeR or
-DESeq2 will generate a counts assay with a matrix formated with 2 columns
-per sample
+Generates a \link{RangedSummarizedExperiment} object for use with
+\code{edgeR} or \code{DESeq2} . Will generate a \code{counts} assay with
+a matrix formatted with 2 columns per sample,
+representing the reference and editing allele counts.
 }
 \examples{
 library(SummarizedExperiment)

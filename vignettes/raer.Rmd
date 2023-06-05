@@ -149,29 +149,23 @@ se_filtered
 Once the object has been filtered, you can prepare it for DE. This means making a new object that contains an assay with read counts if both the alt and ref alleles in a single matrix.
 
 ```{r}
-deobj <- prep_for_de(se_filtered,
-    min_prop = 0.1,
-    max_prop = 0.9,
-    min_samples = 3
-)
+deobj <- prep_for_de(se_filtered, min_prop = 0.05, min_samples = 3)
 
 assay(deobj, "counts")[1:3, 1:6]
 ```
 
 ## Run differential editing (DESeq2)
 
-At this stage, you can use the object to perform DE yourself or you can continue with our pre built functions
-
-For differential editing, we use the design `design <- ~0 + condition:sample + condition:count`.
-
-For the samples, you can leave as is or combine so the same sample name shows up in both the treatment and control. These results are not identical but they are close. In my hands, the same genes come out, but the p values and log fold change values are slightly different.
-
-It is probably best to update the levels of your object, but if you don't, this will still work.
-
+At this stage, you can use the object to perform DE yourself or you can continue with our functions. For differential editing, we use the design `design <- ~0 + condition:sample + condition:count` and perform testing to compare the edited read counts against unedited read counts. 
 
 ```{r}
+colData(deobj)
+```
+
+```{r}
+deobj$sample <- factor(deobj$sample)
 de_results <- perform_de(deobj, 
-    type = "DESeq2",
+    test = "DESeq2",
     sample_col = "sample",
     condition_col = "genotype",
     condition_control = "Wildtype",
@@ -206,7 +200,7 @@ at ALU elements which account for the vast majority of A-to-I editing (> 99%) in
 `raer` provides `calc_AEI()` to calculate the AEI metric. Many of the same parameters used 
 for `pileup_sites()` are available in `calc_AEI()`. 
 
-First we will use the `AnnotationHub` to obtain coordinates for ALU elements. Then we will use a `SNPlocs` package to identify SNPs overlapping the ALU elements from the dbSNP database, which will be excluded from the AEI calculation. The SNPlocs coordinates are `NCBI` based, whereas the `ALU` elements are based on `hg38`, we will therefore convert between the two as needed to obtain SNP and ALU element coordinates based on `hg38`. 
+First we will use the `AnnotationHub` to obtain coordinates for ALU elements. For this example we will only examine a subset of ALUs on `chr18`. Then we will use a `SNPlocs` package to identify SNPs overlapping the ALU elements from the dbSNP database, which will be excluded from the AEI calculation. The SNPlocs coordinates are `NCBI` based, whereas the `ALU` elements are based on `hg38`, we will therefore convert between the two as needed to obtain SNP and ALU element coordinates based on `hg38`. 
 
 
 
@@ -217,8 +211,11 @@ library(SNPlocs.Hsapiens.dbSNP144.GRCh38)
 ah <- AnnotationHub()
 rmsk_hg38 <- ah[["AH99003"]]
 
-alus <- rmsk_hg38[rmsk_hg38$repFamily == "Alu" & seqnames(rmsk_hg38) == "chr18", ]
+alus <- rmsk_hg38[rmsk_hg38$repFamily == "Alu", ]
+alus <- alus[seqnames(alus) == "chr18", ]
 alus <- keepStandardChromosomes(alus) 
+alus <- alus[1:1000, ]
+
 seqlevelsStyle(alus) <- "NCBI"
 genome(alus) <- "GRCh38.p2"
 

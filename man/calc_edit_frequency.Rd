@@ -5,9 +5,9 @@
 \title{Adds editing frequencies}
 \usage{
 calc_edit_frequency(
-  se,
-  edit_from = NULL,
-  edit_to = NULL,
+  rse,
+  edit_from = "A",
+  edit_to = "G",
   drop = FALSE,
   replace_na = TRUE,
   edit_frequency = 0,
@@ -15,40 +15,40 @@ calc_edit_frequency(
 )
 }
 \arguments{
-\item{se}{A SummarizedExperiment object created by \code{merge_pileups}}
+\item{rse}{A \link{RangedSummarizedExperiment} object created by \code{\link[=pileup_sites]{pileup_sites()}}}
 
-\item{edit_from}{This should be a nucleotide (A, C, G, or T)
-corresponding to the nucleotide you expect in the reference. Ex. for A to I
-editing events, this would be "A". If NULL, then editing frequencies will
-be calculated using the \code{nAlt} and \code{nRef} values.}
+\item{edit_from}{This should correspond to a nucleotide or assay
+(\code{A}, \code{C}, \code{G}, \code{T}, \code{Ref}, or \code{Alt}) you expect in the reference. Ex. for A to I
+editing events, this would be \code{A}.}
 
-\item{edit_to}{This should be a nucleotide (A, C, G, or T) and should
-correspond to the nucleotide you expect after the editing event. Ex. for A
-to I editing events, this would be "G". If NULL, then editing frequencies
-will be calculated using the \code{nAlt} and \code{nRef} values.}
+\item{edit_to}{This should correspond to a nucleotide or assay
+(\code{A}, \code{C}, \code{G}, \code{T}, \code{Ref}, or \code{Alt})  you expect in the editing site. Ex. for A
+to I editing events, this would be \code{G}.}
 
-\item{drop}{If TRUE, the summarizedExperiment returned will only retain sites
+\item{drop}{If \code{TRUE}, the \link{RangedSummarizedExperiment} returned will only retain sites
 matching the specified \code{edit_from} and \code{edit_to} bases.}
 
-\item{replace_na}{If TRUE, NA and NaN editing frequencies will be coerced to
-0.}
+\item{replace_na}{If \code{TRUE}, \code{NA} and \code{NaN} editing frequencies will be coerced to
+\code{0}.}
 
 \item{edit_frequency}{The edit frequency cutoff used when calculating the
-number of sites. Set to 0 to require any non-zero editing frequency. The
-number of sites is stored as n_sites in the colData.}
+number of sites. Set to \code{0} to require any non-zero editing frequency. The
+number of sites is stored as \code{n_sites} in the \code{colData}.}
 
 \item{min_count}{The minimum number of reads required when enumerating number
 of editing sites detected.}
 }
 \value{
-\code{SummarizedExperiment::SummarizedExperiment} supplemented with
-\code{edit_freq} assay.
+\link{RangedSummarizedExperiment} supplemented with \code{edit_freq} and \code{depth} assay.
 }
 \description{
 Adds editing frequencies to an existing
-SummarizedExperiment object (created by merge_pileups\verb{). The SummarizedExperiment with a new assay for editing frequencies for each site (}edit_freq\verb{), depth of coverage computed using the indicatededited nucleotides (}depth`) and new colData
-columns with the number of edited sites (n_sites) and the
-fraction of edits (edit_idx) is returned.
+\link{RangedSummarizedExperiment} object (created by \code{\link[=pileup_sites]{pileup_sites()}}). The
+\link{RangedSummarizedExperiment} with a new assay for editing frequencies
+for each site (\code{edit_freq}), depth of coverage computed
+using the indicated edited nucleotides (\code{depth}) and new \code{colData}
+columns with the number of edited sites (\code{n_sites}) and the
+fraction of edits (\code{edit_idx}) is returned.
 }
 \examples{
 library(SummarizedExperiment)

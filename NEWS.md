@@ -1,6 +1,14 @@
+# raer 0.99.1 
+
+* default values for `edit_from` and `edit_to` for `calc_edit_frequency()` have
+been changed to `A` and `G` respectively.
+
+* renamed `type` argument in `perform_de` to `test` and removed `type` argument in
+`prep_for_de`
+
 # raer 0.99.0
 
-* added support for processing multiple bam files with `calc_AEI()`. 
+* added support for processing multiple BAM files with `calc_AEI()`. 
 
 * Dropped minimally used `bad_reads` and `reads` parameters from `pileup_sites()`
 
