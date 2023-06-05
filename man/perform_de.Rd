@@ -6,7 +6,7 @@
 \usage{
 perform_de(
   deobj,
-  type = c("edgeR", "DESeq2"),
+  test = c("edgeR", "DESeq2"),
   sample_col = "sample",
   condition_col = "condition",
   condition_control = NULL,
@@ -14,24 +14,25 @@ perform_de(
 )
 }
 \arguments{
-\item{deobj}{A SummarizedExperiment object prepared for de by \code{prep_for_de}}
+\item{deobj}{A \link{RangedSummarizedExperiment} object prepared for differential
+editing analysis by \code{\link[=prep_for_de]{prep_for_de()}}}
 
-\item{type}{OPTIONAL if edgeR or DESeq2 should be run. Default is edgeR}
+\item{test}{Indicate if \code{edgeR} or \code{DESeq2} should be run.}
 
-\item{sample_col}{OPTIONAL the name of the column from colData(deobj) that
+\item{sample_col}{The name of the column from \code{colData(deobj)} that
 contains your sample information. Default is sample. If you do not have a
 column named "sample", you must provide the appropriate sample column}
 
-\item{condition_col}{OPTIONAL the name of the column from colData(deobj) that
+\item{condition_col}{The name of the column from \code{colData(deobj)} that
 contains your treatment information. Default is condition, If you do not
 have a column named "condition", you must provide the appropriate condition
 column}
 
 \item{condition_control}{The name of the control condition. This must be a
-variable in your condition_col of colData(deobj). No default provided.}
+variable in your \code{condition_col} of \code{colData(deobj)}. No default provided.}
 
 \item{condition_treatment}{The name of the treatment condition. This must be
-a variable in your condition_col of colData(deobj).}
+a variable in your \code{condition_col} of \code{colData(deobj)}.}
 }
 \value{
 A named list:
@@ -43,7 +44,7 @@ A named list:
 }
 }
 \description{
-Uses either edgeR or DESeq2 to perform differential editing
+Use \code{edgeR} or \code{DESeq2} to perform differential editing
 analysis. This will work for simple designs that have 1 treatment and 1
 control. For more complex designs, we suggest you perform your own.
 

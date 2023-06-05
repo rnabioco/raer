@@ -115,7 +115,7 @@ Next we'll filter the pileups to find sites with at least 5 cells with an editin
 
 ```{r}
 e_sce <- e_sce[rowSums(assays(e_sce)$nAlt > 0) >= 5, ]
-e_sce <- calc_edit_frequency(e_sce, replace_na = FALSE)
+e_sce <- calc_edit_frequency(e_sce, edit_from = "Ref", edit_to = "Alt", replace_na = FALSE)
 altExp(sce) <- e_sce[, colnames(sce)]
 ```
 
@@ -142,7 +142,7 @@ plotGroupedHeatmap(altExp(sce),
 )
 ```
 
-Various tools in Bioconductor can be used to provide additional annotation information about each RNA editing site.  The `VariantAnnotation` package provides powerful functionality to annotate the location of each editing site, and provide information about alterations in codons or splice sites. 
+Various tools in Bioconductor can be used to provide additional annotation information about each RNA editing site.  The `VariantAnnotation` package provides powerful functionality to annotate the location of each editing site and provide information about alterations in codons or splice sites. 
 
 <details style="margin-bottom:10px;">
 <summary>

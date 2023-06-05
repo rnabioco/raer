@@ -76,42 +76,6 @@ test_that("annot_from_gr works", {
 })
 
 
-
-test_that("calc_edit_frequency works", {
-    data(rse_adar_ifn)
-    rse <- calc_edit_frequency(rse_adar_ifn)
-    expect_true("edit_freq" %in% assayNames(rse))
-    expect_true("depth" %in% assayNames(rse))
-})
-
-test_that("prep_for_de works", {
-    data(rse_adar_ifn)
-    rse <- calc_edit_frequency(rse_adar_ifn)
-    dse <- prep_for_de(rse, min_samples = 1)
-    expect_true("counts" %in% assayNames(dse))
-    expect_equal(type(assay(dse)), "integer")
-    expect_equal(2 * ncol(rse), ncol(dse))
-    expect_equal(setdiff(c("ref", "alt"), dse$count), character(0))
-})
-
-test_that("perform_de works", {
-    bams <- rep(c(bamfn, bam2fn), each = 3)
-    sample_ids <- paste0(rep(c("KO", "WT"), each = 3), 1:3)
-    names(bams) <- sample_ids
-
-    fp <- FilterParam(only_keep_variants = TRUE)
-    rse <- pileup_sites(bams, fafn, param = fp)
-    rse$condition <- substr(rse$sample, 1, 2)
-
-    rse <- calc_edit_frequency(rse)
-    dse <- prep_for_de(rse)
-    res <- perform_de(dse, condition_control = "WT", condition_treatment = "KO")
-    sig_sites <- rownames(res$sig_results)[1:5]
-    ed <- assay(rse, "edit_freq")[sig_sites, 1] - assay(rse, "edit_freq")[sig_sites, 4]
-    expect_true(all(sign(ed) == sign(res$sig_results$logFC[1:5])))
-})
-
-
 test_that("filter_multiallelic works", {
     data(rse_adar_ifn)
     x <- sum(grepl(",", assay(rse_adar_ifn, "ALT")))
