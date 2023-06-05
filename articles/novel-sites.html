@@ -35,7 +35,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -88,7 +88,7 @@
                         <h4 data-toc-skip class="author">Kent
 Riemondy</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-05-31</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-06-05</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/novel-sites.Rmd" class="external-link"><code>vignettes/novel-sites.Rmd</code></a></small>
       <div class="d-none name"><code>novel-sites.Rmd</code></div>
@@ -127,13 +127,13 @@ alignments from the first 1MB of chromosome 4 and they are stored in a
 <span><span class="co">## [2] "/github/home/.cache/R/raer/SRR1258218_Aligned.sorted.dedup_sub.bam.bai"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $fasta</span></span>
-<span><span class="co">## [1] "/github/home/.cache/R/raer/1bb07c514fb2_hg38_chr4.fa.bgz"</span></span>
+<span><span class="co">## [1] "/github/home/.cache/R/raer/8353e16a2e3_hg38_chr4.fa.bgz"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $snps</span></span>
-<span><span class="co">## [1] "/github/home/.cache/R/raer/1bb0fa14b32_chr4snps.bed.gz"</span></span>
+<span><span class="co">## [1] "/github/home/.cache/R/raer/83536812e93_chr4snps.bed.gz"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $rmsk</span></span>
-<span><span class="co">## [1] "/github/home/.cache/R/raer/1bb06f60a20d_rmsk_hg38.tsv.gz"</span></span></code></pre>
+<span><span class="co">## [1] "/github/home/.cache/R/raer/8351753abec_rmsk_hg38.tsv.gz"</span></span></code></pre>
 <p>Additionally we will use the following additional annotation
 resources:</p>
 <ul>
@@ -228,76 +228,78 @@ frequencies for each sample.</p>
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_multiallelic.html">filter_multiallelic</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #00BBBB;">ℹ</span> `filter_multiallelic()`: removed <span style="color: #0000BB;">0</span> sites from <span style="color: #0000BB;">198</span> (<span style="color: #0000BB;">198</span> remain)</span></span></code></pre>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## DataFrame with 198 rows and 5 columns</span></span>
+<code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## <span style="color: #00BBBB;">ℹ</span> 48 sites had no coverage for calculating editing</span></span></code></pre>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## DataFrame with 150 rows and 5 columns</span></span>
 <span><span class="co">##                            REF      rpbz       vdb       sor         ALT</span></span>
 <span><span class="co">##                    &lt;character&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;character&gt;</span></span>
 <span><span class="co">## site_chr4_124820_1           C -0.939623       Inf  1.410919           A</span></span>
 <span><span class="co">## site_chr4_125213_1           G -1.584745       Inf  0.367725           C</span></span>
 <span><span class="co">## site_chr4_126885_1           A  0.826528       Inf  2.271553           G</span></span>
-<span><span class="co">## site_chr4_126885_2           T       Inf       Inf  2.271553           C</span></span>
 <span><span class="co">## site_chr4_126955_1           A  1.584745       Inf  1.506342           G</span></span>
+<span><span class="co">## site_chr4_134331_1           A -1.868257       0.1  0.367725           G</span></span>
 <span><span class="co">## ...                        ...       ...       ...       ...         ...</span></span>
+<span><span class="co">## site_chr4_894077_1           G  1.289956       Inf  1.524254           A</span></span>
+<span><span class="co">## site_chr4_952419_1           G -1.362512       Inf  0.550831           C</span></span>
 <span><span class="co">## site_chr4_958447_1           C  0.694986       Inf  1.436657           A</span></span>
-<span><span class="co">## site_chr4_989824_1           C  0.144841       Inf  0.582285           T</span></span>
 <span><span class="co">## site_chr4_990589_1           A -1.640049       Inf  1.570697           C</span></span>
-<span><span class="co">## site_chr4_990981_1           C -0.925820       Inf  0.891998           T</span></span>
 <span><span class="co">## site_chr4_993342_1           A  1.498680       Inf  1.472727           G</span></span></code></pre>
 <p>Next we’ll remove sites in simple repeat regions. We will add repeat
 information to the <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData()</a></code> using the
 <code><a href="../reference/annot_from_gr.html">annot_from_gr()</a></code> function.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/annot_from_gr.html">annot_from_gr</a></span><span class="op">(</span><span class="va">rse</span>, <span class="va">rmskhg38</span>, cols_to_map <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"repName"</span>, <span class="st">"repClass"</span>, <span class="st">"repFamily"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"repName"</span>, <span class="st">"repFamily"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
-<pre><code><span><span class="co">## DataFrame with 198 rows and 2 columns</span></span>
+<pre><code><span><span class="co">## DataFrame with 150 rows and 2 columns</span></span>
 <span><span class="co">##                        repName   repFamily</span></span>
 <span><span class="co">##                    &lt;character&gt; &lt;character&gt;</span></span>
 <span><span class="co">## site_chr4_124820_1          NA          NA</span></span>
 <span><span class="co">## site_chr4_125213_1      MER21C        ERVL</span></span>
 <span><span class="co">## site_chr4_126885_1          NA          NA</span></span>
-<span><span class="co">## site_chr4_126885_2      AluSc5         Alu</span></span>
 <span><span class="co">## site_chr4_126955_1          NA          NA</span></span>
+<span><span class="co">## site_chr4_134331_1          NA          NA</span></span>
 <span><span class="co">## ...                        ...         ...</span></span>
+<span><span class="co">## site_chr4_894077_1          NA          NA</span></span>
+<span><span class="co">## site_chr4_952419_1          NA          NA</span></span>
 <span><span class="co">## site_chr4_958447_1          NA          NA</span></span>
-<span><span class="co">## site_chr4_989824_1          NA          NA</span></span>
 <span><span class="co">## site_chr4_990589_1          NA          NA</span></span>
-<span><span class="co">## site_chr4_990981_1          NA          NA</span></span>
 <span><span class="co">## site_chr4_993342_1          NA          NA</span></span></code></pre>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="va">rse</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">repFamily</span> <span class="op"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Simple_repeat"</span>, <span class="st">"Low Complexity"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
 <p>Next we’ll remove sites adjacent to other sites with different
 variant types. For example if an A-&gt;G variant is located proximal to
 a C-&gt;T variant then the variants will be removed.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_clustered_variants.html">filter_clustered_variants</a></span><span class="op">(</span><span class="va">rse</span>, <span class="va">txdb</span>, variant_dist <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #00BBBB;">ℹ</span> `filter_clustered_variants()`: removed <span style="color: #0000BB;">47</span> sites from <span style="color: #0000BB;">197</span> (<span style="color: #0000BB;">150</span> remain)</span></span></code></pre>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_clustered_variants.html">filter_clustered_variants</a></span><span class="op">(</span><span class="va">rse</span>, <span class="va">txdb</span>, variant_dist <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## <span style="color: #00BBBB;">ℹ</span> `filter_clustered_variants()`: removed <span style="color: #0000BB;">22</span> sites from <span style="color: #0000BB;">149</span> (<span style="color: #0000BB;">127</span> remain)</span></span></code></pre>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: RangedSummarizedExperiment </span></span>
-<span><span class="co">## dim: 150 2 </span></span>
+<span><span class="co">## dim: 127 2 </span></span>
 <span><span class="co">## metadata(0):</span></span>
 <span><span class="co">## assays(9): ALT nRef ... depth edit_freq</span></span>
-<span><span class="co">## rownames(150): site_chr4_124820_1 site_chr4_125213_1 ...</span></span>
-<span><span class="co">##   site_chr4_990981_1 site_chr4_993342_1</span></span>
+<span><span class="co">## rownames(127): site_chr4_124820_1 site_chr4_125213_1 ...</span></span>
+<span><span class="co">##   site_chr4_990589_1 site_chr4_993342_1</span></span>
 <span><span class="co">## rowData names(8): REF rpbz ... repClass repFamily</span></span>
 <span><span class="co">## colnames(2): rna dna</span></span>
 <span><span class="co">## colData names(3): sample n_sites edit_idx</span></span></code></pre>
 <p>Next, sites within 4bp of known splicing events will be excluded.
 These sites are low-confidence due to the possibility of mis-alignments
 near splicing events.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_splice_variants.html">filter_splice_variants</a></span><span class="op">(</span><span class="va">rse</span>, <span class="va">txdb</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #00BBBB;">ℹ</span> `filter_splice_variants()`: removed <span style="color: #0000BB;">3</span> sites from <span style="color: #0000BB;">150</span> (<span style="color: #0000BB;">147</span> remain)</span></span></code></pre>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_splice_variants.html">filter_splice_variants</a></span><span class="op">(</span><span class="va">rse</span>, <span class="va">txdb</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## <span style="color: #00BBBB;">ℹ</span> `filter_splice_variants()`: removed <span style="color: #0000BB;">2</span> sites from <span style="color: #0000BB;">127</span> (<span style="color: #0000BB;">125</span> remain)</span></span></code></pre>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: RangedSummarizedExperiment </span></span>
-<span><span class="co">## dim: 147 2 </span></span>
+<span><span class="co">## dim: 125 2 </span></span>
 <span><span class="co">## metadata(0):</span></span>
 <span><span class="co">## assays(9): ALT nRef ... depth edit_freq</span></span>
-<span><span class="co">## rownames(147): site_chr4_124820_1 site_chr4_125213_1 ...</span></span>
-<span><span class="co">##   site_chr4_990981_1 site_chr4_993342_1</span></span>
+<span><span class="co">## rownames(125): site_chr4_124820_1 site_chr4_125213_1 ...</span></span>
+<span><span class="co">##   site_chr4_990589_1 site_chr4_993342_1</span></span>
 <span><span class="co">## rowData names(8): REF rpbz ... repClass repFamily</span></span>
 <span><span class="co">## colnames(2): rna dna</span></span>
 <span><span class="co">## colData names(3): sample n_sites edit_idx</span></span></code></pre>
@@ -306,31 +308,31 @@ SNPs. If using a SNPlocs package you can use the
 <code>annot_snp()</code> function. However we will use the
 <code><a href="../reference/annot_from_gr.html">annot_from_gr()</a></code> function to annotate using the prebuilt
 <code>chr4snps</code> object.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/annot_from_gr.html">annot_from_gr</a></span><span class="op">(</span><span class="va">rse</span>, <span class="va">chr4snps</span>, <span class="st">"name"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"name"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
-<pre><code><span><span class="co">## DataFrame with 147 rows and 1 column</span></span>
+<pre><code><span><span class="co">## DataFrame with 125 rows and 1 column</span></span>
 <span><span class="co">##                            name</span></span>
 <span><span class="co">##                     &lt;character&gt;</span></span>
 <span><span class="co">## site_chr4_124820_1 rs1553807640</span></span>
 <span><span class="co">## site_chr4_125213_1 rs1286128437</span></span>
 <span><span class="co">## site_chr4_126885_1           NA</span></span>
-<span><span class="co">## site_chr4_126885_2           NA</span></span>
 <span><span class="co">## site_chr4_126955_1           NA</span></span>
+<span><span class="co">## site_chr4_134331_1 rs1715464292</span></span>
 <span><span class="co">## ...                         ...</span></span>
+<span><span class="co">## site_chr4_894077_1           NA</span></span>
+<span><span class="co">## site_chr4_952419_1 rs1577433212</span></span>
 <span><span class="co">## site_chr4_958447_1 rs1052651854</span></span>
-<span><span class="co">## site_chr4_989824_1   rs73219719</span></span>
 <span><span class="co">## site_chr4_990589_1           NA</span></span>
-<span><span class="co">## site_chr4_990981_1  rs116514520</span></span>
 <span><span class="co">## site_chr4_993342_1           NA</span></span></code></pre>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="va">rse</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">name</span><span class="op">)</span>, <span class="op">]</span></span>
 <span><span class="va">rse</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: RangedSummarizedExperiment </span></span>
-<span><span class="co">## dim: 89 2 </span></span>
+<span><span class="co">## dim: 78 2 </span></span>
 <span><span class="co">## metadata(0):</span></span>
 <span><span class="co">## assays(9): ALT nRef ... depth edit_freq</span></span>
-<span><span class="co">## rownames(89): site_chr4_126885_1 site_chr4_126885_2 ...</span></span>
+<span><span class="co">## rownames(78): site_chr4_126885_1 site_chr4_126955_1 ...</span></span>
 <span><span class="co">##   site_chr4_990589_1 site_chr4_993342_1</span></span>
 <span><span class="co">## rowData names(9): REF rpbz ... repFamily name</span></span>
 <span><span class="co">## colnames(2): rna dna</span></span>
@@ -338,46 +340,49 @@ SNPs. If using a SNPlocs package you can use the
 <p>Lastly, we’ll further filter the edit sites to require that the
 editing frequency is &gt; 0.05 and that at least 2 reads support the
 editing site.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">to_keep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"edit_freq"</span><span class="op">)</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">&gt;</span> <span class="fl">0.05</span></span>
 <span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="va">rse</span><span class="op">[</span><span class="va">to_keep</span>, <span class="op">]</span></span>
 <span></span>
 <span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="va">rse</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"nAlt"</span><span class="op">)</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">&gt;=</span> <span class="fl">2</span><span class="op">]</span></span></code></pre></div>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">REF</span> <span class="op">==</span> <span class="st">"A"</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">ALT</span> <span class="op">==</span> <span class="st">"G"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">rowRanges</span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## GRanges object with 10 ranges and 9 metadata columns:</span></span>
+<pre><code><span><span class="co">## GRanges object with 12 ranges and 9 metadata columns:</span></span>
 <span><span class="co">##                      seqnames    ranges strand |         REF       rpbz</span></span>
 <span><span class="co">##                         &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;  &lt;numeric&gt;</span></span>
 <span><span class="co">##   site_chr4_134353_1     chr4    134353      + |           A -1.1811989</span></span>
+<span><span class="co">##   site_chr4_377951_1     chr4    377951      + |           A  0.3595421</span></span>
+<span><span class="co">##   site_chr4_378004_1     chr4    378004      + |           A -1.9668785</span></span>
 <span><span class="co">##   site_chr4_378011_1     chr4    378011      + |           A -0.0481455</span></span>
 <span><span class="co">##   site_chr4_378018_1     chr4    378018      + |           A -0.3099735</span></span>
-<span><span class="co">##   site_chr4_378090_1     chr4    378090      + |           A  0.0000000</span></span>
-<span><span class="co">##   site_chr4_378362_1     chr4    378362      + |           A  0.2155896</span></span>
-<span><span class="co">##   site_chr4_378368_1     chr4    378368      + |           A  1.0966509</span></span>
-<span><span class="co">##   site_chr4_378409_1     chr4    378409      + |           A  0.7311006</span></span>
-<span><span class="co">##   site_chr4_380392_1     chr4    380392      + |           A  0.3325434</span></span>
-<span><span class="co">##   site_chr4_778739_2     chr4    778739      - |           A  0.5773503</span></span>
-<span><span class="co">##   site_chr4_778780_2     chr4    778780      - |           A -0.8660254</span></span>
+<span><span class="co">##                  ...      ...       ...    ... .         ...        ...</span></span>
+<span><span class="co">##   site_chr4_378368_1     chr4    378368      + |           A   1.096651</span></span>
+<span><span class="co">##   site_chr4_378409_1     chr4    378409      + |           A   0.731101</span></span>
+<span><span class="co">##   site_chr4_380392_1     chr4    380392      + |           A   0.332543</span></span>
+<span><span class="co">##   site_chr4_778739_2     chr4    778739      - |           A   0.577350</span></span>
+<span><span class="co">##   site_chr4_778780_2     chr4    778780      - |           A  -0.866025</span></span>
 <span><span class="co">##                            vdb       sor         ALT     repName</span></span>
 <span><span class="co">##                      &lt;numeric&gt; &lt;numeric&gt; &lt;character&gt; &lt;character&gt;</span></span>
-<span><span class="co">##   site_chr4_134353_1  0.100000 0.5273549           G        &lt;NA&gt;</span></span>
-<span><span class="co">##   site_chr4_378011_1  0.840000 0.5508310           G       AluSc</span></span>
-<span><span class="co">##   site_chr4_378018_1  0.535497 1.0706105           G       AluSc</span></span>
-<span><span class="co">##   site_chr4_378090_1  0.700000 0.3231611           G       AluSc</span></span>
-<span><span class="co">##   site_chr4_378362_1  0.180000 0.0392207           G        &lt;NA&gt;</span></span>
-<span><span class="co">##   site_chr4_378368_1  0.180000 0.2689899           G        &lt;NA&gt;</span></span>
-<span><span class="co">##   site_chr4_378409_1  0.580000 0.8919980           G        &lt;NA&gt;</span></span>
-<span><span class="co">##   site_chr4_380392_1  0.520000 0.4245653           G      AluSq2</span></span>
-<span><span class="co">##   site_chr4_778739_2  0.230191 0.6685414           G       AluSg</span></span>
-<span><span class="co">##   site_chr4_778780_2  0.303109 1.8855955           G       AluSg</span></span>
+<span><span class="co">##   site_chr4_134353_1  0.100000  0.527355           G        &lt;NA&gt;</span></span>
+<span><span class="co">##   site_chr4_377951_1  0.580000  2.285077           G       AluSc</span></span>
+<span><span class="co">##   site_chr4_378004_1  0.060000  0.464813           G       AluSc</span></span>
+<span><span class="co">##   site_chr4_378011_1  0.840000  0.550831           G       AluSc</span></span>
+<span><span class="co">##   site_chr4_378018_1  0.535497  1.070610           G       AluSc</span></span>
+<span><span class="co">##                  ...       ...       ...         ...         ...</span></span>
+<span><span class="co">##   site_chr4_378368_1  0.180000  0.268990           G        &lt;NA&gt;</span></span>
+<span><span class="co">##   site_chr4_378409_1  0.580000  0.891998           G        &lt;NA&gt;</span></span>
+<span><span class="co">##   site_chr4_380392_1  0.520000  0.424565           G      AluSq2</span></span>
+<span><span class="co">##   site_chr4_778739_2  0.230191  0.668541           G       AluSg</span></span>
+<span><span class="co">##   site_chr4_778780_2  0.303109  1.885595           G       AluSg</span></span>
 <span><span class="co">##                         repClass   repFamily        name</span></span>
 <span><span class="co">##                      &lt;character&gt; &lt;character&gt; &lt;character&gt;</span></span>
 <span><span class="co">##   site_chr4_134353_1        &lt;NA&gt;        &lt;NA&gt;        &lt;NA&gt;</span></span>
+<span><span class="co">##   site_chr4_377951_1        SINE         Alu        &lt;NA&gt;</span></span>
+<span><span class="co">##   site_chr4_378004_1        SINE         Alu        &lt;NA&gt;</span></span>
 <span><span class="co">##   site_chr4_378011_1        SINE         Alu        &lt;NA&gt;</span></span>
 <span><span class="co">##   site_chr4_378018_1        SINE         Alu        &lt;NA&gt;</span></span>
-<span><span class="co">##   site_chr4_378090_1        SINE         Alu        &lt;NA&gt;</span></span>
-<span><span class="co">##   site_chr4_378362_1        &lt;NA&gt;        &lt;NA&gt;        &lt;NA&gt;</span></span>
+<span><span class="co">##                  ...         ...         ...         ...</span></span>
 <span><span class="co">##   site_chr4_378368_1        &lt;NA&gt;        &lt;NA&gt;        &lt;NA&gt;</span></span>
 <span><span class="co">##   site_chr4_378409_1        &lt;NA&gt;        &lt;NA&gt;        &lt;NA&gt;</span></span>
 <span><span class="co">##   site_chr4_380392_1        SINE         Alu        &lt;NA&gt;</span></span>
@@ -387,7 +392,7 @@ editing site.</p>
 <span><span class="co">##   seqinfo: 194 sequences from an unspecified genome</span></span></code></pre>
 <details style="margin-bottom:10px;"><summary>
 Session info
-</summary><div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+</summary><div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.3.0 (2023-04-21)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu (64-bit)</span></span>
@@ -417,7 +422,7 @@ Session info
 <span><span class="co">##  [2] rtracklayer_1.60.0                      </span></span>
 <span><span class="co">##  [3] SummarizedExperiment_1.30.1             </span></span>
 <span><span class="co">##  [4] MatrixGenerics_1.12.0                   </span></span>
-<span><span class="co">##  [5] matrixStats_0.63.0                      </span></span>
+<span><span class="co">##  [5] matrixStats_1.0.0                       </span></span>
 <span><span class="co">##  [6] GenomicFeatures_1.52.0                  </span></span>
 <span><span class="co">##  [7] AnnotationDbi_1.62.1                    </span></span>
 <span><span class="co">##  [8] Biobase_2.60.0                          </span></span>
@@ -426,7 +431,7 @@ Session info
 <span><span class="co">## [11] IRanges_2.34.0                          </span></span>
 <span><span class="co">## [12] S4Vectors_0.38.1                        </span></span>
 <span><span class="co">## [13] BiocGenerics_0.46.0                     </span></span>
-<span><span class="co">## [14] raer_0.99.0                             </span></span>
+<span><span class="co">## [14] raer_0.99.1                             </span></span>
 <span><span class="co">## [15] BiocStyle_2.28.0                        </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
@@ -451,7 +456,7 @@ Session info
 <span><span class="co">## [37] R.oo_1.25.0                 desc_1.4.2                 </span></span>
 <span><span class="co">## [39] grid_4.3.0                  fansi_1.0.4                </span></span>
 <span><span class="co">## [41] biomaRt_2.56.0              cli_3.6.1                  </span></span>
-<span><span class="co">## [43] rmarkdown_2.21              crayon_1.5.2               </span></span>
+<span><span class="co">## [43] rmarkdown_2.22              crayon_1.5.2               </span></span>
 <span><span class="co">## [45] ragg_1.2.5                  generics_0.1.3             </span></span>
 <span><span class="co">## [47] httr_1.4.6                  rjson_0.2.21               </span></span>
 <span><span class="co">## [49] DBI_1.1.3                   cachem_1.0.8               </span></span>
