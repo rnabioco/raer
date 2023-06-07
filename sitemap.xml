@@ -67,6 +67,9 @@
     <loc>https://rnabioco.github.io/raer/reference/filter_splice_variants.html</loc>
   </url>
   <url>
+    <loc>https://rnabioco.github.io/raer/reference/find_de_sites.html</loc>
+  </url>
+  <url>
     <loc>https://rnabioco.github.io/raer/reference/find_mispriming_sites.html</loc>
   </url>
   <url>
@@ -79,16 +82,13 @@
     <loc>https://rnabioco.github.io/raer/reference/index.html</loc>
   </url>
   <url>
-    <loc>https://rnabioco.github.io/raer/reference/perform_de.html</loc>
+    <loc>https://rnabioco.github.io/raer/reference/make_de_object.html</loc>
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/pileup_cells.html</loc>
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/pileup_sites.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/prep_for_de.html</loc>
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/raer.html</loc>

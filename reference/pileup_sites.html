@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,12 +103,14 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>bamfiles</dt>
 <dd><p>character vector of paths to 1 or more bam files. If named,
-the names will be included in the colData of the <a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html" class="external-link">RangedSummarizedExperiment</a>, otherwise
-the <a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a> will be populated with the basename of the bamfile.</p></dd>
+the names will be included in the <a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a> of the <a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html" class="external-link">RangedSummarizedExperiment</a>
+as a <code>sample</code> column, otherwise the names will be taken from the basename of
+the bamfile.</p></dd>
 
 
 <dt>fafile</dt>
-<dd><p>path to fasta file</p></dd>
+<dd><p>path to genome fasta file used for read alignment. Can be in
+gzip or bgzip format.</p></dd>
 
 
 <dt>sites</dt>
@@ -116,7 +118,7 @@ the <a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-c
 
 
 <dt>region</dt>
-<dd><p>samtools region query string (i.e. chr1:100-1000). Can be combined
+<dd><p>samtools region query string (i.e. <code>chr1:100-1000</code>). Can be combined
 with sites, in which case sites will be filtered to keep only sites within the
 region.</p></dd>
 
@@ -131,8 +133,9 @@ filters to apply to reads and sites during pileup.</p></dd>
 
 
 <dt>outfile_prefix</dt>
-<dd><p>Output prefix for tabix indexed files. If <code>NULL</code>, no
-files will be produced.</p></dd>
+<dd><p>If supplied, pileup data will be written to tabix indexed
+files with  the specified prefix. If <code>NULL</code>, no files will be produced and data
+will be stored in memory.</p></dd>
 
 
 <dt>return_data</dt>
@@ -143,7 +146,7 @@ if <code>FALSE</code> a character vector of tabix-index files, specified by
 
 <dt>BPPARAM</dt>
 <dd><p>A BiocParallel class to control parallel execution. Parallel
-processing occurs per chromosome, so is disabled when run on a single
+processing occurs per chromosome and is disabled when run on a single
 region.</p></dd>
 
 
@@ -169,15 +172,16 @@ reads with the same UMI sequence will only be counted once per position.</p></dd
 
 
 <dt>min_mapq</dt>
-<dd><p>minimum required MAPQ score, can be a vector of values
-for each bam file</p></dd>
+<dd><p>minimum required MAPQ score. Values for each input BAM file
+can be provided as a vector.</p></dd>
 
 
 <dt>library_type</dt>
 <dd><p>read orientation, one of <code>fr-first-strand</code>,
-<code>fr-second-strand</code>, <code>unstranded</code>, and <code>genomic-unstranded</code>. Can supply as a vector to specify for each
-input bam. Unstranded library type will be reported based on read alignment.
-genomic-unstranded will report all variants w.r.t the + strand.</p></dd>
+<code>fr-second-strand</code>, <code>unstranded</code>, and <code>genomic-unstranded</code>. Unstranded library
+type will be reported based on read alignment. genomic-unstranded will report
+all variants w.r.t the + strand. Values for each
+input BAM file can be provided as a vector.</p></dd>
 
 
 <dt>bam_flags</dt>
@@ -187,7 +191,7 @@ to generate.</p></dd>
 
 <dt>only_keep_variants</dt>
 <dd><p>if TRUE, then only variant sites will be reported
-(FALSE by default), can be a vector for each input bamfile</p></dd>
+(FALSE by default). Values for each input BAM file can be provided as a vector.</p></dd>
 
 
 <dt>trim_5p</dt>
@@ -218,7 +222,7 @@ distance from splicing event in the read</p></dd>
 
 <dt>min_splice_overhang</dt>
 <dd><p>Exclude read if site is located adjacent to splice
-site with an overhang of less than given length.</p></dd>
+site with an overhang less than given length.</p></dd>
 
 
 <dt>homopolymer_len</dt>
@@ -246,7 +250,7 @@ then the site will be reported.</p></dd>
 
 <dt>min_allelic_freq</dt>
 <dd><p>minimum allelic frequency required for a variant to be
-reported in ALT assays.</p></dd>
+reported in ALT assay.</p></dd>
 
 
 <dt>report_multiallelic</dt>
@@ -282,13 +286,6 @@ as 1 = +, 2 = -, and 3 = *.</p>
 <p>If <code>return_data</code> is <code>FALSE</code> then a character vector of paths to the
 pileup files will be returned. These files can be imported using
 <code><a href="read_pileup.html">read_pileup()</a></code>.</p>
-    </div>
-    <div class="section level2">
-    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Multiple bam files can be processed together, with files being
-written for each bam file. In this mode the output regions will be
-consistent across all files. The min_mapq, only_keep_variants, and
-library_type parameters can be specified for each input files.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
