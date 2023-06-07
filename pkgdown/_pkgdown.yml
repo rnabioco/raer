@@ -24,8 +24,8 @@ reference:
   - '`get_splice_sites`'
 - title: Bulk editing analysis
   contents:
-  - '`perform_de`'
-  - '`prep_for_de`'
+  - '`find_de_sites`'
+  - '`make_de_object`'
 - title: Data
   contents:
   - has_concept('external-data')
