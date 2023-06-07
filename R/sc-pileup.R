@@ -3,10 +3,10 @@
 #' @description This function performs a pileup operation at specified
 #'   sites, returning counts for Reference (e.g. unedited) or Alternate (e.g.
 #'   edited) bases. `pileup_cells` can process either a 10x Genomic's style
-#'   library, from a aligned bam file containing a tag with a cell-barcode and a
+#'   library, from a aligned BAM file containing a tag with a cell-barcode and a
 #'   tag with a UMI, or smart-seq style libraries without cell-barcodes.
 #'
-#'   The `sites` parameter specifies sites to pileup. This must be a GRanges
+#'   The `sites` parameter specifies sites to pileup. This must be a [GRanges]
 #'   object with 1 base intervals, a strand (+ or -), and supplemented with
 #'   metadata columns named `REF` and `ALT` containing the reference and
 #'   alternate base to query. See examples for an example format.
@@ -15,23 +15,25 @@
 #'   each ref and alt base enumerated for each cell-barcode present. A single
 #'   base will be counted once for each UMI sequence present in each cell.
 #'
-#' @param bamfile a BAM file name (for 10x libraries), or a vector of bam file
-#' names (smart-seq2)
+#' @param bamfile a path to a BAM file (for 10x libraries), or a vector of paths
+#' to BAM files (smart-seq2)
 #' @param sites a GRanges object containing sites to process. See examples for
 #'   valid formatting.
-#' @param output_directory Output directory for output files. Will be generated
-#'   if it doesn't exist.
-#' @param chroms A character vector of chromosomes to process, if supplied, only
+#' @param output_directory Output directory for output matrix files. The directory
+#' will be generated if it doesn't exist.
+#' @param chroms A character vector of chromosomes to process. If supplied, only
 #'   sites present in the listed chromosomes will be processed
-#' @param cell_barcodes A character vector of single cell barcodes to process.
+#' @param cell_barcodes A character vector of single cell barcodes to process. If
+#' processing multiple BAM files (e.g. smart-seq-2), provide a character vector
+#' of unique identifiers for each input BAM, to name each BAM file in the output files.
 #' @param param object of class [FilterParam()] which specify various filters to
 #'   apply to reads and sites during pileup. Note that the `min_variant_reads`
 #'   parameter, if set > 0, specifies the number of variant reads at a site
 #'   required in order to report a site. E.g. if set to 2, then at least 2 reads
 #'   (from any cell) must have a variant in order to report the site. The
 #'   default of 0 reports all sites present in the `sites` object.
-#' @param umi_tag tag in bam containing the UMI sequence
-#' @param cb_tag tag in bam containing the cell-barcode sequence
+#' @param umi_tag tag in BAM containing the UMI sequence
+#' @param cb_tag tag in BAM containing the cell-barcode sequence
 #' @param paired_end set to TRUE if data is paired-end to prevent double counting
 #' overlapping read pairs.
 #' @param return_sce if `TRUE`, data is returned as a SingleCellExperiment, if

@@ -1,16 +1,13 @@
 #' Generate base counts using pileup
 #'
-#' @details Multiple bam files can be processed together, with files being
-#'   written for each bam file. In this mode the output regions will be
-#'   consistent across all files. The min_mapq, only_keep_variants, and
-#'   library_type parameters can be specified for each input files.
-#'
 #' @param bamfiles character vector of paths to 1 or more bam files. If named,
-#' the names will be included in the colData of the [RangedSummarizedExperiment], otherwise
-#' the [colData] will be populated with the basename of the bamfile.
-#' @param fafile path to fasta file
+#' the names will be included in the [colData] of the [RangedSummarizedExperiment]
+#' as a `sample` column, otherwise the names will be taken from the basename of
+#' the bamfile.
+#' @param fafile path to genome fasta file used for read alignment. Can be in
+#' gzip or bgzip format.
 #' @param sites a [GRanges] object containing regions or sites to process.
-#' @param region samtools region query string (i.e. chr1:100-1000). Can be combined
+#' @param region samtools region query string (i.e. `chr1:100-1000`). Can be combined
 #' with sites, in which case sites will be filtered to keep only sites within the
 #' region.
 #' @param chroms chromosomes to process, not to be used with region.
@@ -21,10 +18,11 @@
 #' @param return_data if `TRUE`, data is returned as a RangedSummarizedExperiment,
 #'   if `FALSE` a character vector of tabix-index files, specified by
 #'   `outfile_prefix`, will be returned.
-#' @param outfile_prefix Output prefix for tabix indexed files. If `NULL`, no
-#'   files will be produced.
+#' @param outfile_prefix If supplied, pileup data will be written to tabix indexed
+#' files with  the specified prefix. If `NULL`, no files will be produced and data
+#' will be stored in memory.
 #' @param BPPARAM A [BiocParallel] class to control parallel execution. Parallel
-#'   processing occurs per chromosome, so is disabled when run on a single
+#'   processing occurs per chromosome and is disabled when run on a single
 #'   region.
 #' @param verbose if TRUE, then report progress and warnings.
 #'
@@ -662,14 +660,15 @@ setMethod(show, "FilterParam", function(object) {
 #' @param min_depth min read depth needed to report site
 #' @param max_depth maximum read depth considered at each site
 #' @param min_base_quality min base quality score to consider read for pileup
-#' @param min_mapq minimum required MAPQ score, can be a vector of values
-#' for each bam file
+#' @param min_mapq minimum required MAPQ score. Values for each input BAM file
+#' can be provided as a vector.
 #' @param library_type read orientation, one of `fr-first-strand`,
-#' `fr-second-strand`, `unstranded`, and `genomic-unstranded`. Can supply as a vector to specify for each
-#' input bam. Unstranded library type will be reported based on read alignment.
-#' genomic-unstranded will report all variants w.r.t the + strand.
+#' `fr-second-strand`, `unstranded`, and `genomic-unstranded`. Unstranded library
+#' type will be reported based on read alignment. genomic-unstranded will report
+#' all variants w.r.t the + strand. Values for each
+#' input BAM file can be provided as a vector.
 #' @param only_keep_variants if TRUE, then only variant sites will be reported
-#' (FALSE by default), can be a vector for each input bamfile
+#' (FALSE by default). Values for each input BAM file can be provided as a vector.
 #' @param bam_flags bam flags to filter or keep, use [Rsamtools::scanBamFlag()]
 #'   to generate.
 #' @param trim_5p Bases to trim from 5' end of read alignments
@@ -679,7 +678,7 @@ setMethod(show, "FilterParam", function(object) {
 #' @param splice_dist Exclude read if site occurs within given
 #' distance from splicing event in the read
 #' @param min_splice_overhang Exclude read if site is located adjacent to splice
-#' site with an overhang of less than given length.
+#' site with an overhang less than given length.
 #' @param indel_dist Exclude read if site occurs within given
 #' distance from indel event in the read
 #' @param homopolymer_len Exclude site if occurs within homopolymer of given
@@ -694,7 +693,7 @@ setMethod(show, "FilterParam", function(object) {
 #' to be reported. Calculated per bam file, such that if 1 bam file has >= min_variant_reads,
 #' then the site will be reported.
 #' @param min_allelic_freq minimum allelic frequency required for a variant to be
-#' reported in ALT assays.
+#' reported in ALT assay.
 #' @param report_multiallelic if TRUE, report sites with multiple variants passing
 #' filters. If FALSE, site will not be reported.
 #'

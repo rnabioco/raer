@@ -148,7 +148,7 @@ count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
     se
 }
 
-#' Make summarized experiment object for DE
+#' Make summarized experiment object for differential editing analysis
 #'
 #' @description Generates a [RangedSummarizedExperiment] object for use with
 #' `edgeR` or `DESeq2` . Will generate a `counts` assay with
@@ -179,11 +179,11 @@ count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
 #' library(SummarizedExperiment)
 #' data(rse_adar_ifn)
 #' rse <- calc_edit_frequency(rse_adar_ifn)
-#' dse <- prep_for_de(rse, min_samples = 1)
+#' dse <- make_de_object(rse, min_samples = 1)
 #' assay(dse, "counts")[1:5, ]
 #' dse
 #' @export
-prep_for_de <- function(rse,
+make_de_object <- function(rse,
     edit_from = "A",
     edit_to = "G",
     min_prop = 0.0,
@@ -241,7 +241,7 @@ prep_for_de <- function(rse,
 #'   treatment.
 #'
 #' @param deobj A [RangedSummarizedExperiment] object prepared for differential
-#' editing analysis by [prep_for_de()]
+#' editing analysis by [make_de_object()]
 #' @param test Indicate if `edgeR` or `DESeq2` should be run.
 #' @param sample_col The name of the column from `colData(deobj)` that
 #'   contains your sample information. Default is sample. If you do not have a
@@ -270,8 +270,8 @@ prep_for_de <- function(rse,
 #' rse$condition <- substr(rse$sample, 1, 2)
 #'
 #' rse <- calc_edit_frequency(rse)
-#' dse <- prep_for_de(rse)
-#' res <- perform_de(dse, condition_control = "WT", condition_treatment = "KO")
+#' dse <- make_de_object(rse)
+#' res <- find_de_sites(dse, condition_control = "WT", condition_treatment = "KO")
 #' res$sig_results[1:5, ]
 #'
 #' @returns A named list:
@@ -282,7 +282,7 @@ prep_for_de <- function(rse,
 #'
 #' @importFrom stats model.matrix
 #' @export
-perform_de <- function(deobj,
+find_de_sites <- function(deobj,
                        test = c("edgeR", "DESeq2"),
                        sample_col = "sample",
                        condition_col = "condition",
@@ -393,13 +393,13 @@ perform_de <- function(deobj,
 #   complex designs, we suggest you perform your own. It will test if your
 #   sample column makes the model matrix not full rank. If that happens, the
 #   model matrix will be modified to be full rank. This is not intended to be
-#   called directly by the user, instead, this should be called by `perform_de`
+#   called directly by the user, instead, this should be called by `find_de_sites`
 #
 #   At the moment, this function will only find editing events specific to the
 #   treatment, but it will be pretty straight forward to add other possible
 #   return values.
 #
-# @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
+# @param deobj A SummarizedExperiment object prepared for de by `make_de_object`
 # @param condition_control The name of the control condition. This must be a
 #   variable in your condition_col of colData(deobj). No default provided.
 # @param condition_treatment The name of the treatment condition. This must be
@@ -488,13 +488,13 @@ run_deseq2 <- function(deobj, condition_control = NULL,
 # sample column makes the
 # model matrix not full rank. If that happens, the model matrix will be
 # modified to be full rank. This is not intended to be called directly by the
-# user, instead, this should be called by `perform_de`
+# user, instead, this should be called by `calc_differential_editing`
 #
 # At the moment, this function will only find editing events specific to the
 # treatment, but it will be pretty straight forward to add other possible
 # return values.
 #
-# @param deobj A SummarizedExperiment object prepared for de by `prep_for_de`
+# @param deobj A SummarizedExperiment object prepared for de by `make_de_object`
 # @param condition_control The name of the control condition. This must be a
 #   variable in your condition_col of colData(deobj). No default provided.
 # @param condition_treatment The name of the treatment condition. This must be

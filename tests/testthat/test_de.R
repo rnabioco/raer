@@ -27,17 +27,17 @@ test_that("calc_edit_frequency works", {
                                        edit_to = "garbage-out"))
 })
 
-test_that("prep_for_de works", {
+test_that("make_de_object works", {
     data(rse_adar_ifn)
     expect_message(rse <- calc_edit_frequency(rse_adar_ifn))
-    dse <- prep_for_de(rse, min_samples = 1)
+    dse <- make_de_object(rse, min_samples = 1)
     expect_true("counts" %in% assayNames(dse))
     expect_equal(type(assay(dse)), "integer")
     expect_equal(2 * ncol(rse), ncol(dse))
     expect_equal(setdiff(c("ref", "alt"), dse$count), character(0))
 })
 
-test_that("perform_de works", {
+test_that("find_de_sites works", {
     bams <- rep(c(bamfn, bam2fn), each = 3)
     sample_ids <- paste0(rep(c("KO", "WT"), each = 3), 1:3)
     names(bams) <- sample_ids
@@ -47,8 +47,8 @@ test_that("perform_de works", {
     rse$condition <- substr(rse$sample, 1, 2)
 
     expect_message(rse <- calc_edit_frequency(rse))
-    dse <- prep_for_de(rse)
-    res <- perform_de(dse, condition_control = "WT", condition_treatment = "KO")
+    dse <- make_de_object(rse)
+    res <- find_de_sites(dse, condition_control = "WT", condition_treatment = "KO")
     sig_sites <- rownames(res$sig_results)
     ed <- assay(rse, "edit_freq")[sig_sites, 1] - assay(rse, "edit_freq")[sig_sites, 4]
     expect_true(all(sign(ed) == sign(res$sig_results$logFC)))

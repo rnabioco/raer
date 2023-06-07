@@ -149,14 +149,14 @@ se_filtered
 Once the object has been filtered, you can prepare it for DE. This means making a new object that contains an assay with read counts if both the alt and ref alleles in a single matrix.
 
 ```{r}
-deobj <- prep_for_de(se_filtered, min_prop = 0.05, min_samples = 3)
+deobj <- make_de_object(se_filtered, min_prop = 0.05, min_samples = 3)
 
 assay(deobj, "counts")[1:3, 1:6]
 ```
 
 ## Run differential editing (DESeq2)
 
-At this stage, you can use the object to perform DE yourself or you can continue with our functions. For differential editing, we use the design `design <- ~0 + condition:sample + condition:count` and perform testing to compare the edited read counts against unedited read counts. 
+At this stage, you can use the object to perform DE yourself or use `find_de_sites()` to use `edgeR` or `DESeq2` to identify condition specific editing events. For differential editing, we use the design `design <- ~0 + condition:sample + condition:count` and perform testing to compare the edited read counts against unedited read counts. 
 
 ```{r}
 colData(deobj)
@@ -164,7 +164,7 @@ colData(deobj)
 
 ```{r}
 deobj$sample <- factor(deobj$sample)
-de_results <- perform_de(deobj, 
+de_results <- find_de_sites(deobj, 
     test = "DESeq2",
     sample_col = "sample",
     condition_col = "genotype",

@@ -20,23 +20,25 @@ pileup_cells(
 )
 }
 \arguments{
-\item{bamfile}{a BAM file name (for 10x libraries), or a vector of bam file
-names (smart-seq2)}
+\item{bamfile}{a path to a BAM file (for 10x libraries), or a vector of paths
+to BAM files (smart-seq2)}
 
 \item{sites}{a GRanges object containing sites to process. See examples for
 valid formatting.}
 
-\item{cell_barcodes}{A character vector of single cell barcodes to process.}
+\item{cell_barcodes}{A character vector of single cell barcodes to process. If
+processing multiple BAM files (e.g. smart-seq-2), provide a character vector
+of unique identifiers for each input BAM, to name each BAM file in the output files.}
 
-\item{output_directory}{Output directory for output files. Will be generated
-if it doesn't exist.}
+\item{output_directory}{Output directory for output matrix files. The directory
+will be generated if it doesn't exist.}
 
-\item{chroms}{A character vector of chromosomes to process, if supplied, only
+\item{chroms}{A character vector of chromosomes to process. If supplied, only
 sites present in the listed chromosomes will be processed}
 
-\item{umi_tag}{tag in bam containing the UMI sequence}
+\item{umi_tag}{tag in BAM containing the UMI sequence}
 
-\item{cb_tag}{tag in bam containing the cell-barcode sequence}
+\item{cb_tag}{tag in BAM containing the cell-barcode sequence}
 
 \item{paired_end}{set to TRUE if data is paired-end to prevent double counting
 overlapping read pairs.}
@@ -75,10 +77,10 @@ will be returned. These files can be imported using \code{\link[=read_sparray]{r
 This function performs a pileup operation at specified
 sites, returning counts for Reference (e.g. unedited) or Alternate (e.g.
 edited) bases. \code{pileup_cells} can process either a 10x Genomic's style
-library, from a aligned bam file containing a tag with a cell-barcode and a
+library, from a aligned BAM file containing a tag with a cell-barcode and a
 tag with a UMI, or smart-seq style libraries without cell-barcodes.
 
-The \code{sites} parameter specifies sites to pileup. This must be a GRanges
+The \code{sites} parameter specifies sites to pileup. This must be a \link{GRanges}
 object with 1 base intervals, a strand (+ or -), and supplemented with
 metadata columns named \code{REF} and \code{ALT} containing the reference and
 alternate base to query. See examples for an example format.

@@ -44,14 +44,16 @@ FilterParam(
 }
 \arguments{
 \item{bamfiles}{character vector of paths to 1 or more bam files. If named,
-the names will be included in the colData of the \link{RangedSummarizedExperiment}, otherwise
-the \link{colData} will be populated with the basename of the bamfile.}
+the names will be included in the \link{colData} of the \link{RangedSummarizedExperiment}
+as a \code{sample} column, otherwise the names will be taken from the basename of
+the bamfile.}
 
-\item{fafile}{path to fasta file}
+\item{fafile}{path to genome fasta file used for read alignment. Can be in
+gzip or bgzip format.}
 
 \item{sites}{a \link{GRanges} object containing regions or sites to process.}
 
-\item{region}{samtools region query string (i.e. chr1:100-1000). Can be combined
+\item{region}{samtools region query string (i.e. \code{chr1:100-1000}). Can be combined
 with sites, in which case sites will be filtered to keep only sites within the
 region.}
 
@@ -60,15 +62,16 @@ region.}
 \item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
 filters to apply to reads and sites during pileup.}
 
-\item{outfile_prefix}{Output prefix for tabix indexed files. If \code{NULL}, no
-files will be produced.}
+\item{outfile_prefix}{If supplied, pileup data will be written to tabix indexed
+files with  the specified prefix. If \code{NULL}, no files will be produced and data
+will be stored in memory.}
 
 \item{return_data}{if \code{TRUE}, data is returned as a RangedSummarizedExperiment,
 if \code{FALSE} a character vector of tabix-index files, specified by
 \code{outfile_prefix}, will be returned.}
 
 \item{BPPARAM}{A \link{BiocParallel} class to control parallel execution. Parallel
-processing occurs per chromosome, so is disabled when run on a single
+processing occurs per chromosome and is disabled when run on a single
 region.}
 
 \item{umi_tag}{The bam tag containing a UMI sequence. If supplied, multiple
@@ -82,19 +85,20 @@ reads with the same UMI sequence will only be counted once per position.}
 
 \item{min_base_quality}{min base quality score to consider read for pileup}
 
-\item{min_mapq}{minimum required MAPQ score, can be a vector of values
-for each bam file}
+\item{min_mapq}{minimum required MAPQ score. Values for each input BAM file
+can be provided as a vector.}
 
 \item{library_type}{read orientation, one of \code{fr-first-strand},
-\code{fr-second-strand}, \code{unstranded}, and \code{genomic-unstranded}. Can supply as a vector to specify for each
-input bam. Unstranded library type will be reported based on read alignment.
-genomic-unstranded will report all variants w.r.t the + strand.}
+\code{fr-second-strand}, \code{unstranded}, and \code{genomic-unstranded}. Unstranded library
+type will be reported based on read alignment. genomic-unstranded will report
+all variants w.r.t the + strand. Values for each
+input BAM file can be provided as a vector.}
 
 \item{bam_flags}{bam flags to filter or keep, use \code{\link[Rsamtools:ScanBamParam-class]{Rsamtools::scanBamFlag()}}
 to generate.}
 
 \item{only_keep_variants}{if TRUE, then only variant sites will be reported
-(FALSE by default), can be a vector for each input bamfile}
+(FALSE by default). Values for each input BAM file can be provided as a vector.}
 
 \item{trim_5p}{Bases to trim from 5' end of read alignments}
 
@@ -111,7 +115,7 @@ distance from indel event in the read}
 distance from splicing event in the read}
 
 \item{min_splice_overhang}{Exclude read if site is located adjacent to splice
-site with an overhang of less than given length.}
+site with an overhang less than given length.}
 
 \item{homopolymer_len}{Exclude site if occurs within homopolymer of given
 length}
@@ -129,7 +133,7 @@ to be reported. Calculated per bam file, such that if 1 bam file has >= min_vari
 then the site will be reported.}
 
 \item{min_allelic_freq}{minimum allelic frequency required for a variant to be
-reported in ALT assays.}
+reported in ALT assay.}
 
 \item{report_multiallelic}{if TRUE, report sites with multiple variants passing
 filters. If FALSE, site will not be reported.}
@@ -169,12 +173,6 @@ pileup files will be returned. These files can be imported using
 }
 \description{
 Generate base counts using pileup
-}
-\details{
-Multiple bam files can be processed together, with files being
-written for each bam file. In this mode the output regions will be
-consistent across all files. The min_mapq, only_keep_variants, and
-library_type parameters can be specified for each input files.
 }
 \examples{
 library(SummarizedExperiment)

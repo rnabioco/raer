@@ -1,3 +1,7 @@
+# raer 0.99.2
+
+* rename `prep_for_de()` and `perform_de()` to `make_de_object()` and `find_de_sites()`. 
+
 # raer 0.99.1 
 
 * default values for `edit_from` and `edit_to` for `calc_edit_frequency()` have
