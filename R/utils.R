@@ -74,7 +74,7 @@ unlist_w_names <- function(x) {
 #'
 #' @importFrom Rsamtools ScanBamParam BamFile
 #' @importFrom GenomicAlignments readGAlignments
-#' @importFrom GenomicRanges reduce
+#' @importFrom GenomicRanges reduce resize trim
 #' @importFrom IRanges grouplengths
 #' @importFrom S4Vectors aggregate
 #' @examples
@@ -86,6 +86,11 @@ unlist_w_names <- function(x) {
 find_mispriming_sites <- function(bamfile, fafile, pos_5p = 5, pos_3p = 20,
                                   min_reads = 2, tag = "pa", tag_values = 3:300,
                                   n_reads_per_chunk = 1e6, verbose = TRUE){
+
+    if(pos_5p < 0 || pos_3p < 0) {
+        cli::cli_abort("pos_5p and pos_3p must be positive integers")
+    }
+
     tg_lst <- list(tag_values)
     names(tg_lst) <- tag
     sbp <- Rsamtools::ScanBamParam(tagFilter = tg_lst,tag = tag)
@@ -121,8 +126,10 @@ find_mispriming_sites <- function(bamfile, fafile, pos_5p = 5, pos_3p = 20,
     if(length(ans) == 0) {
         return(empty_mispriming_record())
     }
-    ans <- resize(ans, pos_3p + width(ans))
-    ans <- resize(ans, pos_5p + width(ans), fix = "end")
+
+    ans <- GenomicRanges::resize(ans, pos_3p + width(ans))
+    ans <- GenomicRanges::resize(ans, pos_5p + width(ans), fix = "end")
+    ans <- GenomicRanges::trim(ans)
 
     res <- GenomicRanges::reduce(ans, with.revmap = TRUE)
     mcols(res) <- S4Vectors::aggregate(ans, mcols(res)$revmap,
