@@ -14,7 +14,6 @@
 #' download_GSE99249()
 #' }
 #'
-#' @importFrom utils relist
 #' @export
 download_GSE99249 <- function(verbose = TRUE) {
     baseURL <- "https://raer-test-data.s3.us-west-2.amazonaws.com/GSE99249/"
@@ -37,7 +36,7 @@ download_GSE99249 <- function(verbose = TRUE) {
     bfc <- .get_cache()
     fls <- unlist(GSE99249_files)
     fl_paths <- .add_files(fls, paste0(baseURL, fls), bfc, verbose)
-    fl_paths <- utils::relist(fl_paths, GSE99249_files)
+    fl_paths <- relist(fl_paths, GSE99249_files)
     fl_paths
 }
 

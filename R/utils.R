@@ -68,15 +68,14 @@ unlist_w_names <- function(x) {
 #'
 #' @returns A GenomicsRanges containing regions enriched for putative mispriming
 #' events. The `n_reads` column specifies the number of polyA trimmed reads
-#' overlapping the mispriming region. The `n_regions` column specifies the number
+#' overlapping the mispriming region. `mean_pal` indicates the mean length of polyA
+#' sequence trimmed from reads overlapping the region. The `n_regions` column specifies the number
 #' overlapping independent regions found in each chunk (dictated by `n_reads_per_chunk`).
 #' The `A_freq` column indicates the frequency of A bases within the region.
 #'
+#' @import GenomicRanges S4Vectors IRanges
 #' @importFrom Rsamtools ScanBamParam BamFile
 #' @importFrom GenomicAlignments readGAlignments
-#' @importFrom GenomicRanges reduce resize trim
-#' @importFrom IRanges grouplengths
-#' @importFrom S4Vectors aggregate
 #' @examples
 #' bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
 #' fa_fn <- raer_example("mouse_tiny.fasta")
@@ -115,10 +114,11 @@ find_mispriming_sites <- function(bamfile, fafile, pos_5p = 5, pos_3p = 20,
     }
     close(bf)
     # merge again, handle edge cases between yieldsizes
-    ans <- GenomicRanges::reduce(pa_pks, with.revmap = TRUE)
-    mcols(ans) <- S4Vectors::aggregate(pa_pks, mcols(ans)$revmap,
-                                       mean_pal = mean(pa_pks$mean_pal),
-                                       n_reads = sum(pa_pks$n_reads),
+    ans <- reduce(pa_pks, with.revmap = TRUE)
+    mcols(ans) <- aggregate(pa_pks,
+                                       mcols(ans)$revmap,
+                                       mean_pal = mean(mean_pal),
+                                       n_reads = sum(n_reads),
                                        drop = FALSE)
 
     # keep reads above threshold, slop, and merge adjacent misprimed regions
@@ -127,13 +127,15 @@ find_mispriming_sites <- function(bamfile, fafile, pos_5p = 5, pos_3p = 20,
         return(empty_mispriming_record())
     }
 
-    ans <- GenomicRanges::resize(ans, pos_3p + width(ans))
-    ans <- GenomicRanges::resize(ans, pos_5p + width(ans), fix = "end")
-    ans <- GenomicRanges::trim(ans)
+    ans <- resize(ans, pos_3p + width(ans))
+    ans <- resize(ans, pos_5p + width(ans), fix = "end")
+    ans <- trim(ans)
 
-    res <- GenomicRanges::reduce(ans, with.revmap = TRUE)
-    mcols(res) <- S4Vectors::aggregate(ans, mcols(res)$revmap,
-                                       n_reads = sum(ans$n_reads),
+    res <- reduce(ans, with.revmap = TRUE)
+    mcols(res) <- aggregate(ans,
+                                       mcols(res)$revmap,
+                                       mean_pal = mean(mean_pal),
+                                       n_reads = sum(n_reads),
                                        drop = FALSE)
     res$n_regions <- IRanges::grouplengths(res$grouping)
     res$grouping <- NULL
@@ -153,17 +155,19 @@ empty_mispriming_record <- function() {
     gr
 }
 
+#' @import GenomicRanges
 merge_pa_peaks <- function(gr) {
     # get 3' end of read
     start(gr[strand(gr) == "+"]) <- end(gr[strand(gr) == "+"])
     end(gr[strand(gr) == "-"]) <- start(gr[strand(gr) == "-"])
 
     # merge and count reads within merged ivls
-    ans <- GenomicRanges::reduce(gr, with.revmap = TRUE)
-    mcols(ans) <- S4Vectors::aggregate(gr, mcols(ans)$revmap,
-                                       mean_pal = mean(gr$pa),
-                                       drop = FALSE)
-    mcols(ans)$n_reads <- IRanges::grouplengths(ans$grouping)
+    ans <- reduce(gr, with.revmap = TRUE)
+    mcols(ans) <- aggregate(gr,
+                            mcols(ans)$revmap,
+                            mean_pal = mean(pa),
+                            drop = FALSE)
+    mcols(ans)$n_reads <- grouplengths(ans$grouping)
     ans
 }
 
