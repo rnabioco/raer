@@ -106,8 +106,7 @@ annot_snps.SummarizedExperiment <- function(obj,
         genome = genome
     )
 
-    res <- cbind(mcols(gr), mcols(res))
-    mcols(rowRanges(obj)) <- res
+    mcols(rowRanges(obj)) <- mcols(res)
     obj
 }
 

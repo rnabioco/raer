@@ -46,16 +46,17 @@ as comma separated values.}
 \item{drop}{If TRUE, remove sites overlap SNPs}
 
 \item{genome}{A BSgenome object, which if supplied, will be used to provide
-additional "snp_ref_allele" and "snp_alt_alleles" columns containing the
+additional \code{snp_ref_allele} and \code{snp_alt_alleles} columns containing the
 reference and alt allele sequences, with respect to the positive strand.}
 }
 \value{
 Either a GRanges or SummarizedExperiment object with
-a new column "snp" added with information from "col_to_aggr"
+a new column added with information from \code{col_to_aggr} and optionally the
+\code{snp_ref_allele} and \code{snp_alt_allele} sequences.
 }
 \description{
-This function will annotate a GRanges or rowRanges of
-a SummarizedExperiment with SNPs from a SNP package.
+This function will annotate a \link{GRanges} or the rowRanges of
+a \link{SummarizedExperiment} with SNPs from a SNP package.
 }
 \examples{
 if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {

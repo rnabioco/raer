@@ -1,7 +1,7 @@
 #' Annotate known SNP positions
 #'
-#' @description This function will annotate a GRanges or rowRanges of
-#' a SummarizedExperiment with SNPs from a SNP package.
+#' @description This function will annotate a [GRanges] or the rowRanges of
+#' a [SummarizedExperiment] with SNPs from a SNP package.
 #'
 #' @param obj GRanges or SummarizedExperiment  object
 #' @param dbsnp SNPlocs package, see available packages from
@@ -11,14 +11,15 @@
 #' input. If multiple SNPs overlap these values will be concatenated
 #' as comma separated values.
 #' @param genome A BSgenome object, which if supplied, will be used to provide
-#' additional "snp_ref_allele" and "snp_alt_alleles" columns containing the
+#' additional `snp_ref_allele` and `snp_alt_alleles` columns containing the
 #' reference and alt allele sequences, with respect to the positive strand.
 #' @param drop If TRUE, remove sites overlap SNPs
 #' @param ... For the generic, further arguments to pass to specific methods.
 #' Unused for now.
 #'
 #' @return Either a GRanges or SummarizedExperiment object with
-#' a new column "snp" added with information from "col_to_aggr"
+#' a new column added with information from `col_to_aggr` and optionally the
+#' `snp_ref_allele` and `snp_alt_allele` sequences.
 #'
 #' @examples
 #' if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {

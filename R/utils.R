@@ -114,12 +114,13 @@ find_mispriming_sites <- function(bamfile, fafile, pos_5p = 5, pos_3p = 20,
     }
     close(bf)
     # merge again, handle edge cases between yieldsizes
+    mean_pal <- n_reads <- NULL
     ans <- reduce(pa_pks, with.revmap = TRUE)
     mcols(ans) <- aggregate(pa_pks,
-                                       mcols(ans)$revmap,
-                                       mean_pal = mean(mean_pal),
-                                       n_reads = sum(n_reads),
-                                       drop = FALSE)
+                            mcols(ans)$revmap,
+                            mean_pal = mean(mean_pal),
+                            n_reads = sum(n_reads),
+                            drop = FALSE)
 
     # keep reads above threshold, slop, and merge adjacent misprimed regions
     ans <- ans[ans$n_reads >= min_reads]
@@ -133,10 +134,10 @@ find_mispriming_sites <- function(bamfile, fafile, pos_5p = 5, pos_3p = 20,
 
     res <- reduce(ans, with.revmap = TRUE)
     mcols(res) <- aggregate(ans,
-                                       mcols(res)$revmap,
-                                       mean_pal = mean(mean_pal),
-                                       n_reads = sum(n_reads),
-                                       drop = FALSE)
+                            mcols(res)$revmap,
+                            mean_pal = mean(mean_pal),
+                            n_reads = sum(n_reads),
+                            drop = FALSE)
     res$n_regions <- IRanges::grouplengths(res$grouping)
     res$grouping <- NULL
     res <- pa_seq_context(res, fafile)
@@ -162,6 +163,7 @@ merge_pa_peaks <- function(gr) {
     end(gr[strand(gr) == "-"]) <- start(gr[strand(gr) == "-"])
 
     # merge and count reads within merged ivls
+    pa <- NULL
     ans <- reduce(gr, with.revmap = TRUE)
     mcols(ans) <- aggregate(gr,
                             mcols(ans)$revmap,
