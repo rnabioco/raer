@@ -5,7 +5,7 @@
 \title{Pileup sites per cell}
 \usage{
 pileup_cells(
-  bamfile,
+  bamfiles,
   sites,
   cell_barcodes,
   output_directory,
@@ -16,12 +16,14 @@ pileup_cells(
   param = FilterParam(),
   BPPARAM = SerialParam(),
   return_sce = TRUE,
-  verbose = FALSE
+  verbose = FALSE,
+  ...
 )
 }
 \arguments{
-\item{bamfile}{a path to a BAM file (for 10x libraries), or a vector of paths
-to BAM files (smart-seq2)}
+\item{bamfiles}{a path to a BAM file (for 10x libraries), or a vector of paths
+to BAM files (smart-seq2). Can be supplied as a character vector, \link{BamFile}, or
+\link{BamFileList}.}
 
 \item{sites}{a GRanges object containing sites to process. See examples for
 valid formatting.}
@@ -58,6 +60,9 @@ chromosomes.}
 \code{outfile_prefix}, will be returned.}
 
 \item{verbose}{Display messages}
+
+\item{...}{For the generic, further arguments to pass to specific methods.
+Unused for now.}
 }
 \value{
 Returns either a \link{SingleCellExperiment} or character vector of paths

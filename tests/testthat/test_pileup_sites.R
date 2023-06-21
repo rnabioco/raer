@@ -613,3 +613,30 @@ test_that("rowdata stats are reported", {
     exp_cols <- c("REF", "rpbz", "vdb", "sor")
     expect_equal(length(setdiff(rdcols, exp_cols)), 0)
 })
+
+test_that("BamFile and BamFileList input work", {
+    bf <- BamFile(bamfn)
+    res <- pileup_sites(bf, fafn, sites)
+    expect_equal(length(rowData(res)$REF), 182)
+    expect_equal(length(assays(res)), 7)
+
+    bfl <- BamFileList(bamfn)
+    res <- pileup_sites(bfl, fafn, sites)
+    expect_equal(length(rowData(res)$REF), 182)
+    expect_equal(length(assays(res)), 7)
+
+})
+
+test_that("custom indexes work", {
+    bai_1 <- tempfile()
+    bai_2 <- tempfile()
+    file.copy(paste0(bamfn, ".bai"), bai_1)
+    file.copy(paste0(bam2fn, ".bai"), bai_2)
+
+    bfl <- BamFileList(c(bamfn, bam2fn), c(bai_1, bai_2))
+    res <- pileup_sites(bfl, fafn, sites)
+    expect_equal(length(rowData(res)$REF), 182)
+    expect_equal(length(assays(res)), 7)
+    expect_equal(ncol(res), 2L)
+    unlink(c(bai_1, bai_2))
+})

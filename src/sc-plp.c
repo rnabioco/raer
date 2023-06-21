@@ -326,7 +326,7 @@ static void set_event_filters(efilter* ef, int* event_filters) {
   ef->min_var_reads = event_filters[8];
 }
 
-static int run_scpileup(sc_mplp_conf_t* conf, char* bamfn, char* bamid) {
+static int run_scpileup(sc_mplp_conf_t* conf, char* bamfn, char* index, char* bamid) {
 
   hts_set_log_level(HTS_LOG_ERROR);
 
@@ -364,8 +364,7 @@ static int run_scpileup(sc_mplp_conf_t* conf, char* bamfn, char* bamid) {
 
   if (conf->qregion) {
     hts_idx_t* idx = NULL;
-    idx = sam_index_load(data[0]->fp, bamfn) ;
-
+    idx = sam_index_load2(data[0]->fp, bamfn, index) ;
     if (idx == NULL) {
       REprintf("[raer interal] fail to load bamfile index for %s\n", bamfn);
       ret = -1;
@@ -622,7 +621,7 @@ static int write_all_sites(sc_mplp_conf_t* conf) {
 }
 
 
-static void check_sc_plp_args(SEXP bampaths, SEXP qregion, SEXP lst,
+static void check_sc_plp_args(SEXP bampaths, SEXP indexes, SEXP qregion, SEXP lst,
                               SEXP barcodes, SEXP cbtag, SEXP event_filters,
                               SEXP min_mapQ, SEXP max_depth, SEXP min_baseQ,
                               SEXP read_bqual_filter, SEXP libtype, SEXP b_flags,
@@ -631,6 +630,14 @@ static void check_sc_plp_args(SEXP bampaths, SEXP qregion, SEXP lst,
 
   if (!IS_CHARACTER(bampaths) || (LENGTH(bampaths) < 1)) {
     Rf_error("'bampaths' must be character");
+  }
+
+  if (!IS_CHARACTER(indexes) || (LENGTH(indexes) < 1)) {
+      Rf_error("'indexes' must be character");
+  }
+
+  if (LENGTH(bampaths) != LENGTH(indexes)) {
+      Rf_error("'bampaths' and 'indexes' must be same length");
   }
 
   if (!IS_CHARACTER(qregion) || (LENGTH(qregion) > 1)) {
@@ -699,13 +706,13 @@ static void check_sc_plp_args(SEXP bampaths, SEXP qregion, SEXP lst,
 
 }
 
-SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
+SEXP scpileup(SEXP bampaths, SEXP indexes, SEXP query_region, SEXP lst,
               SEXP barcodes, SEXP cbtag, SEXP event_filters, SEXP min_mapQ,
               SEXP max_depth, SEXP min_baseQ, SEXP read_bqual_filter,
               SEXP libtype, SEXP b_flags, SEXP outfns, SEXP umi,
               SEXP index_skip, SEXP pe, SEXP min_counts) {
 
-  check_sc_plp_args(bampaths, query_region, lst,
+  check_sc_plp_args(bampaths, indexes, query_region, lst,
                     barcodes, cbtag, event_filters, min_mapQ, max_depth,
                     min_baseQ, read_bqual_filter, libtype,
                     b_flags, outfns, umi, index_skip, pe, min_counts);
@@ -715,10 +722,13 @@ SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
 
   int i, ret = 0, res = 0;
   char** cbampaths;
+  char** cindexes;
   int nbams = Rf_length(bampaths);
   cbampaths = (char**) R_alloc(sizeof(char*), nbams);
+  cindexes = (char**) R_alloc(sizeof(char*), nbams);
   for (i = 0; i < nbams; ++i) {
     cbampaths[i] = (char*) translateChar(STRING_ELT(bampaths, i));
+    cindexes[i]  = (char*) translateChar(STRING_ELT(indexes, i));
   }
 
   char* cq_region = LENGTH(query_region) == 0 ?
@@ -762,14 +772,14 @@ SEXP scpileup(SEXP bampaths, SEXP query_region, SEXP lst,
     if (ga.min_counts == 0) write_all_sites(&ga);
     if (ga.is_ss2) {
       for (i = 0; i < nbams; ++i) {
-        res = run_scpileup(&ga, cbampaths[i], bcs[i]);
+        res = run_scpileup(&ga, cbampaths[i], cindexes[i], bcs[i]);
         if (res < 0) {
           REprintf("[raer internal] error processing bamfile %s:", cbampaths[i]);
           break;
         }
       }
     } else {
-      res = run_scpileup(&ga, cbampaths[0], NULL);
+      res = run_scpileup(&ga, cbampaths[0], cindexes[0], NULL);
     }
   }
 

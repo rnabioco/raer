@@ -125,3 +125,36 @@ test_that("read_sparray reconstructs rse from output files", {
     expect_equal(rownames(sp_sce), as.character(1:5))
     expect_true(all(elementNROWS(rowRanges(sp_sce)) == 0))
 })
+
+test_that("BamFile and BamFileList input work", {
+    bf <- BamFile(bam_fn)
+    sce <- pileup_cells(bf, gr, cbs, outdir)
+    expect_true(is(sce, "SingleCellExperiment"))
+    expect_equal(dim(sce), c(5, 556))
+
+    bfl <- BamFileList(bam_fn)
+    sce <- pileup_cells(bfl, gr, cbs, outdir)
+    expect_true(is(sce, "SingleCellExperiment"))
+    expect_equal(dim(sce), c(5, 556))
+
+})
+
+test_that("custom indexes work", {
+    # note that using indexes without bai suffix will also work
+    # but will throw an "[E::idx_find_and_load] Could not retrieve index file "
+    bai_1 <- tempfile()
+    bai_2 <- tempfile()
+    file.copy(paste0(bam_fn, ".bai"), bai_1)
+    file.copy(paste0(bam_fn, ".bai"), bai_2)
+
+    bfl <- BamFileList(rep(bam_fn, 2), c(bai_2, bai_2))
+    sce <- pileup_cells(bfl,
+                        sites = gr,
+                        cell_barcodes = LETTERS[1:2],
+                        cb_tag = NULL,
+                        umi_tag = NULL,
+                        outdir
+    )
+    expect_true(all(gr == rowRanges(sce)))
+    unlink(c(bai_1, bai_2))
+})

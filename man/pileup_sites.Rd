@@ -16,7 +16,8 @@ pileup_sites(
   return_data = TRUE,
   BPPARAM = SerialParam(),
   umi_tag = NULL,
-  verbose = FALSE
+  verbose = FALSE,
+  ...
 )
 
 FilterParam(
@@ -43,10 +44,10 @@ FilterParam(
 )
 }
 \arguments{
-\item{bamfiles}{character vector of paths to 1 or more bam files. If named,
-the names will be included in the \link{colData} of the \link{RangedSummarizedExperiment}
-as a \code{sample} column, otherwise the names will be taken from the basename of
-the bamfile.}
+\item{bamfiles}{a character vector, \link{BamFile} or \link{BamFileList} indicating 1 or
+more BAM files to process. If named, the names will be included in the \link{colData}
+of the \link{RangedSummarizedExperiment} as a \code{sample} column, otherwise the names will
+be taken from the basename of the BAM file.}
 
 \item{fafile}{path to genome fasta file used for read alignment. Can be in
 gzip or bgzip format.}
@@ -66,7 +67,7 @@ filters to apply to reads and sites during pileup.}
 files with  the specified prefix. If \code{NULL}, no files will be produced and data
 will be stored in memory.}
 
-\item{return_data}{if \code{TRUE}, data is returned as a RangedSummarizedExperiment,
+\item{return_data}{if \code{TRUE}, data is returned as a \link{RangedSummarizedExperiment},
 if \code{FALSE} a character vector of tabix-index files, specified by
 \code{outfile_prefix}, will be returned.}
 
@@ -78,6 +79,9 @@ region.}
 reads with the same UMI sequence will only be counted once per position.}
 
 \item{verbose}{if TRUE, then report progress and warnings.}
+
+\item{...}{For the generic, further arguments to pass to specific methods.
+Unused for now.}
 
 \item{max_depth}{maximum read depth considered at each site}
 
@@ -203,7 +207,8 @@ colData(rse)
 
 rowRanges(rse)
 
-# specifying regions to query use GRanges object
+# specifying regions to query using GRanges object
+
 sites <- rowRanges(rse)
 rse <- pileup_sites(bams, fafn, sites = sites)
 rse
@@ -213,6 +218,7 @@ rse
 
 rse <- pileup_sites(bams, fafn, region = "DHFR:100-101")
 rse
+
 }
 \seealso{
 Other pileup: 

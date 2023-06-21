@@ -1,9 +1,9 @@
 #' Generate base counts using pileup
 #'
-#' @param bamfiles character vector of paths to 1 or more bam files. If named,
-#' the names will be included in the [colData] of the [RangedSummarizedExperiment]
-#' as a `sample` column, otherwise the names will be taken from the basename of
-#' the bamfile.
+#' @param bamfiles a character vector, [BamFile] or [BamFileList] indicating 1 or
+#' more BAM files to process. If named, the names will be included in the [colData]
+#' of the [RangedSummarizedExperiment] as a `sample` column, otherwise the names will
+#' be taken from the basename of the BAM file.
 #' @param fafile path to genome fasta file used for read alignment. Can be in
 #' gzip or bgzip format.
 #' @param sites a [GRanges] object containing regions or sites to process.
@@ -15,7 +15,7 @@
 #'   filters to apply to reads and sites during pileup.
 #' @param umi_tag The bam tag containing a UMI sequence. If supplied, multiple
 #'   reads with the same UMI sequence will only be counted once per position.
-#' @param return_data if `TRUE`, data is returned as a RangedSummarizedExperiment,
+#' @param return_data if `TRUE`, data is returned as a [RangedSummarizedExperiment],
 #'   if `FALSE` a character vector of tabix-index files, specified by
 #'   `outfile_prefix`, will be returned.
 #' @param outfile_prefix If supplied, pileup data will be written to tabix indexed
@@ -25,7 +25,8 @@
 #'   processing occurs per chromosome and is disabled when run on a single
 #'   region.
 #' @param verbose if TRUE, then report progress and warnings.
-#'
+#' @param ... For the generic, further arguments to pass to specific methods.
+#' Unused for now.
 #' @returns A [RangedSummarizedExperiment] or a
 #'   vector of the output tabix'ed file names if `return_data` is FALSE.
 #'   The [RangedSummarizedExperiment] object is populated with multiple assays:
@@ -83,7 +84,8 @@
 #'
 #' rowRanges(rse)
 #'
-#' # specifying regions to query use GRanges object
+#' # specifying regions to query using GRanges object
+#'
 #' sites <- rowRanges(rse)
 #' rse <- pileup_sites(bams, fafn, sites = sites)
 #' rse
@@ -93,47 +95,56 @@
 #'
 #' rse <- pileup_sites(bams, fafn, region = "DHFR:100-101")
 #' rse
-#' @importFrom Rsamtools bgzip indexTabix TabixFile
-#' @importFrom Rsamtools scanTabix scanFaIndex seqinfo BamFile
+#'
+#' @importFrom BiocGenerics path
+#' @importFrom Rsamtools bgzip indexTabix TabixFile index
+#' @importFrom Rsamtools scanTabix scanFaIndex seqinfo BamFile BamFileList
 #' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges
 #' @importFrom GenomeInfoDb seqlevels seqinfo seqlengths
 #' @importFrom BiocParallel SerialParam bpstop bplapply
 #'
 #' @family pileup
-#'
+#' @rdname pileup_sites
 #' @export
 pileup_sites <- function(bamfiles,
-    fafile,
-    sites = NULL,
-    region = NULL,
-    chroms = NULL,
-    param = FilterParam(),
-    outfile_prefix = NULL,
-    return_data = TRUE,
-    BPPARAM = SerialParam(),
-    umi_tag = NULL,
-    verbose = FALSE) {
+                                     fafile,
+                                     sites = NULL,
+                                     region = NULL,
+                                     chroms = NULL,
+                                     param = FilterParam(),
+                                     outfile_prefix = NULL,
+                                     return_data = TRUE,
+                                     BPPARAM = SerialParam(),
+                                     umi_tag = NULL,
+                                     verbose = FALSE,
+                                     ...) {
+    if(!is(bamfiles, "BamFileList")) {
+        bamfiles <- BamFileList(bamfiles)
+    }
     if (is.null(names(bamfiles))) {
-        sample_ids <- basename(bamfiles)
+        sample_ids <- basename(path(bamfiles))
     } else {
         sample_ids <- names(bamfiles)
     }
 
-    bamfiles <- path.expand(bamfiles)
-    fafile <- path.expand(fafile)
     n_files <- length(bamfiles)
 
     if (!is.null(sites)) {
         if (!is(sites, "GRanges")) {
             cl <- class(sites)
-            cli::cli_abort("invalid object passed to sited, expecting GRanges found {cl}")
+            cli::cli_abort("invalid object passed to sites, expecting GRanges found {cl}")
         }
     }
-
-    if (!all(file.exists(bamfiles))) {
-        missing_bams <- bamfiles[!file.exists(bamfiles)]
+    bf_exists <- file.exists(path(bamfiles))
+    if (!all(bf_exists)) {
+        missing_bams <- path(bamfiles[!bf_exists])
         cli::cli_abort("bamfile(s) not found: {missing_bams}")
+    }
+    missing_index <- is.na(index(bamfiles))
+    if (any(missing_index)) {
+        mi <- path(bamfiles[missing_index])
+        cli::cli_abort("index file(s) not found for bam: {mi}")
     }
 
     if (!file.exists(fafile)) {
@@ -166,7 +177,7 @@ pileup_sites <- function(bamfiles,
         plp_outfns <- outfiles[2:length(outfiles)]
     }
 
-    contigs <- Rsamtools::seqinfo(Rsamtools::BamFile(bamfiles[1]))
+    contigs <- seqinfo_from_header(bamfiles[[1]])
     contig_info <- GenomeInfoDb::seqlengths(contigs)
 
     if (is.null(chroms)) {
@@ -248,7 +259,8 @@ pileup_sites <- function(bamfiles,
     } else {
         region <- character()
     }
-
+    bfs <- path.expand(path(bamfiles))
+    bidxs <- path.expand(index(bamfiles))
     if (is(BPPARAM, "SerialParam") || length(chroms_to_process) == 1) {
         start_time <- Sys.time()
         if (length(chroms_to_process) > 1 && is.null(sites)) {
@@ -257,7 +269,8 @@ pileup_sites <- function(bamfiles,
             sites <- gr_to_cregions(sites)
         }
         res <- .Call(
-            ".pileup", bamfiles, as.integer(n_files), fafile, region,
+            ".pileup", bfs, bidxs, as.integer(n_files),
+            fafile, region,
             sites, fp[["int_args"]], fp[["numeric_args"]], fp[["lgl_args"]],
             fp[["library_type"]], fp[["only_keep_variants"]], fp[["min_mapq"]],
             in_memory, outfiles, umi_tag
@@ -272,7 +285,7 @@ pileup_sites <- function(bamfiles,
             res <- res[2:length(res)]
             res <- lists_to_grs(res, contigs)
             res <- merge_pileups(res,
-                sample_names = sample_ids
+                                 sample_names = sample_ids
             )
             rowData(res) <- cbind(rowData(res), rdat)
         }
@@ -293,7 +306,7 @@ pileup_sites <- function(bamfiles,
                 tmp_plpfiles <- tmp_outfiles[2:length(tmp_outfiles)]
                 fn_lst <- list(
                     contig = ctig,
-                    bam_fn = bamfiles,
+                    bam_fn = bfs,
                     tmp_plpfns = tmp_plpfiles,
                     tmp_rdatfn = tmp_rdatfile
                 )
@@ -302,7 +315,7 @@ pileup_sites <- function(bamfiles,
             }
             if (is.null(ctig)) ctig <- character()
             res <- .Call(
-                ".pileup", bamfiles, as.integer(n_files), fafile, ctig,
+                ".pileup", bfs, bidxs, as.integer(n_files), fafile, ctig,
                 sites, fp[["int_args"]], fp[["numeric_args"]],
                 fp[["lgl_args"]], fp[["library_type"]], fp[["only_keep_variants"]],
                 fp[["min_mapq"]], in_memory, tmp_outfiles, umi_tag

@@ -184,3 +184,19 @@ pa_seq_context <- function(gr, fafile){
     gr
 }
 
+# workaround for seqinfo(bam) which will issue a false positive warning
+# from htslib if the bai file doesn't end in .bai
+#
+# the rsamtools c function first checks for an index ending in .bai
+# via htslib (bam_index_load), prior to querying using the supplied index.
+#
+#' @importFrom Rsamtools scanBamHeader
+#' @importFrom GenomeInfoDb Seqinfo
+seqinfo_from_header <- function(bam) {
+    stopifnot(length(bam) == 1)
+    stopifnot(is(bam, "BamFile"))
+    ctigs <- Rsamtools::scanBamHeader(path(bam),
+                                      index = index(bam))[[1]]$targets
+    GenomeInfoDb::Seqinfo(names(ctigs), ctigs)
+}
+
