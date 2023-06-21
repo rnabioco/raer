@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,8 @@
 <span>  return_data <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  BPPARAM <span class="op">=</span> <span class="fu">SerialParam</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  umi_tag <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">FilterParam</span><span class="op">(</span></span>
@@ -102,10 +103,10 @@
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>bamfiles</dt>
-<dd><p>character vector of paths to 1 or more bam files. If named,
-the names will be included in the <a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a> of the <a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html" class="external-link">RangedSummarizedExperiment</a>
-as a <code>sample</code> column, otherwise the names will be taken from the basename of
-the bamfile.</p></dd>
+<dd><p>a character vector, <a href="https://rdrr.io/pkg/Rsamtools/man/BamFile-class.html" class="external-link">BamFile</a> or <a href="https://rdrr.io/pkg/Rsamtools/man/BamFile-class.html" class="external-link">BamFileList</a> indicating 1 or
+more BAM files to process. If named, the names will be included in the <a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a>
+of the <a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html" class="external-link">RangedSummarizedExperiment</a> as a <code>sample</code> column, otherwise the names will
+be taken from the basename of the BAM file.</p></dd>
 
 
 <dt>fafile</dt>
@@ -139,7 +140,7 @@ will be stored in memory.</p></dd>
 
 
 <dt>return_data</dt>
-<dd><p>if <code>TRUE</code>, data is returned as a RangedSummarizedExperiment,
+<dd><p>if <code>TRUE</code>, data is returned as a <a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html" class="external-link">RangedSummarizedExperiment</a>,
 if <code>FALSE</code> a character vector of tabix-index files, specified by
 <code>outfile_prefix</code>, will be returned.</p></dd>
 
@@ -157,6 +158,11 @@ reads with the same UMI sequence will only be counted once per position.</p></dd
 
 <dt>verbose</dt>
 <dd><p>if TRUE, then report progress and warnings.</p></dd>
+
+
+<dt>...</dt>
+<dd><p>For the generic, further arguments to pass to specific methods.
+Unused for now.</p></dd>
 
 
 <dt>max_depth</dt>
@@ -381,7 +387,8 @@ pileup files will be returned. These files can be imported using
 <span class="r-out co"><span class="r-pr">#&gt;</span>   -------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   seqinfo: 3 sequences from an unspecified genome</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># specifying regions to query use GRanges object</span></span></span>
+<span class="r-in"><span><span class="co"># specifying regions to query using GRanges object</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">sites</span> <span class="op">&lt;-</span> <span class="fu">rowRanges</span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu">pileup_sites</span><span class="op">(</span><span class="va">bams</span>, <span class="va">fafn</span>, sites <span class="op">=</span> <span class="va">sites</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rse</span></span></span>
@@ -417,6 +424,7 @@ pileup files will be returned. These files can be imported using
 <span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rpbz vdb sor</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(6): KO1 KO2 ... WT2 WT3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
