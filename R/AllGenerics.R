@@ -13,7 +13,7 @@
 #' @param genome A BSgenome object, which if supplied, will be used to provide
 #' additional `snp_ref_allele` and `snp_alt_alleles` columns containing the
 #' reference and alt allele sequences, with respect to the positive strand.
-#' @param drop If TRUE, remove sites overlap SNPs
+#' @param drop If TRUE, remove sites overlapping SNPs
 #' @param ... For the generic, further arguments to pass to specific methods.
 #' Unused for now.
 #'

@@ -601,7 +601,7 @@ static int check_umi(const bam_pileup1_t* p, mplp_conf_t* conf,
   return (1);
 }
 
-static int run_pileup(char** cbampaths, const char** coutfns,
+static int run_pileup(char** cbampaths, char** cindexes, const char** coutfns,
                       PLP_DATA pd, mplp_conf_t* conf) {
 
   hts_set_log_level(HTS_LOG_ERROR);
@@ -664,7 +664,7 @@ static int run_pileup(char** cbampaths, const char** coutfns,
 
     if (conf->reg) {
       hts_idx_t* idx = NULL;
-      idx = sam_index_load(data[i]->fp, cbampaths[i]) ;
+      idx = sam_index_load2(data[i]->fp, cbampaths[i], cindexes[i]) ;
 
       if (idx == NULL) {
         Rf_error("[raer internal] fail to load bamfile index for %s\n", cbampaths[i]);
@@ -930,7 +930,7 @@ fail:
 }
 
 
-static void check_plp_args(SEXP bampaths, SEXP n, SEXP fapath, SEXP region,
+static void check_plp_args(SEXP bampaths, SEXP indexes, SEXP n, SEXP fapath, SEXP region,
                            SEXP int_args, SEXP dbl_args, SEXP lgl_args,
                            SEXP libtype, SEXP only_keep_variants, SEXP min_mapQ,
                            SEXP in_mem, SEXP outfns, SEXP umi) {
@@ -941,6 +941,10 @@ static void check_plp_args(SEXP bampaths, SEXP n, SEXP fapath, SEXP region,
 
   if (!IS_CHARACTER(bampaths) || (LENGTH(bampaths) != n_files)) {
     Rf_error("'bampaths' must be character vector equal in length to number of bam files");
+  }
+
+  if (!IS_CHARACTER(indexes) || (LENGTH(indexes) != n_files)) {
+      Rf_error("'indexes' must be character vector equal in length to number of bam files");
   }
 
   if (!IS_CHARACTER(fapath) || (LENGTH(fapath) != 1)) {
@@ -1077,12 +1081,12 @@ static int set_mplp_conf(mplp_conf_t* conf, int n_bams,
   return ret;
 }
 
-SEXP pileup(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP lst,
+SEXP pileup(SEXP bampaths, SEXP indexes, SEXP n, SEXP fapath, SEXP region, SEXP lst,
             SEXP int_args, SEXP dbl_args, SEXP lgl_args,
             SEXP libtype, SEXP only_keep_variants, SEXP min_mapQ,
             SEXP in_mem,  SEXP outfns, SEXP umi) {
 
-  check_plp_args(bampaths, n, fapath, region,
+  check_plp_args(bampaths, indexes, n, fapath, region,
                  int_args, dbl_args, lgl_args,
                  libtype, only_keep_variants, min_mapQ,
                  in_mem, outfns, umi);
@@ -1095,8 +1099,10 @@ SEXP pileup(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP lst,
 
   int i, ret = 0;;
   char** cbampaths = (char**) R_alloc(sizeof(const char*), Rf_length(bampaths));
+  char** cindexes = (char**) R_alloc(sizeof(const char*), Rf_length(indexes));
   for (i = 0; i < LENGTH(bampaths); ++i) {
     cbampaths[i] = (char*) translateChar(STRING_ELT(bampaths, i));
+    cindexes[i] = (char*) translateChar(STRING_ELT(indexes, i));
   }
 
   char* cfafn = (char*) translateChar(STRING_ELT(fapath, 0));
@@ -1130,7 +1136,7 @@ SEXP pileup(SEXP bampaths, SEXP n, SEXP fapath, SEXP region, SEXP lst,
   PLP_DATA pd;
   if (ret >= 0) {
     pd = init_PLP_DATA(result,  nbam);
-    ret = run_pileup(cbampaths, coutfns, pd, &ga);
+    ret = run_pileup(cbampaths, cindexes, coutfns, pd, &ga);
   }
 
   // clean up

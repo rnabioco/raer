@@ -43,7 +43,7 @@ Unused for now.}
 input. If multiple SNPs overlap these values will be concatenated
 as comma separated values.}
 
-\item{drop}{If TRUE, remove sites overlap SNPs}
+\item{drop}{If TRUE, remove sites overlapping SNPs}
 
 \item{genome}{A BSgenome object, which if supplied, will be used to provide
 additional \code{snp_ref_allele} and \code{snp_alt_alleles} columns containing the

@@ -15,8 +15,9 @@
 #'   each ref and alt base enumerated for each cell-barcode present. A single
 #'   base will be counted once for each UMI sequence present in each cell.
 #'
-#' @param bamfile a path to a BAM file (for 10x libraries), or a vector of paths
-#' to BAM files (smart-seq2)
+#' @param bamfiles a path to a BAM file (for 10x libraries), or a vector of paths
+#' to BAM files (smart-seq2). Can be supplied as a character vector, [BamFile], or
+#' [BamFileList].
 #' @param sites a GRanges object containing sites to process. See examples for
 #'   valid formatting.
 #' @param output_directory Output directory for output matrix files. The directory
@@ -42,6 +43,8 @@
 #' @param verbose Display messages
 #' @param BPPARAM BiocParallel instance. Parallel computation occurs across
 #'   chromosomes.
+#' @param ... For the generic, further arguments to pass to specific methods.
+#' Unused for now.
 #'
 #' @returns Returns either a [SingleCellExperiment] or character vector of paths
 #'   to the sparseMatrix files produced. The [SingleCellExperiment] object is
@@ -95,9 +98,9 @@
 #' @importFrom Rsamtools ScanBamParam scanBamFlag
 #' @importFrom BiocParallel bpworkers
 #' @family pileup
-#'
+#' @rdname pileup_cells
 #' @export
-pileup_cells <- function(bamfile,
+pileup_cells <- function(bamfiles,
     sites,
     cell_barcodes,
     output_directory,
@@ -108,11 +111,16 @@ pileup_cells <- function(bamfile,
     param = FilterParam(),
     BPPARAM = SerialParam(),
     return_sce = TRUE,
-    verbose = FALSE) {
+    verbose = FALSE,
+    ...) {
 
-    if (length(bamfile) > 1) {
+    if(!is(bamfiles, "BamFileList")) {
+        bamfiles <- BamFileList(bamfiles)
+    }
+
+    if (length(bamfiles) > 1) {
         process_nbam <- TRUE
-        if (length(bamfile) != length(cell_barcodes)) {
+        if (length(bamfiles) != length(cell_barcodes)) {
             msg <- paste(
                 c(
                     "multiple bamfiles detected ",
@@ -127,13 +135,17 @@ pileup_cells <- function(bamfile,
     } else {
         process_nbam <- FALSE
     }
-    if (!all(file.exists(bamfile))) {
-        missing_bams <- bamfile[!file.exists(bamfile)]
+    bf_exists <- file.exists(path(bamfiles))
+    if (!all(bf_exists)) {
+        missing_bams <- path(bamfiles[!bf_exists])
         cli::cli_abort("bamfile(s) not found: {missing_bams}")
     }
 
-    bamfile <- path.expand(bamfile)
-    seq_info <- GenomeInfoDb::seqinfo(Rsamtools::BamFile(bamfile[1]))
+    missing_index <- is.na(index(bamfiles))
+    if (any(missing_index)) {
+        mi <- path(bamfiles[missing_index])
+        cli::cli_abort("index file(s) not found for bam: {mi}")
+    }
 
     if (!dir.exists(output_directory)) {
         dir.create(output_directory, recursive = TRUE)
@@ -164,7 +176,7 @@ pileup_cells <- function(bamfile,
         check_tag(umi_tag)
     }
 
-    contigs <- GenomeInfoDb::seqinfo(Rsamtools::BamFile(bamfile[1]))
+    contigs <- seqinfo_from_header(bamfiles[[1]])
     contig_info <- GenomeInfoDb::seqlengths(contigs)
     chroms_to_process <- names(contig_info)
     if (!is.null(chroms)) {
@@ -202,14 +214,18 @@ pileup_cells <- function(bamfile,
     )])
 
     if (verbose) cli::cli_alert("Beginning pileup")
+    bf <- path.expand(path(bamfiles))
+    bfi <- path.expand(index(bamfiles))
     if (process_nbam) {
         # operate in parallel over each bam
         nwrkers <- BiocParallel::bpworkers(BPPARAM)
-        tmp_bamfns <- chunk_vec(bamfile, nwrkers)
+        tmp_bamfns <- chunk_vec(bf, nwrkers)
+        tmp_bamidxs <- chunk_vec(bfi, nwrkers)
         tmp_cbs <- chunk_vec(cell_barcodes, nwrkers)
         ids <- seq_along(tmp_bamfns)
         tmp_plp_files <- bpmapply(get_sc_pileup,
             bamfn = tmp_bamfns,
+            index = tmp_bamidxs,
             id = ids,
             barcodes = tmp_cbs,
             MoreArgs = list(
@@ -233,7 +249,8 @@ pileup_cells <- function(bamfile,
             chrom = chroms_to_process,
             id = chroms_to_process,
             MoreArgs = list(
-                bamfn = bamfile,
+                bamfn = bf,
+                index = bfi,
                 sites = sites,
                 barcodes = cell_barcodes,
                 outfile_prefix = output_directory,
@@ -456,7 +473,7 @@ write_sparray <- function(sce, mtx_fn, sites_fn, bc_fn, r_index) {
 
 # Utilities -------------------------------------------------------
 
-get_sc_pileup <- function(bamfn, id, sites, barcodes,
+get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
     outfile_prefix, chrom,
     umi_tag, cb_tag, libtype_code,
     event_filters, fp, pe, verbose) {
@@ -477,6 +494,7 @@ get_sc_pileup <- function(bamfn, id, sites, barcodes,
     res <- .Call(
         ".scpileup",
         bamfn,
+        index,
         chrom,
         lst,
         barcodes,
