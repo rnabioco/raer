@@ -140,8 +140,6 @@ test_that("BamFile and BamFileList input work", {
 })
 
 test_that("custom indexes work", {
-    # note that using indexes without bai suffix will also work
-    # but will throw an "[E::idx_find_and_load] Could not retrieve index file "
     bai_1 <- tempfile()
     bai_2 <- tempfile()
     file.copy(paste0(bam_fn, ".bai"), bai_1)
