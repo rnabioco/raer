@@ -57,6 +57,8 @@ Suggests:
     SNPlocs.Hsapiens.dbSNP144.GRCh38,
     BSgenome.Hsapiens.NCBI.GRCh38,
     scater,
+    scran,
+    scuttle,
     AnnotationHub,
     covr
 LinkingTo: 
