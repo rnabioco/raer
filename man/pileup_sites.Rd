@@ -16,8 +16,7 @@ pileup_sites(
   return_data = TRUE,
   BPPARAM = SerialParam(),
   umi_tag = NULL,
-  verbose = FALSE,
-  ...
+  verbose = FALSE
 )
 
 FilterParam(
@@ -79,9 +78,6 @@ region.}
 reads with the same UMI sequence will only be counted once per position.}
 
 \item{verbose}{if TRUE, then report progress and warnings.}
-
-\item{...}{For the generic, further arguments to pass to specific methods.
-Unused for now.}
 
 \item{max_depth}{maximum read depth considered at each site}
 

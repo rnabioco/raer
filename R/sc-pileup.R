@@ -28,11 +28,12 @@
 #' processing multiple BAM files (e.g. smart-seq-2), provide a character vector
 #' of unique identifiers for each input BAM, to name each BAM file in the output files.
 #' @param param object of class [FilterParam()] which specify various filters to
-#'   apply to reads and sites during pileup. Note that the `min_variant_reads`
-#'   parameter, if set > 0, specifies the number of variant reads at a site
-#'   required in order to report a site. E.g. if set to 2, then at least 2 reads
-#'   (from any cell) must have a variant in order to report the site. The
-#'   default of 0 reports all sites present in the `sites` object.
+#'   apply to reads and sites during pileup. Note that the `min_depth` and
+#'   `min_variant_reads` parameters if set > 0 specify the number of reads
+#'   from any cell required in order to report a site. E.g. if `min_variant_reads` is
+#'   set to 2, then at least 2 reads (from any cell) must have a variant in order
+#'   to report the site. Setting `min_depth` and `min_variant_reads` to 0 reports
+#'   all sites present in the `sites` object.
 #' @param umi_tag tag in BAM containing the UMI sequence
 #' @param cb_tag tag in BAM containing the cell-barcode sequence
 #' @param paired_end set to TRUE if data is paired-end to prevent double counting
@@ -43,8 +44,6 @@
 #' @param verbose Display messages
 #' @param BPPARAM BiocParallel instance. Parallel computation occurs across
 #'   chromosomes.
-#' @param ... For the generic, further arguments to pass to specific methods.
-#' Unused for now.
 #'
 #' @returns Returns either a [SingleCellExperiment] or character vector of paths
 #'   to the sparseMatrix files produced. The [SingleCellExperiment] object is
@@ -111,8 +110,7 @@ pileup_cells <- function(bamfiles,
     param = FilterParam(),
     BPPARAM = SerialParam(),
     return_sce = TRUE,
-    verbose = FALSE,
-    ...) {
+    verbose = FALSE) {
 
     if(!is(bamfiles, "BamFileList")) {
         bamfiles <- BamFileList(bamfiles)
@@ -450,7 +448,8 @@ write_sparray <- function(sce, mtx_fn, sites_fn, bc_fn, r_index) {
                        append = TRUE,
                        sep = " ",
                        row.names = FALSE,
-                       col.names = FALSE)
+                       col.names = FALSE,
+                       showProgress = FALSE)
 
     sites <- data.frame(
         r_index,
@@ -464,7 +463,8 @@ write_sparray <- function(sce, mtx_fn, sites_fn, bc_fn, r_index) {
     data.table::fwrite(sites, sites_fn,
                        sep = "\t",
                        row.names = FALSE,
-                       col.names = FALSE)
+                       col.names = FALSE,
+                       showProgress = FALSE)
 
     writeLines(colnames(sce), gzfile(bc_fn))
 }
@@ -510,7 +510,7 @@ get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
         umi_tag,
         FALSE,
         pe,
-        fp$min_variant_reads
+        max(fp$min_variant_reads, fp$min_depth)
     )
 
     if (res < 0) cli::cli_abort("pileup failed")

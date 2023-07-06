@@ -42,7 +42,7 @@ fns
 
 Additionally we will use the following additional annotation resources:  
   
-  - A database of known SNPs, for example the `SNPlocs.Hsapiens.dbSNP155.GRCh38` package. Due to space and memory constraints , in this vignette we will use a BED file containing SNPs from the first 1Mb region of chr4.  
+  - A database of known SNPs, for example the `SNPlocs.Hsapiens.dbSNP155.GRCh38` package. Due to space and memory constraints in this vignette we will use a BED file containing SNPs from the first 1Mb region of chr4.  
   - `TxDb.Hsapiens.UCSC.hg38.knownGene`, a database of transcript models. Alternatively these can be generated from a `.gtf` file using `makeTxDbFromGRanges()` from the `GenomicFeatures` package.  
   - RepeatMasker annotations, which can be obtained from the `AnnotationHub()` for hg38. For space reasons these annotations for chr4 have been included as a text file. 
 

@@ -16,8 +16,7 @@ pileup_cells(
   param = FilterParam(),
   BPPARAM = SerialParam(),
   return_sce = TRUE,
-  verbose = FALSE,
-  ...
+  verbose = FALSE
 )
 }
 \arguments{
@@ -46,11 +45,12 @@ sites present in the listed chromosomes will be processed}
 overlapping read pairs.}
 
 \item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various filters to
-apply to reads and sites during pileup. Note that the \code{min_variant_reads}
-parameter, if set > 0, specifies the number of variant reads at a site
-required in order to report a site. E.g. if set to 2, then at least 2 reads
-(from any cell) must have a variant in order to report the site. The
-default of 0 reports all sites present in the \code{sites} object.}
+apply to reads and sites during pileup. Note that the \code{min_depth} and
+\code{min_variant_reads} parameters if set > 0 specify the number of reads
+from any cell required in order to report a site. E.g. if \code{min_variant_reads} is
+set to 2, then at least 2 reads (from any cell) must have a variant in order
+to report the site. Setting \code{min_depth} and \code{min_variant_reads} to 0 reports
+all sites present in the \code{sites} object.}
 
 \item{BPPARAM}{BiocParallel instance. Parallel computation occurs across
 chromosomes.}
@@ -60,9 +60,6 @@ chromosomes.}
 \code{outfile_prefix}, will be returned.}
 
 \item{verbose}{Display messages}
-
-\item{...}{For the generic, further arguments to pass to specific methods.
-Unused for now.}
 }
 \value{
 Returns either a \link{SingleCellExperiment} or character vector of paths
