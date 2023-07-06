@@ -23,7 +23,7 @@ outdir <- tempdir()
 on.exit(unlink(outdir))
 
 test_that("basic functionality works", {
-    fp <- FilterParam(library_type = "fr-second-strand")
+    fp <- FilterParam(library_type = "fr-second-strand", min_depth = 0)
     sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
     expect_true(is(sce, "SingleCellExperiment"))
     expect_equal(dim(sce), c(5, 556))
@@ -56,10 +56,12 @@ test_that("basic functionality works", {
 })
 
 test_that("ranges are correct", {
-    fp <- FilterParam(library_type = "fr-second-strand")
+    fp <- FilterParam(library_type = "fr-second-strand", min_depth = 0)
     sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
     expect_true(all(gr == rowRanges(sce)))
+})
 
+test_that("depth filters work", {
     # should drop 1 site with 0 reads
     fp <- FilterParam(
         library_type = "fr-second-strand",
@@ -67,11 +69,44 @@ test_that("ranges are correct", {
     )
     sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
     expect_equal(nrow(sce), 4)
+
+    # should also drop 1 site with 0 reads
+    fp <- FilterParam(
+        library_type = "fr-second-strand",
+        min_depth = 1
+    )
+    sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
+    expect_equal(nrow(sce), 4)
+
+    # drop 2 sites, 1 with only 7 variant reads and site with no depth
+    fp <- FilterParam(
+        library_type = "fr-second-strand",
+        min_variant_reads = 10
+    )
+    sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
+    expect_equal(nrow(sce), 3)
+
+    # drops 2 sites, 1 with total depth of 230 and site with no depth
+    fp <- FilterParam(
+        library_type = "fr-second-strand",
+        min_depth = 231
+    )
+    sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
+    expect_equal(nrow(sce), 3)
+
+    # also drop 1 site with 7 variant reads
+    fp <- FilterParam(
+        library_type = "fr-second-strand",
+        min_depth = 231,
+        min_variant_reads = 8
+    )
+    sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
+    expect_equal(nrow(sce), 2)
 })
 
 
 test_that("if multiple bams are supplied, treat each as a separate cell", {
-    fp <- FilterParam(library_type = "fr-second-strand")
+    fp <- FilterParam(library_type = "fr-second-strand", min_depth = 0)
     sce <- pileup_cells(rep(bam_fn, 10),
         sites = gr,
         cell_barcodes = LETTERS[1:10],
@@ -84,8 +119,8 @@ test_that("if multiple bams are supplied, treat each as a separate cell", {
     expect_true(all(colnames(sce) == LETTERS[1:10]))
 })
 
-test_that("if multiple bams are supplied, require nbam # of barcodes", {
-    fp <- FilterParam(library_type = "fr-second-strand")
+test_that("if multiple bams are supplied, require nbam = # of barcodes", {
+    fp <- FilterParam(library_type = "fr-second-strand", min_depth = 0)
     expect_error(pileup_cells(rep(bam_fn, 10),
         sites = gr,
         cell_barcodes = LETTERS[1:2],
@@ -113,7 +148,7 @@ test_that("output files are generated", {
 })
 
 test_that("read_sparray reconstructs rse from output files", {
-    sce <- pileup_cells(bam_fn, gr, cbs, outdir)
+    sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = FilterParam(min_depth = 0))
     mtx_fns <- file.path(outdir,
                          c("counts.mtx.gz",
                            "sites.txt.gz",
@@ -130,12 +165,12 @@ test_that("BamFile and BamFileList input work", {
     bf <- BamFile(bam_fn)
     sce <- pileup_cells(bf, gr, cbs, outdir)
     expect_true(is(sce, "SingleCellExperiment"))
-    expect_equal(dim(sce), c(5, 556))
+    expect_equal(dim(sce), c(4, 556))
 
     bfl <- BamFileList(bam_fn)
     sce <- pileup_cells(bfl, gr, cbs, outdir)
     expect_true(is(sce, "SingleCellExperiment"))
-    expect_equal(dim(sce), c(5, 556))
+    expect_equal(dim(sce), c(4, 556))
 
 })
 
@@ -151,7 +186,8 @@ test_that("custom indexes work", {
                         cell_barcodes = LETTERS[1:2],
                         cb_tag = NULL,
                         umi_tag = NULL,
-                        outdir
+                        outdir,
+                        param = FilterParam(min_depth = 0)
     )
     expect_true(all(gr == rowRanges(sce)))
     unlink(c(bai_1, bai_2))

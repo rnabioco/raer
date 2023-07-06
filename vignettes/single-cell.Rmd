@@ -66,8 +66,8 @@ If the editing sites of interest are not known, one option is to perform a two p
 
 `raer` provides a function, `pileup_cells()`, which will quantify edited and non-edited UMI counts per cell barcode, then collect the site counts into a SingleCellExperiment. 
 
-The sites to quantified are specified using a custom formatted GRanges object with 1 base intervals, a strand (+ or -), and supplemented with metadata columns named `ref` and `alt` containing the reference and alternate base to query. In this case we are
-only interested in A->I editing, so we set the ref and alt to `A` and `G`. Note that the `ref` and `alt` bases are in reference to strand. For a `-` strand interval the bases should be the complement of the `+` strand bases.  
+The sites to quantified are specified using a custom formatted GRanges object with 1 base intervals, a strand (+ or -), and supplemented with metadata columns named `REF` and `ALT` containing the reference and alternate base to query. In this case we are
+only interested in A->I editing, so we set the ref and alt to `A` and `G`. Note that the `REF` and `ALT` bases are in reference to strand. For a `-` strand interval the bases should be the complement of the `+` strand bases.  
 
 ```{r}
 gr <- import(bed_fn)

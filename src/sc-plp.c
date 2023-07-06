@@ -440,7 +440,9 @@ static int run_scpileup(sc_mplp_conf_t* conf, char* bamfn, char* index, char* ba
     // reset cb/umi count structure
     clear_cb_umiset(conf->cbmap);
 
-    int n_counted = 0;
+    int n_ref = 0;
+    int n_alt = 0;
+
     // iterate through bam files, in this case 1 bam
     for (i = 0; i < nbam; ++i) {
       int j;
@@ -470,18 +472,23 @@ static int run_scpileup(sc_mplp_conf_t* conf, char* bamfn, char* index, char* ba
         int strand = invert + 1; //invert is 0 if pos, 1 if neg.
 
         int cret = count_record(p->b, conf, pld, c, strand, bamid);
-        if (cret < 0) {
-          ret = -1;
-          REprintf("[raer internal] issue with counting records\n");
-          goto fail;
+
+        if(cret < 0) {
+            ret = -1;
+            REprintf("[raer internal] issue with counting records\n");
+            goto fail;
+        } else if (cret == 2) {
+            n_ref += 1;
         } else if (cret == 3) {
-          n_counted += 1;
+            n_alt += 1;
         }
       }
     }
 
     // write records
-    if (conf->min_counts == 0 || (conf->min_counts > 0 && n_counted >= conf->min_counts)) {
+    int n_counted = n_ref + n_alt;
+    if (conf->min_counts == 0 ||
+        (n_counted >= conf->min_counts && n_alt >= conf->ef.min_var_reads) ) {
 
       int wr = write_counts(conf, pld, sam_hdr_tid2name(h, tid), pos);
       if (wr == -1) {

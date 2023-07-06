@@ -1,3 +1,7 @@
+# raer 0.99.4
+
+* `pileup_cells` now respects the `min_depth` and `min_variant_reads` FilterParameters.   
+
 # raer 0.99.3
 
 * support `BamFile` and `BamFileList` inputs to `pileup_sites()` and `pileup_cells()`, which provides an option to provide custom BAI index file names.

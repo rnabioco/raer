@@ -25,8 +25,7 @@
 #'   processing occurs per chromosome and is disabled when run on a single
 #'   region.
 #' @param verbose if TRUE, then report progress and warnings.
-#' @param ... For the generic, further arguments to pass to specific methods.
-#' Unused for now.
+#'
 #' @returns A [RangedSummarizedExperiment] or a
 #'   vector of the output tabix'ed file names if `return_data` is FALSE.
 #'   The [RangedSummarizedExperiment] object is populated with multiple assays:
@@ -108,18 +107,18 @@
 #' @rdname pileup_sites
 #' @export
 pileup_sites <- function(bamfiles,
-                                     fafile,
-                                     sites = NULL,
-                                     region = NULL,
-                                     chroms = NULL,
-                                     param = FilterParam(),
-                                     outfile_prefix = NULL,
-                                     return_data = TRUE,
-                                     BPPARAM = SerialParam(),
-                                     umi_tag = NULL,
-                                     verbose = FALSE,
-                                     ...) {
-    if(!is(bamfiles, "BamFileList")) {
+    fafile,
+    sites = NULL,
+    region = NULL,
+    chroms = NULL,
+    param = FilterParam(),
+    outfile_prefix = NULL,
+    return_data = TRUE,
+    BPPARAM = SerialParam(),
+    umi_tag = NULL,
+    verbose = FALSE) {
+
+    if (!is(bamfiles, "BamFileList")) {
         bamfiles <- BamFileList(bamfiles)
     }
     if (is.null(names(bamfiles))) {
@@ -194,7 +193,8 @@ pileup_sites <- function(bamfiles,
         }
     }
 
-    missing_chroms <- chroms_to_process[!chroms_to_process %in% names(contig_info)]
+    missing_chroms <-
+        chroms_to_process[!chroms_to_process %in% names(contig_info)]
 
     if (length(missing_chroms) > 0) {
         if (verbose) {
@@ -204,11 +204,13 @@ pileup_sites <- function(bamfiles,
                 "{msg}"
             ))
         }
-        chroms_to_process <- setdiff(chroms_to_process, missing_chroms)
+        chroms_to_process <-
+            setdiff(chroms_to_process, missing_chroms)
     }
 
     chroms_in_fa <- seqnames(Rsamtools::scanFaIndex(fafile))
-    missing_chroms <- chroms_to_process[!chroms_to_process %in% levels(chroms_in_fa)]
+    missing_chroms <-
+        chroms_to_process[!chroms_to_process %in% levels(chroms_in_fa)]
 
     if (length(missing_chroms) > 0) {
         if (verbose) {
@@ -218,7 +220,8 @@ pileup_sites <- function(bamfiles,
                 "msg"
             ))
         }
-        chroms_to_process <- setdiff(chroms_to_process, missing_chroms)
+        chroms_to_process <-
+            setdiff(chroms_to_process, missing_chroms)
     }
 
     chroms_to_process <-
@@ -261,19 +264,32 @@ pileup_sites <- function(bamfiles,
     }
     bfs <- path.expand(path(bamfiles))
     bidxs <- path.expand(index(bamfiles))
-    if (is(BPPARAM, "SerialParam") || length(chroms_to_process) == 1) {
+    if (is(BPPARAM, "SerialParam") ||
+        length(chroms_to_process) == 1) {
         start_time <- Sys.time()
         if (length(chroms_to_process) > 1 && is.null(sites)) {
             to_process <- contig_info[chroms_to_process]
-            sites <- GRanges(paste0(names(to_process), ":", 1, "-", to_process))
+            sites <-
+                GRanges(paste0(names(to_process), ":", 1, "-", to_process))
             sites <- gr_to_cregions(sites)
         }
         res <- .Call(
-            ".pileup", bfs, bidxs, as.integer(n_files),
-            fafile, region,
-            sites, fp[["int_args"]], fp[["numeric_args"]], fp[["lgl_args"]],
-            fp[["library_type"]], fp[["only_keep_variants"]], fp[["min_mapq"]],
-            in_memory, outfiles, umi_tag
+            ".pileup",
+            bfs,
+            bidxs,
+            as.integer(n_files),
+            fafile,
+            region,
+            sites,
+            fp[["int_args"]],
+            fp[["numeric_args"]],
+            fp[["lgl_args"]],
+            fp[["library_type"]],
+            fp[["only_keep_variants"]],
+            fp[["min_mapq"]],
+            in_memory,
+            outfiles,
+            umi_tag
         )
 
         if (!in_memory) {
@@ -285,8 +301,7 @@ pileup_sites <- function(bamfiles,
             res <- res[2:length(res)]
             res <- lists_to_grs(res, contigs)
             res <- merge_pileups(res,
-                                 sample_names = sample_ids
-            )
+                                 sample_names = sample_ids)
             rowData(res) <- cbind(rowData(res), rdat)
         }
 
@@ -298,10 +313,9 @@ pileup_sites <- function(bamfiles,
         res <- bplapply(chroms_to_process, function(ctig) {
             start_time <- Sys.time()
             if (length(outfiles) > 0) {
-                tmp_outfiles <- unlist(lapply(
-                    seq_along(outfiles),
-                    function(x) tempfile()
-                ))
+                tmp_outfiles <- unlist(lapply(seq_along(outfiles),
+                                              function(x)
+                                                  tempfile()))
                 tmp_rdatfile <- tmp_outfiles[1]
                 tmp_plpfiles <- tmp_outfiles[2:length(tmp_outfiles)]
                 fn_lst <- list(
@@ -313,12 +327,25 @@ pileup_sites <- function(bamfiles,
             } else {
                 tmp_outfiles <- character()
             }
-            if (is.null(ctig)) ctig <- character()
+            if (is.null(ctig))
+                ctig <- character()
             res <- .Call(
-                ".pileup", bfs, bidxs, as.integer(n_files), fafile, ctig,
-                sites, fp[["int_args"]], fp[["numeric_args"]],
-                fp[["lgl_args"]], fp[["library_type"]], fp[["only_keep_variants"]],
-                fp[["min_mapq"]], in_memory, tmp_outfiles, umi_tag
+                ".pileup",
+                bfs,
+                bidxs,
+                as.integer(n_files),
+                fafile,
+                ctig,
+                sites,
+                fp[["int_args"]],
+                fp[["numeric_args"]],
+                fp[["lgl_args"]],
+                fp[["library_type"]],
+                fp[["only_keep_variants"]],
+                fp[["min_mapq"]],
+                in_memory,
+                tmp_outfiles,
+                umi_tag
             )
 
             if (!in_memory) {
@@ -367,7 +394,14 @@ pileup_sites <- function(bamfiles,
         # run_pileup writes to a (temp)file, next the file will be tabix indexed
         tbxfiles <- lapply(outfiles, function(x) {
             tbxfile <- Rsamtools::bgzip(x, overwrite = TRUE)
-            idx <- Rsamtools::indexTabix(tbxfile, seq = 1, start = 2, end = 2, zeroBased = FALSE)
+            idx <-
+                Rsamtools::indexTabix(
+                    tbxfile,
+                    seq = 1,
+                    start = 2,
+                    end = 2,
+                    zeroBased = FALSE
+                )
             tbxfile
         })
 
@@ -378,7 +412,8 @@ pileup_sites <- function(bamfiles,
 
         res <- lapply(tbxfiles, function(x) {
             xx <- read_pileup(x, region = NULL)
-            GenomeInfoDb::seqlevels(xx) <- GenomeInfoDb::seqlevels(contigs)
+            GenomeInfoDb::seqlevels(xx) <-
+                GenomeInfoDb::seqlevels(contigs)
             GenomeInfoDb::seqinfo(xx) <- contigs
             xx
         })
