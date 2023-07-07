@@ -57,7 +57,7 @@ plus strand).}
 \value{
 Either a GRanges or SummarizedExperiment object with
 a new column added with information from \code{col_to_aggr} and optionally
-\code{snp_ref_allele}, \code{snp_alt_allele}, and \code{snp_matches_site} annotations.
+\code{snp_ref_allele}, \code{snp_alt_alleles}, and \code{snp_matches_site} annotations.
 }
 \description{
 This function will annotate a \link{GRanges} or the rowRanges of

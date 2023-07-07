@@ -26,6 +26,10 @@ reference:
   contents:
   - '`find_de_sites`'
   - '`make_de_object`'
+ - title: Single cell editing analysis
+  contents:
+  - '`find_scde_sites`'
+  - '`find_mispriming_sites`'
 - title: Data
   contents:
   - has_concept('external-data')
@@ -36,4 +40,3 @@ reference:
   - '`raer_example`'
   - '`read_pileup`'
   - '`read_sparray`'
-  - '`find_mispriming_sites`'

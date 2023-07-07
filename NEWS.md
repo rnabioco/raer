@@ -3,6 +3,9 @@
 * `annot_snps` will now compare the site allele to the SNP allele and return a 
 column `snp_matches_site` indicating if the site matches the snp. 
 
+* added new function, `find_scde_sites()` to identify differentially editing 
+sites in single cell data using fishers exact tests. 
+
 * `pileup_cells` now respects the `min_depth` and `min_variant_reads` FilterParameters.   
 
 # raer 0.99.3
