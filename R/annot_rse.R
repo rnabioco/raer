@@ -39,6 +39,7 @@ annot_snps.GRanges <- function(obj,
 
     # now annot if site is a SNP
     snp_overlaps <- findOverlaps(sites, snps, ignore.strand = TRUE)
+
     if (length(snp_overlaps) == 0) {
         mcols(sites)[col_to_aggr] <- NA
         seqlevelsStyle(sites) <- in_style
@@ -63,19 +64,30 @@ annot_snps.GRanges <- function(obj,
 
         # prevent no visible binding for global variable note
         alt_alleles <- ref_allele <- NULL
-        snps$alt_alleles <- unstrsplit(snps$alt_alleles)
+
+        snps$alt_alleles <- vapply(snps$alt_alleles,
+                                   function(x) paste0(unique(x), collapse = ","),
+                                   FUN.VALUE = character(1))
 
         snp_info <- aggregate(
             snps,
             snp_overlaps,
             snp = unstrsplit(eval(parse(text = col_to_aggr)), ","),
-            ref_allele = unstrsplit(ref_allele, ","),
-            alt_alleles = unstrsplit(alt_alleles, ","),
+            ref_allele = unstrsplit(ref_allele),
+            alt_alleles = unstrsplit(alt_alleles),
             drop = FALSE
         )
+
         snp_info$grouping <- NULL
-        colnames(snp_info) <- c(col_to_aggr, "snp_ref_allele", "snp_alt_alleles")
+        colnames(snp_info) <- c(col_to_aggr,
+                                "snp_ref_allele",
+                                "snp_alt_alleles")
+
         mcols(sites) <- cbind(mcols(sites), snp_info)
+
+        if("ALT" %in% colnames(mcols(sites))) {
+            mcols(sites)$snp_matches_site <- check_snp_match(sites)
+        }
     }
 
     seqlevelsStyle(sites) <- in_style

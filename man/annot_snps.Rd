@@ -47,12 +47,17 @@ as comma separated values.}
 
 \item{genome}{A BSgenome object, which if supplied, will be used to provide
 additional \code{snp_ref_allele} and \code{snp_alt_alleles} columns containing the
-reference and alt allele sequences, with respect to the positive strand.}
+reference and alt allele sequences, with respect to the positive strand.
+Additionally the snp sequences will be checked against the allele at the site
+if a column named \code{ALT} is present in object. The strand of the site will be
+used to determine if the \code{ALT} allele needs to be complemented prior to
+comparing against the SNP db (which always returns sequences w.r.t the
+plus strand).}
 }
 \value{
 Either a GRanges or SummarizedExperiment object with
-a new column added with information from \code{col_to_aggr} and optionally the
-\code{snp_ref_allele} and \code{snp_alt_allele} sequences.
+a new column added with information from \code{col_to_aggr} and optionally
+\code{snp_ref_allele}, \code{snp_alt_allele}, and \code{snp_matches_site} annotations.
 }
 \description{
 This function will annotate a \link{GRanges} or the rowRanges of

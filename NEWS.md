@@ -1,5 +1,8 @@
 # raer 0.99.4
 
+* `annot_snps` will now compare the site allele to the SNP allele and return a 
+column `snp_matches_site` indicating if the site matches the snp. 
+
 * `pileup_cells` now respects the `min_depth` and `min_variant_reads` FilterParameters.   
 
 # raer 0.99.3
