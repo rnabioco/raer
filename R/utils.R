@@ -200,3 +200,26 @@ seqinfo_from_header <- function(bam) {
     GenomeInfoDb::Seqinfo(names(ctigs), ctigs)
 }
 
+# Check is ALT allele matches snpDB allele
+check_snp_match <- function(x, snp_col = "snp_alt_alleles", stranded = TRUE) {
+    stopifnot(all(c(snp_col, "ALT") %in%
+                      colnames(mcols(x))))
+
+    alt <- mcols(x)$ALT
+    snp_seq_str <- mcols(x)[[snp_col]]
+    snp_seqs <- strsplit(snp_seq_str, ",")
+
+    # convert ALT to + strand representation to match SNP sequence representation
+    if(stranded) {
+        is_minus <- as.logical(strand(x) == "-")
+        ma <- alt[is_minus]
+        comp_bases <- Biostrings::complement(Biostrings::DNAStringSet(ma))
+        alt[is_minus] <- as.character(comp_bases)
+    }
+
+    res <- mapply(function(x, y) {x %in% y}, alt, snp_seqs)
+    # set sites without a SNP to NA
+    res[snp_seq_str == ""] <- NA
+    res
+}
+

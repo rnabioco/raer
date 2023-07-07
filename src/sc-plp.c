@@ -456,7 +456,7 @@ static int run_scpileup(sc_mplp_conf_t* conf, char* bamfn, char* index, char* ba
                 ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
                 : 'N';
 
-        // store base counts based on library type and r1/r2 status
+        // determine if based should be complemented based on library type and r1/r2 status
         int invert = invert_read_orientation(p->b, conf->libtype);
         if (invert < 0) {
           REprintf("[raer internal] invert read orientation failure %i\n", invert);
@@ -469,7 +469,10 @@ static int run_scpileup(sc_mplp_conf_t* conf, char* bamfn, char* index, char* ba
         if (rret > 0) continue;
 
         if (invert) c = (char)comp_base[(unsigned char)c];
-        int strand = invert + 1; //invert is 0 if pos, 1 if neg.
+
+        // invert is 0 if pos, 1 if neg
+        // set strand to match payload with 1 is pos 2 is neg
+        int strand = invert + 1; //
 
         int cret = count_record(p->b, conf, pld, c, strand, bamid);
 

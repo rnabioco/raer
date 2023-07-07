@@ -554,3 +554,154 @@ run_edger <- function(deobj, condition_control = NULL,
         model_matrix = design
     ))
 }
+
+#' Identify sites with differential editing between cells in single cell datasets
+#'
+#' @description
+#' Compare editing frequencies between clusters or celltypes. REF and ALT counts
+#' from each cluster are pooled to create pseudobulk estimates. Each pair of clusters
+#' are compared using fisher exact tests. Statistics are aggregated across each pairwise
+#' comparison using [scran::combineMarkers].
+#'
+#' @param sce [SingleCellExperiment] object with `nRef` and `nAlt` assays.
+#' @param group column name from colData used to define groups to compare.
+#' @param BPPARAM BiocParallel backend for control how paralllel computations are
+#' performed.
+#' @param ... Additional arguments passed to [scran::combineMarkers]
+#'
+#' @returns
+#' A named list of [DataFrame]s containing results for each cluster specified by `group`.
+#' The difference in editing frequencies between cluster pairs are denoted as `dEF`.
+#' See [combineMarkers] for a description of additional output fields.
+#'
+#'
+#'
+#' @examples
+#'
+#' ### generate example data ###
+#'
+#' library(Rsamtools)
+#' library(GenomicRanges)
+#' bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
+#'
+#' gr <- GRanges(c("2:579:-", "2:625:-", "2:645:-", "2:589:-", "2:601:-"))
+#' gr$REF <- c(rep("A", 4), "T")
+#' gr$ALT <- c(rep("G", 4), "C")
+#'
+#' cbs <- unique(scanBam(bam_fn, param = ScanBamParam(tag = "CB"))[[1]]$tag$CB)
+#' cbs <- na.omit(cbs)
+#'
+#' outdir <- tempdir()
+#' bai <- indexBam(bam_fn)
+#'
+#' fp <- FilterParam(library_type = "fr-second-strand")
+#' sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
+#'
+#' # mock some clusters
+#' sce$clusters <- paste0("cluster_", sample(1:3, nrow(sce), replace = TRUE))
+#' res <- find_scde_sites(sce, "clusters")
+#' res[[1]]
+#' @importFrom stats fisher.test
+#' @importFrom
+#' @export
+find_scde_sites <- function(
+        sce,
+        group,
+        BPPARAM = SerialParam(),
+        ...) {
+
+    if (!requireNamespace("scran", quietly = TRUE)) {
+        cli::cli_abort("Package \"scran\" needed for differential editing.")
+    }
+
+    if (!requireNamespace("scuttle", quietly = TRUE)) {
+        cli::cli_abort("Package \"scran\" needed for differential editing.")
+    }
+
+    if(!is(sce, "SingleCellExperiment")) {
+        cli::cli_abort("sce must be a SingleCellExperiment object")
+    }
+
+    if(!all(c("nRef", "nAlt") %in% assayNames(sce))) {
+        cli::cli_abort("sce must contain nRef and nAlt assays")
+    }
+
+    if(length(group) != 1) {
+        cli::cli_abort("group must be a single value")
+    }
+
+    if(!(group %in% colnames(colData(sce)))){
+        cli::cli_abort("{group} not found in colData")
+    }
+    assay(sce, "depth") <- assay(sce, "nRef") + assay(sce, "nAlt")
+
+    no_depth_cells <-  colSums(assay(sce, "depth")) == 0
+    if(sum(no_depth_cells) > 0) {
+        cli::cli_alert(c("{sum(no_depth_cells)} cells had no REF or ALT counts ",
+                         "and were excluded from the analysis"))
+        sce <- sce[, !no_depth_cells]
+    }
+
+    assay(sce, "depth") <- scuttle::normalizeCounts(sce,
+                                                    assay.type = "depth",
+                                                    BPPARAM = BPPARAM)
+
+    nref <- scuttle::summarizeAssayByGroup(sce,
+                                           sce[[group]],
+                                           statistics = c("sum", "prop.detected"),
+                                           assay.type = "nRef",
+                                           BPPARAM = BPPARAM)
+
+    nalt <- scuttle::summarizeAssayByGroup(sce,
+                                           sce[[group]],
+                                           statistics = c("sum", "prop.detected"),
+                                           assay.type = "nAlt",
+                                           BPPARAM = BPPARAM)
+
+    grps <- unique(sce[[group]])
+    grp_pairs <- as.data.frame(t(utils::combn(grps, 2)))
+    colnames(grp_pairs) <- c("first", "second")
+
+    stats <- BiocParallel::bplapply(seq_len(nrow(grp_pairs)),
+                                    function(i) {
+                                        gp <- grp_pairs[i, , drop = TRUE]
+                                        ref <- assay(nref, "sum")[, c(gp$first, gp$second)]
+                                        alt <- assay(nalt, "sum")[, c(gp$first, gp$second)]
+                                        pvals <- calc_fishers(ref, alt)
+                                        ef <- alt / (ref + alt)
+                                        d_editing_frequency <- ef[, 2] - ef[, 1]
+
+                                        res <- data.frame(p.value = pvals,
+                                                          dEF = d_editing_frequency,
+                                                          row.names = rownames(ref))
+                                        res
+                                    }, BPPARAM = BPPARAM)
+    res <- scran::combineMarkers(stats,
+                                 grp_pairs,
+                                 effect.field = "dEF",
+                                 BPPARAM = BPPARAM,
+                                 ...)
+
+    depth_summary <- scran::summaryMarkerStats(sce,
+                                               sce[[group]],
+                                               assay.type = "depth",
+                                               BPPARAM = BPPARAM)
+
+    for(nm in names(res)) {
+        res[[nm]] <- cbind(depth_summary[[nm]], res[[nm]])
+    }
+
+    res
+}
+
+
+calc_fishers <- function(ref, alt) {
+    nr <- nrow(ref)
+    res <- vector("numeric", length = nr)
+    for(i in seq.int(nr)) {
+        vals <- rbind(ref[i, ], alt[i, ])
+        res[i] <- fisher.test(vals, alternative="two.sided")$p.value
+    }
+    res
+}
+
