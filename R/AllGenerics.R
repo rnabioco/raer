@@ -24,7 +24,7 @@
 #'
 #' @return Either a GRanges or SummarizedExperiment object with
 #' a new column added with information from `col_to_aggr` and optionally
-#' `snp_ref_allele`, `snp_alt_allele`, and `snp_matches_site` annotations.
+#' `snp_ref_allele`, `snp_alt_alleles`, and `snp_matches_site` annotations.
 #'
 #' @examples
 #' if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
