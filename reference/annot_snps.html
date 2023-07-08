@@ -122,7 +122,12 @@ as comma separated values.</p></dd>
 <dt>genome</dt>
 <dd><p>A BSgenome object, which if supplied, will be used to provide
 additional <code>snp_ref_allele</code> and <code>snp_alt_alleles</code> columns containing the
-reference and alt allele sequences, with respect to the positive strand.</p></dd>
+reference and alt allele sequences, with respect to the positive strand.
+Additionally the snp sequences will be checked against the allele at the site
+if a column named <code>ALT</code> is present in object. The strand of the site will be
+used to determine if the <code>ALT</code> allele needs to be complemented prior to
+comparing against the SNP db (which always returns sequences w.r.t the
+plus strand).</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -130,8 +135,8 @@ reference and alt allele sequences, with respect to the positive strand.</p></dd
     
 
 <p>Either a GRanges or SummarizedExperiment object with
-a new column added with information from <code>col_to_aggr</code> and optionally the
-<code>snp_ref_allele</code> and <code>snp_alt_allele</code> sequences.</p>
+a new column added with information from <code>col_to_aggr</code> and optionally
+<code>snp_ref_allele</code>, <code>snp_alt_alleles</code>, and <code>snp_matches_site</code> annotations.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
