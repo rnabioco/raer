@@ -26,7 +26,7 @@ reference:
   contents:
   - '`find_de_sites`'
   - '`make_de_object`'
- - title: Single cell editing analysis
+- title: Single cell editing analysis
   contents:
   - '`find_scde_sites`'
   - '`find_mispriming_sites`'
