@@ -358,7 +358,7 @@ pileup_cells <- function(bamfiles,
 read_sparray <- function(mtx_fn, sites_fn, bc_fn,
                          site_format = c("coordinate", "index")) {
 
-    if (!file.size(mtx_fn) > 0) {
+    if (!file.size(sites_fn) > 0) {
         return(SingleCellExperiment::SingleCellExperiment())
     }
 
@@ -384,26 +384,39 @@ read_sparray <- function(mtx_fn, sites_fn, bc_fn,
     cnames <- readLines(bc_fn)
     n_skip <- ifelse(startsWith(readLines(mtx_fn, n = 1), "%%%"), 3, 0)
 
-    dt <- data.table::fread(mtx_fn,
-                            sep = " ",
-                            colClasses = "integer",
-                            skip = n_skip,
-                            header = FALSE)
     sp_mtx_names <- c("nRef", "nAlt")
     n_sp_cols <- 2 + length(sp_mtx_names)
 
-    if (ncol(dt) != n_sp_cols) cli::cli_abort("malformed sparseMatrix")
+    if(file.size(mtx_fn) > 0) {
+        dt <- data.table::fread(mtx_fn,
+                                sep = " ",
+                                colClasses = "integer",
+                                skip = n_skip,
+                                header = FALSE)
 
-    sp_idxs <- 3:n_sp_cols
-    sps <- lapply(sp_idxs, function(x) {
-        sm <- sparseMatrix(
-            i = dt[[1]],
-            j = dt[[2]],
-            x = dt[[x]],
-            dims = c(length(rnames), length(cnames)),
-        )
-    })
+        if (ncol(dt) != n_sp_cols) cli::cli_abort("malformed sparseMatrix")
+
+        sp_idxs <- 3:n_sp_cols
+        sps <- lapply(sp_idxs, function(x) {
+            sm <- sparseMatrix(
+                i = dt[[1]],
+                j = dt[[2]],
+                x = dt[[x]],
+                dims = c(length(rnames), length(cnames)),
+            )
+        })
+    } else {
+        # handle case where sites were queried, but no counts
+        sps <- lapply(seq_along(sp_mtx_names), function(x) {
+            sparseMatrix(integer(0),
+                         integer(0),
+                         x = 0L,
+                         dims = c(length(rnames), length(cnames)))
+        })
+
+    }
     names(sps) <- sp_mtx_names
+
     res <- SingleCellExperiment::SingleCellExperiment(sps)
     colnames(res) <- cnames
     if(site_format == "coordinate") {

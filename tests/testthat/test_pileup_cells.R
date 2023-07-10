@@ -42,8 +42,19 @@ test_that("basic functionality works", {
     expect_warning(pileup_cells(bam_fn, gr,
         c("non", "existent", "barcodes"),
         outdir,
-        param = fp
+        param = FilterParam(library_type = "fr-second-strand",
+                            min_depth = 1)
     ))
+
+    # returns empty matricies
+
+    sce <- pileup_cells(bam_fn, gr,
+                 c("non", "existent", "barcodes"),
+                 outdir,
+                 param = fp
+    )
+    expect_equal(sum(assay(sce, "nRef")) + sum(assay(sce, "nAlt")), 0L)
+
 
     expect_error(pileup_cells(bam_fn, as.data.frame(gr),
         cbs, outdir,
