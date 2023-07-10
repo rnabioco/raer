@@ -128,19 +128,25 @@ See combineMarkers for a description of additional output fields.</p>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">find_scde_sites</span><span class="op">(</span><span class="va">sce</span>, <span class="st">"clusters"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> → 244 cells had no REF or ALT counts and were excluded from the analysis</span>
 <span class="r-in"><span><span class="va">res</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DataFrame with 4 rows and 9 columns</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DataFrame with 4 rows and 10 columns</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              self.average other.average self.detected other.detected</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 &lt;numeric&gt;     &lt;numeric&gt;     &lt;numeric&gt;      &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_579_2     0.634774      0.696045      0.682927       0.743243</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_589_2     0.832883      0.850076      0.853659       0.871622</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_601_2     0.852779      0.838010      0.865854       0.864865</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_625_2     0.989513      0.948444      0.890244       0.864865</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    Top   p.value       FDR summary.dEF dEF.cluster_3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_579_2     0.632028      0.670244      0.674699       0.719201</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_589_2     0.832536      0.836886      0.843373       0.862409</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_601_2     0.825593      0.853260      0.831325       0.876493</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_625_2     0.990507      0.967634      0.879518       0.876493</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    Top   p.value       FDR summary.dEF dEF.cluster_1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              &lt;integer&gt; &lt;numeric&gt; &lt;numeric&gt;   &lt;numeric&gt;     &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_579_2         1  0.509699  0.905384  0.04530671    0.04530671</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_589_2         2  0.605692  0.905384 -0.00823487   -0.00823487</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_601_2         3  0.713095  0.905384  0.00930280    0.00930280</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_625_2         4  0.905384  0.905384  0.01100433    0.01100433</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_579_2         1  0.405911  0.872899   0.0607903     0.0607903</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_589_2         2  0.853034  0.872899   0.0287400     0.0287400</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_601_2         2  0.548374  0.872899  -0.0151515    -0.0141844</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_625_2         3  0.872899  0.872899  -0.0405660     0.0226496</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              dEF.cluster_3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  &lt;numeric&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_579_2     0.0714286</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_589_2    -0.0135135</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_601_2    -0.0151515</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_625_2    -0.0405660</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
