@@ -68,8 +68,8 @@ populated with two assays, \code{nRef} and \code{nAlt}, which represent base cou
 for the reference and alternate alleles. The \code{\link[=rowRanges]{rowRanges()}} will contain the
 genomic interval for each site, along with \code{REF} and \code{ALT} columns. The
 rownames will be populated with the format
-\verb{site_[seqnames]_[position(1-based)]_[strand]}, with \code{strand} being encoded
-as 1 = +, 2 = -, and 3 = *.
+\verb{site_[seqnames]_[position(1-based)]_[strand]_[allele]}, with \code{strand} being encoded
+as 1 = +, 2 = -, and 3 = *, and allele being \code{REF} + \code{ALT}.
 
 If \code{return_sce} is \code{FALSE} then a character vector of paths to the
 sparseMatrix files (\code{barcodes.txt.gz}, \code{sites.txt.gz}, \code{counts.mtx.gz}),

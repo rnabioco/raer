@@ -95,11 +95,9 @@ e_sce <- pileup_cells(
     cb_tag = "CB",
     umi_tag = "UB",
     param = FilterParam(
-        min_base_quality = 30L,
+        min_mapq = 255L,
         library_type = "fr-second-strand",
-        min_variant_reads = 1L,
-        trim_5p = 5L,
-        trim_3p = 5L
+        min_variant_reads = 1L
     ),
     verbose = FALSE
 )
@@ -133,16 +131,16 @@ Alternatively we can view these top edited sites as a Heatmap, showing the avera
 number of edited reads per site in each cell type. 
 
 ```{r}
-altExp(sce)$cell_type <- sce$celltype
+altExp(sce)$celltype <- sce$celltype
 
 plotGroupedHeatmap(altExp(sce),
     features = to_plot[1:25],
-    group = "cell_type",
+    group = "celltype",
     exprs_values = "nAlt"
 )
 ```
 
-Various tools in Bioconductor can be used to provide additional annotation information about each RNA editing site.  The `VariantAnnotation` package provides powerful functionality to annotate the location of each editing site and provide information about alterations in codons or splice sites. 
+`raer` provides additional tools to examine cell type specific editing. `find_celltype_de()` will perform statistical testing to identify sites with different editing frequencies between clusters/cell types. `calc_scAEI()` will calculate the `AEI` score find single cells. 
 
 <details style="margin-bottom:10px;">
 <summary>

@@ -1073,15 +1073,29 @@ cbind_sparse <- function(mats) {
     res
 }
 
-site_names <- function(gr) {
+site_names <- function(gr, allele = FALSE) {
     if (length(gr) == 0) {
         return(NULL)
     }
-    paste(
-        "site",
-        decode(seqnames(gr)),
-        decode(start(gr)),
-        as.integer(strand(gr)),
-        sep = "_"
-    )
+    if(allele) {
+        stopifnot(all(c("ALT", "REF") %in% colnames(mcols(gr))))
+        res <- paste0(
+            "site", "_",
+            decode(seqnames(gr)), "_",
+            decode(start(gr)), "_",
+            as.integer(strand(gr)), "_",
+            mcols(gr)$REF,
+            mcols(gr)$ALT
+        )
+    } else {
+        res <- paste(
+            "site",
+            decode(seqnames(gr)),
+            decode(start(gr)),
+            as.integer(strand(gr)),
+            sep = "_"
+        )
+    }
+    res
+
 }

@@ -92,7 +92,7 @@ typedef struct {
   int idx_skip;
   int pe; // 1 if paired end, 0 if not
   int min_counts; // if 0 report all sites in sparseMatrix
-  int site_idx; // counter of sites written, used for row index if report_all is FALSE
+  int site_idx; // counter of sites written, used for row index if min_counts > 0
   int is_ss2; // 1 if smart-seq2 mode, 0 otherwise
 } sc_mplp_conf_t;
 
@@ -326,6 +326,70 @@ static void set_event_filters(efilter* ef, int* event_filters) {
   ef->min_var_reads = event_filters[8];
 }
 
+// process one site
+static int process_one_site(const bam_pileup1_t** plp, sc_mplp_conf_t* conf,
+                            payload_t* pld, bam_hdr_t* h, int tid,
+                            int pos, int nbam, int* n_plp, char* bamid) {
+    int i, j,n_ref,n_alt;
+    i = j = n_ref = n_alt = 0;
+
+    clear_cb_umiset(conf->cbmap);
+
+    for (i = 0; i < nbam; ++i) {
+        // iterate through reads that overlap position
+        for (j = 0; j < n_plp[i]; ++j) {
+
+            const bam_pileup1_t* p = plp[i] + j;
+
+            // get read base
+            int c = p->qpos < p->b->core.l_qseq
+            ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
+            : 'N';
+
+            // determine if based should be complemented based on library type and r1/r2 status
+            int invert = invert_read_orientation(p->b, conf->libtype);
+            if (invert < 0) {
+                REprintf("[raer internal] invert read orientation failure %i\n", invert);
+                return(-1);
+            }
+
+            // remove bad reads
+            int rret = check_read_filters(p, conf);
+            if (rret > 0) continue;
+
+            if (invert) c = (char)comp_base[(unsigned char)c];
+
+            // invert is 0 if pos, 1 if neg
+            // set strand to match payload with 1 is pos 2 is neg
+            int strand = invert + 1; //
+
+            int cret = count_record(p->b, conf, pld, c, strand, bamid);
+
+            if(cret < 0) {
+                REprintf("[raer internal] issue with counting records\n");
+                return(-1);
+            } else if (cret == 2) {
+                n_ref += 1;
+            } else if (cret == 3) {
+                n_alt += 1;
+            }
+        }
+    }
+
+    // write records
+    int n_counted = n_ref + n_alt;
+    if (conf->min_counts == 0 ||
+        (n_counted >= conf->min_counts && n_alt >= conf->ef.min_var_reads) ) {
+
+        int wr = write_counts(conf, pld, sam_hdr_tid2name(h, tid), pos);
+        if (wr == -1) {
+            REprintf("[raer internal] error in writing output.");
+            return(-1);
+        }
+    }
+    return(1);
+}
+
 static int run_scpileup(sc_mplp_conf_t* conf, char* bamfn, char* index, char* bamid) {
 
   hts_set_log_level(HTS_LOG_ERROR);
@@ -419,88 +483,25 @@ static int run_scpileup(sc_mplp_conf_t* conf, char* bamfn, char* index, char* ba
     }
 
     // ensure position is in requested intervals
-    // if so recover payload with information about strand and ref/var bases
+    // if so recover payload with information about strand and ref/alt bases
     int ol;
     payload_t* pld;
-    if (conf->reg_idx && tid >= 0) {
-      ol = regidx_overlap(conf->reg_idx,
+    if (!(conf->reg_idx && tid >= 0)) continue;
+
+    ol = regidx_overlap(conf->reg_idx,
                           sam_hdr_tid2name(h, tid),
                           pos,
                           pos,
                           conf->reg_itr);
-      if (ol) {
-        pld = regitr_payload(conf->reg_itr, payload_t*);
-      } else {
-        continue;
-      }
-    } else {
-      continue;
+    if (!ol) continue;
+
+    // iterate through multiple requested alleles per position/region
+    while ( regitr_overlap(conf->reg_itr) ) {
+      pld = regitr_payload(conf->reg_itr, payload_t*);
+      ret = process_one_site(plp, conf, pld, h, tid, pos, nbam, n_plp, bamid);
+      if(ret < 0) goto fail;
+      ++n_iter;
     }
-
-    // reset cb/umi count structure
-    clear_cb_umiset(conf->cbmap);
-
-    int n_ref = 0;
-    int n_alt = 0;
-
-    // iterate through bam files, in this case 1 bam
-    for (i = 0; i < nbam; ++i) {
-      int j;
-      // iterate through reads that overlap position
-      for (j = 0; j < n_plp[i]; ++j) {
-
-        const bam_pileup1_t* p = plp[i] + j;
-
-        // get read base
-        int c = p->qpos < p->b->core.l_qseq
-                ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
-                : 'N';
-
-        // determine if based should be complemented based on library type and r1/r2 status
-        int invert = invert_read_orientation(p->b, conf->libtype);
-        if (invert < 0) {
-          REprintf("[raer internal] invert read orientation failure %i\n", invert);
-          ret = -1;
-          goto fail;
-        }
-
-        // remove bad reads
-        int rret = check_read_filters(p, conf);
-        if (rret > 0) continue;
-
-        if (invert) c = (char)comp_base[(unsigned char)c];
-
-        // invert is 0 if pos, 1 if neg
-        // set strand to match payload with 1 is pos 2 is neg
-        int strand = invert + 1; //
-
-        int cret = count_record(p->b, conf, pld, c, strand, bamid);
-
-        if(cret < 0) {
-            ret = -1;
-            REprintf("[raer internal] issue with counting records\n");
-            goto fail;
-        } else if (cret == 2) {
-            n_ref += 1;
-        } else if (cret == 3) {
-            n_alt += 1;
-        }
-      }
-    }
-
-    // write records
-    int n_counted = n_ref + n_alt;
-    if (conf->min_counts == 0 ||
-        (n_counted >= conf->min_counts && n_alt >= conf->ef.min_var_reads) ) {
-
-      int wr = write_counts(conf, pld, sam_hdr_tid2name(h, tid), pos);
-      if (wr == -1) {
-        REprintf("[raer internal] error in writing output.");
-        ret = -1;
-        goto fail;
-      }
-    }
-    ++n_iter;
   }
 
 fail:
