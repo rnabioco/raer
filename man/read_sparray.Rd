@@ -14,8 +14,8 @@ read_sparray(mtx_fn, sites_fn, bc_fn, site_format = c("coordinate", "index"))
 \item{bc_fn}{bcs.txt.gz file path}
 
 \item{site_format}{one of \code{coordinate} or \code{index}, \code{coordinate} will populate
-a SingleCellExperiment with rowRanges and rownames corresponind to genomic
-intervals, whereas `index`` will only add row indicies to the rownames.}
+a SingleCellExperiment with rowRanges and rownames corresponing to genomic
+intervals, whereas `index`` will only add row indices to the rownames.}
 }
 \value{
 a \code{SingleCellExperiment} object populated with \code{nRef} and \code{nAlt}

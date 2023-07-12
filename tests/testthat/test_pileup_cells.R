@@ -46,20 +46,19 @@ test_that("basic functionality works", {
                             min_depth = 1)
     ))
 
-    # returns empty matricies
-
+    # returns empty matrices
     sce <- pileup_cells(bam_fn, gr,
-                 c("non", "existent", "barcodes"),
-                 outdir,
-                 param = fp
+                        c("non", "existent", "barcodes"),
+                        outdir,
+                        param = fp
     )
     expect_equal(sum(assay(sce, "nRef")) + sum(assay(sce, "nAlt")), 0L)
-
 
     expect_error(pileup_cells(bam_fn, as.data.frame(gr),
         cbs, outdir,
         fp = fp
     ))
+
     expect_error(pileup_cells(bam_fn, gr,
         1:10, outdir,
         param = fp
@@ -203,3 +202,38 @@ test_that("custom indexes work", {
     expect_true(all(gr == rowRanges(sce)))
     unlink(c(bai_1, bai_2))
 })
+
+
+# get larger set of sites to query
+fa_fn <- raer_example("mouse_tiny.fasta")
+bulkfp <- FilterParam(min_mapq = 255L,
+                  min_variant_reads = 1,
+                  min_allelic_freq = 0.01,
+                  only_keep_variants = TRUE,
+                  report_multiallelic = FALSE,
+                  library_type = "fr-second-strand",
+                  bam_flags = scanBamFlag(isSecondaryAlignment = FALSE,
+                                          isSupplementaryAlignment = FALSE,
+                                          isNotPassingQualityControls =  FALSE))
+rse <- pileup_sites(bam_fn, fafile = fa_fn, chrom = "2", param = bulkfp)
+rowData(rse)$ALT <- assay(rse, "ALT")[, 1]
+sites <- rowRanges(rse)
+
+test_that("rownames are not duplicated", {
+    fp <- FilterParam(library_type = "fr-second-strand", min_depth = 0)
+    sce <- pileup_cells(bam_fn, sites, cbs, outdir, param = fp)
+    expect_false(any(duplicated(rownames(sce))))
+})
+
+test_that("multiple alleles per site can be queried", {
+    fp <- FilterParam(library_type = "fr-second-strand", min_depth = 0)
+    ol_sites <- GRanges(rep(c("2:261", "2:262", "2:279"), each = 2),
+                        strand = rep(c("+", "-"), 3),
+                        REF = c("G", "C", "C", "G", "G", "C"),
+                        ALT = c("T", "A", "T", "A", "T", "A"))
+    sce <- pileup_cells(bam_fn, ol_sites, cbs, outdir, param = fp)
+    expect_true(nrow(sce) == 6)
+    expect_true(all(Matrix::rowSums(assay(sce, "nAlt")) > 0))
+    expect_true(all(Matrix::rowSums(assay(sce, "nRef")) > 0))
+})
+

@@ -572,7 +572,7 @@ run_edger <- function(deobj, condition_control = NULL,
 #' @returns
 #' A named list of [DataFrame]s containing results for each cluster specified by `group`.
 #' The difference in editing frequencies between cluster pairs are denoted as `dEF`.
-#' See [combineMarkers] for a description of additional output fields.
+#' See [scran::combineMarkers] for a description of additional output fields.
 #'
 #'
 #'
@@ -598,7 +598,8 @@ run_edger <- function(deobj, condition_control = NULL,
 #' sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
 #'
 #' # mock some clusters
-#' sce$clusters <- paste0("cluster_", sample(1:3, nrow(sce), replace = TRUE))
+#' set.seed(42)
+#' sce$clusters <- paste0("cluster_", sample(1:3, ncol(sce), replace = TRUE))
 #' res <- find_scde_sites(sce, "clusters")
 #' res[[1]]
 #' @importFrom stats fisher.test

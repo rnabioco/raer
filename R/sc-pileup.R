@@ -51,8 +51,8 @@
 #'   for the reference and alternate alleles. The [rowRanges()] will contain the
 #'   genomic interval for each site, along with `REF` and `ALT` columns. The
 #'   rownames will be populated with the format
-#'   `site_[seqnames]_[position(1-based)]_[strand]`, with `strand` being encoded
-#'   as 1 = +, 2 = -, and 3 = *.
+#'   `site_[seqnames]_[position(1-based)]_[strand]_[allele]`, with `strand` being encoded
+#'   as 1 = +, 2 = -, and 3 = *, and allele being `REF` + `ALT`.
 #'
 #'   If `return_sce` is `FALSE` then a character vector of paths to the
 #'   sparseMatrix files (`barcodes.txt.gz`, `sites.txt.gz`, `counts.mtx.gz`),
@@ -221,7 +221,7 @@ pileup_cells <- function(bamfiles,
         tmp_bamidxs <- chunk_vec(bfi, nwrkers)
         tmp_cbs <- chunk_vec(cell_barcodes, nwrkers)
         ids <- seq_along(tmp_bamfns)
-        tmp_plp_files <- bpmapply(get_sc_pileup,
+        sces <- bpmapply(get_sc_pileup,
             bamfn = tmp_bamfns,
             index = tmp_bamidxs,
             id = ids,
@@ -243,7 +243,7 @@ pileup_cells <- function(bamfiles,
         )
     } else {
         # operate in parallel over each chromosome
-        tmp_plp_files <- bpmapply(get_sc_pileup,
+        sces <- bpmapply(get_sc_pileup,
             chrom = chroms_to_process,
             id = chroms_to_process,
             MoreArgs = list(
@@ -269,13 +269,6 @@ pileup_cells <- function(bamfiles,
 
     if (verbose) cli::cli_alert("pileup completed, binding matrices")
 
-    on.exit(unlink(unlist(tmp_plp_files)))
-    tmp_plp_files <- Filter(function(x) length(x) > 0, tmp_plp_files)
-
-    sces <- lapply(tmp_plp_files, function(x) {
-        read_sparray(x[1], x[2], x[3], site_format = "index")
-    })
-
     sces <- Filter(function(x) length(x) > 0, sces)
 
     outfns <- c("counts.mtx.gz", "sites.txt.gz", "barcodes.txt.gz")
@@ -293,11 +286,9 @@ pileup_cells <- function(bamfiles,
     }
 
     sce <- do.call(rbind, sces)
-    ridx <- as.integer(rownames(sce))
-    rowRanges(sce) <- sites[ridx]
-    rownames(sce) <- site_names(rowRanges(sce))
+    rownames(sce) <- site_names(rowRanges(sce), allele = TRUE)
 
-    write_sparray(sce, outfns["counts"], outfns["sites"], outfns["bc"], ridx)
+    write_sparray(sce, outfns["counts"], outfns["sites"], outfns["bc"])
 
     if (return_sce) {
         res <- sce
@@ -305,6 +296,60 @@ pileup_cells <- function(bamfiles,
         res <- outfns
     }
     res
+}
+
+get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
+                          outfile_prefix, chrom,
+                          umi_tag, cb_tag, libtype_code,
+                          event_filters, fp, pe, verbose) {
+    if (length(chrom) > 0) {
+        sites <- sites[seqnames(sites) %in% chrom, ]
+    }
+
+    if (length(sites) == 0) {
+        return(character())
+    }
+
+    outfns <- c("counts.mtx", "sites.txt", "bcs.txt")
+    plp_outfns <- file.path(outfile_prefix, paste0(id, "_", outfns))
+    plp_outfns <- path.expand(plp_outfns)
+    on.exit(unlink(plp_outfns))
+
+    if (verbose) cli::cli_alert("working on group: {id}")
+    lst <- gr_to_regions(sites)
+    res <- .Call(
+        ".scpileup",
+        bamfn,
+        index,
+        chrom,
+        lst,
+        barcodes,
+        cb_tag,
+        event_filters,
+        fp$min_mapq,
+        fp$max_depth,
+        fp$min_base_quality,
+        fp$read_bqual,
+        as.integer(libtype_code),
+        fp$bam_flags,
+        plp_outfns,
+        umi_tag,
+        FALSE,
+        pe,
+        max(fp$min_variant_reads, fp$min_depth)
+    )
+
+    if (res < 0) cli::cli_abort("pileup failed")
+
+    # read files and populate with rownames matching index in sites gr
+    # alternatively can regenerate gr regions using data in files, however
+    # using the indexes is likely less error prone
+    sce <- read_sparray(plp_outfns[1], plp_outfns[2], plp_outfns[3],
+                        site_format = "index")
+
+    ridx <- as.integer(rownames(sce))
+    rowRanges(sce) <- sites[ridx]
+    sce
 }
 
 #' Read sparseMatrix produced by pileup_cells()
@@ -323,8 +368,8 @@ pileup_cells <- function(bamfiles,
 #' @param sites_fn sites.txt.gz file path
 #' @param bc_fn bcs.txt.gz file path
 #' @param site_format one of `coordinate` or `index`, `coordinate` will populate
-#' a SingleCellExperiment with rowRanges and rownames corresponind to genomic
-#' intervals, whereas `index`` will only add row indicies to the rownames.
+#' a SingleCellExperiment with rowRanges and rownames corresponing to genomic
+#' intervals, whereas `index`` will only add row indices to the rownames.
 #' @returns a `SingleCellExperiment` object populated with `nRef` and `nAlt`
 #' assays.
 #'
@@ -370,6 +415,8 @@ read_sparray <- function(mtx_fn, sites_fn, bc_fn,
                                                "integer", "character", "character"),
                                 data.table = FALSE)
     site_format <- match.arg(site_format)
+
+    # reconstruct rowRanges using index value or
     if(site_format == "index") {
         rnames <- rnames$index
     } else if (site_format == "coordinate") {
@@ -378,7 +425,7 @@ read_sparray <- function(mtx_fn, sites_fn, bc_fn,
         gr <- makeGRangesFromDataFrame(rnames,
                                        end.field = "start",
                                        keep.extra.columns = TRUE)
-        rnames <- site_names(gr)
+        rnames <- site_names(gr, allele = TRUE)
     }
 
     cnames <- readLines(bc_fn)
@@ -426,7 +473,7 @@ read_sparray <- function(mtx_fn, sites_fn, bc_fn,
     res
 }
 
-write_sparray <- function(sce, mtx_fn, sites_fn, bc_fn, r_index) {
+write_sparray <- function(sce, mtx_fn, sites_fn, bc_fn) {
     if(!all(c("nRef", "nAlt") %in% assayNames(sce))) {
         cli::cli_abort("missing required asssays nRef or nAlt")
     }
@@ -465,7 +512,7 @@ write_sparray <- function(sce, mtx_fn, sites_fn, bc_fn, r_index) {
                        showProgress = FALSE)
 
     sites <- data.frame(
-        r_index,
+        seq_along(sce),
         seqnames(sce),
         start(sce),
         as.integer(strand(sce)),
@@ -486,49 +533,7 @@ write_sparray <- function(sce, mtx_fn, sites_fn, bc_fn, r_index) {
 
 # Utilities -------------------------------------------------------
 
-get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
-    outfile_prefix, chrom,
-    umi_tag, cb_tag, libtype_code,
-    event_filters, fp, pe, verbose) {
-    if (length(chrom) > 0) {
-        sites <- sites[seqnames(sites) %in% chrom, ]
-    }
 
-    if (length(sites) == 0) {
-        return(character())
-    }
-
-    outfns <- c("counts.mtx", "sites.txt", "bcs.txt")
-    plp_outfns <- file.path(outfile_prefix, paste0(id, "_", outfns))
-    plp_outfns <- path.expand(plp_outfns)
-
-    if (verbose) cli::cli_alert("working on group: {id}")
-    lst <- gr_to_regions(sites)
-    res <- .Call(
-        ".scpileup",
-        bamfn,
-        index,
-        chrom,
-        lst,
-        barcodes,
-        cb_tag,
-        event_filters,
-        fp$min_mapq,
-        fp$max_depth,
-        fp$min_base_quality,
-        fp$read_bqual,
-        as.integer(libtype_code),
-        fp$bam_flags,
-        plp_outfns,
-        umi_tag,
-        FALSE,
-        pe,
-        max(fp$min_variant_reads, fp$min_depth)
-    )
-
-    if (res < 0) cli::cli_abort("pileup failed")
-    plp_outfns
-}
 
 gr_to_regions <- function(gr) {
     stopifnot(all(width(gr) == 1))

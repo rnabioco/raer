@@ -1,3 +1,9 @@
+# raer 0.99.5
+
+* `pileup_cells()` now allows for multiple alleles to be queried at a site.
+
+* Fixed an indexing bug in `pileup_cells()` that misassigned sites to counts.
+
 # raer 0.99.4
 
 * `annot_snps` will now compare the site allele to the SNP allele and return a 

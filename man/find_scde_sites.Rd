@@ -19,7 +19,7 @@ performed.}
 \value{
 A named list of \link{DataFrame}s containing results for each cluster specified by \code{group}.
 The difference in editing frequencies between cluster pairs are denoted as \code{dEF}.
-See \link{combineMarkers} for a description of additional output fields.
+See \link[scran:combineMarkers]{scran::combineMarkers} for a description of additional output fields.
 }
 \description{
 Compare editing frequencies between clusters or celltypes. REF and ALT counts
@@ -49,7 +49,8 @@ fp <- FilterParam(library_type = "fr-second-strand")
 sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
 
 # mock some clusters
-sce$clusters <- paste0("cluster_", sample(1:3, nrow(sce), replace = TRUE))
+set.seed(42)
+sce$clusters <- paste0("cluster_", sample(1:3, ncol(sce), replace = TRUE))
 res <- find_scde_sites(sce, "clusters")
 res[[1]]
 }
