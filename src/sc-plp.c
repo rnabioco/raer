@@ -12,14 +12,15 @@
 #include "regfile.h"
 #include "plp_utils.h"
 
-typedef struct umi_bases_t {
+
+typedef struct base_counts_t {
     int ref;
     int alt;
     int oth;
-} umi_bases_t ;
+} base_counts_t ;
 
 // hashmap with UMI seq as key pointing to a struct storing base counts
-KHASH_MAP_INIT_STR(umimap, umi_bases_t*)
+KHASH_MAP_INIT_STR(umimap, base_counts_t*)
 typedef khash_t(umimap)* umimap_t;
 
 typedef struct  {
@@ -34,13 +35,13 @@ typedef khash_t(cbumimap)* cbumi_map_t;
 
 static void clear_umi(umimap_t uhash) {
   khint_t k;
-  umi_bases_t* ub;
+  base_counts_t* ub;
 
   if (!uhash) return;
   for (k = kh_begin(uhash); k < kh_end(uhash); ++k) {
     if (kh_exist(uhash, k)) {
         free((char*)kh_key(uhash, k));
-        ub = (umi_bases_t*) kh_val(uhash, k);
+        ub = (base_counts_t*) kh_val(uhash, k);
         if(ub) free(ub);
     }
   }
@@ -169,12 +170,14 @@ static int check_read_filters(const bam_pileup1_t* p, sc_mplp_conf_t* conf) {
  * 2 umi is reference
  * 3 umi is alternate
  */
-static int count_record(bam1_t* b, sc_mplp_conf_t* conf, payload_t* pld,
+static int count_record(const bam_pileup1_t* p, sc_mplp_conf_t* conf, payload_t* pld,
                         unsigned char base, int strand, char* bamid) {
+
+  bam1_t* b = p->b;
   khiter_t k;
   char* cb, *cb_cpy, *umi, *umi_val;
   cb_t* cbdat;
-  umi_bases_t* ucounts;
+  base_counts_t* ucounts;
 
   int cret, uret;
   if (conf->is_ss2) {
@@ -214,21 +217,25 @@ static int count_record(bam1_t* b, sc_mplp_conf_t* conf, payload_t* pld,
       return (-1);
     }
     if (uret == 0) free(umi_val); // umi in hash already
-    if (uret == 1) kh_value(cbdat->umi, k) = R_Calloc(1, umi_bases_t);
+    if (uret == 1) kh_value(cbdat->umi, k) = R_Calloc(1, base_counts_t);
 
     ucounts = kh_value(cbdat->umi, k);
 
+    // store sum of base qualities for determining consensus base
+    int bq = p->qpos < p->b->core.l_qseq ? bam_get_qual(p->b)[p->qpos] : 0;
+
     if ((unsigned char)*pld->ref == base) {
-        ucounts->ref++;
+        ucounts->ref += bq;
         return (2);
     } else if ((unsigned char)*pld->alt == base) {
-        ucounts->alt++;
+        ucounts->alt += bq;
         return (3);
     } else {
         ucounts->oth++;
         return(1);
     }
   } else {
+
       if ((unsigned char)*pld->ref == base) {
           cbdat->ref++;
           return (2);
@@ -240,9 +247,12 @@ static int count_record(bam1_t* b, sc_mplp_conf_t* conf, payload_t* pld,
   return (1);
 }
 
-static int count_consensus_bases(cb_t* cbmap) {
+// determine if reads from each cb + umi pair support ref or alt, based on
+// sum of base qualities
+static int count_consensus_base(cb_t* cbmap, base_counts_t* all_bc) {
+
   khint_t k;
-  umi_bases_t* uc;
+  base_counts_t* uc;
 
   for (k = kh_begin(cbmap->umi); k != kh_end(cbmap->umi); ++k) {
     if (!kh_exist(cbmap->umi, k)) continue;
@@ -258,12 +268,42 @@ static int count_consensus_bases(cb_t* cbmap) {
     // in case of ties, report as alt
     if(uc->alt >= uc->ref) {
         cbmap->alt++;
+        all_bc->alt++;
     } else {
         cbmap->ref++;
+        all_bc->ref++;
     }
   }
 
   return(0);
+}
+
+static int resolve_consensus_bases(sc_mplp_conf_t* conf, base_counts_t* all_bc) {
+    const char* cb;
+    cb_t* cbdat;
+    khint_t k;
+    //reset base counts from all cells
+    memset(all_bc, 0, sizeof(base_counts_t));
+
+    if(!conf->has_umi) return (1);
+
+    for (k = kh_begin(conf->cbmap); k != kh_end(conf->cbmap); ++k) {
+        if (!kh_exist(conf->cbmap, k)) continue;
+        cb = kh_key(conf->cbmap, k);
+        cbdat = kh_val(conf->cbmap, k);
+
+        if(!cbdat->umi) {
+            REprintf("[raer internal] no bases found for CB %s %d\n", cb, k);
+            return (-1);
+        }
+
+        if(count_consensus_base(cbdat, all_bc) < 0) {
+            REprintf("[raer internal] error calculating consensus base for umi\n");
+            return (-1);
+        }
+    }
+    return(0);
+
 }
 
 /* write entry to sparse array-like format
@@ -293,16 +333,6 @@ static int write_counts(sc_mplp_conf_t* conf, payload_t* pld, const char* seqnam
       return (-1);
     }
 
-    if (conf->has_umi) {
-      if(!cbdat->umi) {
-          REprintf("[raer internal] no bases found for CB %s %d\n", cb, j);
-          return (-1);
-      }
-      if(count_consensus_bases(cbdat) < 0) {
-          REprintf("[raer internal] error calculating consensus base for umi\n");
-          return (-1);
-      }
-    }
     if (cbdat->ref == 0 && cbdat->alt == 0) continue;
     r_idx = conf->min_counts == 0 ? pld->idx : conf->site_idx;
     ret = fprintf(conf->fps[0], "%d %d %d %d\n", r_idx, c_idx, cbdat->ref, cbdat->alt);
@@ -402,6 +432,8 @@ static int process_one_site(const bam_pileup1_t** plp, sc_mplp_conf_t* conf,
                             int pos, int nbam, int* n_plp, char* bamid) {
     int i, j,n_ref,n_alt;
     i = j = n_ref = n_alt = 0;
+    base_counts_t all_cell_bc;
+    memset(&all_cell_bc, 0, sizeof(base_counts_t));
 
     clear_cb_umiset(conf->cbmap);
 
@@ -433,23 +465,29 @@ static int process_one_site(const bam_pileup1_t** plp, sc_mplp_conf_t* conf,
             // set strand to match payload with 1 is pos 2 is neg
             int strand = invert + 1; //
 
-            int cret = count_record(p->b, conf, pld, c, strand, bamid);
+            int cret = count_record(p, conf, pld, c, strand, bamid);
 
             if(cret < 0) {
                 REprintf("[raer internal] issue with counting records\n");
                 return(-1);
             } else if (cret == 2) {
-                n_ref += 1;
+                all_cell_bc.ref++;
             } else if (cret == 3) {
-                n_alt += 1;
+                all_cell_bc.alt++;;
             }
         }
     }
 
+    if(conf->has_umi) {
+        if(resolve_consensus_bases(conf, &all_cell_bc) < 0) {
+            REprintf("[raer interal] error resolving consensus bases");
+        }
+    }
+
     // write records
-    int n_counted = n_ref + n_alt;
+    int n_counted = all_cell_bc.ref + all_cell_bc.alt;
     if (conf->min_counts == 0 ||
-        (n_counted >= conf->min_counts && n_alt >= conf->ef.min_var_reads) ) {
+        (n_counted >= conf->min_counts && all_cell_bc.alt >= conf->ef.min_var_reads) ) {
 
         int wr = write_counts(conf, pld, sam_hdr_tid2name(h, tid), pos);
         if (wr == -1) {
