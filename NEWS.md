@@ -1,4 +1,4 @@
-# reaer 0.99.6 
+# raer 0.99.6 
 
 * added method to count base consensus base when counting UMIs with `pileup_cells()` using the sum of base qualities to select consensus. 
 
@@ -37,11 +37,6 @@ been changed to `A` and `G` respectively.
 # raer 0.99.0
 
 * added support for processing multiple BAM files with `calc_AEI()`. 
-
-* added method to count base occuring most frequently when counting UMIs with `pileup_cells()`. 
-
-* added support for processing multiple bam files with `calc_AEI()`. 
-
 
 * Dropped minimally used `bad_reads` and `reads` parameters from `pileup_sites()`
 

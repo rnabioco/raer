@@ -269,7 +269,7 @@ test_that("UMI consensus base selection works", {
 
     tf <- tempfile(fileext = ".sam")
     writeLines(c(mouse_sam_hdr, ref_aln, aln), tf)
-    tbam <- Rsamtools::asBam(tf, overwrite = TRUE)
+    tbam <- asBam(tf, overwrite = TRUE)
     tbai <- indexBam(tbam)
     on.exit(unlink(c(tf, tbam, tbai)))
 
@@ -287,7 +287,7 @@ test_that("UMI consensus base selection works", {
 
     # 2 reads support ref 1 alt
     writeLines(c(mouse_sam_hdr, ref_aln, ref_aln, aln), tf)
-    tbam <- Rsamtools::asBam(tf, overwrite = TRUE)
+    tbam <- asBam(tf, overwrite = TRUE)
     tbai <- indexBam(tbam)
     sce <- pileup_cells(tbam, ol_sites,
                         "AGGGAGTAGGCTATCT-1",
@@ -298,7 +298,7 @@ test_that("UMI consensus base selection works", {
     # 2 reads support ref, 1 support alt, alt has higher sum of base qualities
     ref_low_qual_aln <- change_qual(ref_aln, 84, 10)
     writeLines(c(mouse_sam_hdr, ref_low_qual_aln, ref_low_qual_aln, aln), tf)
-    tbam <- Rsamtools::asBam(tf, overwrite = TRUE)
+    tbam <- asBam(tf, overwrite = TRUE)
     tbai <- indexBam(tbam)
 
     sce <- pileup_cells(tbam, ol_sites,
@@ -319,7 +319,7 @@ test_that("UMI consensus base selection works", {
     # non ref/alt majority base not counted.
     other_aln <- change_base(aln, 84, "C")
     writeLines(c(mouse_sam_hdr, other_aln, other_aln, aln), tf)
-    tbam <- Rsamtools::asBam(tf, overwrite = TRUE)
+    tbam <- asBam(tf, overwrite = TRUE)
     tbai <- indexBam(tbam)
 
     sce <- pileup_cells(tbam, ol_sites,
@@ -327,8 +327,6 @@ test_that("UMI consensus base selection works", {
                         outdir, param = fp)
     expect_true(all(assay(sce, "nRef")[, 1] == c(0, 0, 1)))
     expect_true(all(assay(sce, "nAlt")[, 1] == c(0, 0, 0)))
-
-
 })
 
 
