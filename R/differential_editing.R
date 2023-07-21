@@ -603,7 +603,6 @@ run_edger <- function(deobj, condition_control = NULL,
 #' res <- find_scde_sites(sce, "clusters")
 #' res[[1]]
 #' @importFrom stats fisher.test
-#' @importFrom
 #' @export
 find_scde_sites <- function(
         sce,

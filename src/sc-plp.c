@@ -12,7 +12,14 @@
 #include "regfile.h"
 #include "plp_utils.h"
 
+/*! @typedef
+ @abstract Structure for storing count data for ref, alt or other bases
+ @field ref reference base count
+ @field alt alternate base count
+ @field other non-ref, non-alt base count
 
+ @note Used for storing sums of base counts or base qualities
+ */
 typedef struct base_counts_t {
     int ref;
     int alt;
@@ -23,16 +30,26 @@ typedef struct base_counts_t {
 KHASH_MAP_INIT_STR(umimap, base_counts_t*)
 typedef khash_t(umimap)* umimap_t;
 
+/*! @typedef
+ @abstract Structure for storing count data for ref, alt or other bases
+ @field umi hashmap storing umi sequences as keys and base count array as values
+ @field ref # of UMIs supporting ref
+ @field alt # of UMIs supporting alt
+
+ @note populated and cleared at each site
+ */
 typedef struct  {
-  umimap_t umi; // hashmap storing umi sequences, and base count array
-  int ref; // # of UMIs supporting ref
-  int alt; // # of UMIs supporting alt
+  umimap_t umi; //
+  int ref; //
+  int alt; //
 } cb_t;
 
 KHASH_MAP_INIT_STR(cbumimap, cb_t*)
 typedef khash_t(cbumimap)* cbumi_map_t;
 
-
+/*! @function
+ @abstract  free keys, values, and clear umimap_t hashmap
+ */
 static void clear_umi(umimap_t uhash) {
   khint_t k;
   base_counts_t* ub;
@@ -48,6 +65,9 @@ static void clear_umi(umimap_t uhash) {
   kh_clear(umimap, uhash);
 }
 
+/*! @function
+ @abstract  free keys, values and clear cbumi_map_t hashmap
+ */
 static void clear_cb_umiset(cbumi_map_t cbhash) {
   khint_t k;
   cb_t* cdat;
@@ -60,12 +80,18 @@ static void clear_cb_umiset(cbumi_map_t cbhash) {
   }
 }
 
+/*! @function
+ @abstract  initialize cb_t stuct and umimap_t hashmap
+ */
 static cb_t* init_umihash() {
   cb_t* cb = R_Calloc(1, cb_t);
   cb->umi = kh_init(umimap);
   return cb ;
 }
 
+/*! @function
+ @abstract  free cb hashmaps and associated data
+ */
 static void free_hashmaps(cbumi_map_t cbhash, str2intmap_t cbidx) {
   khint_t k;
   cb_t* cdat;
@@ -89,44 +115,53 @@ static void free_hashmaps(cbumi_map_t cbhash, str2intmap_t cbidx) {
 
 }
 
-// single cell pileup parameters
+/*! @typedef
+ @abstract single cell pileup configuration
+ */
 typedef struct {
-  int min_mq, libtype, min_bq, max_depth;
-  read_qual_t read_qual;
-  uint32_t keep_flag[2];
-  char* qregion;
-  regidx_t* reg_idx;
-  regitr_t* reg_itr;
-  char* mtxfn;
-  char* bcfn;
-  char* sitesfn;
-  FILE** fps; // [0] = mtxfn, [1] = sitefn, [2] = bcfn;
-  efilter ef;
-  str2intmap_t cbidx; // hashmap cellbarcode key -> column index value
-  cbumi_map_t cbmap; // hashmap cellbarcode key -> cbumi_map_t as value
-  int has_umi;
-  char* umi_tag;
-  char* cb_tag;
-  int idx_skip;
-  int pe; // 1 if paired end, 0 if not
-  int min_counts; // if 0 report all sites in sparseMatrix
-  int site_idx; // counter of sites written, used for row index if min_counts > 0
-  int is_ss2; // 1 if smart-seq2 mode, 0 otherwise
+  int min_mq, libtype, min_bq, max_depth; // min_mapQ, library type min baseQ max depth
+  read_qual_t read_qual; // read level base quality filter
+  uint32_t keep_flag[2]; // bam flag filter
+  char* qregion;         // query region
+  regidx_t* reg_idx;     // region index data structure
+  regitr_t* reg_itr;     // region index iterator
+  char* mtxfn;           // sparseMatrix filename
+  char* bcfn;            // barcodes filename
+  char* sitesfn;         // sites filename
+  FILE** fps;            // file pointers [0] = mtxfn, [1] = sitefn, [2] = bcfn;
+  efilter ef;            // various additional site filters
+  str2intmap_t cbidx;    // hashmap cellbarcode key -> sparsematrix column index
+  cbumi_map_t cbmap;     // hashmap cellbarcode key -> cbumi_map_t
+  int has_umi;           // bool, library has umi
+  char* umi_tag;         // umi tag value
+  char* cb_tag;          // cb tag value
+  int pe;                // 1 if paired end, 0 if not
+  int min_counts;        // if 0 report all sites provide in output sparseMatrix
+  int site_idx;          // counter of sites written, used for row index if min_counts > 0
+  int is_ss2;            // 1 if smart-seq2 mode, 0 otherwise
 } sc_mplp_conf_t;
 
+/*! @typedef
+ @abstract single cell pileup data
+ */
 typedef struct {
-  samFile* fp;
-  hts_itr_t* iter;
-  bam_hdr_t* h;
-  const sc_mplp_conf_t* conf;
-  hts_idx_t* idx;
+  samFile* fp;      // bamfile
+  hts_itr_t* iter;  // bamfile iterator
+  bam_hdr_t* h;     // bamfile header
+  const sc_mplp_conf_t* conf; // configuration
+  hts_idx_t* idx;   // bamfile index
 } mplp_sc_aux_t;
 
 
-/* return codes,
- * 0 = read passes,
- * 1 = read fails
- * 2 = read fails due to refskip, deletion, overlapping mate
+/*! @function
+ @abstract  Check read against various filters
+ @param  b  pointer to an alignment
+ @param  conf pointer to pileup configuration
+ @return
+ return codes
+   0 = read passes,
+   1 = read fails
+   2 = read fails due to refskip, deletion, overlapping mate
  */
 static int check_read_filters(const bam_pileup1_t* p, sc_mplp_conf_t* conf) {
 
@@ -163,12 +198,22 @@ static int check_read_filters(const bam_pileup1_t* p, sc_mplp_conf_t* conf) {
   return 0;
 }
 
-/* return codes,
- * -1 error in hashmap
- * 0 missing cb or umi
- * 1 umi is duplicate, or base/strand not in payload
- * 2 umi is reference
- * 3 umi is alternate
+
+/*! @function
+ @abstract  Count a single record
+ @param  p    pointer to pileup data
+ @param  conf pointer to pileup configuration
+ @param  pld  pointer to site data supplied by regidx_t
+ @param  base read base at site
+ @param  strand 1 if pos, 2 if negative
+ @param  bamid  id supplied for smartseq2 style libs
+
+ @return
+   -1 error in hashmap
+   0 missing cb or umi
+   1 umi is duplicate, or base/strand not in payload
+   2 umi is reference
+   3 umi is alternate
  */
 static int count_record(const bam_pileup1_t* p, sc_mplp_conf_t* conf, payload_t* pld,
                         unsigned char base, int strand, char* bamid) {
@@ -231,7 +276,7 @@ static int count_record(const bam_pileup1_t* p, sc_mplp_conf_t* conf, payload_t*
         ucounts->alt += bq;
         return (3);
     } else {
-        ucounts->oth++;
+        ucounts->oth += bq;
         return(1);
     }
   } else {
@@ -247,8 +292,16 @@ static int count_record(const bam_pileup1_t* p, sc_mplp_conf_t* conf, payload_t*
   return (1);
 }
 
-// determine if reads from each cb + umi pair support ref or alt, based on
-// sum of base qualities
+
+/*! @function
+ @abstract  Determine if reads from each cb + umi pair support ref or alt, based on
+ sum of base qualities
+
+ @param  cbmap    pointer to cb_t hashmap
+ @param  all_bc   pointer to struct containing ref and alt counts across all cells at site
+ @return
+   0 for now
+ */
 static int count_consensus_base(cb_t* cbmap, base_counts_t* all_bc) {
 
   khint_t k;
@@ -278,6 +331,17 @@ static int count_consensus_base(cb_t* cbmap, base_counts_t* all_bc) {
   return(0);
 }
 
+/*! @function
+ @abstract  Iterate through cb + umi pair to determine if UMIs support ref or alt, based on
+ sum of base qualities
+
+ @param  conf     pointer to pileup configuration
+ @param  all_bc   pointer to struct containing ref and alt counts across all cells at site
+ @return
+   -1 on error
+   0  on success
+   1  on case of no UMI in config
+ */
 static int resolve_consensus_bases(sc_mplp_conf_t* conf, base_counts_t* all_bc) {
     const char* cb;
     cb_t* cbdat;
@@ -306,13 +370,26 @@ static int resolve_consensus_bases(sc_mplp_conf_t* conf, base_counts_t* all_bc) 
 
 }
 
-/* write entry to sparse array-like format
- * col 1 = row index (site index)
- * col 2 = column index (barcode index)
- * col 3 = values for ref
- * col 4 = values for alt
- *
- * read into R as a 4 column matrix, then coerce to list of 2 sparseMatrices.
+/*! @function
+ @abstract  Write counts into sparseMatrix like format
+
+ @param  conf     pointer to pileup configuration
+ @param  pld      pointer to site data supplied by regidx_t
+ @param  seqname  contig name
+ @param  pos      current position
+
+ @note
+   write entry to sparse array-like format
+   col 1 = row index (site index)
+   col 2 = column index (barcode index)
+   col 3 = values for ref
+   col 4 = values for alt
+
+   read into R as a 4 column matrix, then coerced to list of 2 sparseMatrices.
+
+ @return
+ -1 on error
+ otherwise count of number of records written
  */
 static int write_counts(sc_mplp_conf_t* conf, payload_t* pld, const char* seqname, int pos) {
   const char* cb;
@@ -349,7 +426,16 @@ static int write_counts(sc_mplp_conf_t* conf, payload_t* pld, const char* seqnam
   return (n_rec);
 }
 
-// read processing function for pileup
+/*! @function
+ @abstract  Read processing function for pileup, selects reads to populate pileup
+
+ @param  data     pointer to mplp_sc_aux_t configuration
+ @param  bam1_t   pointer to alignment struct
+
+ @return
+ 0 if read passes filters
+ 1 otherwise
+ */
 static int screadaln(void* data, bam1_t* b) {
   mplp_sc_aux_t* g = (mplp_sc_aux_t*)data;
   int ret, skip = 0;
@@ -414,6 +500,9 @@ static int screadaln(void* data, bam1_t* b) {
   return ret;
 }
 
+/*! @function
+ @abstract  Populate efilter struct
+ */
 static void set_event_filters(efilter* ef, int* event_filters) {
   ef->trim_5p_dist = event_filters[0];
   ef->trim_3p_dist = event_filters[1];
@@ -426,7 +515,20 @@ static void set_event_filters(efilter* ef, int* event_filters) {
   ef->min_var_reads = event_filters[8];
 }
 
-// process one site
+/*! @function
+ @abstract  Process one pileup site
+
+ @param  plp       pointer to array of pileup data
+ @param  conf      pointer to pileup configuration
+ @param  pld       pointer to site data supplied by regidx_t
+ @param  h         pointer to bam header
+ @param  tid       contig tid value
+ @param  pos       current position
+ @param  nbam      number of bam files and length of plp array
+ @param  n_plp     pointer to array of reads in pileup per bam
+ @param  bamid     id to use in case of smartseq2 library
+
+ */
 static int process_one_site(const bam_pileup1_t** plp, sc_mplp_conf_t* conf,
                             payload_t* pld, bam_hdr_t* h, int tid,
                             int pos, int nbam, int* n_plp, char* bamid) {
@@ -498,6 +600,19 @@ static int process_one_site(const bam_pileup1_t** plp, sc_mplp_conf_t* conf,
     return(1);
 }
 
+/*! @function
+ @abstract  Pileup main C function
+
+ @param  conf      pointer to pileup configuration
+ @param  bamfn     path to bam filename
+ @param  index     path to bam index filename
+ @param  bamid     id to use in case of smartseq2 library
+
+ @note Internal errors are handled by early exiting and passing
+ back to caller as integer error codes. Any referenced functions should obey
+ this approach to ensure allocated resources are properly freed prior to exit.
+
+ */
 static int run_scpileup(sc_mplp_conf_t* conf, char* bamfn, char* index, char* bamid) {
 
   hts_set_log_level(HTS_LOG_ERROR);
@@ -629,13 +744,15 @@ fail:
   return ret;
 }
 
-
+/*! @function
+ @abstract Populate pileup configuration with parameters and data from R
+ */
 static int set_sc_mplp_conf(sc_mplp_conf_t* conf, int nbams,
                             int n_outfns, char** outfns, char* qregion, regidx_t* idx,
                             int min_mapQ, int min_baseQ, double* read_bqual_filter,
                             int max_depth, int* b_flags, int* event_filters, int libtype,
                             int n_bcs, char** bcs, char* cbtag, char* umi,
-                            int idx_skip, int pe, int min_counts) {
+                            int pe, int min_counts) {
   conf->is_ss2 = nbams > 1 ? 1 : 0;
 
   conf->fps = R_Calloc(n_outfns, FILE*);
@@ -707,7 +824,6 @@ static int set_sc_mplp_conf(sc_mplp_conf_t* conf, int nbams,
     conf->umi_tag = NULL;
   }
   conf->cb_tag = cbtag;
-  conf->idx_skip = idx_skip;
   conf->pe = pe;
   conf->min_counts = min_counts < 0 ? 0 : min_counts;
   conf->site_idx = 1;
@@ -739,12 +855,14 @@ static int write_all_sites(sc_mplp_conf_t* conf) {
   return (1);
 }
 
-
+/*! @function
+ @abstract Check args passed from R. Likely has some redundancies with checks in R code.
+ */
 static void check_sc_plp_args(SEXP bampaths, SEXP indexes, SEXP qregion, SEXP lst,
                               SEXP barcodes, SEXP cbtag, SEXP event_filters,
                               SEXP min_mapQ, SEXP max_depth, SEXP min_baseQ,
                               SEXP read_bqual_filter, SEXP libtype, SEXP b_flags,
-                              SEXP outfns, SEXP umi, SEXP index_skip, SEXP pe,
+                              SEXP outfns, SEXP umi, SEXP pe,
                               SEXP min_counts) {
 
   if (!IS_CHARACTER(bampaths) || (LENGTH(bampaths) < 1)) {
@@ -811,10 +929,6 @@ static void check_sc_plp_args(SEXP bampaths, SEXP indexes, SEXP qregion, SEXP ls
     Rf_error("'umi' must be character of length 0 or 1");
   }
 
-  if (!IS_LOGICAL(index_skip) || (LENGTH(index_skip) != 1)) {
-    Rf_error("'index_skip' must be logical(1)");
-  }
-
   if (!IS_LOGICAL(pe) || (LENGTH(pe) != 1)) {
     Rf_error("'pe' must be logical(1)");
   }
@@ -825,16 +939,19 @@ static void check_sc_plp_args(SEXP bampaths, SEXP indexes, SEXP qregion, SEXP ls
 
 }
 
+/*! @function
+ @abstract R interface to single cell pileup code
+ */
 SEXP scpileup(SEXP bampaths, SEXP indexes, SEXP query_region, SEXP lst,
               SEXP barcodes, SEXP cbtag, SEXP event_filters, SEXP min_mapQ,
               SEXP max_depth, SEXP min_baseQ, SEXP read_bqual_filter,
               SEXP libtype, SEXP b_flags, SEXP outfns, SEXP umi,
-              SEXP index_skip, SEXP pe, SEXP min_counts) {
+              SEXP pe, SEXP min_counts) {
 
   check_sc_plp_args(bampaths, indexes, query_region, lst,
                     barcodes, cbtag, event_filters, min_mapQ, max_depth,
                     min_baseQ, read_bqual_filter, libtype,
-                    b_flags, outfns, umi, index_skip, pe, min_counts);
+                    b_flags, outfns, umi, pe, min_counts);
 
   regidx_t* idx = regidx_build(lst, 1);
   if (!idx) Rf_error("Failed to build region index");
@@ -881,7 +998,7 @@ SEXP scpileup(SEXP bampaths, SEXP indexes, SEXP query_region, SEXP lst,
                          INTEGER(min_baseQ)[0], REAL(read_bqual_filter),
                          INTEGER(max_depth)[0], INTEGER(b_flags),
                          INTEGER(event_filters), INTEGER(libtype)[0],
-                         nbcs, bcs, c_cbtag, c_umi, LOGICAL(index_skip)[0],
+                         nbcs, bcs, c_cbtag, c_umi,
                          LOGICAL(pe)[0], INTEGER(min_counts)[0]);
 
   if (ret >= 0) {

@@ -334,7 +334,6 @@ get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
         fp$bam_flags,
         plp_outfns,
         umi_tag,
-        FALSE,
         pe,
         max(fp$min_variant_reads, fp$min_depth)
     )

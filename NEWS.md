@@ -1,6 +1,6 @@
 # reaer 0.99.6 
 
-* added method to count base occurring most frequently when counting UMIs with `pileup_cells()`. 
+* added method to count base consensus base when counting UMIs with `pileup_cells()` using the sum of base qualities to select consensus. 
 
 # raer 0.99.5
 
