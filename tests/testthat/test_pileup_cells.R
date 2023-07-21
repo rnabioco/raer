@@ -21,6 +21,8 @@ cbs <- na.omit(cbs)
 
 outdir <- tempdir()
 on.exit(unlink(outdir))
+fp <- FilterParam(library_type = "fr-second-strand")
+sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
 
 test_that("basic functionality works", {
     fp <- FilterParam(library_type = "fr-second-strand", min_depth = 0)
@@ -236,4 +238,100 @@ test_that("multiple alleles per site can be queried", {
     expect_true(all(Matrix::rowSums(assay(sce, "nAlt")) > 0))
     expect_true(all(Matrix::rowSums(assay(sce, "nRef")) > 0))
 })
+
+
+mouse_sam_hdr <- c(
+    "@HD\tVN:1.6\tSO:coordinate",
+    "@SQ\tSN:2\tLN:1115",
+    "@SQ\tSN:6\tLN:400",
+    "@SQ\tSN:11\tLN:493",
+    "@SQ\tSN:8\tLN:396")
+
+change_base <- function(aln, pos, new_base) {
+    rec <- strsplit(aln, "\t")[[1]]
+    seq <- rec[[10]]
+    substr(seq, pos, pos) <- new_base
+    rec[[10]] <- seq
+    paste(rec, collapse = "\t")
+}
+
+change_qual <- function(aln, pos, new_qual, offset = 33) {
+    rec <- strsplit(aln, "\t")[[1]]
+    qual <- rec[[11]]
+    substr(qual, pos, pos) <- intToUtf8(new_qual + offset)
+    rec[[11]] <- qual
+    paste(rec, collapse = "\t")
+}
+
+test_that("UMI consensus base selection works", {
+    aln <- "A00836:50:HKF7VDSXX:4:1361:12337:2503\t16\t2\t247\t255\t14M315N77M\t*\t0\t0\tTTATTTATTTATTTTTTTGAGACAGGGTTTCTCTCTGTAGCCCTGGCTGTCCTGGAACTCACTCTGTAGACCAGGCTGGCCTCGAACTCAG\tFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\tCB:Z:AGGGAGTAGGCTATCT-1\tUB:Z:CTATGTTCGTGG\tRE:A:E\tNH:i:1\tHI:i:1\tnM:i:7\tCR:Z:AGGGAGTAGGCTATCT\tUR:Z:CTATGTTCGTGG\tAS:i:67\tCY:Z:FFFFFFFFFFFFFFFF\tUY:Z:FFFFFFFFFFFF\txf:i:0"
+    ref_aln <- change_base(aln, 84, "A")
+
+    tf <- tempfile(fileext = ".sam")
+    writeLines(c(mouse_sam_hdr, ref_aln, aln), tf)
+    tbam <- asBam(tf, overwrite = TRUE)
+    tbai <- indexBam(tbam)
+    on.exit(unlink(c(tf, tbam, tbai)))
+
+    fp <- FilterParam(library_type = "fr-first-strand", min_depth = 0)
+    ol_sites <- GRanges(c("2:20", "2:645", "2:646"),
+                        strand = "+",
+                        REF = "A",
+                        ALT = "G")
+    # 1 reads support ref 1 alt
+    sce <- pileup_cells(tbam, ol_sites,
+                        "AGGGAGTAGGCTATCT-1",
+                        outdir, param = fp)
+    expect_true(all(assay(sce, "nRef")[, 1] == c(0, 0, 1)))
+    expect_true(all(assay(sce, "nAlt")[, 1] == c(0, 1, 0)))
+
+    # 2 reads support ref 1 alt
+    writeLines(c(mouse_sam_hdr, ref_aln, ref_aln, aln), tf)
+    tbam <- asBam(tf, overwrite = TRUE)
+    tbai <- indexBam(tbam)
+    sce <- pileup_cells(tbam, ol_sites,
+                        "AGGGAGTAGGCTATCT-1",
+                        outdir, param = fp)
+    expect_true(all(assay(sce, "nRef")[, 1] == c(0, 1, 1)))
+    expect_true(all(assay(sce, "nAlt")[, 1] == c(0, 0, 0)))
+
+    # 2 reads support ref, 1 support alt, alt has higher sum of base qualities
+    ref_low_qual_aln <- change_qual(ref_aln, 84, 10)
+    writeLines(c(mouse_sam_hdr, ref_low_qual_aln, ref_low_qual_aln, aln), tf)
+    tbam <- asBam(tf, overwrite = TRUE)
+    tbai <- indexBam(tbam)
+
+    sce <- pileup_cells(tbam, ol_sites,
+                        "AGGGAGTAGGCTATCT-1",
+                        outdir, param = fp)
+    expect_true(all(assay(sce, "nRef")[, 1] == c(0, 0, 1)))
+    expect_true(all(assay(sce, "nAlt")[, 1] == c(0, 1, 0)))
+
+    # no UMI tag disables consensus
+    fp <- FilterParam(library_type = "fr-first-strand", min_base_quality = 10, min_depth = 0)
+    sce <- pileup_cells(tbam, ol_sites,
+                        "AGGGAGTAGGCTATCT-1",
+                        umi_tag = NULL,
+                        outdir, param = fp)
+    expect_true(all(assay(sce, "nRef")[, 1] == c(0, 2, 3)))
+    expect_true(all(assay(sce, "nAlt")[, 1] == c(0, 1, 0)))
+
+    # non ref/alt majority base not counted.
+    other_aln <- change_base(aln, 84, "C")
+    writeLines(c(mouse_sam_hdr, other_aln, other_aln, aln), tf)
+    tbam <- asBam(tf, overwrite = TRUE)
+    tbai <- indexBam(tbam)
+
+    sce <- pileup_cells(tbam, ol_sites,
+                        "AGGGAGTAGGCTATCT-1",
+                        outdir, param = fp)
+    expect_true(all(assay(sce, "nRef")[, 1] == c(0, 0, 1)))
+    expect_true(all(assay(sce, "nAlt")[, 1] == c(0, 0, 0)))
+})
+
+
+
+
+
+
 
