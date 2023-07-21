@@ -15,8 +15,8 @@
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><link href="../deps/Source_Sans_Pro-0.4.6/font.css" rel="stylesheet">
-<link href="../deps/Source_Code_Pro-0.4.6/font.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><link href="../deps/Source_Sans_Pro-0.4.7/font.css" rel="stylesheet">
+<link href="../deps/Source_Code_Pro-0.4.7/font.css" rel="stylesheet">
 <!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Identifying RNA editing sites in droplet single cell datasets">
@@ -35,7 +35,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.6</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -88,7 +88,7 @@
                         <h4 data-toc-skip class="author">Kent
 Riemondy</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-07-10</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-07-21</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/single-cell.Rmd" class="external-link"><code>vignettes/single-cell.Rmd</code></a></small>
       <div class="d-none name"><code>single-cell.Rmd</code></div>
@@ -135,10 +135,10 @@ with other needed files can be downloaded using
 <span><span class="co">## [1] "/github/home/.cache/R/raer/10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam.bai"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $edit_sites</span></span>
-<span><span class="co">## [1] "/github/home/.cache/R/raer/6815fe25b11_rediportal_chr16.bed.gz"</span></span>
+<span><span class="co">## [1] "/github/home/.cache/R/raer/128b2321bd8f_rediportal_chr16.bed.gz"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $sce</span></span>
-<span><span class="co">## [1] "/github/home/.cache/R/raer/6812397742b_sce.rds"</span></span></code></pre>
+<span><span class="co">## [1] "/github/home/.cache/R/raer/128b65df4b45_sce.rds"</span></span></code></pre>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bam_fn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bam</span></span>
 <span><span class="va">bed_fn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">edit_sites</span></span></code></pre></div>
@@ -233,21 +233,19 @@ chromosomes, by supplying a BiocParallel backend to the
 <span>    cb_tag <span class="op">=</span> <span class="st">"CB"</span>,</span>
 <span>    umi_tag <span class="op">=</span> <span class="st">"UB"</span>,</span>
 <span>    param <span class="op">=</span> <span class="fu"><a href="../reference/pileup_sites.html">FilterParam</a></span><span class="op">(</span></span>
-<span>        min_base_quality <span class="op">=</span> <span class="fl">30L</span>,</span>
+<span>        min_mapq <span class="op">=</span> <span class="fl">255L</span>,</span>
 <span>        library_type <span class="op">=</span> <span class="st">"fr-second-strand"</span>,</span>
-<span>        min_variant_reads <span class="op">=</span> <span class="fl">1L</span>,</span>
-<span>        trim_5p <span class="op">=</span> <span class="fl">5L</span>,</span>
-<span>        trim_3p <span class="op">=</span> <span class="fl">5L</span></span>
+<span>        min_variant_reads <span class="op">=</span> <span class="fl">1L</span></span>
 <span>    <span class="op">)</span>,</span>
 <span>    verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">e_sce</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: SingleCellExperiment </span></span>
-<span><span class="co">## dim: 4427 500 </span></span>
+<span><span class="co">## dim: 3850 500 </span></span>
 <span><span class="co">## metadata(0):</span></span>
 <span><span class="co">## assays(2): nRef nAlt</span></span>
-<span><span class="co">## rownames(4427): site_chr16_83540_1 site_chr16_83621_1 ...</span></span>
-<span><span class="co">##   site_chr16_31453268_2 site_chr16_31454303_2</span></span>
+<span><span class="co">## rownames(3850): site_chr16_83540_1_AG site_chr16_83621_1_AG ...</span></span>
+<span><span class="co">##   site_chr16_31453268_2_AG site_chr16_31454303_2_AG</span></span>
 <span><span class="co">## rowData names(2): REF ALT</span></span>
 <span><span class="co">## colnames(500): TGTTTGTCAGTTAGGG-1 ATCTCTACAAGCTACT-1 ...</span></span>
 <span><span class="co">##   GGGCGTTTCAGGACGA-1 CTATAGGAGATTGTGA-1</span></span>
@@ -293,19 +291,19 @@ with the highest edited read counts.</p>
 showing the average number of edited reads per site in each cell
 type.</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">cell_type</span> <span class="op">&lt;-</span> <span class="va">sce</span><span class="op">$</span><span class="va">celltype</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">celltype</span> <span class="op">&lt;-</span> <span class="va">sce</span><span class="op">$</span><span class="va">celltype</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/scater/man/plotGroupedHeatmap.html" class="external-link">plotGroupedHeatmap</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span>,</span>
 <span>    features <span class="op">=</span> <span class="va">to_plot</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">25</span><span class="op">]</span>,</span>
-<span>    group <span class="op">=</span> <span class="st">"cell_type"</span>,</span>
+<span>    group <span class="op">=</span> <span class="st">"celltype"</span>,</span>
 <span>    exprs_values <span class="op">=</span> <span class="st">"nAlt"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="single-cell_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
-<p>Various tools in Bioconductor can be used to provide additional
-annotation information about each RNA editing site. The
-<code>VariantAnnotation</code> package provides powerful functionality
-to annotate the location of each editing site and provide information
-about alterations in codons or splice sites.</p>
+<p><code>raer</code> provides additional tools to examine cell type
+specific editing. <code>find_celltype_de()</code> will perform
+statistical testing to identify sites with different editing frequencies
+between clusters/cell types. <code>calc_scAEI()</code> will calculate
+the <code>AEI</code> score find single cells.</p>
 <details style="margin-bottom:10px;"><summary>
 Session info
 </summary><div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
@@ -342,27 +340,27 @@ Session info
 <span><span class="co">## [11] GenomicRanges_1.52.0        GenomeInfoDb_1.36.1        </span></span>
 <span><span class="co">## [13] IRanges_2.34.1              S4Vectors_0.38.1           </span></span>
 <span><span class="co">## [15] BiocGenerics_0.46.0         MatrixGenerics_1.12.2      </span></span>
-<span><span class="co">## [17] matrixStats_1.0.0           raer_0.99.4                </span></span>
+<span><span class="co">## [17] matrixStats_1.0.0           raer_0.99.6                </span></span>
 <span><span class="co">## [19] BiocStyle_2.28.0           </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##   [1] RColorBrewer_1.1-3        jsonlite_1.8.7           </span></span>
 <span><span class="co">##   [3] magrittr_2.0.3            ggbeeswarm_0.7.2         </span></span>
 <span><span class="co">##   [5] GenomicFeatures_1.52.1    farver_2.1.1             </span></span>
-<span><span class="co">##   [7] rmarkdown_2.23            fs_1.6.2                 </span></span>
+<span><span class="co">##   [7] rmarkdown_2.23            fs_1.6.3                 </span></span>
 <span><span class="co">##   [9] BiocIO_1.10.0             zlibbioc_1.46.0          </span></span>
 <span><span class="co">##  [11] ragg_1.2.5                vctrs_0.6.3              </span></span>
 <span><span class="co">##  [13] memoise_2.0.1             DelayedMatrixStats_1.22.1</span></span>
 <span><span class="co">##  [15] RCurl_1.98-1.12           htmltools_0.5.5          </span></span>
 <span><span class="co">##  [17] S4Arrays_1.0.4            progress_1.2.2           </span></span>
 <span><span class="co">##  [19] curl_5.0.1                BiocNeighbors_1.18.0     </span></span>
-<span><span class="co">##  [21] sass_0.4.6                bslib_0.5.0              </span></span>
+<span><span class="co">##  [21] sass_0.4.7                bslib_0.5.0              </span></span>
 <span><span class="co">##  [23] desc_1.4.2                cachem_1.0.8             </span></span>
 <span><span class="co">##  [25] GenomicAlignments_1.36.0  lifecycle_1.0.3          </span></span>
 <span><span class="co">##  [27] pkgconfig_2.0.3           rsvd_1.0.5               </span></span>
-<span><span class="co">##  [29] Matrix_1.5-4.1            R6_2.5.1                 </span></span>
+<span><span class="co">##  [29] Matrix_1.6-0              R6_2.5.1                 </span></span>
 <span><span class="co">##  [31] fastmap_1.1.1             GenomeInfoDbData_1.2.10  </span></span>
-<span><span class="co">##  [33] digest_0.6.32             colorspace_2.1-0         </span></span>
+<span><span class="co">##  [33] digest_0.6.33             colorspace_2.1-0         </span></span>
 <span><span class="co">##  [35] AnnotationDbi_1.62.2      rprojroot_2.0.3          </span></span>
 <span><span class="co">##  [37] irlba_2.3.5.1             textshaping_0.3.6        </span></span>
 <span><span class="co">##  [39] RSQLite_2.3.1             beachmat_2.16.0          </span></span>
@@ -381,7 +379,7 @@ Session info
 <span><span class="co">##  [65] gtable_0.3.3              BSgenome_1.68.0          </span></span>
 <span><span class="co">##  [67] R.methodsS3_1.8.2         data.table_1.14.8        </span></span>
 <span><span class="co">##  [69] hms_1.1.3                 BiocSingular_1.16.0      </span></span>
-<span><span class="co">##  [71] ScaledMatrix_1.8.1        xml2_1.3.4               </span></span>
+<span><span class="co">##  [71] ScaledMatrix_1.8.1        xml2_1.3.5               </span></span>
 <span><span class="co">##  [73] utf8_1.2.3                ggrepel_0.9.3            </span></span>
 <span><span class="co">##  [75] pillar_1.9.0              stringr_1.5.0            </span></span>
 <span><span class="co">##  [77] dplyr_1.1.2               BiocFileCache_2.8.0      </span></span>
@@ -391,10 +389,10 @@ Session info
 <span><span class="co">##  [85] xfun_0.39                 pheatmap_1.0.12          </span></span>
 <span><span class="co">##  [87] stringi_1.7.12            yaml_2.3.7               </span></span>
 <span><span class="co">##  [89] evaluate_0.21             codetools_0.2-19         </span></span>
-<span><span class="co">##  [91] tibble_3.2.1              BiocManager_1.30.21      </span></span>
+<span><span class="co">##  [91] tibble_3.2.1              BiocManager_1.30.21.1    </span></span>
 <span><span class="co">##  [93] cli_3.6.1                 systemfonts_1.0.4        </span></span>
 <span><span class="co">##  [95] munsell_0.5.0             jquerylib_0.1.4          </span></span>
-<span><span class="co">##  [97] Rcpp_1.0.10               dbplyr_2.3.2             </span></span>
+<span><span class="co">##  [97] Rcpp_1.0.11               dbplyr_2.3.3             </span></span>
 <span><span class="co">##  [99] png_0.1-8                 XML_3.99-0.14            </span></span>
 <span><span class="co">## [101] parallel_4.3.0            pkgdown_2.0.7            </span></span>
 <span><span class="co">## [103] blob_1.2.4                prettyunits_1.1.1        </span></span>
