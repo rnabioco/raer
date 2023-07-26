@@ -12,7 +12,7 @@
 #' quantification of ADAR adenosine-to-inosine RNA editing activity. Nat Methods
 #' 16, 1131–1138 (2019). https://doi.org/10.1038/s41592-019-0610-9
 #'
-#' @param bam_fns character vector of paths to indexed bam files. If a named
+#' @param bamfiles character vector of paths to indexed bam files. If a named
 #' character vector is supplied the names will be used in the output.
 #' @param fasta_fn fasta filename
 #' @param alu_ranges [GRanges] with regions to query for
@@ -63,7 +63,7 @@
 #' @import GenomicRanges
 #'
 #' @export
-calc_AEI <- function(bam_fns,
+calc_AEI <- function(bamfiles,
     fasta_fn,
     alu_ranges = NULL,
     txdb = NULL,
@@ -72,7 +72,14 @@ calc_AEI <- function(bam_fns,
     BPPARAM = SerialParam(),
     verbose = FALSE) {
 
-    chroms <- names(Rsamtools::scanBamHeader(bam_fns[1])[[1]]$targets)
+    if (!is(bamfiles, "BamFileList")) {
+        if (is.null(names(bamfiles))) {
+            names(bamfiles) <- bamfiles
+        }
+        bamfiles <- BamFileList(bamfiles)
+    }
+
+    chroms <- names(Rsamtools::scanBamHeader(bamfiles[[1]])$targets)
 
     if (is.null(alu_ranges)) {
         cli::cli_alert_warning(c(
@@ -158,21 +165,16 @@ calc_AEI <- function(bam_fns,
         snps <- snp_lst[chroms]
     }
     res <- list()
-    for(i in seq_along(bam_fns)) {
-        bam_fn <- bam_fns[i]
+    for(i in seq_along(bamfiles)) {
+        bam_fn <- bamfiles[i]
         aei <- .AEI_per_bam(bam_fn = bam_fn, fasta_fn = fasta_fn, chroms = chroms,
                      alu_ranges = alu_ranges, snps = snps, param = param,
                      genes_gr = genes_gr, verbose = verbose, BPPARAM = BPPARAM)
-        res[[bam_fn]] <- aei
+        res[[path(bam_fn)]] <- aei
     }
 
     aei <- do.call(rbind, lapply(res, '[[', 1))
-
-    if(is.null(names(bam_fns))){
-        rownames(aei) <- bam_fns
-    } else {
-        rownames(aei) <- names(bam_fns)
-    }
+    rownames(aei) <- names(bamfiles)
 
     aei_per_chrom <- lapply(seq_along(res), function(i) {
         x <- res[[i]][[2]]
@@ -407,22 +409,20 @@ correct_strand <- function(rse, genes_gr) {
     # drop non-genic and multi-strand (overlapping annotations)
     rse <- rse[!is.na(rowData(rse)$gene_strand), ]
 
-    n_strands <- lengths(regmatches(
-        rowData(rse)$gene_strand,
-        gregexpr(",", rowData(rse)$gene_strand)
-    ))
+    gs <- decode(rowData(rse)$gene_strand)
+    n_strands <- lengths(regmatches(gs, gregexpr(",", gs)))
     rse <- rse[n_strands == 0, ]
 
     flip_rows <- as.vector(strand(rse) != rowData(rse)$gene_strand)
 
-    rowData(rse)$REF[flip_rows] <- BASE_MAP[rowData(rse)$REF[flip_rows]]
+    rowData(rse)$REF[flip_rows] <- comp_bases(rowData(rse)$REF[flip_rows])
 
     flipped_variants <- vector(mode = "list", ncol(rse))
     to_flip <- assay(rse, "ALT")[flip_rows, , drop = FALSE]
     flipped_variants <- apply(to_flip, c(1, 2), function(x) {
         vapply(
             strsplit(x, ","), function(y) {
-                paste0(unname(ALLELE_MAP[y]),
+                paste0(comp_bases(y),
                     collapse = ","
                 )
             },
@@ -431,7 +431,6 @@ correct_strand <- function(rse, genes_gr) {
     })
 
     assay(rse, "ALT")[flip_rows, ] <- flipped_variants
-
 
     # complement the nucleotide counts by reordering the assays
     assays_to_swap <- c("nA", "nT", "nC", "nG")
@@ -451,27 +450,3 @@ correct_strand <- function(rse, genes_gr) {
     rse
 }
 
-
-ALLELE_MAP <- c(
-    TA = "CT",
-    CA = "GT",
-    GA = "AT",
-    AT = "TC",
-    CT = "GC",
-    GT = "AC",
-    AC = "TG",
-    TC = "CG",
-    GC = "AG",
-    AG = "TA",
-    TG = "CA",
-    CG = "GA",
-    `-` = "-"
-)
-
-BASE_MAP <- c(
-    "A" = "T",
-    "G" = "C",
-    "C" = "G",
-    "T" = "A",
-    "N" = "N"
-)

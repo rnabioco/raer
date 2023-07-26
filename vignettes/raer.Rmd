@@ -231,7 +231,7 @@ alus[1:3, ]
 `calc_AEI()` will return a matrix containing the AEI calculated for all allelic combinations and a more detailed table containing values for each chromosome.
 
 ```{r}
-alu_index <- calc_AEI(bam_fn = bam_files, 
+alu_index <- calc_AEI(bam_files, 
                       fasta_fn = fafn, 
                       snp_db = alu_snps,
                       alu_ranges = alus, 

@@ -19,6 +19,9 @@
 #' comparing against the SNP db (which always returns sequences w.r.t the
 #' plus strand).
 #' @param drop If TRUE, remove sites overlapping SNPs
+#' @param RLE If TRUE, columns added will returned as [S4Vectors::Rle()] vectors
+#' to reduce memory
+#'
 #' @param ... For the generic, further arguments to pass to specific methods.
 #' Unused for now.
 #'

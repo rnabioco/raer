@@ -2,9 +2,9 @@
 % Please edit documentation in R/annot_rse.R
 \name{annot_from_gr}
 \alias{annot_from_gr}
-\title{Annotate a RangedSummarizedExperiment using Granges objects}
+\title{Annotate sites using GRanges object}
 \usage{
-annot_from_gr(obj, gr, cols_to_map, ...)
+annot_from_gr(obj, gr, cols_to_map, RLE = TRUE, ...)
 }
 \arguments{
 \item{obj}{RangedSummarizedExperiment or GRanges object}
@@ -14,6 +14,9 @@ annot_from_gr(obj, gr, cols_to_map, ...)
 \item{cols_to_map}{character vector of columns from gr to map to obj. If the
 vector has names, the names will be the column names in the output obj}
 
+\item{RLE}{If TRUE, columns added will returned as \code{\link[S4Vectors:Rle-class]{S4Vectors::Rle()}} vectors
+to reduce memory}
+
 \item{...}{additional arguments to pass to \code{\link[GenomicRanges:findOverlaps-methods]{GenomicRanges::findOverlaps()}}}
 }
 \value{
@@ -22,7 +25,7 @@ annotations provided by the supplied GRanges object.
 }
 \description{
 Utility function to map annotations from GRanges to rowData of
-SummarizedExperiment or GRanges object. If multiple features overlap then
+SummarizedExperiment or to mcols of GRanges object. If multiple features overlap then
 they will be concatenated as comma separated values.
 }
 \examples{
