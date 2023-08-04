@@ -5,8 +5,8 @@
 #'   bases) observed at A positions. The vast majority A-to-I editing occurs in
 #'   ALU elements in the human genome, and these regions have a high A-to-I
 #'   editing signal compared to other regions such as coding exons. This
-#'   function will perform pileup at specified repeat regions and return a
-#'   summary AEI metric.
+#'   function will examine potential editing sites and return
+#'   summary AEI metric per cell.
 #'
 #' @references Roth, S.H., Levanon, E.Y. & Eisenberg, E. Genome-wide
 #' quantification of ADAR adenosine-to-inosine RNA editing activity. Nat Methods
@@ -49,7 +49,8 @@ calc_scAEI <- function(bamfiles, sites, cell_barcodes, param = FilterParam(),
     }
 
     # if unstranded, only query w.r.t + strand
-    if(!param@library_type %in% c(1, 2)) {
+    is_unstranded <- !param@library_type %in% c(1, 2)
+    if(is_unstranded) {
         is_minus <- strand(sites) == "-"
         sites[is_minus]$REF <- comp_bases(edit_from)
         sites[is_minus]$ALT <- comp_bases(edit_to)
@@ -65,36 +66,25 @@ calc_scAEI <- function(bamfiles, sites, cell_barcodes, param = FilterParam(),
         param = param,
         ...
     )
-
-    n_alt <- Matrix::colSums(assay(aei_sce, "nAlt"))
-    n_ref <- Matrix::colSums(assay(aei_sce, "nRef"))
-    aei <- 100 * (n_alt / (n_alt + n_ref))
-    res <- DataFrame(row.names = colnames(aei_sce),
-                     AEI = aei,
-                     n_alt = n_alt,
-                     n_ref = n_ref)
-
-    if(return_sce) {
-        colData(aei_sce) <- res
-        return(aei_sce)
+     if(is_unstranded) {
+        aei_sce <- resolve_aei_regions(aei_sce)
     }
-    res
+
+     n_alt <- Matrix::colSums(assay(aei_sce, "nAlt"))
+     n_ref <- Matrix::colSums(assay(aei_sce, "nRef"))
+     aei <- 100 * (n_alt / (n_alt + n_ref))
+     res <- DataFrame(row.names = colnames(aei_sce),
+                      AEI = aei,
+                      n_alt = n_alt,
+                      n_ref = n_ref)
+
+     if(return_sce) {
+         colData(aei_sce) <- res
+         return(aei_sce)
+     }
+     res
 }
 
-#' Calculate the Adenosine Editing Index (AEI) in single cells
-#'
-#' @description The Adenosine Editing Index describes the magnitude of A-to-I
-#'   editing in a sample. The index is a weighted average of editing events (G
-#'   bases) observed at A positions. The vast majority A-to-I editing occurs in
-#'   ALU elements in the human genome, and these regions have a high A-to-I
-#'   editing signal compared to other regions such as coding exons. This
-#'   function will perform pileup at specified repeat regions and return a
-#'   summary AEI metric.
-#'
-#' @references Roth, S.H., Levanon, E.Y. & Eisenberg, E. Genome-wide
-#' quantification of ADAR adenosine-to-inosine RNA editing activity. Nat Methods
-#' 16, 1131–1138 (2019). https://doi.org/10.1038/s41592-019-0610-9
-#'
 #' @param fasta_fn a path to a BAM file (for 10x libraries), or a vector of paths
 #' to BAM files (smart-seq2). Can be supplied as a character vector, [BamFile], or
 #' [BamFileList].
@@ -112,8 +102,11 @@ calc_scAEI <- function(bamfiles, sites, cell_barcodes, param = FilterParam(),
 #'
 #' @rdname calc_scAEI
 #' @export
-get_scAEI_sites <- function(fasta_fn, genes, alus,
-                            edit_from = "A", edit_to = "G") {
+get_scAEI_sites <- function(fasta_fn,
+                            genes,
+                            alus,
+                            edit_from = "A",
+                            edit_to = "G") {
     if(is(genes, "TxDb")) {
         genes <- suppressMessages(GenomicFeatures::genes(genes))
     }
@@ -195,3 +188,77 @@ get_aei_site_positions <- function(gr, fasta, base) {
     res$REF <- S4Vectors::Rle(res$REF)
     res
 }
+
+
+# figure out which strand should be used for each ALU region
+# follows approach described by Roth et al @ https://doi.org/10.1038/s41592-019-0610-9
+resolve_aei_regions <- function(sce) {
+
+    # general approach for regions with overlapping annotations
+    # if there are mismatches, select strand with most mismatches
+    # if not, average the counts from the two strands
+
+    d_sce <- sce[rowData(sce)$gene_strand == "defined"]
+    ud_sce <- sce[rowData(sce)$gene_strand != "defined"]
+
+    nr <- Matrix::rowSums(assay(ud_sce, "nRef"))
+    na <- Matrix::rowSums(assay(ud_sce, "nAlt"))
+
+    v <- paste0(rowData(ud_sce)$REF, rowData(ud_sce)$ALT)
+    id <- rowData(ud_sce)$id
+    dat <- data.frame(rid = rownames(ud_sce), nr, na, v, id)
+
+    sums <- rowsum(data.frame(nr, na),
+                   decode(id),
+                   reorder = FALSE)
+    sites_to_average <- rownames(sums[sums$na == 0, ])
+
+    subset_dat <- dat[!dat$id %in% sites_to_average, ]
+    sdat <- split(subset_dat, subset_dat$id)
+
+    # select strand based on most mismatches
+    vdat <- vapply(sdat, function(x){
+        rs <- rowsum(x$na, x$v)
+        rownames(rs)[which.max(rs)]
+    }, FUN.VALUE = character(1))
+    vdat <- unlist(vdat)
+
+    sites_to_keep <- subset_dat[subset_dat$v == vdat[as.character(subset_dat$id)], ]
+    res_sce <- ud_sce[sites_to_keep$rid, ]
+
+    sce_to_avg <- ud_sce[rowData(ud_sce)$id %in% sites_to_average, ]
+    anr <- rowsum(assay(sce_to_avg, "nRef"),
+                  paste0(rowData(sce_to_avg)$var, "_", rowData(sce_to_avg)$id),
+                  reorder = FALSE)
+
+    ids <- unlist(lapply(strsplit(rownames(anr), "_"), "[", 2))
+    ns <- lengths(split(ids, ids))
+    anr <- rowsum(anr, ids)
+
+    stopifnot(length(ns) == nrow(anr))
+    stopifnot(all(names(ns) == rownames(anr)))
+
+    avg_nref <- anr / ns
+    avg_nalt <- avg_nref
+    avg_nalt[] <- 0
+
+    # figure out ranges and names for average coords
+    rr <- rowRanges(sce_to_avg)
+    stopifnot(all(as.character(rr$id) %in% rownames(avg_nref)))
+    avg_nref <- avg_nref[unique(as.character(rr$id)), , drop = FALSE]
+    avg_nalt <- avg_nalt[unique(as.character(rr$id)), , drop = FALSE]
+    srr <- split(rr, rr$id)
+    new_ranges <- GRanges(unlist(unique(seqnames(srr))),
+                          IRanges(min(start(srr)),
+                                  max(end(srr))),
+                          id = names(srr))
+    names(new_ranges) <- paste0("range_mean_", seq_along(new_ranges))
+
+    avg_sce_res <- SingleCellExperiment(list(nRef = avg_nref,
+                                             nAlt = avg_nalt))
+    rowRanges(avg_sce_res) <- new_ranges
+
+    # put it all back together
+    do.call(rbind, list(d_sce, res_sce, avg_sce_res))
+}
+

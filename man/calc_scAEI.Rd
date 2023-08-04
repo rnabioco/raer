@@ -70,22 +70,10 @@ editing in a sample. The index is a weighted average of editing events (G
 bases) observed at A positions. The vast majority A-to-I editing occurs in
 ALU elements in the human genome, and these regions have a high A-to-I
 editing signal compared to other regions such as coding exons. This
-function will perform pileup at specified repeat regions and return a
-summary AEI metric.
-
-The Adenosine Editing Index describes the magnitude of A-to-I
-editing in a sample. The index is a weighted average of editing events (G
-bases) observed at A positions. The vast majority A-to-I editing occurs in
-ALU elements in the human genome, and these regions have a high A-to-I
-editing signal compared to other regions such as coding exons. This
-function will perform pileup at specified repeat regions and return a
-summary AEI metric.
+function will examine potential editing sites and return
+summary AEI metric per cell.
 }
 \references{
-Roth, S.H., Levanon, E.Y. & Eisenberg, E. Genome-wide
-quantification of ADAR adenosine-to-inosine RNA editing activity. Nat Methods
-16, 1131–1138 (2019). https://doi.org/10.1038/s41592-019-0610-9
-
 Roth, S.H., Levanon, E.Y. & Eisenberg, E. Genome-wide
 quantification of ADAR adenosine-to-inosine RNA editing activity. Nat Methods
 16, 1131–1138 (2019). https://doi.org/10.1038/s41592-019-0610-9
