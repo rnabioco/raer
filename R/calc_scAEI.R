@@ -27,14 +27,49 @@
 #' @param edit_to This should correspond to the base
 #'  (`A`, `C`, `G`, `T`) you expect in an edited site. Ex. for A
 #'   to I editing events, this would be `G`.
-#' @param output_directory Output directory for `nRef` and `nAlt` sparseMatrix files.
+#' @param output_dir Output directory for `nRef` and `nAlt` sparseMatrix files.
 #' If NULL, a temporary directory will be used.
 #' @param return_sce if `TRUE`, data is returned as a SingleCellExperiment, if
 #' `FALSE` a [DataFrame] containing computed AEI values will be returned.
 #' @param ... additional arguments to [pileup_cells]
 #'
-#' @returns A `SingleCellExperiment` or a `DataFrame` containing computed AEI values,
-#' count of editing events (n_alt), and count of referenc events (n_ref) per cell.
+#' @returns A `DataFrame` containing computed `AEI` values,
+#' count of editing events (`n_alt`), and count of reference events (`n_ref`) per cell.
+#' If `return_sce` is `TRUE`, then a `SingleCellExperiment` is returned with the
+#' AEI values stored in the `colData`.
+#'
+#' @examples
+#'
+#' # bam file
+#' bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
+#' Rsamtools::indexBam(bam_fn)
+#'
+#' # cell barcodes to query
+#' cbs <- c("TGTTTGTTCCATCCGT-1", "CAACCAACATAATCGC-1", "TGGAACTCAAGCTGTT-1")
+#'
+#' # genes used to infer transcribed strand
+#' genes_gr <- GenomicRanges::GRanges(c(
+#'     "2:100-400:-",
+#'     "2:500-605:-",
+#'     "2:600-680:+"
+#' ))
+#'
+#' # alu intervals
+#' alus_gr <-  GenomicRanges::GRanges(c(
+#'     "2:110-380",
+#'     "2:510-600",
+#'     "2:610-670"
+#' ))
+#'
+#' # genome fasta file, used to find A bases
+#' fa_fn <- raer_example("mouse_tiny.fasta")
+#'
+#' # get positions of potential A -> G changes in alus
+#' sites <- get_scAEI_sites(fa_fn, genes_gr, alus_gr)
+#'
+#' fp <- FilterParam(library_type = "fr-second-strand",
+#'                   min_mapq = 255)
+#' calc_scAEI(bam_fn, sites, cbs, fp)
 #'
 #' @rdname calc_scAEI
 #' @export

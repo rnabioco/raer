@@ -41,6 +41,9 @@ editing events, this would be \code{A}.}
 (\code{A}, \code{C}, \code{G}, \code{T}) you expect in an edited site. Ex. for A
 to I editing events, this would be \code{G}.}
 
+\item{output_dir}{Output directory for \code{nRef} and \code{nAlt} sparseMatrix files.
+If NULL, a temporary directory will be used.}
+
 \item{return_sce}{if \code{TRUE}, data is returned as a SingleCellExperiment, if
 \code{FALSE} a \link{DataFrame} containing computed AEI values will be returned.}
 
@@ -56,13 +59,12 @@ which if supplied, will be used extract gene coordinates.}
 \item{alus}{\link{GRanges} with repeat regions to query for calculating the AEI,
 typically ALU repeats. The strand of the supplied intervals will be ignored for
 defining repeat regions.}
-
-\item{output_directory}{Output directory for \code{nRef} and \code{nAlt} sparseMatrix files.
-If NULL, a temporary directory will be used.}
 }
 \value{
-A \code{SingleCellExperiment} or a \code{DataFrame} containing computed AEI values,
-count of editing events (n_alt), and count of referenc events (n_ref) per cell.
+A \code{DataFrame} containing computed \code{AEI} values,
+count of editing events (\code{n_alt}), and count of reference events (\code{n_ref}) per cell.
+If \code{return_sce} is \code{TRUE}, then a \code{SingleCellExperiment} is returned with the
+AEI values stored in the \code{colData}.
 }
 \description{
 The Adenosine Editing Index describes the magnitude of A-to-I
@@ -72,6 +74,40 @@ ALU elements in the human genome, and these regions have a high A-to-I
 editing signal compared to other regions such as coding exons. This
 function will examine potential editing sites and return
 summary AEI metric per cell.
+}
+\examples{
+
+# bam file
+bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
+Rsamtools::indexBam(bam_fn)
+
+# cell barcodes to query
+cbs <- c("TGTTTGTTCCATCCGT-1", "CAACCAACATAATCGC-1", "TGGAACTCAAGCTGTT-1")
+
+# genes used to infer transcribed strand
+genes_gr <- GenomicRanges::GRanges(c(
+    "2:100-400:-",
+    "2:500-605:-",
+    "2:600-680:+"
+))
+
+# alu intervals
+alus_gr <-  GenomicRanges::GRanges(c(
+    "2:110-380",
+    "2:510-600",
+    "2:610-670"
+))
+
+# genome fasta file, used to find A bases
+fa_fn <- raer_example("mouse_tiny.fasta")
+
+# get positions of potential A -> G changes in alus
+sites <- get_scAEI_sites(fa_fn, genes_gr, alus_gr)
+
+fp <- FilterParam(library_type = "fr-second-strand",
+                  min_mapq = 255)
+calc_scAEI(bam_fn, sites, cbs, fp)
+
 }
 \references{
 Roth, S.H., Levanon, E.Y. & Eisenberg, E. Genome-wide
