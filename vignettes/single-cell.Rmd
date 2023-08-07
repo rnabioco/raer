@@ -140,7 +140,7 @@ plotGroupedHeatmap(altExp(sce),
 )
 ```
 
-`raer` provides additional tools to examine cell type specific editing. `find_celltype_de()` will perform statistical testing to identify sites with different editing frequencies between clusters/cell types. `calc_scAEI()` will calculate the `AEI` score find single cells. 
+`raer` provides additional tools to examine cell type specific editing. `find_celltype_de()` will perform statistical testing to identify sites with different editing frequencies between clusters/cell types. `calc_scAEI()` will calculate the `AEI` score in single cells. 
 
 <details style="margin-bottom:10px;">
 <summary>

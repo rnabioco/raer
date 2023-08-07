@@ -13,6 +13,7 @@ reference:
   - '`calc_AEI`'
   - '`calc_confidence`'
   - '`calc_edit_frequency`'
+  - '`calc_scAEI'`'
 - title: Filtering
   contents:
   - has_concept('se-filters')
@@ -37,6 +38,7 @@ reference:
 - title: Utilities
   contents:
   - '`correct_strand`'
+  - '`get_scAEI_sites`'
   - '`raer_example`'
   - '`read_pileup`'
   - '`read_sparray`'

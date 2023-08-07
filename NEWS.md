@@ -1,3 +1,7 @@
+# raer 0.99.7
+
+* added a single cell specific AEI calculation (`calc_scAEI()`)
+
 # raer 0.99.6 
 
 * added method to count base consensus base when counting UMIs with `pileup_cells()` using the sum of base qualities to select consensus. 

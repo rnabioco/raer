@@ -5,7 +5,7 @@
 \title{Calculate the Adenosine Editing Index (AEI)}
 \usage{
 calc_AEI(
-  bam_fns,
+  bamfiles,
   fasta_fn,
   alu_ranges = NULL,
   txdb = NULL,
@@ -16,7 +16,7 @@ calc_AEI(
 )
 }
 \arguments{
-\item{bam_fns}{character vector of paths to indexed bam files. If a named
+\item{bamfiles}{character vector of paths to indexed bam files. If a named
 character vector is supplied the names will be used in the output.}
 
 \item{fasta_fn}{fasta filename}

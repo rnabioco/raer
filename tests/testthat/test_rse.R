@@ -63,7 +63,7 @@ test_that("annot_snps works", {
                               SNPlocs.Hsapiens.dbSNP144.GRCh38,
                               genome = BSgenome.Hsapiens.NCBI.GRCh38)
             expect_true("snp_matches_site" %in%  colnames(mcols(res)))
-            expect_equal(unname(res$snp_matches_site),
+            expect_equal(decode(res$snp_matches_site),
                          c(TRUE, FALSE, TRUE, TRUE, FALSE, NA))
         }
     }

@@ -63,3 +63,11 @@ test_that("calc_aei basic options work", {
     expect_true(all(us_aei$AEI[, "A_G"] > us_aei$AEI[, "T_C"]))
 
 })
+
+test_that("BamFile class works", {
+    fp <- FilterParam(library_type = "fr-first-strand")
+    aei <- calc_AEI(BamFile(bamfn), fafn, mock_alu_ranges, param = fp)
+    expect_equal(length(aei), 2L)
+    aei <- calc_AEI(BamFileList(bamfn), fafn, mock_alu_ranges, param = fp)
+    expect_equal(length(aei), 2L)
+})

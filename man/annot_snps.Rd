@@ -15,18 +15,11 @@ annot_snps(obj, ...)
   col_to_aggr = "RefSNP_id",
   drop = FALSE,
   genome = NULL,
+  RLE = TRUE,
   ...
 )
 
-\method{annot_snps}{SummarizedExperiment}(
-  obj,
-  dbsnp,
-  chrom = NULL,
-  col_to_aggr = "RefSNP_id",
-  drop = FALSE,
-  genome = NULL,
-  ...
-)
+\method{annot_snps}{SummarizedExperiment}(obj, ...)
 }
 \arguments{
 \item{obj}{GRanges or SummarizedExperiment  object}
@@ -53,6 +46,9 @@ if a column named \code{ALT} is present in object. The strand of the site will b
 used to determine if the \code{ALT} allele needs to be complemented prior to
 comparing against the SNP db (which always returns sequences w.r.t the
 plus strand).}
+
+\item{RLE}{If TRUE, columns added will returned as \code{\link[S4Vectors:Rle-class]{S4Vectors::Rle()}} vectors
+to reduce memory}
 }
 \value{
 Either a GRanges or SummarizedExperiment object with
