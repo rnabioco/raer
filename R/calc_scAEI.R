@@ -13,9 +13,9 @@
 #' 16, 1131–1138 (2019). https://doi.org/10.1038/s41592-019-0610-9
 #'
 #' @param bamfiles a path to a BAM file (for 10x libraries), or a vector of paths
-#' to BAM files (smart-seq2). Can be supplied as a character vector, [BamFile], or
-#' [BamFileList].
-#' @param sites a GRanges object produced by [get_scAEI_sites] containing sites to process.
+#' to BAM files (smart-seq2). Can be supplied as a character vector, `BamFile`, or
+#' `BamFileList`.
+#' @param sites a GRanges object produced by [get_scAEI_sites()] containing sites to process.
 #' @param cell_barcodes A character vector of single cell barcodes to process. If
 #' processing multiple BAM files (e.g. smart-seq-2), provide a character vector
 #' of unique identifiers for each input BAM, to name each BAM file in the output files.
@@ -30,8 +30,8 @@
 #' @param output_dir Output directory for `nRef` and `nAlt` sparseMatrix files.
 #' If NULL, a temporary directory will be used.
 #' @param return_sce if `TRUE`, data is returned as a SingleCellExperiment, if
-#' `FALSE` a [DataFrame] containing computed AEI values will be returned.
-#' @param ... additional arguments to [pileup_cells]
+#' `FALSE` a `DataFrame` containing computed AEI values will be returned.
+#' @param ... additional arguments to [pileup_cells()]
 #'
 #' @returns A `DataFrame` containing computed `AEI` values,
 #' count of editing events (`n_alt`), and count of reference events (`n_ref`) per cell.
@@ -39,23 +39,23 @@
 #' AEI values stored in the `colData`.
 #'
 #' @examples
-#'
-#' # bam file
+#' library(Rsamtools)
+#' library(GenomicRanges)
 #' bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
-#' Rsamtools::indexBam(bam_fn)
+#' indexBam(bam_fn)
 #'
 #' # cell barcodes to query
 #' cbs <- c("TGTTTGTTCCATCCGT-1", "CAACCAACATAATCGC-1", "TGGAACTCAAGCTGTT-1")
 #'
 #' # genes used to infer transcribed strand
-#' genes_gr <- GenomicRanges::GRanges(c(
+#' genes_gr <- GRanges(c(
 #'     "2:100-400:-",
 #'     "2:500-605:-",
 #'     "2:600-680:+"
 #' ))
 #'
 #' # alu intervals
-#' alus_gr <-  GenomicRanges::GRanges(c(
+#' alus_gr <-  GRanges(c(
 #'     "2:110-380",
 #'     "2:510-600",
 #'     "2:610-670"
@@ -121,11 +121,11 @@ calc_scAEI <- function(bamfiles, sites, cell_barcodes, param = FilterParam(),
 }
 
 #' @param fasta_fn a path to a BAM file (for 10x libraries), or a vector of paths
-#' to BAM files (smart-seq2). Can be supplied as a character vector, [BamFile], or
-#' [BamFileList].
-#' @param genes  A [GRanges] object with gene coordinates.Alternatively a [TxDb] object,
+#' to BAM files (smart-seq2). Can be supplied as a character vector, `BamFile`, or
+#' `BamFileList`.
+#' @param genes  A `GRanges` object with gene coordinates.Alternatively a `TxDb` object,
 #' which if supplied, will be used extract gene coordinates.
-#' @param alus [GRanges] with repeat regions to query for calculating the AEI,
+#' @param alus `GRanges` with repeat regions to query for calculating the AEI,
 #' typically ALU repeats. The strand of the supplied intervals will be ignored for
 #' defining repeat regions.
 #' @param edit_from This should correspond to the base

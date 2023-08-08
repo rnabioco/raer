@@ -21,10 +21,10 @@ get_scAEI_sites(fasta_fn, genes, alus, edit_from = "A", edit_to = "G")
 }
 \arguments{
 \item{bamfiles}{a path to a BAM file (for 10x libraries), or a vector of paths
-to BAM files (smart-seq2). Can be supplied as a character vector, \link{BamFile}, or
-\link{BamFileList}.}
+to BAM files (smart-seq2). Can be supplied as a character vector, \code{BamFile}, or
+\code{BamFileList}.}
 
-\item{sites}{a GRanges object produced by \link{get_scAEI_sites} containing sites to process.}
+\item{sites}{a GRanges object produced by \code{\link[=get_scAEI_sites]{get_scAEI_sites()}} containing sites to process.}
 
 \item{cell_barcodes}{A character vector of single cell barcodes to process. If
 processing multiple BAM files (e.g. smart-seq-2), provide a character vector
@@ -45,18 +45,18 @@ to I editing events, this would be \code{G}.}
 If NULL, a temporary directory will be used.}
 
 \item{return_sce}{if \code{TRUE}, data is returned as a SingleCellExperiment, if
-\code{FALSE} a \link{DataFrame} containing computed AEI values will be returned.}
+\code{FALSE} a \code{DataFrame} containing computed AEI values will be returned.}
 
-\item{...}{additional arguments to \link{pileup_cells}}
+\item{...}{additional arguments to \code{\link[=pileup_cells]{pileup_cells()}}}
 
 \item{fasta_fn}{a path to a BAM file (for 10x libraries), or a vector of paths
-to BAM files (smart-seq2). Can be supplied as a character vector, \link{BamFile}, or
-\link{BamFileList}.}
+to BAM files (smart-seq2). Can be supplied as a character vector, \code{BamFile}, or
+\code{BamFileList}.}
 
-\item{genes}{A \link{GRanges} object with gene coordinates.Alternatively a \link{TxDb} object,
+\item{genes}{A \code{GRanges} object with gene coordinates.Alternatively a \code{TxDb} object,
 which if supplied, will be used extract gene coordinates.}
 
-\item{alus}{\link{GRanges} with repeat regions to query for calculating the AEI,
+\item{alus}{\code{GRanges} with repeat regions to query for calculating the AEI,
 typically ALU repeats. The strand of the supplied intervals will be ignored for
 defining repeat regions.}
 }
@@ -76,23 +76,23 @@ function will examine potential editing sites and return
 summary AEI metric per cell.
 }
 \examples{
-
-# bam file
+library(Rsamtools)
+library(GenomicRanges)
 bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
-Rsamtools::indexBam(bam_fn)
+indexBam(bam_fn)
 
 # cell barcodes to query
 cbs <- c("TGTTTGTTCCATCCGT-1", "CAACCAACATAATCGC-1", "TGGAACTCAAGCTGTT-1")
 
 # genes used to infer transcribed strand
-genes_gr <- GenomicRanges::GRanges(c(
+genes_gr <- GRanges(c(
     "2:100-400:-",
     "2:500-605:-",
     "2:600-680:+"
 ))
 
 # alu intervals
-alus_gr <-  GenomicRanges::GRanges(c(
+alus_gr <-  GRanges(c(
     "2:110-380",
     "2:510-600",
     "2:610-670"
