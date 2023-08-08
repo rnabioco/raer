@@ -35,7 +35,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.6</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.7</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -88,7 +88,7 @@
                         <h4 data-toc-skip class="author">Kent
 Riemondy</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-07-21</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-08-08</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/novel-sites.Rmd" class="external-link"><code>vignettes/novel-sites.Rmd</code></a></small>
       <div class="d-none name"><code>novel-sites.Rmd</code></div>
@@ -127,13 +127,13 @@ alignments from the first 1MB of chromosome 4 and they are stored in a
 <span><span class="co">## [2] "/github/home/.cache/R/raer/SRR1258218_Aligned.sorted.dedup_sub.bam.bai"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $fasta</span></span>
-<span><span class="co">## [1] "/github/home/.cache/R/raer/128b57d0c7fd_hg38_chr4.fa.bgz"</span></span>
+<span><span class="co">## [1] "/github/home/.cache/R/raer/15362bc4cfbd_hg38_chr4.fa.bgz"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $snps</span></span>
-<span><span class="co">## [1] "/github/home/.cache/R/raer/128bc3a310b_chr4snps.bed.gz"</span></span>
+<span><span class="co">## [1] "/github/home/.cache/R/raer/15362c3f21b8_chr4snps.bed.gz"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $rmsk</span></span>
-<span><span class="co">## [1] "/github/home/.cache/R/raer/128b6d2b2b32_rmsk_hg38.tsv.gz"</span></span></code></pre>
+<span><span class="co">## [1] "/github/home/.cache/R/raer/15366b810546_rmsk_hg38.tsv.gz"</span></span></code></pre>
 <p>Additionally we will use the following additional annotation
 resources:</p>
 <ul>
@@ -254,19 +254,19 @@ information to the <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/S
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"repName"</span>, <span class="st">"repFamily"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">## DataFrame with 150 rows and 2 columns</span></span>
-<span><span class="co">##                        repName   repFamily</span></span>
-<span><span class="co">##                    &lt;character&gt; &lt;character&gt;</span></span>
-<span><span class="co">## site_chr4_124820_1          NA          NA</span></span>
-<span><span class="co">## site_chr4_125213_1      MER21C        ERVL</span></span>
-<span><span class="co">## site_chr4_126885_1          NA          NA</span></span>
-<span><span class="co">## site_chr4_126955_1          NA          NA</span></span>
-<span><span class="co">## site_chr4_134331_1          NA          NA</span></span>
-<span><span class="co">## ...                        ...         ...</span></span>
-<span><span class="co">## site_chr4_894077_1          NA          NA</span></span>
-<span><span class="co">## site_chr4_952419_1          NA          NA</span></span>
-<span><span class="co">## site_chr4_958447_1          NA          NA</span></span>
-<span><span class="co">## site_chr4_990589_1          NA          NA</span></span>
-<span><span class="co">## site_chr4_993342_1          NA          NA</span></span></code></pre>
+<span><span class="co">##                    repName repFamily</span></span>
+<span><span class="co">##                      &lt;Rle&gt;     &lt;Rle&gt;</span></span>
+<span><span class="co">## site_chr4_124820_1      NA        NA</span></span>
+<span><span class="co">## site_chr4_125213_1  MER21C      ERVL</span></span>
+<span><span class="co">## site_chr4_126885_1      NA        NA</span></span>
+<span><span class="co">## site_chr4_126955_1      NA        NA</span></span>
+<span><span class="co">## site_chr4_134331_1      NA        NA</span></span>
+<span><span class="co">## ...                    ...       ...</span></span>
+<span><span class="co">## site_chr4_894077_1      NA        NA</span></span>
+<span><span class="co">## site_chr4_952419_1      NA        NA</span></span>
+<span><span class="co">## site_chr4_958447_1      NA        NA</span></span>
+<span><span class="co">## site_chr4_990589_1      NA        NA</span></span>
+<span><span class="co">## site_chr4_993342_1      NA        NA</span></span></code></pre>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="va">rse</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">repFamily</span> <span class="op"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Simple_repeat"</span>, <span class="st">"Low Complexity"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
 <p>Next we’ll remove sites adjacent to other sites with different
@@ -313,7 +313,7 @@ SNPs. If using a SNPlocs package you can use the
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"name"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">## DataFrame with 125 rows and 1 column</span></span>
 <span><span class="co">##                            name</span></span>
-<span><span class="co">##                     &lt;character&gt;</span></span>
+<span><span class="co">##                           &lt;Rle&gt;</span></span>
 <span><span class="co">## site_chr4_124820_1 rs1553807640</span></span>
 <span><span class="co">## site_chr4_125213_1 rs1286128437</span></span>
 <span><span class="co">## site_chr4_126885_1           NA</span></span>
@@ -362,32 +362,32 @@ editing site.</p>
 <span><span class="co">##   site_chr4_380392_1     chr4    380392      + |           A   0.332543</span></span>
 <span><span class="co">##   site_chr4_778739_2     chr4    778739      - |           A   0.577350</span></span>
 <span><span class="co">##   site_chr4_778780_2     chr4    778780      - |           A  -0.866025</span></span>
-<span><span class="co">##                            vdb       sor         ALT     repName</span></span>
-<span><span class="co">##                      &lt;numeric&gt; &lt;numeric&gt; &lt;character&gt; &lt;character&gt;</span></span>
-<span><span class="co">##   site_chr4_134353_1  0.100000  0.527355           G        &lt;NA&gt;</span></span>
-<span><span class="co">##   site_chr4_377951_1  0.580000  2.285077           G       AluSc</span></span>
-<span><span class="co">##   site_chr4_378004_1  0.060000  0.464813           G       AluSc</span></span>
-<span><span class="co">##   site_chr4_378011_1  0.840000  0.550831           G       AluSc</span></span>
-<span><span class="co">##   site_chr4_378018_1  0.535497  1.070610           G       AluSc</span></span>
-<span><span class="co">##                  ...       ...       ...         ...         ...</span></span>
-<span><span class="co">##   site_chr4_378368_1  0.180000  0.268990           G        &lt;NA&gt;</span></span>
-<span><span class="co">##   site_chr4_378409_1  0.580000  0.891998           G        &lt;NA&gt;</span></span>
-<span><span class="co">##   site_chr4_380392_1  0.520000  0.424565           G      AluSq2</span></span>
-<span><span class="co">##   site_chr4_778739_2  0.230191  0.668541           G       AluSg</span></span>
-<span><span class="co">##   site_chr4_778780_2  0.303109  1.885595           G       AluSg</span></span>
-<span><span class="co">##                         repClass   repFamily        name</span></span>
-<span><span class="co">##                      &lt;character&gt; &lt;character&gt; &lt;character&gt;</span></span>
-<span><span class="co">##   site_chr4_134353_1        &lt;NA&gt;        &lt;NA&gt;        &lt;NA&gt;</span></span>
-<span><span class="co">##   site_chr4_377951_1        SINE         Alu        &lt;NA&gt;</span></span>
-<span><span class="co">##   site_chr4_378004_1        SINE         Alu        &lt;NA&gt;</span></span>
-<span><span class="co">##   site_chr4_378011_1        SINE         Alu        &lt;NA&gt;</span></span>
-<span><span class="co">##   site_chr4_378018_1        SINE         Alu        &lt;NA&gt;</span></span>
-<span><span class="co">##                  ...         ...         ...         ...</span></span>
-<span><span class="co">##   site_chr4_378368_1        &lt;NA&gt;        &lt;NA&gt;        &lt;NA&gt;</span></span>
-<span><span class="co">##   site_chr4_378409_1        &lt;NA&gt;        &lt;NA&gt;        &lt;NA&gt;</span></span>
-<span><span class="co">##   site_chr4_380392_1        SINE         Alu        &lt;NA&gt;</span></span>
-<span><span class="co">##   site_chr4_778739_2        SINE         Alu        &lt;NA&gt;</span></span>
-<span><span class="co">##   site_chr4_778780_2        SINE         Alu        &lt;NA&gt;</span></span>
+<span><span class="co">##                            vdb       sor         ALT repName repClass</span></span>
+<span><span class="co">##                      &lt;numeric&gt; &lt;numeric&gt; &lt;character&gt;   &lt;Rle&gt;    &lt;Rle&gt;</span></span>
+<span><span class="co">##   site_chr4_134353_1  0.100000  0.527355           G    &lt;NA&gt;     &lt;NA&gt;</span></span>
+<span><span class="co">##   site_chr4_377951_1  0.580000  2.285077           G   AluSc     SINE</span></span>
+<span><span class="co">##   site_chr4_378004_1  0.060000  0.464813           G   AluSc     SINE</span></span>
+<span><span class="co">##   site_chr4_378011_1  0.840000  0.550831           G   AluSc     SINE</span></span>
+<span><span class="co">##   site_chr4_378018_1  0.535497  1.070610           G   AluSc     SINE</span></span>
+<span><span class="co">##                  ...       ...       ...         ...     ...      ...</span></span>
+<span><span class="co">##   site_chr4_378368_1  0.180000  0.268990           G    &lt;NA&gt;     &lt;NA&gt;</span></span>
+<span><span class="co">##   site_chr4_378409_1  0.580000  0.891998           G    &lt;NA&gt;     &lt;NA&gt;</span></span>
+<span><span class="co">##   site_chr4_380392_1  0.520000  0.424565           G  AluSq2     SINE</span></span>
+<span><span class="co">##   site_chr4_778739_2  0.230191  0.668541           G   AluSg     SINE</span></span>
+<span><span class="co">##   site_chr4_778780_2  0.303109  1.885595           G   AluSg     SINE</span></span>
+<span><span class="co">##                      repFamily  name</span></span>
+<span><span class="co">##                          &lt;Rle&gt; &lt;Rle&gt;</span></span>
+<span><span class="co">##   site_chr4_134353_1      &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">##   site_chr4_377951_1       Alu  &lt;NA&gt;</span></span>
+<span><span class="co">##   site_chr4_378004_1       Alu  &lt;NA&gt;</span></span>
+<span><span class="co">##   site_chr4_378011_1       Alu  &lt;NA&gt;</span></span>
+<span><span class="co">##   site_chr4_378018_1       Alu  &lt;NA&gt;</span></span>
+<span><span class="co">##                  ...       ...   ...</span></span>
+<span><span class="co">##   site_chr4_378368_1      &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">##   site_chr4_378409_1      &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">##   site_chr4_380392_1       Alu  &lt;NA&gt;</span></span>
+<span><span class="co">##   site_chr4_778739_2       Alu  &lt;NA&gt;</span></span>
+<span><span class="co">##   site_chr4_778780_2       Alu  &lt;NA&gt;</span></span>
 <span><span class="co">##   -------</span></span>
 <span><span class="co">##   seqinfo: 194 sequences from an unspecified genome</span></span></code></pre>
 <details style="margin-bottom:10px;"><summary>
@@ -421,7 +421,7 @@ Session info
 <span><span class="co">##  [1] TxDb.Hsapiens.UCSC.hg38.knownGene_3.17.0</span></span>
 <span><span class="co">##  [2] rtracklayer_1.60.0                      </span></span>
 <span><span class="co">##  [3] SummarizedExperiment_1.30.2             </span></span>
-<span><span class="co">##  [4] MatrixGenerics_1.12.2                   </span></span>
+<span><span class="co">##  [4] MatrixGenerics_1.12.3                   </span></span>
 <span><span class="co">##  [5] matrixStats_1.0.0                       </span></span>
 <span><span class="co">##  [6] GenomicFeatures_1.52.1                  </span></span>
 <span><span class="co">##  [7] AnnotationDbi_1.62.2                    </span></span>
@@ -431,7 +431,7 @@ Session info
 <span><span class="co">## [11] IRanges_2.34.1                          </span></span>
 <span><span class="co">## [12] S4Vectors_0.38.1                        </span></span>
 <span><span class="co">## [13] BiocGenerics_0.46.0                     </span></span>
-<span><span class="co">## [14] raer_0.99.6                             </span></span>
+<span><span class="co">## [14] raer_0.99.7                             </span></span>
 <span><span class="co">## [15] BiocStyle_2.28.0                        </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
@@ -449,37 +449,37 @@ Session info
 <span><span class="co">## [23] tools_4.3.0                 utf8_1.2.3                 </span></span>
 <span><span class="co">## [25] yaml_2.3.7                  data.table_1.14.8          </span></span>
 <span><span class="co">## [27] knitr_1.43                  prettyunits_1.1.1          </span></span>
-<span><span class="co">## [29] S4Arrays_1.0.4              bit_4.0.5                  </span></span>
-<span><span class="co">## [31] curl_5.0.1                  DelayedArray_0.26.6        </span></span>
-<span><span class="co">## [33] xml2_1.3.5                  BiocParallel_1.34.2        </span></span>
-<span><span class="co">## [35] withr_2.5.0                 purrr_1.0.1                </span></span>
-<span><span class="co">## [37] R.oo_1.25.0                 desc_1.4.2                 </span></span>
-<span><span class="co">## [39] grid_4.3.0                  fansi_1.0.4                </span></span>
-<span><span class="co">## [41] biomaRt_2.56.1              cli_3.6.1                  </span></span>
-<span><span class="co">## [43] rmarkdown_2.23              crayon_1.5.2               </span></span>
-<span><span class="co">## [45] ragg_1.2.5                  generics_0.1.3             </span></span>
-<span><span class="co">## [47] httr_1.4.6                  rjson_0.2.21               </span></span>
-<span><span class="co">## [49] DBI_1.1.3                   cachem_1.0.8               </span></span>
-<span><span class="co">## [51] stringr_1.5.0               zlibbioc_1.46.0            </span></span>
-<span><span class="co">## [53] parallel_4.3.0              BiocManager_1.30.21.1      </span></span>
-<span><span class="co">## [55] XVector_0.40.0              restfulr_0.0.15            </span></span>
-<span><span class="co">## [57] vctrs_0.6.3                 Matrix_1.6-0               </span></span>
-<span><span class="co">## [59] jsonlite_1.8.7              bookdown_0.34              </span></span>
-<span><span class="co">## [61] hms_1.1.3                   bit64_4.0.5                </span></span>
-<span><span class="co">## [63] systemfonts_1.0.4           jquerylib_0.1.4            </span></span>
-<span><span class="co">## [65] glue_1.6.2                  pkgdown_2.0.7              </span></span>
-<span><span class="co">## [67] codetools_0.2-19            stringi_1.7.12             </span></span>
-<span><span class="co">## [69] BiocIO_1.10.0               tibble_3.2.1               </span></span>
-<span><span class="co">## [71] pillar_1.9.0                rappdirs_0.3.3             </span></span>
-<span><span class="co">## [73] htmltools_0.5.5             GenomeInfoDbData_1.2.10    </span></span>
-<span><span class="co">## [75] BSgenome_1.68.0             R6_2.5.1                   </span></span>
-<span><span class="co">## [77] dbplyr_2.3.3                textshaping_0.3.6          </span></span>
-<span><span class="co">## [79] rprojroot_2.0.3             evaluate_0.21              </span></span>
-<span><span class="co">## [81] lattice_0.21-8              R.methodsS3_1.8.2          </span></span>
-<span><span class="co">## [83] png_0.1-8                   Rsamtools_2.16.0           </span></span>
-<span><span class="co">## [85] memoise_2.0.1               bslib_0.5.0                </span></span>
-<span><span class="co">## [87] xfun_0.39                   fs_1.6.3                   </span></span>
-<span><span class="co">## [89] pkgconfig_2.0.3</span></span></code></pre>
+<span><span class="co">## [29] S4Arrays_1.0.5              bit_4.0.5                  </span></span>
+<span><span class="co">## [31] curl_5.0.1                  DelayedArray_0.26.7        </span></span>
+<span><span class="co">## [33] xml2_1.3.5                  abind_1.4-5                </span></span>
+<span><span class="co">## [35] BiocParallel_1.34.2         withr_2.5.0                </span></span>
+<span><span class="co">## [37] purrr_1.0.1                 R.oo_1.25.0                </span></span>
+<span><span class="co">## [39] desc_1.4.2                  grid_4.3.0                 </span></span>
+<span><span class="co">## [41] fansi_1.0.4                 biomaRt_2.56.1             </span></span>
+<span><span class="co">## [43] cli_3.6.1                   rmarkdown_2.23             </span></span>
+<span><span class="co">## [45] crayon_1.5.2                ragg_1.2.5                 </span></span>
+<span><span class="co">## [47] generics_0.1.3              httr_1.4.6                 </span></span>
+<span><span class="co">## [49] rjson_0.2.21                DBI_1.1.3                  </span></span>
+<span><span class="co">## [51] cachem_1.0.8                stringr_1.5.0              </span></span>
+<span><span class="co">## [53] zlibbioc_1.46.0             parallel_4.3.0             </span></span>
+<span><span class="co">## [55] BiocManager_1.30.21.1       XVector_0.40.0             </span></span>
+<span><span class="co">## [57] restfulr_0.0.15             vctrs_0.6.3                </span></span>
+<span><span class="co">## [59] Matrix_1.6-0                jsonlite_1.8.7             </span></span>
+<span><span class="co">## [61] bookdown_0.34               hms_1.1.3                  </span></span>
+<span><span class="co">## [63] bit64_4.0.5                 systemfonts_1.0.4          </span></span>
+<span><span class="co">## [65] jquerylib_0.1.4             glue_1.6.2                 </span></span>
+<span><span class="co">## [67] pkgdown_2.0.7               codetools_0.2-19           </span></span>
+<span><span class="co">## [69] stringi_1.7.12              BiocIO_1.10.0              </span></span>
+<span><span class="co">## [71] tibble_3.2.1                pillar_1.9.0               </span></span>
+<span><span class="co">## [73] rappdirs_0.3.3              htmltools_0.5.5            </span></span>
+<span><span class="co">## [75] GenomeInfoDbData_1.2.10     BSgenome_1.68.0            </span></span>
+<span><span class="co">## [77] R6_2.5.1                    dbplyr_2.3.3               </span></span>
+<span><span class="co">## [79] textshaping_0.3.6           rprojroot_2.0.3            </span></span>
+<span><span class="co">## [81] evaluate_0.21               lattice_0.21-8             </span></span>
+<span><span class="co">## [83] R.methodsS3_1.8.2           png_0.1-8                  </span></span>
+<span><span class="co">## [85] Rsamtools_2.16.0            memoise_2.0.1              </span></span>
+<span><span class="co">## [87] bslib_0.5.0                 xfun_0.39                  </span></span>
+<span><span class="co">## [89] fs_1.6.3                    pkgconfig_2.0.3</span></span></code></pre>
 </details>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

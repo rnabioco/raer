@@ -12,7 +12,7 @@ a SummarizedExperiment with SNPs from a SNP package."><meta property="og:image" 
     
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.6</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.7</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,19 +74,12 @@ a <a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperime
 <span>  col_to_aggr <span class="op">=</span> <span class="st">"RefSNP_id"</span>,</span>
 <span>  drop <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  genome <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  RLE <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for SummarizedExperiment</span></span>
-<span><span class="fu">annot_snps</span><span class="op">(</span></span>
-<span>  <span class="va">obj</span>,</span>
-<span>  <span class="va">dbsnp</span>,</span>
-<span>  chrom <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  col_to_aggr <span class="op">=</span> <span class="st">"RefSNP_id"</span>,</span>
-<span>  drop <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  genome <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  <span class="va">...</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">annot_snps</span><span class="op">(</span><span class="va">obj</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -128,6 +121,11 @@ if a column named <code>ALT</code> is present in object. The strand of the site 
 used to determine if the <code>ALT</code> allele needs to be complemented prior to
 comparing against the SNP db (which always returns sequences w.r.t the
 plus strand).</p></dd>
+
+
+<dt>RLE</dt>
+<dd><p>If TRUE, columns added will returned as <code><a href="https://rdrr.io/pkg/S4Vectors/man/Rle-class.html" class="external-link">S4Vectors::Rle()</a></code> vectors
+to reduce memory</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -171,18 +169,18 @@ a new column added with information from <code>col_to_aggr</code> and optionally
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: rtracklayer</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>replacing previous import ‘utils::findMatches’ by ‘S4Vectors::findMatches’ when loading ‘SNPlocs.Hsapiens.dbSNP144.GRCh38’</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 10 ranges and 1 metadata column:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        seqnames            ranges strand |   RefSNP_id</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    [1]       22 10510077-10510326      + |            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    [2]       22 10511077-10511326      + |   rs4022986</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    [3]       22 10512077-10512326      + |            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    [4]       22 10513077-10513326      + |            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    [5]       22 10514077-10514326      + |            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    [6]       22 10515077-10515326      + |            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    [7]       22 10516077-10516326      + |            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    [8]       22 10517077-10517326      + |            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    [9]       22 10518077-10518326      + |            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [10]       22 10519077-10519326      + |            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        seqnames            ranges strand | RefSNP_id</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; |     &lt;Rle&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    [1]       22 10510077-10510326      + |          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    [2]       22 10511077-10511326      + | rs4022986</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    [3]       22 10512077-10512326      + |          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    [4]       22 10513077-10513326      + |          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    [5]       22 10514077-10514326      + |          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    [6]       22 10515077-10515326      + |          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    [7]       22 10516077-10516326      + |          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    [8]       22 10517077-10517326      + |          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    [9]       22 10518077-10518326      + |          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [10]       22 10519077-10519326      + |          </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   -------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   seqinfo: 1 sequence from GRCh38.p2 genome; no seqlengths</span>
 </code></pre></div>
