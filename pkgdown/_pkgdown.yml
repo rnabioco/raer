@@ -13,7 +13,7 @@ reference:
   - '`calc_AEI`'
   - '`calc_confidence`'
   - '`calc_edit_frequency`'
-  - '`calc_scAEI'`'
+  - '`calc_scAEI`'
 - title: Filtering
   contents:
   - has_concept('se-filters')
