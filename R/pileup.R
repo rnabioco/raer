@@ -4,7 +4,7 @@
 #' more BAM files to process. If named, the names will be included in the [colData]
 #' of the [RangedSummarizedExperiment] as a `sample` column, otherwise the names will
 #' be taken from the basename of the BAM file.
-#' @param fafile path to genome fasta file used for read alignment. Can be in
+#' @param fasta path to genome fasta file used for read alignment. Can be in
 #' gzip or bgzip format.
 #' @param sites a [GRanges] object containing regions or sites to process.
 #' @param region samtools region query string (i.e. `chr1:100-1000`). Can be combined
@@ -107,7 +107,7 @@
 #' @rdname pileup_sites
 #' @export
 pileup_sites <- function(bamfiles,
-    fafile,
+    fasta,
     sites = NULL,
     region = NULL,
     chroms = NULL,
@@ -146,9 +146,10 @@ pileup_sites <- function(bamfiles,
         cli::cli_abort("index file(s) not found for bam: {mi}")
     }
 
-    if (!file.exists(fafile)) {
-        cli::cli_abort("fasta file not found: {fafile}")
+    if (!file.exists(fasta)) {
+        cli::cli_abort("fasta file not found: {fasta}")
     }
+    fasta <- path.expand(fasta)
 
     if (is.null(outfile_prefix)) {
         if (!return_data) {
@@ -208,7 +209,7 @@ pileup_sites <- function(bamfiles,
             setdiff(chroms_to_process, missing_chroms)
     }
 
-    chroms_in_fa <- seqnames(Rsamtools::scanFaIndex(fafile))
+    chroms_in_fa <- seqnames(Rsamtools::scanFaIndex(fasta))
     missing_chroms <-
         chroms_to_process[!chroms_to_process %in% levels(chroms_in_fa)]
 
@@ -278,7 +279,7 @@ pileup_sites <- function(bamfiles,
             bfs,
             bidxs,
             as.integer(n_files),
-            fafile,
+            fasta,
             region,
             sites,
             fp[["int_args"]],
@@ -334,7 +335,7 @@ pileup_sites <- function(bamfiles,
                 bfs,
                 bidxs,
                 as.integer(n_files),
-                fafile,
+                fasta,
                 ctig,
                 sites,
                 fp[["int_args"]],

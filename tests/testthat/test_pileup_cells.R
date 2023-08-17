@@ -217,7 +217,7 @@ bulkfp <- FilterParam(min_mapq = 255L,
                   bam_flags = scanBamFlag(isSecondaryAlignment = FALSE,
                                           isSupplementaryAlignment = FALSE,
                                           isNotPassingQualityControls =  FALSE))
-rse <- pileup_sites(bam_fn, fafile = fa_fn, chrom = "2", param = bulkfp)
+rse <- pileup_sites(bam_fn, fa_fn, chrom = "2", param = bulkfp)
 rowData(rse)$ALT <- assay(rse, "ALT")[, 1]
 sites <- rowRanges(rse)
 

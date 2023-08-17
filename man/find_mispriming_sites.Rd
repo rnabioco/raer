@@ -6,7 +6,7 @@
 \usage{
 find_mispriming_sites(
   bamfile,
-  fafile,
+  fasta,
   pos_5p = 5,
   pos_3p = 20,
   min_reads = 2,
@@ -19,7 +19,7 @@ find_mispriming_sites(
 \arguments{
 \item{bamfile}{path to bamfile}
 
-\item{fafile}{path to fasta file}
+\item{fasta}{path to fasta file}
 
 \item{pos_5p}{distance 5' of mispriming site to define mispriming region}
 

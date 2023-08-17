@@ -6,7 +6,7 @@
 \usage{
 calc_AEI(
   bamfiles,
-  fasta_fn,
+  fasta,
   alu_ranges = NULL,
   txdb = NULL,
   snp_db = NULL,
@@ -19,7 +19,7 @@ calc_AEI(
 \item{bamfiles}{character vector of paths to indexed bam files. If a named
 character vector is supplied the names will be used in the output.}
 
-\item{fasta_fn}{fasta filename}
+\item{fasta}{fasta filename}
 
 \item{alu_ranges}{\link{GRanges} with regions to query for
 calculating the AEI, typically ALU repeats.}

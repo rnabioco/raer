@@ -14,7 +14,7 @@
 #'
 #' @param bamfiles character vector of paths to indexed bam files. If a named
 #' character vector is supplied the names will be used in the output.
-#' @param fasta_fn fasta filename
+#' @param fasta fasta filename
 #' @param alu_ranges [GRanges] with regions to query for
 #'   calculating the AEI, typically ALU repeats.
 #' @param txdb A [TxDb] object, if supplied, will be used to subset the alu_ranges
@@ -64,7 +64,7 @@
 #'
 #' @export
 calc_AEI <- function(bamfiles,
-    fasta_fn,
+    fasta,
     alu_ranges = NULL,
     txdb = NULL,
     snp_db = NULL,
@@ -167,7 +167,7 @@ calc_AEI <- function(bamfiles,
     res <- list()
     for(i in seq_along(bamfiles)) {
         bam_fn <- bamfiles[i]
-        aei <- .AEI_per_bam(bam_fn = bam_fn, fasta_fn = fasta_fn, chroms = chroms,
+        aei <- .AEI_per_bam(bam_fn = bam_fn, fasta_fn = fasta, chroms = chroms,
                      alu_ranges = alu_ranges, snps = snps, param = param,
                      genes_gr = genes_gr, verbose = verbose, BPPARAM = BPPARAM)
         res[[path(bam_fn)]] <- aei
@@ -267,7 +267,7 @@ calc_AEI <- function(bamfiles,
     param@only_keep_variants <- FALSE
 
     plp <- pileup_sites(bam_fn,
-        fafile = fasta_fn,
+        fasta = fasta_fn,
         sites = alu_sites,
         chroms = chrom,
         param = param

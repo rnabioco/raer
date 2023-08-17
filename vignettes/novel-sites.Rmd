@@ -87,7 +87,7 @@ fp <- FilterParam(
 bams <- c(rna_bam, wgs_bam)
 names(bams) <- c("rna", "dna")
 rse <- pileup_sites(bams,
-    fafile = fafn,
+    fasta = fafn,
     chrom = "chr4",
     param = fp
 )

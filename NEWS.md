@@ -1,3 +1,7 @@
+# raer 0.99.8
+
+* Function arguments involving a fasta file have been renamed to all be `fasta`
+
 # raer 0.99.7
 
 * added a single cell specific AEI calculation (`calc_scAEI()`)
