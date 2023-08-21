@@ -121,9 +121,7 @@ calc_scAEI <- function(bamfiles, sites, cell_barcodes, param = FilterParam(),
      res
 }
 
-#' @param fasta_fn a path to a BAM file (for 10x libraries), or a vector of paths
-#' to BAM files (smart-seq2). Can be supplied as a character vector, `BamFile`, or
-#' `BamFileList`.
+#' @param fasta Path to a genome fasta file
 #' @param genes  A `GRanges` object with gene coordinates.Alternatively a `TxDb` object,
 #' which if supplied, will be used extract gene coordinates.
 #' @param alus `GRanges` with repeat regions to query for calculating the AEI,
@@ -138,7 +136,7 @@ calc_scAEI <- function(bamfiles, sites, cell_barcodes, param = FilterParam(),
 #'
 #' @rdname calc_scAEI
 #' @export
-get_scAEI_sites <- function(fasta_fn,
+get_scAEI_sites <- function(fasta,
                             genes,
                             alus,
                             edit_from = "A",
@@ -159,7 +157,7 @@ get_scAEI_sites <- function(fasta_fn,
     alus$id <- seq_along(alus)
     gn_alus <- prep_genic_alu_regions(genes, alus)
     aei_sites <- get_aei_site_positions(gn_alus,
-                                        fasta_fn,
+                                        fasta,
                                         edit_from)
 
     aei_sites$ALT <- edit_to

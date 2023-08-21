@@ -56,7 +56,7 @@ unlist_w_names <- function(x) {
 #' are returned.
 #'
 #' @param bamfile path to bamfile
-#' @param fafile path to fasta file
+#' @param fasta path to fasta file
 #' @param pos_5p distance 5' of mispriming site to define mispriming region
 #' @param pos_3p distance 3' of mispriming site to define mispriming region
 #' @param min_reads minimum required number of reads at a mispriming site
@@ -82,7 +82,7 @@ unlist_w_names <- function(x) {
 #' find_mispriming_sites(bam_fn, fa_fn)
 #'
 #' @export
-find_mispriming_sites <- function(bamfile, fafile, pos_5p = 5, pos_3p = 20,
+find_mispriming_sites <- function(bamfile, fasta, pos_5p = 5, pos_3p = 20,
                                   min_reads = 2, tag = "pa", tag_values = 3:300,
                                   n_reads_per_chunk = 1e6, verbose = TRUE){
 
@@ -140,7 +140,7 @@ find_mispriming_sites <- function(bamfile, fafile, pos_5p = 5, pos_3p = 20,
                             drop = FALSE)
     res$n_regions <- IRanges::grouplengths(res$grouping)
     res$grouping <- NULL
-    res <- pa_seq_context(res, fafile)
+    res <- pa_seq_context(res, fasta)
     res
 }
 
@@ -175,8 +175,8 @@ merge_pa_peaks <- function(gr) {
 
 #' @importFrom Rsamtools FaFile scanFa
 #' @importFrom Biostrings letterFrequency reverseComplement
-pa_seq_context <- function(gr, fafile){
-    fa <- Rsamtools::FaFile(fafile)
+pa_seq_context <- function(gr, fasta){
+    fa <- Rsamtools::FaFile(fasta)
     seqs <- Rsamtools::scanFa(fa, gr)
     seqs[strand(gr) == "-"] <- Biostrings::reverseComplement(seqs[strand(gr) == "-"])
     a_prop <- Biostrings::letterFrequency(seqs, "A") / width(gr)

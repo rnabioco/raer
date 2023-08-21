@@ -7,7 +7,7 @@
 \usage{
 pileup_sites(
   bamfiles,
-  fafile,
+  fasta,
   sites = NULL,
   region = NULL,
   chroms = NULL,
@@ -48,7 +48,7 @@ more BAM files to process. If named, the names will be included in the \link{col
 of the \link{RangedSummarizedExperiment} as a \code{sample} column, otherwise the names will
 be taken from the basename of the BAM file.}
 
-\item{fafile}{path to genome fasta file used for read alignment. Can be in
+\item{fasta}{path to genome fasta file used for read alignment. Can be in
 gzip or bgzip format.}
 
 \item{sites}{a \link{GRanges} object containing regions or sites to process.}

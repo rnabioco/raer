@@ -17,7 +17,7 @@ calc_scAEI(
   ...
 )
 
-get_scAEI_sites(fasta_fn, genes, alus, edit_from = "A", edit_to = "G")
+get_scAEI_sites(fasta, genes, alus, edit_from = "A", edit_to = "G")
 }
 \arguments{
 \item{bamfiles}{a path to a BAM file (for 10x libraries), or a vector of paths
@@ -49,9 +49,7 @@ If NULL, a temporary directory will be used.}
 
 \item{...}{additional arguments to \code{\link[=pileup_cells]{pileup_cells()}}}
 
-\item{fasta_fn}{a path to a BAM file (for 10x libraries), or a vector of paths
-to BAM files (smart-seq2). Can be supplied as a character vector, \code{BamFile}, or
-\code{BamFileList}.}
+\item{fasta}{Path to a genome fasta file}
 
 \item{genes}{A \code{GRanges} object with gene coordinates.Alternatively a \code{TxDb} object,
 which if supplied, will be used extract gene coordinates.}

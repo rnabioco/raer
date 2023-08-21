@@ -84,7 +84,7 @@ fp <- FilterParam(
 )
 
 rse <- pileup_sites(bam_files,
-    fafile = fafn,
+    fasta = fafn,
     sites = sites,
     region = "chr18",
     param = fp
@@ -232,7 +232,7 @@ alus[1:3, ]
 
 ```{r}
 alu_index <- calc_AEI(bam_files, 
-                      fasta_fn = fafn, 
+                      fasta = fafn, 
                       snp_db = alu_snps,
                       alu_ranges = alus, 
                       param = fp)

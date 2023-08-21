@@ -138,7 +138,7 @@ sce
 #> dim: 3 3 
 #> metadata(0):
 #> assays(2): nRef nAlt
-#> rownames(3): site_2_579_2 site_2_625_2 site_2_589_2
+#> rownames(3): site_2_579_2_AG site_2_589_2_AG site_2_625_2_AG
 #> rowData names(2): REF ALT
 #> colnames(3): CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
 #> colData names(0):
@@ -150,16 +150,16 @@ sce
 ``` r
 assays(sce)$nRef
 #> 3 x 3 sparse Matrix of class "dgCMatrix"
-#>              CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
-#> site_2_579_2                  0                  0                  1
-#> site_2_625_2                  0                  0                  0
-#> site_2_589_2                  1                  1                  2
+#>                 CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
+#> site_2_579_2_AG                  0                  0                  1
+#> site_2_589_2_AG                  1                  1                  2
+#> site_2_625_2_AG                  0                  0                  0
 assays(sce)$nAlt
 #> 3 x 3 sparse Matrix of class "dgCMatrix"
-#>              CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
-#> site_2_579_2                  1                  1                  1
-#> site_2_625_2                  1                  1                  1
-#> site_2_589_2                  0                  0                  0
+#>                 CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
+#> site_2_579_2_AG                  1                  1                  1
+#> site_2_589_2_AG                  0                  0                  0
+#> site_2_625_2_AG                  1                  1                  1
 ```
 
 ## Related work
