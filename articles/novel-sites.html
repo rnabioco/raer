@@ -35,7 +35,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.8</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -88,7 +88,7 @@
                         <h4 data-toc-skip class="author">Kent
 Riemondy</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-08-08</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-08-21</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/novel-sites.Rmd" class="external-link"><code>vignettes/novel-sites.Rmd</code></a></small>
       <div class="d-none name"><code>novel-sites.Rmd</code></div>
@@ -127,13 +127,13 @@ alignments from the first 1MB of chromosome 4 and they are stored in a
 <span><span class="co">## [2] "/github/home/.cache/R/raer/SRR1258218_Aligned.sorted.dedup_sub.bam.bai"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $fasta</span></span>
-<span><span class="co">## [1] "/github/home/.cache/R/raer/15362bc4cfbd_hg38_chr4.fa.bgz"</span></span>
+<span><span class="co">## [1] "/github/home/.cache/R/raer/133db39545e_hg38_chr4.fa.bgz"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $snps</span></span>
-<span><span class="co">## [1] "/github/home/.cache/R/raer/15362c3f21b8_chr4snps.bed.gz"</span></span>
+<span><span class="co">## [1] "/github/home/.cache/R/raer/133ddc73dae_chr4snps.bed.gz"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $rmsk</span></span>
-<span><span class="co">## [1] "/github/home/.cache/R/raer/15366b810546_rmsk_hg38.tsv.gz"</span></span></code></pre>
+<span><span class="co">## [1] "/github/home/.cache/R/raer/133d36adbbe8_rmsk_hg38.tsv.gz"</span></span></code></pre>
 <p>Additionally we will use the following additional annotation
 resources:</p>
 <ul>
@@ -189,7 +189,7 @@ accept multiple arguments matched to the input bam files.</p>
 <span><span class="va">bams</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">rna_bam</span>, <span class="va">wgs_bam</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">bams</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rna"</span>, <span class="st">"dna"</span><span class="op">)</span></span>
 <span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pileup_sites.html">pileup_sites</a></span><span class="op">(</span><span class="va">bams</span>,</span>
-<span>    fafile <span class="op">=</span> <span class="va">fafn</span>,</span>
+<span>    fasta <span class="op">=</span> <span class="va">fafn</span>,</span>
 <span>    chrom <span class="op">=</span> <span class="st">"chr4"</span>,</span>
 <span>    param <span class="op">=</span> <span class="va">fp</span></span>
 <span><span class="op">)</span></span>
@@ -419,7 +419,7 @@ Session info
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
 <span><span class="co">##  [1] TxDb.Hsapiens.UCSC.hg38.knownGene_3.17.0</span></span>
-<span><span class="co">##  [2] rtracklayer_1.60.0                      </span></span>
+<span><span class="co">##  [2] rtracklayer_1.60.1                      </span></span>
 <span><span class="co">##  [3] SummarizedExperiment_1.30.2             </span></span>
 <span><span class="co">##  [4] MatrixGenerics_1.12.3                   </span></span>
 <span><span class="co">##  [5] matrixStats_1.0.0                       </span></span>
@@ -431,7 +431,7 @@ Session info
 <span><span class="co">## [11] IRanges_2.34.1                          </span></span>
 <span><span class="co">## [12] S4Vectors_0.38.1                        </span></span>
 <span><span class="co">## [13] BiocGenerics_0.46.0                     </span></span>
-<span><span class="co">## [14] raer_0.99.7                             </span></span>
+<span><span class="co">## [14] raer_0.99.8                             </span></span>
 <span><span class="co">## [15] BiocStyle_2.28.0                        </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
@@ -450,35 +450,35 @@ Session info
 <span><span class="co">## [25] yaml_2.3.7                  data.table_1.14.8          </span></span>
 <span><span class="co">## [27] knitr_1.43                  prettyunits_1.1.1          </span></span>
 <span><span class="co">## [29] S4Arrays_1.0.5              bit_4.0.5                  </span></span>
-<span><span class="co">## [31] curl_5.0.1                  DelayedArray_0.26.7        </span></span>
+<span><span class="co">## [31] curl_5.0.2                  DelayedArray_0.26.7        </span></span>
 <span><span class="co">## [33] xml2_1.3.5                  abind_1.4-5                </span></span>
 <span><span class="co">## [35] BiocParallel_1.34.2         withr_2.5.0                </span></span>
-<span><span class="co">## [37] purrr_1.0.1                 R.oo_1.25.0                </span></span>
+<span><span class="co">## [37] purrr_1.0.2                 R.oo_1.25.0                </span></span>
 <span><span class="co">## [39] desc_1.4.2                  grid_4.3.0                 </span></span>
 <span><span class="co">## [41] fansi_1.0.4                 biomaRt_2.56.1             </span></span>
-<span><span class="co">## [43] cli_3.6.1                   rmarkdown_2.23             </span></span>
+<span><span class="co">## [43] cli_3.6.1                   rmarkdown_2.24             </span></span>
 <span><span class="co">## [45] crayon_1.5.2                ragg_1.2.5                 </span></span>
-<span><span class="co">## [47] generics_0.1.3              httr_1.4.6                 </span></span>
+<span><span class="co">## [47] generics_0.1.3              httr_1.4.7                 </span></span>
 <span><span class="co">## [49] rjson_0.2.21                DBI_1.1.3                  </span></span>
 <span><span class="co">## [51] cachem_1.0.8                stringr_1.5.0              </span></span>
 <span><span class="co">## [53] zlibbioc_1.46.0             parallel_4.3.0             </span></span>
-<span><span class="co">## [55] BiocManager_1.30.21.1       XVector_0.40.0             </span></span>
+<span><span class="co">## [55] BiocManager_1.30.22         XVector_0.40.0             </span></span>
 <span><span class="co">## [57] restfulr_0.0.15             vctrs_0.6.3                </span></span>
-<span><span class="co">## [59] Matrix_1.6-0                jsonlite_1.8.7             </span></span>
-<span><span class="co">## [61] bookdown_0.34               hms_1.1.3                  </span></span>
+<span><span class="co">## [59] Matrix_1.6-1                jsonlite_1.8.7             </span></span>
+<span><span class="co">## [61] bookdown_0.35               hms_1.1.3                  </span></span>
 <span><span class="co">## [63] bit64_4.0.5                 systemfonts_1.0.4          </span></span>
 <span><span class="co">## [65] jquerylib_0.1.4             glue_1.6.2                 </span></span>
 <span><span class="co">## [67] pkgdown_2.0.7               codetools_0.2-19           </span></span>
 <span><span class="co">## [69] stringi_1.7.12              BiocIO_1.10.0              </span></span>
 <span><span class="co">## [71] tibble_3.2.1                pillar_1.9.0               </span></span>
-<span><span class="co">## [73] rappdirs_0.3.3              htmltools_0.5.5            </span></span>
+<span><span class="co">## [73] rappdirs_0.3.3              htmltools_0.5.6            </span></span>
 <span><span class="co">## [75] GenomeInfoDbData_1.2.10     BSgenome_1.68.0            </span></span>
 <span><span class="co">## [77] R6_2.5.1                    dbplyr_2.3.3               </span></span>
 <span><span class="co">## [79] textshaping_0.3.6           rprojroot_2.0.3            </span></span>
 <span><span class="co">## [81] evaluate_0.21               lattice_0.21-8             </span></span>
 <span><span class="co">## [83] R.methodsS3_1.8.2           png_0.1-8                  </span></span>
 <span><span class="co">## [85] Rsamtools_2.16.0            memoise_2.0.1              </span></span>
-<span><span class="co">## [87] bslib_0.5.0                 xfun_0.39                  </span></span>
+<span><span class="co">## [87] bslib_0.5.1                 xfun_0.40                  </span></span>
 <span><span class="co">## [89] fs_1.6.3                    pkgconfig_2.0.3</span></span></code></pre>
 </details>
 </div>

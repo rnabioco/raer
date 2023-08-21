@@ -43,7 +43,7 @@
     
     <a class="navbar-brand me-2" href="index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.8</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -203,7 +203,7 @@
 <span><span class="co">#&gt; dim: 3 3 </span></span>
 <span><span class="co">#&gt; metadata(0):</span></span>
 <span><span class="co">#&gt; assays(2): nRef nAlt</span></span>
-<span><span class="co">#&gt; rownames(3): site_2_579_2 site_2_625_2 site_2_589_2</span></span>
+<span><span class="co">#&gt; rownames(3): site_2_579_2_AG site_2_589_2_AG site_2_625_2_AG</span></span>
 <span><span class="co">#&gt; rowData names(2): REF ALT</span></span>
 <span><span class="co">#&gt; colnames(3): CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1</span></span>
 <span><span class="co">#&gt; colData names(0):</span></span>
@@ -213,16 +213,16 @@
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">nRef</span></span>
 <span><span class="co">#&gt; 3 x 3 sparse Matrix of class "dgCMatrix"</span></span>
-<span><span class="co">#&gt;              CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1</span></span>
-<span><span class="co">#&gt; site_2_579_2                  0                  0                  1</span></span>
-<span><span class="co">#&gt; site_2_625_2                  0                  0                  0</span></span>
-<span><span class="co">#&gt; site_2_589_2                  1                  1                  2</span></span>
+<span><span class="co">#&gt;                 CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1</span></span>
+<span><span class="co">#&gt; site_2_579_2_AG                  0                  0                  1</span></span>
+<span><span class="co">#&gt; site_2_589_2_AG                  1                  1                  2</span></span>
+<span><span class="co">#&gt; site_2_625_2_AG                  0                  0                  0</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">nAlt</span></span>
 <span><span class="co">#&gt; 3 x 3 sparse Matrix of class "dgCMatrix"</span></span>
-<span><span class="co">#&gt;              CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1</span></span>
-<span><span class="co">#&gt; site_2_579_2                  1                  1                  1</span></span>
-<span><span class="co">#&gt; site_2_625_2                  1                  1                  1</span></span>
-<span><span class="co">#&gt; site_2_589_2                  0                  0                  0</span></span></code></pre></div>
+<span><span class="co">#&gt;                 CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1</span></span>
+<span><span class="co">#&gt; site_2_579_2_AG                  1                  1                  1</span></span>
+<span><span class="co">#&gt; site_2_589_2_AG                  0                  0                  0</span></span>
+<span><span class="co">#&gt; site_2_625_2_AG                  1                  1                  1</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="related-work">Related work<a class="anchor" aria-label="anchor" href="#related-work"></a>
