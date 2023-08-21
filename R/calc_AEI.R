@@ -167,7 +167,7 @@ calc_AEI <- function(bamfiles,
     res <- list()
     for(i in seq_along(bamfiles)) {
         bam_fn <- bamfiles[i]
-        aei <- .AEI_per_bam(bam_fn = bam_fn, fasta_fn = fasta, chroms = chroms,
+        aei <- .AEI_per_bam(bam_fn = bam_fn, fasta = fasta, chroms = chroms,
                      alu_ranges = alu_ranges, snps = snps, param = param,
                      genes_gr = genes_gr, verbose = verbose, BPPARAM = BPPARAM)
         res[[path(bam_fn)]] <- aei
@@ -186,7 +186,7 @@ calc_AEI <- function(bamfiles,
 }
 
 
-.AEI_per_bam <- function(bam_fn, fasta_fn, chroms, alu_ranges, snps, param,
+.AEI_per_bam <- function(bam_fn, fasta, chroms, alu_ranges, snps, param,
                          genes_gr, verbose,
                          BPPARAM = BiocParallel::SerialParam()) {
 
@@ -195,7 +195,7 @@ calc_AEI <- function(bamfiles,
                         chroms,
                         MoreArgs = list(
                             bam_fn = bam_fn,
-                            fasta_fn = fasta_fn,
+                            fasta = fasta,
                             alu_sites = alu_ranges,
                             param = param,
                             snp_gr = NULL,
@@ -214,7 +214,7 @@ calc_AEI <- function(bamfiles,
                         snps,
                         MoreArgs = list(
                             bam_fn = bam_fn,
-                            fasta_fn = fasta_fn,
+                            fasta = fasta,
                             alu_sites = alu_ranges,
                             param = param,
                             genes_gr = genes_gr,
@@ -257,7 +257,7 @@ calc_AEI <- function(bamfiles,
     list(AEI = aei_summary, AEI_per_chrom = aei_per_chrom)
 }
 
-.calc_AEI_per_chrom <- function(bam_fn, fasta_fn, alu_sites, chrom, param,
+.calc_AEI_per_chrom <- function(bam_fn, fasta, alu_sites, chrom, param,
                                 snp_gr, genes_gr, verbose) {
     if (verbose) {
         start <- Sys.time()
@@ -267,7 +267,7 @@ calc_AEI <- function(bamfiles,
     param@only_keep_variants <- FALSE
 
     plp <- pileup_sites(bam_fn,
-        fasta = fasta_fn,
+        fasta = fasta,
         sites = alu_sites,
         chroms = chrom,
         param = param
