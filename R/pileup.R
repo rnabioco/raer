@@ -559,8 +559,9 @@ empty_plp_record <- function() {
             slot(obj, name) <- rep(slot(obj, name), len)
         } else {
             stop(
-                "%s requires either 1 value, or individual values,",
-                "for all input bamfiles", slot
+                name,
+                " requires either 1 value, or individual values,",
+                " for all input bamfiles"
             )
         }
     }
@@ -570,7 +571,7 @@ empty_plp_record <- function() {
 .adjustParams <- function(filterParam, nFiles) {
     if (!inherits(filterParam, "FilterParam")) {
         stop(
-            "'filterParam' must inherit from 'FilterParam', got '%s'",
+            "'filterParam' must inherit from 'FilterParam', got ",
             class(filterParam)
         )
     }
