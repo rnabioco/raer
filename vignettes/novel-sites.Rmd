@@ -74,7 +74,7 @@ fp <- FilterParam(
     min_depth = 1,
     min_base_quality = 30,
     min_mapq = c(255, 30),
-    library_type = c("fr-first-strand", "genomic-unstranded"),
+    library_type = c("fr-first-strand", "unstranded"),
     trim_5p = 5,
     trim_3p = 5,
     indel_dist = 4,

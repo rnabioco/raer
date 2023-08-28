@@ -365,10 +365,6 @@ int invert_read_orientation(bam1_t* b, int libtype) {
         invert = 1;
       }
     }
-  } else if (libtype == 3) {
-    if (is_neg) {
-      invert = 1;
-    }
   } else {
     invert = -1;
   }

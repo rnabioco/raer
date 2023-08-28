@@ -89,9 +89,8 @@ reads with the same UMI sequence will only be counted once per position.}
 can be provided as a vector.}
 
 \item{library_type}{read orientation, one of \code{fr-first-strand},
-\code{fr-second-strand}, \code{unstranded}, and \code{genomic-unstranded}. Unstranded library
-type will be reported based on read alignment. genomic-unstranded will report
-all variants w.r.t the + strand. Values for each
+\code{fr-second-strand}, and \code{unstranded}. Unstranded library
+type will be reported with variants w.r.t the + strand. Values for each
 input BAM file can be provided as a vector.}
 
 \item{bam_flags}{bam flags to filter or keep, use \code{\link[Rsamtools:ScanBamParam-class]{Rsamtools::scanBamFlag()}}
