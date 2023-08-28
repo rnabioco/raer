@@ -8,7 +8,7 @@ correct_strand(rse, genes_gr)
 }
 \arguments{
 \item{rse}{RangedSummarizedExperiment object containing editing sites processed with
-"genomic-unstranded" setting}
+"unstranded" setting}
 
 \item{genes_gr}{GRanges object containing reference features to annotate the
 strand of the editing sites.}
@@ -20,7 +20,7 @@ with strand corrected based on supplied genomic intervals.
 \description{
 Gene annotations are used to infer the likely strand of editing
 sites. This function will operate on unstranded datasets which have been
-processed using "genomic-unstranded" library type which reports variants
+processed using "unstranded" library type which reports variants
 with respect to the + strand for all sites. The strand of the editing site
 will be assigned the strand of overlapping features in the \code{genes_gr}
 object. Sites with no-overlap, or overlapping features with conflicting
@@ -31,7 +31,7 @@ suppressPackageStartupMessages(library("GenomicRanges"))
 
 bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")
-fp <- FilterParam(library_type = "genomic-unstranded")
+fp <- FilterParam(library_type = "unstranded")
 rse <- pileup_sites(bamfn, fafn, param = fp)
 
 genes <- GRanges(c(

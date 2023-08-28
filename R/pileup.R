@@ -628,21 +628,18 @@ setMethod(show, "FilterParam", function(object) {
 })
 
 
-.encode_libtype <- function(library_type = c("genomic-unstranded",
+.encode_libtype <- function(library_type = c("unstranded",
                                              "fr-first-strand",
-                                             "fr-second-strand",
-                                             "unstranded"),
+                                             "fr-second-strand"),
                             n_files) {
     # encode libtype as integer
-    # 0 = genomic-unstranded  all reads on + strand
+    # 0 = unstranded  all reads on + strand
     # 1 = fr-first-strand     strand based on R1/antisense, R2/sense
     # 2 = fr-second-strand    strand based on R1/sense, R2/antisense
-    # 3 = unstranded          strand based on alignment
     lib_values <- c(
-        "genomic-unstranded",
+        "unstranded",
         "fr-first-strand",
-        "fr-second-strand",
-        "unstranded"
+        "fr-second-strand"
     )
     lib_code <- match(library_type, lib_values)
     if (any(is.na(lib_code))) {
@@ -712,9 +709,8 @@ setMethod(show, "FilterParam", function(object) {
 #' @param min_mapq minimum required MAPQ score. Values for each input BAM file
 #' can be provided as a vector.
 #' @param library_type read orientation, one of `fr-first-strand`,
-#' `fr-second-strand`, `unstranded`, and `genomic-unstranded`. Unstranded library
-#' type will be reported based on read alignment. genomic-unstranded will report
-#' all variants w.r.t the + strand. Values for each
+#' `fr-second-strand`, and `unstranded`. Unstranded library
+#' type will be reported with variants w.r.t the + strand. Values for each
 #' input BAM file can be provided as a vector.
 #' @param only_keep_variants if TRUE, then only variant sites will be reported
 #' (FALSE by default). Values for each input BAM file can be provided as a vector.

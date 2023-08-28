@@ -56,7 +56,7 @@ test_that("calc_aei basic options work", {
     ssr3_aei <- pc[pc$chrom == "SPCS3" & startsWith(pc$allele, "A_"), ]
     expect_true(all(ssr3_aei[c("alt", "ref")] == 0))
 
-    fp <- FilterParam(library_type = "genomic-unstranded")
+    fp <- FilterParam(library_type = "unstranded")
     expect_error(calc_AEI(bams, fafn, mock_alu_ranges, param = fp))
 
     us_aei <- calc_AEI(bams, fafn, mock_alu_ranges, mock_genes, param = fp)

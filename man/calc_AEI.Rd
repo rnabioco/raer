@@ -26,8 +26,8 @@ calculating the AEI, typically ALU repeats.}
 
 \item{txdb}{A \link{TxDb} object, if supplied, will be used to subset the alu_ranges
 to those found overlapping genes. Alternatively a \link{GRanges} object with gene
-coordinates.  If the \code{library_type} specified by
-\code{FilterParam}, is \code{unstranded} or \code{genomic-unstranded}, then the \link{TxDb} will
+coordinates.  If the \code{library_type}, specified by
+\code{FilterParam}, is \code{unstranded} then the \link{TxDb} will
 be used to correct the strandness relative to the reference and is a required
 parameter.}
 
