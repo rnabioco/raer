@@ -35,7 +35,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.8</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.9</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -88,7 +88,7 @@
                         <h4 data-toc-skip class="author">Kent
 Riemondy</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-08-21</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-08-28</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/novel-sites.Rmd" class="external-link"><code>vignettes/novel-sites.Rmd</code></a></small>
       <div class="d-none name"><code>novel-sites.Rmd</code></div>
@@ -127,13 +127,13 @@ alignments from the first 1MB of chromosome 4 and they are stored in a
 <span><span class="co">## [2] "/github/home/.cache/R/raer/SRR1258218_Aligned.sorted.dedup_sub.bam.bai"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $fasta</span></span>
-<span><span class="co">## [1] "/github/home/.cache/R/raer/133db39545e_hg38_chr4.fa.bgz"</span></span>
+<span><span class="co">## [1] "/github/home/.cache/R/raer/13c8482077d2_hg38_chr4.fa.bgz"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $snps</span></span>
-<span><span class="co">## [1] "/github/home/.cache/R/raer/133ddc73dae_chr4snps.bed.gz"</span></span>
+<span><span class="co">## [1] "/github/home/.cache/R/raer/13c82cb6b926_chr4snps.bed.gz"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $rmsk</span></span>
-<span><span class="co">## [1] "/github/home/.cache/R/raer/133d36adbbe8_rmsk_hg38.tsv.gz"</span></span></code></pre>
+<span><span class="co">## [1] "/github/home/.cache/R/raer/13c82169ad75_rmsk_hg38.tsv.gz"</span></span></code></pre>
 <p>Additionally we will use the following additional annotation
 resources:</p>
 <ul>
@@ -176,7 +176,7 @@ accept multiple arguments matched to the input bam files.</p>
 <span>    min_depth <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>    min_base_quality <span class="op">=</span> <span class="fl">30</span>,</span>
 <span>    min_mapq <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">255</span>, <span class="fl">30</span><span class="op">)</span>,</span>
-<span>    library_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"fr-first-strand"</span>, <span class="st">"genomic-unstranded"</span><span class="op">)</span>,</span>
+<span>    library_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"fr-first-strand"</span>, <span class="st">"unstranded"</span><span class="op">)</span>,</span>
 <span>    trim_5p <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>    trim_3p <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>    indel_dist <span class="op">=</span> <span class="fl">4</span>,</span>
@@ -423,15 +423,15 @@ Session info
 <span><span class="co">##  [3] SummarizedExperiment_1.30.2             </span></span>
 <span><span class="co">##  [4] MatrixGenerics_1.12.3                   </span></span>
 <span><span class="co">##  [5] matrixStats_1.0.0                       </span></span>
-<span><span class="co">##  [6] GenomicFeatures_1.52.1                  </span></span>
+<span><span class="co">##  [6] GenomicFeatures_1.52.2                  </span></span>
 <span><span class="co">##  [7] AnnotationDbi_1.62.2                    </span></span>
 <span><span class="co">##  [8] Biobase_2.60.0                          </span></span>
 <span><span class="co">##  [9] GenomicRanges_1.52.0                    </span></span>
-<span><span class="co">## [10] GenomeInfoDb_1.36.1                     </span></span>
+<span><span class="co">## [10] GenomeInfoDb_1.36.2                     </span></span>
 <span><span class="co">## [11] IRanges_2.34.1                          </span></span>
 <span><span class="co">## [12] S4Vectors_0.38.1                        </span></span>
 <span><span class="co">## [13] BiocGenerics_0.46.0                     </span></span>
-<span><span class="co">## [14] raer_0.99.8                             </span></span>
+<span><span class="co">## [14] raer_0.99.9                             </span></span>
 <span><span class="co">## [15] BiocStyle_2.28.0                        </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
