@@ -417,20 +417,10 @@ correct_strand <- function(rse, genes_gr) {
 
     rowData(rse)$REF[flip_rows] <- comp_bases(rowData(rse)$REF[flip_rows])
 
-    flipped_variants <- vector(mode = "list", ncol(rse))
-    to_flip <- assay(rse, "ALT")[flip_rows, , drop = FALSE]
-    flipped_variants <- apply(to_flip, c(1, 2), function(x) {
-        vapply(
-            strsplit(x, ","), function(y) {
-                paste0(comp_bases(y),
-                    collapse = ","
-                )
-            },
-            character(1)
-        )
-    })
-
-    assay(rse, "ALT")[flip_rows, ] <- flipped_variants
+    # complement the ALT variants
+    alts <- assay(rse, "ALT")[flip_rows, , drop = FALSE]
+    comp_alts <- complement_variant_matrix(alts)
+    assay(rse, "ALT")[flip_rows, ] <- comp_alts
 
     # complement the nucleotide counts by reordering the assays
     assays_to_swap <- c("nA", "nT", "nC", "nG")
@@ -450,3 +440,34 @@ correct_strand <- function(rse, genes_gr) {
     rse
 }
 
+
+# complement the ALT assay matrix, including multiallelics (e.g. c("A", "A,T", "C))
+complement_variant_matrix <- function(alt_mat) {
+    stopifnot(all(!is.na(alt_mat)))
+
+    # find multiallelics
+    n_alleles <- lengths(regmatches(alt_mat, gregexpr(",", alt_mat)))
+
+    # convert to a vector for processing
+    alts <- as.vector(alt_mat)
+    comp_alts <- alts
+
+    # single allele sites
+    comp_alts[n_alleles == 0] <- comp_bases(alts[n_alleles == 0])
+
+    # split and complement multiallelics
+    multialts <- alts[n_alleles > 0]
+    multialts <- vapply(strsplit(multialts, ","), function(y) {
+        paste0(comp_bases(y), collapse = ",")
+    },
+    character(1)
+    )
+    comp_alts[n_alleles > 0] <- multialts
+
+    # get back to a matrix
+    comp_alts <- matrix(comp_alts,
+                        nrow = nrow(alt_mat),
+                        ncol = ncol(alt_mat),
+                        dimnames = dimnames(alt_mat))
+    comp_alts
+}

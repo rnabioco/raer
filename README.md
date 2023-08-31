@@ -7,7 +7,7 @@
 
 [![R-CMD-check-bioc](https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml/badge.svg)](https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml)
 [![Codecov test
-coverage](https://codecov.io/gh/rnabioco/raer/branch/main/graph/badge.svg)](https://app.codecov.io/gh/rnabioco/raer?branch=main)
+coverage](https://codecov.io/gh/rnabioco/raer/branch/devel/graph/badge.svg)](https://app.codecov.io/gh/rnabioco/raer?branch=devel)
 <!-- badges: end -->
 
 raer facilitates analysis of RNA adenosine editing in the
