@@ -37,11 +37,13 @@ needed files will downloaded and cached using  `pbmc_10x()`from the *raerdata* E
 
 ```{r message=FALSE}
 library(raer)
+library(raerdata)
 library(scater)
 library(SingleCellExperiment)
-library(raerdata)
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+library(AnnotationHub)
+library(SNPlocs.Hsapiens.dbSNP144.GRCh38)
 library(ComplexHeatmap)
-library(viridis)
 ```
 
 `pbmc_10x()` returns a list containing a `BamFile` object, a `GRanges` object with known RNA editing sites from the `REDIportal` database, and a `SingleCellExperiment` populated with the gene expression data and cell type annotations. 
@@ -320,7 +322,6 @@ top_sites <- rownames(de_results$sig_results)[1:20]
 
 Heatmap(assay(rse, "edit_freq")[top_sites, ], 
         name = "editing frequency",
-        col = viridis(100),
         column_labels = rse$genotype_treatment
 )
 ```
@@ -340,9 +341,6 @@ First we will use the `AnnotationHub` package to obtain coordinates for ALU elem
 
 
 ```{r}
-library(AnnotationHub)
-library(SNPlocs.Hsapiens.dbSNP144.GRCh38)
-
 ah <- AnnotationHub()
 rmsk_hg38 <- ah[["AH99003"]]
 
@@ -377,7 +375,6 @@ names(alu_index)
 ```{r}
 Heatmap(alu_index$AEI, 
         name = "AEI",
-        col = viridis(100), 
         row_labels = rse$genotype_treatment[match(rownames(alu_index$AEI),
                                                   rse$sample)]
 )
@@ -393,16 +390,10 @@ Next we will demonstrate how to identify novel RNA editing sites using the *raer
 
 Aligned BAM files, a genome fasta file, and a GRanges object containing SNPs corresponding to the first 1Mb region of chr4 have been prepared for this vignette and can be downloaded and cached using `NA12878()`.
 
-```{r, eval = FALSE}
-wgsrna <- NA12877()
+```{r}
+wgsrna <- NA12878()
 names(wgsrna)
-
 ```
-
-```{r, eval = FALSE}
-wgsrna$bams
-```
-
 
 Additionally we will use the following additional annotation resources:  
   
@@ -413,20 +404,14 @@ Additionally we will use the following additional annotation resources:
   - RepeatMasker annotations, which can be obtained from the `AnnotationHub()` for hg38, as shown in the [bulk RNA-seq](#bulk) tutorial. 
 
 ```{r}
-library(TxDb.Hsapiens.UCSC.hg38.knownGene)
-
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
-
-fns <- download_NA12878()
-chr4snps <- import(fns$snps)
+chr4snps <- wgsrna$snps
 ```
 
 The `pileup_sites()` function accept multiple bam files, here we supply one from RNA-seq, and one from whole genome sequencing. A subset of the filtering parameters (`FilterParam()`) can accept multiple arguments matched to each of the input bam files. This allows us to have distinct settings for the WGS and RNA-seq BAM files.
 
 ```{r}
-wgs_bam <- fns$bams[1]
-rna_bam <- fns$bams[2]
-bams <- c(rna_bam, wgs_bam)
+bams <- wgsrna$bams
 names(bams) <- c("rna", "dna")
 fp <- FilterParam(
     min_depth = 1,               # minimum read depth across all samples
@@ -444,7 +429,7 @@ fp <- FilterParam(
 )
 
 rse <- pileup_sites(bams,
-                    fasta = fns$fasta,
+                    fasta = wgsrna$fasta,
                     chrom = "chr4",
                     param = fp
 )
