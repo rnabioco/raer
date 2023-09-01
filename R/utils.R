@@ -17,12 +17,6 @@ t_lst <- function(x) {
     split(unlist(x), sequence(lengths(x)))
 }
 
-check_tag <- function(x) {
-    if (length(x) != 1 && nchar(x) != 2) {
-        stop("supplied tag must by nchar of 2: ", x)
-    }
-}
-
 chunk_vec <- function(x, n) {
     if (n == 1) {
         res <- list(`1` = x)
@@ -227,3 +221,14 @@ check_snp_match <- function(x, snp_col = "snp_alt_alleles", stranded = TRUE) {
     res
 }
 
+check_tag <- function(tag) {
+    if (!is.null(tag)) {
+        if (length(tag) != 1 && nchar(tag) != 2) {
+            tag_variable <- as.list(match.call())$tag
+            cli::cli_abort("{tag_variable} must be a character(1) with nchar of 2 ")
+        }
+    } else {
+        tag <- character()
+    }
+    tag
+}

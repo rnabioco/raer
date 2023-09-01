@@ -26,7 +26,7 @@ typedef struct base_counts_t {
     int oth;
 } base_counts_t ;
 
-// hashmap with UMI seq as key pointing to a struct storing base counts
+/* hashmap with UMI seq as key pointing to a struct storing base counts */
 KHASH_MAP_INIT_STR(umimap, base_counts_t*)
 typedef khash_t(umimap)* umimap_t;
 
