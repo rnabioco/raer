@@ -5,7 +5,6 @@
 #include <htslib/khash.h>
 #include <htslib/faidx.h>
 #include "regfile.h"
-//#include "samtools/samtools-ext.h"
 #include <Rinternals.h>
 
 SEXP get_region(SEXP region);
@@ -57,7 +56,7 @@ typedef struct {
 
 typedef struct {
   int min_global_mq, flag, min_bq, min_depth, max_depth, output_reads;
-  int report_multiallelics, multi_itr, in_memory;
+  int report_multiallelics, multi_itr;
   int nbam, nfps;
   double min_af;
   int umi;

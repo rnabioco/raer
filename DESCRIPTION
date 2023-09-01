@@ -1,7 +1,7 @@
 Package: raer
 Type: Package
 Title: RNA editing tools in R
-Version: 0.99.9
+Version: 0.99.10
 Authors@R: c(
     person("Kent", "Riemondy", , "kent.riemondy@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-0750-1273")),

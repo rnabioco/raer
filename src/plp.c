@@ -157,28 +157,6 @@ static void get_var_string(str2intmap_t* vhash, char* out) {
     }
 }
 
-static int print_counts(FILE* fp, counts* p, const char* ctig, int pos, int ref, int strand) {
-    char vout[12];
-    int ret;
-    get_var_string(&(p->var), vout);
-    ret = fprintf(fp,
-                  "%s\t%i\t%c\t%c\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n",
-                  ctig,
-                  pos + 1,
-                  strand,
-                  ref,
-                  vout,
-                  p->nr,
-                  p->nv,
-                  p->na,
-                  p->nt,
-                  p->nc,
-                  p->ng,
-                  p->nn,
-                  p->nx);
-    return ret;
-}
-
 static int add_counts(PLP_DATA pd, int fi, counts* p, const char* ctig, int gpos, int ref, int strand) {
 
     int ret = 0;
@@ -257,22 +235,6 @@ static int add_counts(PLP_DATA pd, int fi, counts* p, const char* ctig, int gpos
     }
     return ret;
 }
-
-static int print_stats(FILE* fp, double s1, double s2, double s3,
-                       const char* ctig, int pos, int ref, int strand) {
-    int ret = 0;
-    ret = fprintf(fp,
-                  "%s\t%i\t%c\t%c\t%g\t%g\t%g\n",
-                  ctig,
-                  pos + 1,
-                  strand,
-                  ref,
-                  s1,
-                  s2,
-                  s3);
-    return ret;
-}
-
 
 static void add_stats(PLP_DATA pd, int idx, double rpbz, double vdb, double sor) {
     // check if size is sufficient
@@ -384,33 +346,17 @@ static int store_counts(PLP_DATA pd, pcounts* pc, const char* ctig,
 
     if (write_p) {
         for (i = 0; i < conf->nbam; ++i) {
-            if (conf->in_memory) {
-                ret = add_counts(pd, i, (pc + i)->pc, ctig, gpos, pref, '+');
-            } else {
-                ret = print_counts(pd->fps[i + 1], (pc + i)->pc, ctig, gpos, pref, '+') ;
-            }
+            ret = add_counts(pd, i, (pc + i)->pc, ctig, gpos, pref, '+');
         }
-        if (conf->in_memory) {
-            add_stats(pd, pd->icnt, stats[0], stats[1], stats[2]);
-        } else {
-            ret = print_stats(pd->fps[0], stats[0], stats[1], stats[2], ctig, gpos, pref, '+');
-        }
+        add_stats(pd, pd->icnt, stats[0], stats[1], stats[2]);
         pd->icnt += 1;
     }
 
     if (write_m) {
         for (i = 0; i < conf->nbam; ++i) {
-            if (conf->in_memory) {
-                ret = add_counts(pd, i, (pc + i)->mc, ctig, gpos, mref, '-');
-            } else {
-                ret = print_counts(pd->fps[i + 1], (pc + i)->mc, ctig, gpos, mref, '-') ;
-            }
+            ret = add_counts(pd, i, (pc + i)->mc, ctig, gpos, mref, '-');
         }
-        if (conf->in_memory) {
-            add_stats(pd, pd->icnt, stats[3], stats[4], stats[5]);
-        } else {
-            ret = print_stats(pd->fps[0], stats[3], stats[4], stats[5], ctig, gpos, mref, '-');
-        }
+        add_stats(pd, pd->icnt, stats[3], stats[4], stats[5]);
         pd->icnt += 1;
     }
     return ret;
@@ -601,7 +547,7 @@ static int check_umi(const bam_pileup1_t* p, mplp_conf_t* conf,
     return (1);
 }
 
-static int run_pileup(char** cbampaths, char** cindexes, const char** coutfns,
+static int run_pileup(char** cbampaths, char** cindexes,
                       PLP_DATA pd, mplp_conf_t* conf) {
 
     hts_set_log_level(HTS_LOG_ERROR);
@@ -614,317 +560,300 @@ static int run_pileup(char** cbampaths, char** cindexes, const char** coutfns,
     mplp_ref_t mp_ref = MPLP_REF_INIT;
     bam_mplp_t iter;
     bam_hdr_t* h = NULL; /* header of first file in input list */
-char* ref;
+    char* ref;
 
-data = calloc(conf->nbam, sizeof(mplp_aux_t*));
-plp = calloc(conf->nbam, sizeof(bam_pileup1_t*));
-n_plp = calloc(conf->nbam, sizeof(int));
+    data = calloc(conf->nbam, sizeof(mplp_aux_t*));
+    plp = calloc(conf->nbam, sizeof(bam_pileup1_t*));
+    n_plp = calloc(conf->nbam, sizeof(int));
 
-pcounts* plpc;
-plpc = R_Calloc(conf->nbam, pcounts);
-for (i = 0; i < conf->nbam; ++i) {
-    plpc[i].pc = R_Calloc(1, counts);
-    plpc[i].mc = R_Calloc(1, counts);
+    pcounts* plpc;
+    plpc = R_Calloc(conf->nbam, pcounts);
+    for (i = 0; i < conf->nbam; ++i) {
+        plpc[i].pc = R_Calloc(1, counts);
+        plpc[i].mc = R_Calloc(1, counts);
 
-    //initialize variant string set (AG, AT, TC) etc.
-    if (plpc[i].pc->var == NULL) plpc[i].pc->var = kh_init(str2intmap);
-    if (plpc[i].mc->var == NULL) plpc[i].mc->var = kh_init(str2intmap);
+        //initialize variant string set (AG, AT, TC) etc.
+        if (plpc[i].pc->var == NULL) plpc[i].pc->var = kh_init(str2intmap);
+        if (plpc[i].mc->var == NULL) plpc[i].mc->var = kh_init(str2intmap);
 
-    //initialize umi string set
-    if (plpc[i].pc->umi == NULL) plpc[i].pc->umi = kh_init(strset);
-    if (plpc[i].mc->umi == NULL) plpc[i].mc->umi = kh_init(strset);
-}
-
-pall_counts* pall = init_pall_counts();
-
-double* site_stats = R_Calloc(6, double);
-
-// read the header of each file in the list and initialize data
-for (i = 0; i < conf->nbam; ++i) {
-    bam_hdr_t* h_tmp;
-    data[i] = calloc(1, sizeof(mplp_aux_t));
-    data[i]->fp = sam_open(cbampaths[i], "rb");
-    if (!data[i]->fp) {
-        Rf_error("[raer internal] failed to open %s: %s\n",
-                 cbampaths[i], strerror(errno));
+        //initialize umi string set
+        if (plpc[i].pc->umi == NULL) plpc[i].pc->umi = kh_init(strset);
+        if (plpc[i].mc->umi == NULL) plpc[i].mc->umi = kh_init(strset);
     }
-    if (conf->fai_fname) {
-        if (hts_set_fai_filename(data[i]->fp, conf->fai_fname) != 0) {
-            Rf_error("[raer internal] failed to process %s: %s\n",
-                     conf->fai_fname, strerror(errno));
+
+    pall_counts* pall = init_pall_counts();
+
+    double* site_stats = R_Calloc(6, double);
+
+    // read the header of each file in the list and initialize data
+    for (i = 0; i < conf->nbam; ++i) {
+        bam_hdr_t* h_tmp;
+        data[i] = calloc(1, sizeof(mplp_aux_t));
+        data[i]->fp = sam_open(cbampaths[i], "rb");
+        if (!data[i]->fp) {
+            Rf_error("[raer internal] failed to open %s: %s\n",
+                     cbampaths[i], strerror(errno));
         }
-    }
-    data[i]->conf = conf;
-    data[i]->ref = &mp_ref;
+        if (conf->fai_fname) {
+            if (hts_set_fai_filename(data[i]->fp, conf->fai_fname) != 0) {
+                Rf_error("[raer internal] failed to process %s: %s\n",
+                         conf->fai_fname, strerror(errno));
+            }
+        }
+        data[i]->conf = conf;
+        data[i]->ref = &mp_ref;
 
-    h_tmp = sam_hdr_read(data[i]->fp);
-    if (!h_tmp) {
-        Rf_error("[raer internal] fail to read the header of %s\n", cbampaths[i]);
-    }
-
-    if (conf->reg) {
-        hts_idx_t* idx = NULL;
-        idx = sam_index_load2(data[i]->fp, cbampaths[i], cindexes[i]) ;
-
-        if (idx == NULL) {
-            Rf_error("[raer internal] fail to load bamfile index for %s\n", cbampaths[i]);
+        h_tmp = sam_hdr_read(data[i]->fp);
+        if (!h_tmp) {
+            Rf_error("[raer internal] fail to read the header of %s\n", cbampaths[i]);
         }
 
-        if ((data[i]->iter=sam_itr_querys(idx, h_tmp, conf->reg)) == 0) {
-            Rf_error("[raer internal] fail to parse region '%s' with %s\n", conf->reg, cbampaths[i]);
+        if (conf->reg) {
+            hts_idx_t* idx = NULL;
+            idx = sam_index_load2(data[i]->fp, cbampaths[i], cindexes[i]) ;
+
+            if (idx == NULL) {
+                Rf_error("[raer internal] fail to load bamfile index for %s\n", cbampaths[i]);
+            }
+
+            if ((data[i]->iter=sam_itr_querys(idx, h_tmp, conf->reg)) == 0) {
+                Rf_error("[raer internal] fail to parse region '%s' with %s\n", conf->reg, cbampaths[i]);
+            }
+
+            if (i == 0) {
+                beg0 = data[i]->iter->beg;
+                end0 = data[i]->iter->end;
+            }
+            hts_idx_destroy(idx);
+        } else {
+            data[i]->iter = NULL;
         }
 
         if (i == 0) {
-            beg0 = data[i]->iter->beg;
-            end0 = data[i]->iter->end;
-        }
-        hts_idx_destroy(idx);
-    } else {
-        data[i]->iter = NULL;
-    }
-
-    if (i == 0) {
-        h = data[i]->h = h_tmp;
-    } else {
-        bam_hdr_destroy(h_tmp);
-        data[i]->h = h;
-    }
-}
-
-iter = bam_mplp_init(conf->nbam, readaln, (void**)data);
-
-ret = bam_mplp_init_overlaps(iter) ;
-if (ret < 0) {
-    REprintf("[raer internal] issue initializing iterator");
-    ret = -1;
-    goto fail;
-}
-
-// set max depth
-bam_mplp_set_maxcnt(iter, conf->max_depth);
-
-if (!iter) {
-    REprintf("[raer internal] issue setting max depth on iterator");
-    ret = -1;
-    goto fail;
-}
-
-if (!conf->in_memory) pd->fps = R_Calloc(conf->nfps, FILE*);
-for (i = 0; i < conf->nfps; ++i) {
-    if (!conf->in_memory) {
-        // initialize output files
-        pd->fps[i] = fopen(R_ExpandFileName(coutfns[i]), "w");
-        if (pd->fps[i] == NULL) {
-            REprintf("[raer internal] Failed to open file outputfile %s\n",
-                     R_ExpandFileName(coutfns[i]));
-            ret = -1;
-            goto fail;
-        }
-    }
-}
-
-int n_iter = 0;
-while ((ret = bam_mplp64_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
-    ++n_iter;
-
-    if (conf->reg && (pos < beg0 || pos >= end0)) continue;
-
-    mplp_get_ref(data[0], tid, &ref, &ref_len);
-
-    if (tid < 0) break;
-
-    // check user interrupt, using a 2^k value is faster
-    if (n_iter % 262144 == 0) {
-        if(checkInterrupt()){
-            REprintf("[raer internal] user interrupt detected, exiting\n");
-            ret = -1;
-            goto fail;
+            h = data[i]->h = h_tmp;
+        } else {
+            bam_hdr_destroy(h_tmp);
+            data[i]->h = h;
         }
     }
 
-    // ensure position is in requested intervals
-    if (conf->reg_idx && tid >= 0) {
-        int ol = regidx_overlap(conf->reg_idx,
-                                sam_hdr_tid2name(h, tid),
-                                pos,
-                                pos,
-                                conf->reg_itr);
-        if (!ol) continue;
+    iter = bam_mplp_init(conf->nbam, readaln, (void**)data);
+
+    ret = bam_mplp_init_overlaps(iter) ;
+    if (ret < 0) {
+        REprintf("[raer internal] issue initializing iterator");
+        ret = -1;
+        goto fail;
     }
 
-    // get reference base on +/- strand
-    int pref_b, mref_b;
-    pref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
-    pref_b = toupper(pref_b);
+    // set max depth
+    bam_mplp_set_maxcnt(iter, conf->max_depth);
 
-    if (pref_b == 'N') continue;
-
-    mref_b = comp_base[(unsigned char) pref_b];
-
-    // reset count structure
-    clear_pall_counts(pall);
-    memset(site_stats, 0, sizeof(double) * 6);
-    for (i = 0; i < conf->nbam; ++i) {
-        clear_pcounts(&plpc[i]);
+    if (!iter) {
+        REprintf("[raer internal] issue setting max depth on iterator");
+        ret = -1;
+        goto fail;
     }
 
-    // check if site is in a homopolymer
-    if (conf->ef.nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, conf->ef.nmer)) continue;
 
-    // check if read count less than min_depth
-    int pass_reads = 0;
-    for (i = 0; i < conf->nbam; ++i) {
-        if (n_plp[i] >= conf->min_depth) {
-            pass_reads = 1;
-        }
-    }
-    if (!pass_reads) continue;
+    int n_iter = 0;
+    while ((ret = bam_mplp64_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
+        ++n_iter;
 
-    // iterate through bam files
-    for (i = 0; i < conf->nbam; ++i) {
-        int j;
-        // iterate through reads that overlap position
-        for (j = 0; j < n_plp[i]; ++j) {
+        if (conf->reg && (pos < beg0 || pos >= end0)) continue;
 
-            const bam_pileup1_t* p = plp[i] + j;
+        mplp_get_ref(data[0], tid, &ref, &ref_len);
 
-            // get read base
-            int c = p->qpos < p->b->core.l_qseq
-            ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
-            : 'N';
-            if (c == 'N') continue;
+        if (tid < 0) break;
 
-            int invert = invert_read_orientation(p->b, conf->libtype[i]);
-            if (invert < 0) {
-                REprintf("[raer internal] invert read orientation failure %i\n", invert);
+        // check user interrupt, using a 2^k value is faster
+        if (n_iter % 262144 == 0) {
+            if(checkInterrupt()){
+                REprintf("[raer internal] user interrupt detected, exiting\n");
                 ret = -1;
                 goto fail;
             }
+        }
 
-            // remove bad reads
-            int rret = check_read_filters(p, conf, conf->min_bq, conf->min_mqs[i]);
+        // ensure position is in requested intervals
+        if (conf->reg_idx && tid >= 0) {
+            int ol = regidx_overlap(conf->reg_idx,
+                                    sam_hdr_tid2name(h, tid),
+                                    pos,
+                                    pos,
+                                    conf->reg_itr);
+            if (!ol) continue;
+        }
 
-            // only keep first read with a UMI tag per position
-            if (conf->umi) {
-                int uret = check_umi(p, conf, &plpc[i], invert);
-                if (uret != 1) continue;
+        // get reference base on +/- strand
+        int pref_b, mref_b;
+        pref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
+        pref_b = toupper(pref_b);
+
+        if (pref_b == 'N') continue;
+
+        mref_b = comp_base[(unsigned char) pref_b];
+
+        // reset count structure
+        clear_pall_counts(pall);
+        memset(site_stats, 0, sizeof(double) * 6);
+        for (i = 0; i < conf->nbam; ++i) {
+            clear_pcounts(&plpc[i]);
+        }
+
+        // check if site is in a homopolymer
+        if (conf->ef.nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, conf->ef.nmer)) continue;
+
+        // check if read count less than min_depth
+        int pass_reads = 0;
+        for (i = 0; i < conf->nbam; ++i) {
+            if (n_plp[i] >= conf->min_depth) {
+                pass_reads = 1;
             }
+        }
+        if (!pass_reads) continue;
 
-            if (rret > 0) {
-                if (rret == 1) {
-                    if (invert) {
-                        plpc[i].mc->nx += 1;
+        // iterate through bam files
+        for (i = 0; i < conf->nbam; ++i) {
+            int j;
+            // iterate through reads that overlap position
+            for (j = 0; j < n_plp[i]; ++j) {
+
+                const bam_pileup1_t* p = plp[i] + j;
+
+                // get read base
+                int c = p->qpos < p->b->core.l_qseq
+                ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
+                : 'N';
+                if (c == 'N') continue;
+
+                int invert = invert_read_orientation(p->b, conf->libtype[i]);
+                if (invert < 0) {
+                    REprintf("[raer internal] invert read orientation failure %i\n", invert);
+                    ret = -1;
+                    goto fail;
+                }
+
+                // remove bad reads
+                int rret = check_read_filters(p, conf, conf->min_bq, conf->min_mqs[i]);
+
+                // only keep first read with a UMI tag per position
+                if (conf->umi) {
+                    int uret = check_umi(p, conf, &plpc[i], invert);
+                    if (uret != 1) continue;
+                }
+
+                if (rret > 0) {
+                    if (rret == 1) {
+                        if (invert) {
+                            plpc[i].mc->nx += 1;
+                        } else {
+                            plpc[i].pc->nx += 1;
+                        }
+                    }
+                    continue;
+                }
+                int ci = c;
+                if (invert) ci = (char)comp_base[(unsigned char)c];
+
+                // check read for >= mismatch different types and at least n_mm mismatches
+                if (conf->ef.n_mm_type > 0 || conf->ef.n_mm > 0) {
+                    if ((invert && mref_b != ci) || pref_b != ci) {
+                        int m = parse_mismatches(p->b, conf->ef.n_mm_type, conf->ef.n_mm);
+                        if (m == -1) {
+                            ret = -1;
+                            goto fail;
+                        } else if (m > 0) {
+                            continue;
+                        }
+                    }
+                }
+
+
+                if (pref_b == c) {
+                    if (bam_is_rev(p->b)) {
+                        pall->s->ref_rev += 1;
                     } else {
-                        plpc[i].pc->nx += 1;
+                        pall->s->ref_fwd += 1;
+                    }
+                } else {
+                    if (bam_is_rev(p->b)) {
+                        pall->s->alt_rev += 1;
+                    } else {
+                        pall->s->alt_fwd += 1;
                     }
                 }
-                continue;
-            }
-            int ci = c;
-            if (invert) ci = (char)comp_base[(unsigned char)c];
 
-            // check read for >= mismatch different types and at least n_mm mismatches
-            if (conf->ef.n_mm_type > 0 || conf->ef.n_mm > 0) {
-                if ((invert && mref_b != ci) || pref_b != ci) {
-                    int m = parse_mismatches(p->b, conf->ef.n_mm_type, conf->ef.n_mm);
-                    if (m == -1) {
-                        ret = -1;
-                        goto fail;
-                    } else if (m > 0) {
-                        continue;
-                    }
+                // increment counts per sample
+                int cret = count_one_record(p, &plpc[i], conf, pall,
+                                            sam_hdr_tid2name(h, tid), pos,
+                                            pref_b, mref_b,
+                                            ci, invert, i);
+                if (cret < 0) {
+                    ret = -1;
+                    goto fail;
                 }
+
             }
+        }
 
+        int sres = calc_biases(pall, site_stats);
+        if (sres < 0) {
+            ret = -1;
+            goto fail;
+        }
 
-            if (pref_b == c) {
-                if (bam_is_rev(p->b)) {
-                    pall->s->ref_rev += 1;
-                } else {
-                    pall->s->ref_fwd += 1;
-                }
-            } else {
-                if (bam_is_rev(p->b)) {
-                    pall->s->alt_rev += 1;
-                } else {
-                    pall->s->alt_fwd += 1;
-                }
-            }
-
-            // increment counts per sample
-            int cret = count_one_record(p, &plpc[i], conf, pall,
-                                        sam_hdr_tid2name(h, tid), pos,
-                                        pref_b, mref_b,
-                                        ci, invert, i);
-            if (cret < 0) {
-                ret = -1;
-                goto fail;
-            }
-
+        // write or store records if pass depth criteria
+        sres = store_counts(pd, plpc, sam_hdr_tid2name(h, tid),
+                            pos, pref_b, mref_b, site_stats, conf);
+        if (sres < 0) {
+            REprintf("[raer internal] failed storing counts, %s %d\n",
+                     sam_hdr_tid2name(h, tid),
+                     pos);
+            ret = -1;
+            goto fail;
         }
     }
 
-    int sres = calc_biases(pall, site_stats);
-    if (sres < 0) {
-        ret = -1;
-        goto fail;
-    }
+    fail:
+        if (ret >= 0) finish_PLP_DATA(pd);
 
-    // write or store records if pass depth criteria
-    sres = store_counts(pd, plpc, sam_hdr_tid2name(h, tid),
-                        pos, pref_b, mref_b, site_stats, conf);
-    if (sres < 0) {
-        REprintf("[raer internal] failed storing counts, %s %d\n",
-                 sam_hdr_tid2name(h, tid),
-                 pos);
-        ret = -1;
-        goto fail;
-    }
-}
+        bam_mplp_destroy(iter);
+        bam_hdr_destroy(h);
 
-fail:
-    if (conf->in_memory && ret >= 0) finish_PLP_DATA(pd);
+        for (i = 0; i < conf->nbam; ++i) {
+            sam_close(data[i]->fp);
+            if (data[i]->iter) hts_itr_destroy(data[i]->iter);
+            free(data[i]);
+            clear_pcounts(&plpc[i]);
+            kh_destroy(str2intmap, plpc[i].mc->var);
+            kh_destroy(str2intmap, plpc[i].pc->var);
+            kh_destroy(strset, plpc[i].mc->umi);
+            kh_destroy(strset, plpc[i].pc->umi);
+            R_Free(plpc[i].pc);
+            R_Free(plpc[i].mc);
 
-    bam_mplp_destroy(iter);
-    bam_hdr_destroy(h);
-
-    for (i = 0; i < conf->nbam; ++i) {
-        sam_close(data[i]->fp);
-        if (data[i]->iter) hts_itr_destroy(data[i]->iter);
-        free(data[i]);
-        clear_pcounts(&plpc[i]);
-        kh_destroy(str2intmap, plpc[i].mc->var);
-        kh_destroy(str2intmap, plpc[i].pc->var);
-        kh_destroy(strset, plpc[i].mc->umi);
-        kh_destroy(strset, plpc[i].pc->umi);
-        R_Free(plpc[i].pc);
-        R_Free(plpc[i].mc);
-
-    }
-    if (!conf->in_memory) {
-        for (i = 0; i < conf->nfps; ++i) {
-            fclose(pd->fps[i]);
         }
-    }
-    free(data);
-    free(plp);
-    free(n_plp);
-    free(mp_ref.ref[0]);
-    free(mp_ref.ref[1]);
 
-    if (pall) {
-        R_Free(pall->p_ref_pos);
-        R_Free(pall->p_alt_pos);
-        R_Free(pall->m_alt_pos);
-        R_Free(pall->m_alt_pos);
-        R_Free(pall);
-    }
+        free(data);
+        free(plp);
+        free(n_plp);
+        free(mp_ref.ref[0]);
+        free(mp_ref.ref[1]);
 
-    R_Free(plpc);
-    if (pd->fps) R_Free(pd->fps);
-    R_Free(pd->pdat);
+        if (pall) {
+            R_Free(pall->p_ref_pos);
+            R_Free(pall->p_alt_pos);
+            R_Free(pall->m_alt_pos);
+            R_Free(pall->m_alt_pos);
+            R_Free(pall);
+        }
 
-    if (site_stats) R_Free(site_stats);
+        R_Free(plpc);
+        if (pd->fps) R_Free(pd->fps);
+        R_Free(pd->pdat);
+
+        if (site_stats) R_Free(site_stats);
 
     return ret;
 }
@@ -933,7 +862,7 @@ fail:
 static void check_plp_args(SEXP bampaths, SEXP indexes, SEXP n, SEXP fapath, SEXP region,
                            SEXP int_args, SEXP dbl_args, SEXP lgl_args,
                            SEXP libtype, SEXP only_keep_variants, SEXP min_mapQ,
-                           SEXP in_mem, SEXP outfns, SEXP umi) {
+                           SEXP umi) {
     if (!IS_INTEGER(n) || (LENGTH(n) != 1)) {
         Rf_error("'n' must be integer(1)");
     }
@@ -982,13 +911,6 @@ static void check_plp_args(SEXP bampaths, SEXP indexes, SEXP n, SEXP fapath, SEX
     }
 
     // other args
-    if (!IS_LOGICAL(in_mem) || (LENGTH(in_mem) != 1)) {
-        Rf_error("'in_mem' must be logical(1)");
-    }
-
-    if (!LOGICAL(in_mem)[0] && (!IS_CHARACTER(outfns) || (LENGTH(outfns) != n_files + 1))) {
-        Rf_error("'outfns' must be character vector equal in length to number of bam files + 1");
-    }
 
     if (!IS_CHARACTER(umi) || (LENGTH(umi) > 1)) {
         Rf_error("'umi' must be character of length 0 or 1");
@@ -1000,7 +922,7 @@ static int set_mplp_conf(mplp_conf_t* conf, int n_bams,
                          char* fafn, char* qregion, regidx_t* idx,
                          int* i_args, double* d_args, int* b_args,
                          int* libtypes, int* keep_variants, int* min_mapqs,
-                         int in_memory, char* umi) {
+                         char* umi) {
     int ret = 0;
     if (n_bams <= 0) {
         REprintf("[raer internal] invalid bam input");
@@ -1073,8 +995,6 @@ static int set_mplp_conf(mplp_conf_t* conf, int n_bams,
         conf->min_global_mq = mq;
     }
 
-    conf->in_memory = in_memory;
-
     if (umi) {
         conf->umi = 1;
         conf->umi_tag = umi;
@@ -1085,13 +1005,11 @@ static int set_mplp_conf(mplp_conf_t* conf, int n_bams,
 
 SEXP pileup(SEXP bampaths, SEXP indexes, SEXP n, SEXP fapath, SEXP region, SEXP lst,
             SEXP int_args, SEXP dbl_args, SEXP lgl_args,
-            SEXP libtype, SEXP only_keep_variants, SEXP min_mapQ,
-            SEXP in_mem,  SEXP outfns, SEXP umi) {
+            SEXP libtype, SEXP only_keep_variants, SEXP min_mapQ, SEXP umi) {
 
     check_plp_args(bampaths, indexes, n, fapath, region,
                    int_args, dbl_args, lgl_args,
-                   libtype, only_keep_variants, min_mapQ,
-                   in_mem, outfns, umi);
+                   libtype, only_keep_variants, min_mapQ, umi);
 
     regidx_t* idx = NULL;
     if (!Rf_isNull(lst) && Rf_length(VECTOR_ELT(lst, 0)) > 0) {
@@ -1115,16 +1033,6 @@ SEXP pileup(SEXP bampaths, SEXP indexes, SEXP n, SEXP fapath, SEXP region, SEXP 
     char* umi_tag = LENGTH(umi) == 0 ?
     NULL : (char*) translateChar(STRING_ELT(umi, 0));
 
-    const char** coutfns;
-    if (LENGTH(outfns) > 0) {
-        coutfns= (const char**) R_alloc(sizeof(const char*), Rf_length(outfns));
-        for (i = 0; i < LENGTH(outfns); ++i) {
-            coutfns[i] = (char*) translateChar(STRING_ELT(outfns, i));
-        }
-    } else {
-        coutfns = NULL;
-    }
-
     mplp_conf_t ga;
     memset(&ga, 0, sizeof(mplp_conf_t));
 
@@ -1132,13 +1040,13 @@ SEXP pileup(SEXP bampaths, SEXP indexes, SEXP n, SEXP fapath, SEXP region, SEXP 
     ret = set_mplp_conf(&ga, nbam, cfafn, cregion, idx,
                         INTEGER(int_args), REAL(dbl_args), LOGICAL(lgl_args),
                         INTEGER(libtype), LOGICAL(only_keep_variants), INTEGER(min_mapQ),
-                        LOGICAL(in_mem)[0], umi_tag);
+                        umi_tag);
     SEXP result;
     result = PROTECT(pileup_result_init(nbam));
     PLP_DATA pd;
     if (ret >= 0) {
         pd = init_PLP_DATA(result,  nbam);
-        ret = run_pileup(cbampaths, cindexes, coutfns, pd, &ga);
+        ret = run_pileup(cbampaths, cindexes, pd, &ga);
     }
 
     // clean up
@@ -1148,8 +1056,6 @@ SEXP pileup(SEXP bampaths, SEXP indexes, SEXP n, SEXP fapath, SEXP region, SEXP 
 
     UNPROTECT(1);
     if (ret < 0) Rf_error("[raer internal] error detected during pileup");
-    if (!ga.in_memory) {
-        return Rf_ScalarInteger(ret);
-    }
+
     return result ;
 }

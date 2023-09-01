@@ -15,20 +15,12 @@
 #'   filters to apply to reads and sites during pileup.
 #' @param umi_tag The bam tag containing a UMI sequence. If supplied, multiple
 #'   reads with the same UMI sequence will only be counted once per position.
-#' @param return_data if `TRUE`, data is returned as a [RangedSummarizedExperiment],
-#'   if `FALSE` a character vector of tabix-index files, specified by
-#'   `outfile_prefix`, will be returned.
-#' @param outfile_prefix If supplied, pileup data will be written to tabix indexed
-#' files with  the specified prefix. If `NULL`, no files will be produced and data
-#' will be stored in memory.
 #' @param BPPARAM A [BiocParallel] class to control parallel execution. Parallel
 #'   processing occurs per chromosome and is disabled when run on a single
 #'   region.
 #' @param verbose if TRUE, then report progress and warnings.
 #'
-#' @returns A [RangedSummarizedExperiment] or a
-#'   vector of the output tabix'ed file names if `return_data` is FALSE.
-#'   The [RangedSummarizedExperiment] object is populated with multiple assays:
+#' @returns A [RangedSummarizedExperiment] object populated with multiple assays:
 #'   * `ALT`:  Alternate base(s) found at each position
 #'   * `nRef`: # of reads supporting the reference base
 #'   * `nAlt`: # of reads supporting an alternate base
@@ -50,9 +42,6 @@
 #'   `site_[seqnames]_[position(1-based)]_[strand]`, with `strand` being encoded
 #'   as 1 = +, 2 = -, and 3 = *.
 #'
-#'   If `return_data` is `FALSE` then a character vector of paths to the
-#'   pileup files will be returned. These files can be imported using
-#'   `read_pileup()`.
 #'
 #' @examples
 #' library(SummarizedExperiment)
@@ -112,8 +101,6 @@ pileup_sites <- function(bamfiles,
     region = NULL,
     chroms = NULL,
     param = FilterParam(),
-    outfile_prefix = NULL,
-    return_data = TRUE,
     BPPARAM = SerialParam(),
     umi_tag = NULL,
     verbose = FALSE) {
@@ -150,19 +137,6 @@ pileup_sites <- function(bamfiles,
         cli::cli_abort("fasta file not found: {fasta}")
     }
     fasta <- path.expand(fasta)
-
-    in_memory <- TRUE
-    outfiles <- character()
-    if (is.null(outfile_prefix)) {
-        if (!return_data) {
-            cli::cli_abort("an outfile_prefix must be supplied if data is written to files")
-        }
-    } else {
-        in_memory <- FALSE
-        outfiles <- setup_plp_files(outfile_prefix, n_files)
-        rdat_outfn <- outfiles[1]
-        plp_outfns <- outfiles[2:length(outfiles)]
-    }
 
     valid_regions <- setup_valid_regions(bamfiles[[1]], chroms, region, fasta)
     chroms_to_process <- valid_regions$chroms
@@ -216,41 +190,18 @@ pileup_sites <- function(bamfiles,
             fp[["library_type"]],
             fp[["only_keep_variants"]],
             fp[["min_mapq"]],
-            in_memory,
-            outfiles,
             umi_tag
         )
 
-        if (!in_memory) {
-            if (res != 0) {
-                cli::cli_abort("Error occured during pileup")
-            }
-        } else {
-            rdat <- res[[1]]
-            res <- res[2:length(res)]
-            res <- lists_to_grs(res, contigs)
-            res <- merge_pileups(res,
-                                 sample_names = sample_ids)
-            rowData(res) <- cbind(rowData(res), rdat)
-        }
+        rdat <- res[[1]]
+        res <- res[2:length(res)]
+        res <- lists_to_grs(res, contigs)
+        res <- merge_pileups(res,
+                             sample_names = sample_ids)
+        rowData(res) <- cbind(rowData(res), rdat)
 
     } else {
         res <- bplapply(chroms_to_process, function(ctig) {
-            if (!in_memory) {
-                tmp_outfiles <- unlist(lapply(seq_along(outfiles),
-                                              function(x)
-                                                  tempfile()))
-                tmp_rdatfile <- tmp_outfiles[1]
-                tmp_plpfiles <- tmp_outfiles[2:length(tmp_outfiles)]
-                fn_lst <- list(
-                    contig = ctig,
-                    bam_fn = bfs,
-                    tmp_plpfns = tmp_plpfiles,
-                    tmp_rdatfn = tmp_rdatfile
-                )
-            } else {
-                tmp_outfiles <- character()
-            }
 
             if (is.null(ctig)) {
                 ctig <- character()
@@ -270,76 +221,24 @@ pileup_sites <- function(bamfiles,
                 fp[["library_type"]],
                 fp[["only_keep_variants"]],
                 fp[["min_mapq"]],
-                in_memory,
-                tmp_outfiles,
                 umi_tag
             )
 
-            if (!in_memory) {
-                if (res != 0) {
-                    cli::cli_abort("Error occured during pileup")
-                }
-                res <- fn_lst
-            } else {
-                rdat <- res[[1]]
-                res <- res[2:length(res)]
-                res <- lists_to_grs(res, contigs)
-                res <- list(rdat = rdat, plps = res)
-            }
-
+            rdat <- res[[1]]
+            res <- res[2:length(res)]
+            res <- lists_to_grs(res, contigs)
+            res <- list(rdat = rdat, plps = res)
             res
         }, BPPARAM = BPPARAM)
         bpstop(BPPARAM)
-        if (!in_memory) {
-            for (i in seq_along(res)) {
-                ra <- file.append(rdat_outfn, res[[i]]$tmp_rdatfn)
-                pa <- file.append(plp_outfns, res[[i]]$tmp_plpfns)
-                if (!all(c(ra, pa))) {
-                    cli::cli_abort("error occured concatenating pileup files")
-                }
-                unlink(c(res[[i]]$tmp_rdatfn, res[[i]]$tmp_plpfns))
-            }
-        } else {
-            res <- lapply(res, function(x) {
-                se <- merge_pileups(x$plps, sample_names = sample_ids)
-                rowData(se) <- cbind(rowData(se), x$rdat)
-                se
-            })
-            res <- do.call(rbind, res)
-        }
+        res <- lapply(res, function(x) {
+            se <- merge_pileups(x$plps, sample_names = sample_ids)
+            rowData(se) <- cbind(rowData(se), x$rdat)
+            se
+        })
+        res <- do.call(rbind, res)
     }
 
-    if (!in_memory) {
-
-        # run_pileup writes to a (temp)file, next the file will be tabix indexed
-        tbxfiles <- lapply(outfiles, function(x) {
-            tbxfile <- Rsamtools::bgzip(x, overwrite = TRUE)
-            idx <- Rsamtools::indexTabix(
-                       tbxfile,
-                       seq = 1,
-                       start = 2,
-                       end = 2,
-                       zeroBased = FALSE
-                )
-            tbxfile
-        })
-
-        if (!return_data) {
-            unlink(outfiles)
-            return(unlist(tbxfiles))
-        }
-
-        res <- lapply(tbxfiles, function(x) {
-            xx <- read_pileup(x, region = NULL)
-            GenomeInfoDb::seqlevels(xx) <- GenomeInfoDb::seqlevels(contigs)
-            GenomeInfoDb::seqinfo(xx) <- contigs
-            xx
-        })
-
-        rdat <- res[[1]]
-        res <- res[2:length(res)]
-        unlink(outfiles)
-    }
     res
 }
 
@@ -403,116 +302,8 @@ setup_valid_regions <- function(bam, chroms, region = NULL, fasta = NULL) {
          region = region)
 }
 
-setup_plp_files <- function(outfile_prefix, n_files) {
-    outfiles <- c(
-        paste0(outfile_prefix, ".sites.txt"),
-        paste0(outfile_prefix, "_", seq_len(n_files), ".plp")
-    )
-    if (!dir.exists(dirname(outfile_prefix))) {
-        dir.create(dirname(outfile_prefix), recursive = TRUE)
-    }
-    outfiles <- path.expand(outfiles)
-    if (length(outfiles) != n_files + 1) {
-        cli::cli_abort("# of outfiles does not match # of bam input files: {outfiles}")
-    }
-    # remove files if exist, to avoid appending to existing files
-    unlink(outfiles)
-
-    outfiles
-}
-
-
 # IRanges/GRanges are limited to this max int
 MAX_INT <- 536870912
-
-#' Read pileup, indexed by tabix
-#'
-#' @description This function can read in pileup or site data tables produced by
-#' pileup_sites().
-#' @param tbx_fn filename
-#' @param region region to read from file, samtools style
-#' region specifiers are supported.
-#'
-#' @examples
-#' bamfn <- system.file("extdata", "SRR5564269_Aligned.sortedByCoord.out.md.bam", package = "raer")
-#' fafn <- system.file("extdata", "human.fasta", package = "raer")
-#' plp_fn <- tempfile()
-#' plp <- pileup_sites(bamfn, fafn, return_data = FALSE, outfile_prefix = plp_fn)
-#'
-#' # first table contains site information, second table pileup count
-#' lapply(plp, function(x) head(read_pileup(x)))
-#' unlink(c(plp, plp_fn, paste0(plp, ".tbi")))
-#'
-#' @return `GenomicRanges::GRanges` containing positions of editing sites and pileup
-#' data.
-#' @importFrom data.table fread
-#' @export
-read_pileup <- function(tbx_fn, region = NULL) {
-    tbx <- Rsamtools::TabixFile(tbx_fn)
-
-    # using Rsamtools read in tabix file
-    # note that file is read in as a list of character vectors
-    if (!is.null(region)) {
-        ivl_vals <- get_region(region)
-        # note that samtools will return a larger INT than IRANGES can handle
-        # if no ranges are supplied in the region
-        ivl_end <- min(MAX_INT, ivl_vals$end)
-        params <- GenomicRanges::GRanges(
-            ivl_vals$chrom,
-            IRanges::IRanges(
-                start = ivl_vals$start + 1,
-                end = ivl_end
-            )
-        )
-        tbx_vals <- Rsamtools::scanTabix(tbx, param = params)[[1]]
-    } else {
-        tbx_vals <- Rsamtools::scanTabix(tbx)[[1]]
-    }
-
-    # quick method to convert vector of character strings into data.frame
-    if (length(tbx_vals) == 1) {
-        nc <- lengths(regmatches(tbx_vals, gregexpr("\t", tbx_vals, fixed = TRUE)))
-
-        # handle length 1 character vectors, which will not work with fread
-        from <- data.frame(t(strsplit(tbx_vals, "\t")[[1]]))
-        colnames(from) <- paste0("V", seq_len(ncol(from)))
-        if(nc == 7) {
-            from[c(2, 5:nc)] <- as.numeric(from[c(2, 5:nc)])
-        } else {
-            from[c(2, 6:nc)] <- as.numeric(from[c(2, 6:nc)])
-        }
-    } else {
-        from <- data.table::fread(
-            text = tbx_vals,
-            stringsAsFactors = FALSE,
-            data.table = FALSE,
-            showProgress = FALSE,
-            sep = "\t"
-        )
-    }
-
-    plp_cols <- c("ALT", "nRef", "nAlt", "nA", "nT", "nC", "nG", "nN", "nX")
-    rowData_cols <- c("rpbz", "vdb", "sor")
-    if (ncol(from) ==  (4 + length(rowData_cols))) {
-        cols <- rowData_cols
-    } else if (ncol(from) == (4 + length(plp_cols))) {
-        cols <- plp_cols
-    } else {
-        cli::cli_abort("unknown pileup file format")
-    }
-
-    colnames(from)[4:ncol(from)] <- c("REF", cols)
-
-    GenomicRanges::GRanges(
-        seqnames = from$V1,
-        ranges = IRanges::IRanges(
-            start = from$V2,
-            end = from$V2
-        ),
-        strand = from$V3,
-        from[, 4:ncol(from)]
-    )
-}
 
 # parses a region string (e.g. "chr1:456-567" or "chr1")
 # using htslib into chrom, start, and end (0-based start)
@@ -525,29 +316,6 @@ get_region <- function(region) {
     }
     .Call(".get_region", region)
 }
-
-# generate empty pileup record
-# idea from @user2462304 https://stackoverflow.com/a/48180979/6276041
-empty_plp_record <- function() {
-    col_types <- list(
-        REF = character(),
-        ALT = character(),
-        nRef = integer(),
-        nAlt = integer(),
-        nA = integer(),
-        nT = integer(),
-        nC = integer(),
-        nG = integer(),
-        nN = integer(),
-        nX = integer()
-    )
-    df <- do.call(data.frame, col_types)
-    gr <- GRanges(c(seqnames = NULL, ranges = NULL, strand = NULL))
-    mcols(gr) <- df
-    gr
-}
-
-
 
 
 #' @importFrom methods slot slot<- slotNames
