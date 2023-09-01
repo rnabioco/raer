@@ -129,17 +129,17 @@ pileup_sites <- function(bamfiles,
 
     n_files <- length(bamfiles)
 
-    if (!is.null(sites)) {
-        if (!is(sites, "GRanges")) {
-            cl <- class(sites)
-            cli::cli_abort("invalid object passed to sites, expecting GRanges found {cl}")
-        }
+    if (!is.null(sites) && !is(sites, "GRanges")) {
+        cl <- class(sites)
+        cli::cli_abort("invalid object passed to sites, expecting GRanges found {cl}")
     }
+
     bf_exists <- file.exists(path(bamfiles))
     if (!all(bf_exists)) {
         missing_bams <- path(bamfiles[!bf_exists])
         cli::cli_abort("bamfile(s) not found: {missing_bams}")
     }
+
     missing_index <- is.na(index(bamfiles))
     if (any(missing_index)) {
         mi <- path(bamfiles[missing_index])
@@ -151,99 +151,30 @@ pileup_sites <- function(bamfiles,
     }
     fasta <- path.expand(fasta)
 
+    in_memory <- TRUE
+    outfiles <- character()
     if (is.null(outfile_prefix)) {
         if (!return_data) {
             cli::cli_abort("an outfile_prefix must be supplied if data is written to files")
         }
-        in_memory <- TRUE
-        outfiles <- character()
     } else {
         in_memory <- FALSE
-        outfiles <- c(
-            paste0(outfile_prefix, ".sites.txt"),
-            paste0(outfile_prefix, "_", seq_len(n_files), ".plp")
-        )
-        if (!dir.exists(dirname(outfile_prefix))) {
-            dir.create(dirname(outfile_prefix), recursive = TRUE)
-        }
-        outfiles <- path.expand(outfiles)
-        if (length(outfiles) != n_files + 1) {
-            cli::cli_abort("# of outfiles does not match # of bam input files: {outfiles}")
-        }
-        # remove files if exist, to avoid appending to existing files
-        unlink(outfiles)
-
+        outfiles <- setup_plp_files(outfile_prefix, n_files)
         rdat_outfn <- outfiles[1]
         plp_outfns <- outfiles[2:length(outfiles)]
     }
 
-    contigs <- seqinfo_from_header(bamfiles[[1]])
-    contig_info <- GenomeInfoDb::seqlengths(contigs)
-
-    if (is.null(chroms)) {
-        chroms_to_process <- names(contig_info)
-    } else {
-        chroms_to_process <- chroms
-    }
-
-    if (is.null(region)) {
-        if (!is.null(chroms)) {
-            if (length(chroms) == 1) {
-                region <- chroms
-            }
-        }
-    }
-
-    missing_chroms <-
-        chroms_to_process[!chroms_to_process %in% names(contig_info)]
-
-    if (length(missing_chroms) > 0) {
-        if (verbose) {
-            msg <- paste(missing_chroms, collapse = "\n")
-            cli::cli_warn(c(
-                "the following chromosomes are not present in the bamfile(s):",
-                "{msg}"
-            ))
-        }
-        chroms_to_process <-
-            setdiff(chroms_to_process, missing_chroms)
-    }
-
-    chroms_in_fa <- seqnames(Rsamtools::scanFaIndex(fasta))
-    missing_chroms <-
-        chroms_to_process[!chroms_to_process %in% levels(chroms_in_fa)]
-
-    if (length(missing_chroms) > 0) {
-        if (verbose) {
-            msg <- paste(missing_chroms, collapse = "\n")
-            cli::cli_warn(c(
-                "the following chromosomes are not present in the fasta file:",
-                "msg"
-            ))
-        }
-        chroms_to_process <-
-            setdiff(chroms_to_process, missing_chroms)
-    }
-
-    chroms_to_process <-
-        chroms_to_process[order(match(chroms_to_process, names(contig_info)))]
+    valid_regions <- setup_valid_regions(bamfiles[[1]], chroms, region, fasta)
+    chroms_to_process <- valid_regions$chroms
+    region <- valid_regions$region
+    contigs <- valid_regions$all_contigs
 
     if (!is.null(sites)) {
         sites <- sites[seqnames(sites) %in% chroms_to_process]
         sites <- gr_to_cregions(sites)
     }
 
-    if (length(chroms_to_process) == 0) {
-        cli::cli_abort("No chromosomes requested are found in bam file")
-    }
-
-    if (!is.null(umi_tag)) {
-        if (nchar(umi_tag) != 2) {
-            cli::cli_abort("umi_tag must be a character(1) with nchar of 2 ")
-        }
-    } else {
-        umi_tag <- character()
-    }
+    umi_tag <- check_tag(umi_tag)
 
     ## set default bam flags if not supplied
     if (identical(param@bam_flags, Rsamtools::scanBamFlag())) {
@@ -263,15 +194,13 @@ pileup_sites <- function(bamfiles,
     } else {
         region <- character()
     }
+
     bfs <- path.expand(path(bamfiles))
     bidxs <- path.expand(index(bamfiles))
-    if (is(BPPARAM, "SerialParam") ||
-        length(chroms_to_process) == 1) {
-        start_time <- Sys.time()
+
+    if (is(BPPARAM, "SerialParam") || length(chroms_to_process) == 1) {
         if (length(chroms_to_process) > 1 && is.null(sites)) {
-            to_process <- contig_info[chroms_to_process]
-            sites <-
-                GRanges(paste0(names(to_process), ":", 1, "-", to_process))
+            sites <- GRanges(contigs[chroms_to_process])
             sites <- gr_to_cregions(sites)
         }
         res <- .Call(
@@ -306,14 +235,9 @@ pileup_sites <- function(bamfiles,
             rowData(res) <- cbind(rowData(res), rdat)
         }
 
-        if (verbose) {
-            time_elapsed <- prettyNum(Sys.time() - start_time, digits = 3)
-            cli::cli_alert_success("Completed pileup in {time_elapsed}")
-        }
     } else {
         res <- bplapply(chroms_to_process, function(ctig) {
-            start_time <- Sys.time()
-            if (length(outfiles) > 0) {
+            if (!in_memory) {
                 tmp_outfiles <- unlist(lapply(seq_along(outfiles),
                                               function(x)
                                                   tempfile()))
@@ -328,8 +252,11 @@ pileup_sites <- function(bamfiles,
             } else {
                 tmp_outfiles <- character()
             }
-            if (is.null(ctig))
+
+            if (is.null(ctig)) {
                 ctig <- character()
+            }
+
             res <- .Call(
                 ".pileup",
                 bfs,
@@ -361,10 +288,6 @@ pileup_sites <- function(bamfiles,
                 res <- list(rdat = rdat, plps = res)
             }
 
-            if (verbose) {
-                time_elapsed <- prettyNum(Sys.time() - start_time, digits = 3)
-                cli::cli_alert_success("Completed pileup on {ctig} in {time_elapsed}")
-            }
             res
         }, BPPARAM = BPPARAM)
         bpstop(BPPARAM)
@@ -388,20 +311,16 @@ pileup_sites <- function(bamfiles,
     }
 
     if (!in_memory) {
-        if (any(file.info(outfiles)$size == 0)) {
-            return(empty_plp_record())
-        }
 
         # run_pileup writes to a (temp)file, next the file will be tabix indexed
         tbxfiles <- lapply(outfiles, function(x) {
             tbxfile <- Rsamtools::bgzip(x, overwrite = TRUE)
-            idx <-
-                Rsamtools::indexTabix(
-                    tbxfile,
-                    seq = 1,
-                    start = 2,
-                    end = 2,
-                    zeroBased = FALSE
+            idx <- Rsamtools::indexTabix(
+                       tbxfile,
+                       seq = 1,
+                       start = 2,
+                       end = 2,
+                       zeroBased = FALSE
                 )
             tbxfile
         })
@@ -413,8 +332,7 @@ pileup_sites <- function(bamfiles,
 
         res <- lapply(tbxfiles, function(x) {
             xx <- read_pileup(x, region = NULL)
-            GenomeInfoDb::seqlevels(xx) <-
-                GenomeInfoDb::seqlevels(contigs)
+            GenomeInfoDb::seqlevels(xx) <- GenomeInfoDb::seqlevels(contigs)
             GenomeInfoDb::seqinfo(xx) <- contigs
             xx
         })
@@ -424,6 +342,84 @@ pileup_sites <- function(bamfiles,
         unlink(outfiles)
     }
     res
+}
+
+# check supplied chroms and region against supplied bam and fasta files
+# return list with valid chroms, seqinfo from bam and
+# supplied valid single region to process
+setup_valid_regions <- function(bam, chroms, region = NULL, fasta = NULL) {
+    contigs <- seqinfo_from_header(bam)
+    contig_info <- GenomeInfoDb::seqlengths(contigs)
+
+    if (is.null(chroms)) {
+        chroms_to_process <- names(contig_info)
+    } else {
+        chroms_to_process <- chroms
+    }
+
+    if (is.null(region)) {
+        if (!is.null(chroms)) {
+            if (length(chroms) == 1) {
+                region <- chroms
+            }
+        }
+    }
+
+    missing_chroms <-
+        chroms_to_process[!chroms_to_process %in% names(contig_info)]
+
+    if (length(missing_chroms) > 0) {
+         msg <- paste(missing_chroms, collapse = "\n")
+            cli::cli_warn(c(
+                "the following chromosomes are not present in the bamfile(s):",
+                "{msg}"
+            ))
+        chroms_to_process <- setdiff(chroms_to_process, missing_chroms)
+    }
+
+    if(!is.null(fasta)){
+        chroms_in_fa <- seqnames(Rsamtools::scanFaIndex(fasta))
+        missing_chroms <-
+            chroms_to_process[!chroms_to_process %in% levels(chroms_in_fa)]
+
+        if (length(missing_chroms) > 0) {
+            msg <- paste(missing_chroms, collapse = "\n")
+            cli::cli_warn(c(
+                "the following chromosomes are not present in the fasta file:",
+                "msg"
+            ))
+            chroms_to_process <- setdiff(chroms_to_process, missing_chroms)
+        }
+    }
+
+    chroms_to_process <-
+        chroms_to_process[order(match(chroms_to_process, names(contig_info)))]
+
+    if (length(chroms_to_process) == 0) {
+        cli::cli_abort("There are no valid chromosomes to process")
+    }
+
+    list(chroms = chroms_to_process,
+         all_contigs = contigs,
+         region = region)
+}
+
+setup_plp_files <- function(outfile_prefix, n_files) {
+    outfiles <- c(
+        paste0(outfile_prefix, ".sites.txt"),
+        paste0(outfile_prefix, "_", seq_len(n_files), ".plp")
+    )
+    if (!dir.exists(dirname(outfile_prefix))) {
+        dir.create(dirname(outfile_prefix), recursive = TRUE)
+    }
+    outfiles <- path.expand(outfiles)
+    if (length(outfiles) != n_files + 1) {
+        cli::cli_abort("# of outfiles does not match # of bam input files: {outfiles}")
+    }
+    # remove files if exist, to avoid appending to existing files
+    unlink(outfiles)
+
+    outfiles
 }
 
 
@@ -652,12 +648,10 @@ setMethod(show, "FilterParam", function(object) {
 }
 
 .c_args_FilterParam <- function(x, ...) {
-    slotnames <- slotNames(x)
-    names(slotnames) <- slotnames
-    fp <- lapply(slotnames, slot, object = x)
+    fp <-.as.list_FilterParam(x)
 
     # consistent length args are populated into vectors
-    # note that unlisting will increase vector size greather than number of args
+    # note that unlisting will increase vector size greater than number of args
     # (e.g. bam_flags will add 2 to vector)
     int_args <- unlist(fp[c(
         "max_depth",

@@ -163,36 +163,14 @@ pileup_cells <- function(bamfiles,
     }
 
     cell_barcodes <- cell_barcodes[!is.na(cell_barcodes)]
-    if (is.null(cb_tag)) {
-        cb_tag <- character()
-    } else {
-        check_tag(cb_tag)
-    }
-    if (is.null(umi_tag)) {
-        umi_tag <- character()
-    } else {
-        check_tag(umi_tag)
-    }
 
-    contigs <- seqinfo_from_header(bamfiles[[1]])
-    contig_info <- GenomeInfoDb::seqlengths(contigs)
-    chroms_to_process <- names(contig_info)
-    if (!is.null(chroms)) {
-        missing_chroms <- setdiff(chroms, chroms_to_process)
-        if (length(missing_chroms) > 0) {
-            if (verbose) {
-                msg <- "the following chromosomes are not present in the bamfile(s):\n{missing_chroms}"
-                cli::cli_alert_warning(msg)
-            }
-        }
-        chroms_to_process <- intersect(chroms, chroms_to_process)
-    }
-    chroms_to_process <- as.character(intersect(seqnames(sites), chroms_to_process))
+    cb_tag <- check_tag(cb_tag)
+    umi_tag <- check_tag(umi_tag)
+
+    valid_regions <- setup_valid_regions(bamfiles[[1]], chroms)
+    chroms_to_process <- valid_regions$chroms
+
     sites <- sites[seqnames(sites) %in% chroms_to_process, ]
-
-    if (length(chroms_to_process) == 0) {
-        cli::cli_abort("there are no shared chromosomes found in the sites provided and bam file")
-    }
 
     fp <- .adjustParams(param, 1)
     fp <- .as.list_FilterParam(fp)
@@ -276,7 +254,7 @@ pileup_cells <- function(bamfiles,
     names(outfns) <- c("counts", "sites", "bc")
 
     if (length(sces) == 0) {
-        warning("no sites reported in output")
+        cli::cli_warn("no sites reported in output")
         if (return_sce) {
             res <- SingleCellExperiment::SingleCellExperiment()
         } else {
