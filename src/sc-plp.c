@@ -129,7 +129,7 @@ typedef struct {
   char* bcfn;            // barcodes filename
   char* sitesfn;         // sites filename
   FILE** fps;            // file pointers [0] = mtxfn, [1] = sitefn, [2] = bcfn;
-  efilter ef;            // various additional site filters
+  efilter_t ef;            // various additional site filters
   str2intmap_t cbidx;    // hashmap cellbarcode key -> sparsematrix column index
   cbumi_map_t cbmap;     // hashmap cellbarcode key -> cbumi_map_t
   int has_umi;           // bool, library has umi
@@ -164,7 +164,7 @@ typedef struct {
    2 = read fails due to refskip, deletion, overlapping mate
  */
 static int check_read_filters(const bam_pileup1_t* p, sc_mplp_conf_t* conf) {
-
+  int res = 0;
   // skip indel and ref skip ;
   if (p->is_del || p->is_refskip) return (2) ;
 
@@ -184,14 +184,26 @@ static int check_read_filters(const bam_pileup1_t* p, sc_mplp_conf_t* conf) {
   }
 
   // check if pos is within x dist from 5' end of read, qpos is 0-based
-  if (check_variant_pos(p->b, p->qpos, conf->ef.trim_5p_dist, conf->ef.trim_3p_dist)) return (1);
+  if (conf->ef.trim_f5p > 0 || conf->ef.trim_f3p > 0) {
+      res = check_variant_fpos(p->b, p->qpos, conf->ef.trim_f5p, conf->ef.trim_f3p);
+      if (res < 0) return -1; // error
+      if (res > 0) return 1;
+  }
 
+  if (conf->ef.trim_i5p > 0 || conf->ef.trim_i3p > 0) {
+      res = check_variant_pos(p->b, p->qpos, conf->ef.trim_i5p, conf->ef.trim_i3p);
+      if (res < 0) return -1; // error
+      if (res > 0) return 1;
+  }
   // check for splice in alignment nearby
   if (conf->ef.splice_dist && dist_to_splice(p->b, p->qpos, conf->ef.splice_dist) >= 0) return (1);
 
   // check if site in splice overhang and > min_overhang
-  if (conf->ef.min_overhang && check_splice_overhang(p->b, p->qpos, conf->ef.min_overhang) > 0) return (1);
-
+  if (conf->ef.min_overhang) {
+      res = check_splice_overhang(p->b, p->qpos, conf->ef.min_overhang);
+      if (res == -2) return -1; // error
+      if (res > 0) return (1);
+  }
   // check if indel event nearby
   if (conf->ef.indel_dist && dist_to_indel(p->b, p->qpos, conf->ef.indel_dist) >= 0) return (1);
 
@@ -500,20 +512,6 @@ static int screadaln(void* data, bam1_t* b) {
   return ret;
 }
 
-/*! @function
- @abstract  Populate efilter struct
- */
-static void set_event_filters(efilter* ef, int* event_filters) {
-  ef->trim_5p_dist = event_filters[0];
-  ef->trim_3p_dist = event_filters[1];
-  ef->splice_dist = event_filters[2];
-  ef->indel_dist = event_filters[3];
-  ef->nmer = event_filters[4];
-  ef->n_mm_type = event_filters[5];
-  ef->n_mm = event_filters[6];
-  ef->min_overhang = event_filters[7];
-  ef->min_var_reads = event_filters[8];
-}
 
 /*! @function
  @abstract  Process one pileup site
@@ -749,8 +747,7 @@ fail:
  */
 static int set_sc_mplp_conf(sc_mplp_conf_t* conf, int nbams,
                             int n_outfns, char** outfns, char* qregion, regidx_t* idx,
-                            int min_mapQ, int min_baseQ, double* read_bqual_filter,
-                            int max_depth, int* b_flags, int* event_filters, int libtype,
+                            int* i_args, double* d_args, int libtype,
                             int n_bcs, char** bcs, char* cbtag, char* umi,
                             int pe, int min_counts) {
   conf->is_ss2 = nbams > 1 ? 1 : 0;
@@ -775,22 +772,30 @@ static int set_sc_mplp_conf(sc_mplp_conf_t* conf, int nbams,
     conf->reg_itr = regitr_init(conf->reg_idx);
   }
 
-  conf->min_mq = (min_mapQ < 0) ? 0 : min_mapQ;
-  conf->min_bq = (min_baseQ < 0) ? 0 : min_baseQ;
-  conf->max_depth = (!max_depth) ? 10000: max_depth;
+  memset(&conf->ef, 0, sizeof(efilter_t));
 
-  if (b_flags) {
-    conf->keep_flag[0] = b_flags[0];
-    conf->keep_flag[1] = b_flags[1];
-  }
+  conf->max_depth        = i_args[0];
+  conf->min_bq           = i_args[2];
+  conf->ef.trim_i5p      = i_args[3];
+  conf->ef.trim_i3p      = i_args[4];
+  conf->ef.indel_dist    = i_args[5];
+  conf->ef.splice_dist   = i_args[6];
+  conf->ef.min_overhang  = i_args[7];
+  conf->ef.nmer          = i_args[8];
+  conf->ef.min_var_reads = i_args[9];
+  conf->ef.n_mm_type     = i_args[10];
+  conf->ef.n_mm          = i_args[11];
+  conf->keep_flag[0]     = i_args[12];
+  conf->keep_flag[1]     = i_args[13];
 
-  if (read_bqual_filter) {
-    conf->read_qual.pct = read_bqual_filter[0];
-    conf->read_qual.minq = (int)read_bqual_filter[1];
-  }
+  conf->ef.trim_f5p      = d_args[0];
+  conf->ef.trim_f3p      = d_args[1];
+  conf->read_qual.pct    = d_args[3];
+  conf->read_qual.minq   = d_args[4];
 
-  memset(&conf->ef, 0, sizeof(efilter));
-  set_event_filters(&(conf->ef), event_filters);
+  conf->min_mq = (conf->min_mq < 0) ? 0 : conf->min_mq;
+  conf->min_bq = (conf->min_bq < 0) ? 0 : conf->min_bq;
+  conf->max_depth = (!conf->max_depth ) ? 10000: conf->max_depth ;
 
   conf->libtype = libtype;
   int hret = 0;
@@ -859,10 +864,8 @@ static int write_all_sites(sc_mplp_conf_t* conf) {
  @abstract Check args passed from R. Likely has some redundancies with checks in R code.
  */
 static void check_sc_plp_args(SEXP bampaths, SEXP indexes, SEXP qregion, SEXP lst,
-                              SEXP barcodes, SEXP cbtag, SEXP event_filters,
-                              SEXP min_mapQ, SEXP max_depth, SEXP min_baseQ,
-                              SEXP read_bqual_filter, SEXP libtype, SEXP b_flags,
-                              SEXP outfns, SEXP umi, SEXP pe,
+                              SEXP barcodes, SEXP cbtag, SEXP int_args, SEXP dbl_args,
+                              SEXP libtype, SEXP outfns, SEXP umi, SEXP pe,
                               SEXP min_counts) {
 
   if (!IS_CHARACTER(bampaths) || (LENGTH(bampaths) < 1)) {
@@ -893,32 +896,17 @@ static void check_sc_plp_args(SEXP bampaths, SEXP indexes, SEXP qregion, SEXP ls
     Rf_error("'cbtag' must be character of length 0 or 1");
   }
 
-  if (!IS_INTEGER(event_filters) || (LENGTH(event_filters) != 9)) {
-    Rf_error("'event_filters' must be integer of length 9");
+  // vectors populated with parameters of fixed sizes
+  if (!IS_INTEGER(int_args) || (LENGTH(int_args) != 14)) {
+      Rf_error("'int_args' must be integer of length 14");
   }
 
-  if (!IS_INTEGER(min_mapQ) || (LENGTH(min_mapQ) != 1)) {
-    Rf_error("'min_mapQ' must be integer(1)");
-  }
-
-  if (!IS_INTEGER(max_depth) || (LENGTH(max_depth) != 1)) {
-    Rf_error("'max_depth' must be integer(1)");
-  }
-
-  if (!IS_INTEGER(min_baseQ) || (LENGTH(min_baseQ) != 1)) {
-    Rf_error("'min_baseQ' must be integer(1)");
-  }
-
-  if (!IS_NUMERIC(read_bqual_filter) || (LENGTH(read_bqual_filter) != 2)) {
-    Rf_error("'read_bqual_filter' must be numeric of length 2");
+  if (!IS_NUMERIC(dbl_args) || (LENGTH(dbl_args) != 5)) {
+      Rf_error("'dbl_args' must be numeric of length 5");
   }
 
   if (!IS_INTEGER(libtype) || (LENGTH(libtype) != 1)) {
     Rf_error("'lib_type' must be integer(1)");
-  }
-
-  if (!IS_INTEGER(b_flags) || (LENGTH(b_flags) != 2)) {
-    Rf_error("'b_flags' must be integer of length 2");
   }
 
   if ((!IS_CHARACTER(outfns) || (LENGTH(outfns) != 3))) {
@@ -943,15 +931,13 @@ static void check_sc_plp_args(SEXP bampaths, SEXP indexes, SEXP qregion, SEXP ls
  @abstract R interface to single cell pileup code
  */
 SEXP scpileup(SEXP bampaths, SEXP indexes, SEXP query_region, SEXP lst,
-              SEXP barcodes, SEXP cbtag, SEXP event_filters, SEXP min_mapQ,
-              SEXP max_depth, SEXP min_baseQ, SEXP read_bqual_filter,
-              SEXP libtype, SEXP b_flags, SEXP outfns, SEXP umi,
+              SEXP barcodes, SEXP cbtag, SEXP int_args, SEXP dbl_args,
+              SEXP libtype,  SEXP outfns, SEXP umi,
               SEXP pe, SEXP min_counts) {
 
   check_sc_plp_args(bampaths, indexes, query_region, lst,
-                    barcodes, cbtag, event_filters, min_mapQ, max_depth,
-                    min_baseQ, read_bqual_filter, libtype,
-                    b_flags, outfns, umi, pe, min_counts);
+                    barcodes, cbtag, int_args, dbl_args, libtype,
+                    outfns, umi, pe, min_counts);
 
   regidx_t* idx = regidx_build(lst, 1);
   if (!idx) Rf_error("Failed to build region index");
@@ -994,11 +980,9 @@ SEXP scpileup(SEXP bampaths, SEXP indexes, SEXP query_region, SEXP lst,
   memset(&ga, 0, sizeof(sc_mplp_conf_t));
 
   ret = set_sc_mplp_conf(&ga, nbams, nout, coutfns,
-                         cq_region, idx, INTEGER(min_mapQ)[0],
-                         INTEGER(min_baseQ)[0], REAL(read_bqual_filter),
-                         INTEGER(max_depth)[0], INTEGER(b_flags),
-                         INTEGER(event_filters), INTEGER(libtype)[0],
-                         nbcs, bcs, c_cbtag, c_umi,
+                         cq_region, idx,
+                         INTEGER(int_args), REAL(dbl_args),
+                         INTEGER(libtype)[0], nbcs, bcs, c_cbtag, c_umi,
                          LOGICAL(pe)[0], INTEGER(min_counts)[0]);
 
   if (ret >= 0) {

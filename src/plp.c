@@ -325,10 +325,10 @@ static int store_counts(PLP_DATA pd, pcounts* pc, const char* ctig,
     // predicated on the true or false values in only_variants
     for (i = 0; i < conf->nbam; ++i) {
         // check depth
-        if ((pc + i)->pc->total >= conf->min_depth && (pc + i)->pc->nv >= conf->min_var_reads) {
+        if ((pc + i)->pc->total >= conf->min_depth && (pc + i)->pc->nv >= conf->ef.min_var_reads) {
             write_p = 1;
         }
-        if ((pc + i)->mc->total >= conf->min_depth && (pc + i)->mc->nv >= conf->min_var_reads) {
+        if ((pc + i)->mc->total >= conf->min_depth && (pc + i)->mc->nv >= conf->ef.min_var_reads) {
             write_m = 1;
         }
 
@@ -542,30 +542,30 @@ static int check_read_filters(const bam_pileup1_t* p, mplp_conf_t* conf, int baq
     }
 
     // check if pos is within x dist from 5' end of read, qpos is 0-based
-    if (conf->trim.f5p > 0 || conf->trim.f3p > 0) {
-        res = check_variant_fpos(p->b, p->qpos, conf->trim.f5p, conf->trim.f3p);
+    if (conf->ef.trim_f5p > 0 || conf->ef.trim_f3p > 0) {
+        res = check_variant_fpos(p->b, p->qpos, conf->ef.trim_f5p, conf->ef.trim_f3p);
         if (res < 0) return -1; // error
         if (res > 0) return 1;
     }
 
-    if (conf->trim.i5p > 0 || conf->trim.i3p > 0) {
-        res = check_variant_pos(p->b, p->qpos, conf->trim.i5p, conf->trim.i3p);
+    if (conf->ef.trim_i5p > 0 || conf->ef.trim_i3p > 0) {
+        res = check_variant_pos(p->b, p->qpos, conf->ef.trim_i5p, conf->ef.trim_i3p);
         if (res < 0) return -1; // error
         if (res > 0) return 1;
     }
 
     // check for splice in alignment nearby
-    if (conf->splice_dist && dist_to_splice(p->b, p->qpos, conf->splice_dist) >= 0) return (1);
+    if (conf->ef.splice_dist && dist_to_splice(p->b, p->qpos, conf->ef.splice_dist) >= 0) return (1);
 
     // check if site in splice overhang and > min_overhang
-    if (conf->min_overhang) {
-        res = check_splice_overhang(p->b, p->qpos, conf->min_overhang);
+    if (conf->ef.min_overhang) {
+        res = check_splice_overhang(p->b, p->qpos, conf->ef.min_overhang);
         if (res == -2) return -1; // error
         if (res > 0) return (1);
     }
 
     // check if indel event nearby
-    if (conf->indel_dist && dist_to_indel(p->b, p->qpos, conf->indel_dist) >= 0) return (1);
+    if (conf->ef.indel_dist && dist_to_indel(p->b, p->qpos, conf->ef.indel_dist) >= 0) return (1);
 
     return 0;
 }
@@ -769,7 +769,7 @@ while ((ret = bam_mplp64_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
     }
 
     // check if site is in a homopolymer
-    if (conf->nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, conf->nmer)) continue;
+    if (conf->ef.nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, conf->ef.nmer)) continue;
 
     // check if read count less than min_depth
     int pass_reads = 0;
@@ -824,9 +824,9 @@ while ((ret = bam_mplp64_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
             if (invert) ci = (char)comp_base[(unsigned char)c];
 
             // check read for >= mismatch different types and at least n_mm mismatches
-            if (conf->n_mm_type > 0 || conf->n_mm > 0) {
+            if (conf->ef.n_mm_type > 0 || conf->ef.n_mm > 0) {
                 if ((invert && mref_b != ci) || pref_b != ci) {
-                    int m = parse_mismatches(p->b, conf->n_mm_type, conf->n_mm);
+                    int m = parse_mismatches(p->b, conf->ef.n_mm_type, conf->ef.n_mm);
                     if (m == -1) {
                         ret = -1;
                         goto fail;
@@ -1031,26 +1031,28 @@ static int set_mplp_conf(mplp_conf_t* conf, int n_bams,
         }
     }
 
-    conf->max_depth     = i_args[0];
-    conf->min_depth     = i_args[1];
-    conf->min_bq        = i_args[2];
-    conf->trim.i5p      = i_args[3];
-    conf->trim.i3p      = i_args[4];
-    conf->indel_dist    = i_args[5];
-    conf->splice_dist   = i_args[6];
-    conf->min_overhang  = i_args[7];
-    conf->nmer          = i_args[8];
-    conf->min_var_reads = i_args[9];
-    conf->n_mm_type     = i_args[10];
-    conf->n_mm          = i_args[11];
-    conf->keep_flag[0]  = i_args[12];
-    conf->keep_flag[1]  = i_args[13];
+    memset(&conf->ef, 0, sizeof(efilter_t));
 
-    conf->trim.f5p       = d_args[0];
-    conf->trim.f3p       = d_args[1];
-    conf->min_af         = d_args[2];
-    conf->read_qual.pct  = d_args[3];
-    conf->read_qual.minq = d_args[4];
+    conf->max_depth        = i_args[0];
+    conf->min_depth        = i_args[1];
+    conf->min_bq           = i_args[2];
+    conf->ef.trim_i5p      = i_args[3];
+    conf->ef.trim_i3p      = i_args[4];
+    conf->ef.indel_dist    = i_args[5];
+    conf->ef.splice_dist   = i_args[6];
+    conf->ef.min_overhang  = i_args[7];
+    conf->ef.nmer          = i_args[8];
+    conf->ef.min_var_reads = i_args[9];
+    conf->ef.n_mm_type     = i_args[10];
+    conf->ef.n_mm          = i_args[11];
+    conf->keep_flag[0]     = i_args[12];
+    conf->keep_flag[1]     = i_args[13];
+
+    conf->ef.trim_f5p      = d_args[0];
+    conf->ef.trim_f3p      = d_args[1];
+    conf->min_af           = d_args[2];
+    conf->read_qual.pct    = d_args[3];
+    conf->read_qual.minq   = d_args[4];
 
     conf->report_multiallelics = b_args[0];
 
