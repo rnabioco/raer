@@ -88,7 +88,7 @@
                         <h4 data-toc-skip class="author">Kent
 Riemondy</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-08-31</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-09-01</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/single-cell.Rmd" class="external-link"><code>vignettes/single-cell.Rmd</code></a></small>
       <div class="d-none name"><code>single-cell.Rmd</code></div>
@@ -135,10 +135,10 @@ with other needed files can be downloaded using
 <span><span class="co">## [1] "/github/home/.cache/R/raer/10k_PBMC_3p_nextgem_Chromium_X_intron_possorted_chr16_rp.bam.bai"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $edit_sites</span></span>
-<span><span class="co">## [1] "/github/home/.cache/R/raer/8d738e82007_rediportal_chr16.bed.gz"</span></span>
+<span><span class="co">## [1] "/github/home/.cache/R/raer/7e5d8ec020_rediportal_chr16.bed.gz"</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## $sce</span></span>
-<span><span class="co">## [1] "/github/home/.cache/R/raer/8d79a0e9a6_sce.rds"</span></span></code></pre>
+<span><span class="co">## [1] "/github/home/.cache/R/raer/7e539eb6585_sce.rds"</span></span></code></pre>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bam_fn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">bam</span></span>
 <span><span class="va">bed_fn</span> <span class="op">&lt;-</span> <span class="va">fns</span><span class="op">$</span><span class="va">edit_sites</span></span></code></pre></div>
@@ -241,10 +241,10 @@ chromosomes, by supplying a BiocParallel backend to the
 <span><span class="op">)</span></span>
 <span><span class="va">e_sce</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: SingleCellExperiment </span></span>
-<span><span class="co">## dim: 3850 500 </span></span>
+<span><span class="co">## dim: 4812 500 </span></span>
 <span><span class="co">## metadata(0):</span></span>
 <span><span class="co">## assays(2): nRef nAlt</span></span>
-<span><span class="co">## rownames(3850): site_chr16_83540_1_AG site_chr16_83621_1_AG ...</span></span>
+<span><span class="co">## rownames(4812): site_chr16_83540_1_AG site_chr16_83621_1_AG ...</span></span>
 <span><span class="co">##   site_chr16_31453268_2_AG site_chr16_31454303_2_AG</span></span>
 <span><span class="co">## rowData names(2): REF ALT</span></span>
 <span><span class="co">## colnames(500): TGTTTGTCAGTTAGGG-1 ATCTCTACAAGCTACT-1 ...</span></span>
