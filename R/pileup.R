@@ -186,8 +186,7 @@ pileup_sites <- function(bamfiles,
         )
     }
 
-    fp <- .adjustParams(param, n_files)
-    fp <- .c_args_FilterParam(fp)
+    fp <- cfilterParam(param, n_files)
 
     if (!is.null(region)) {
         chroms_to_process <- region
@@ -549,44 +548,6 @@ empty_plp_record <- function() {
 }
 
 
-.adjust_arg_length <- function(obj, name, len) {
-    if (length(slot(obj, name)) != len) {
-        if (length(slot(obj, name)) == 1) {
-            slot(obj, name) <- rep(slot(obj, name), len)
-        } else {
-            stop(
-                "%s requires either 1 value, or individual values,",
-                "for all input bamfiles", slot
-            )
-        }
-    }
-    slot(obj, name)
-}
-## Check validity and adjust
-.adjustParams <- function(filterParam, nFiles) {
-    if (!inherits(filterParam, "FilterParam")) {
-        stop(
-            "'filterParam' must inherit from 'FilterParam', got '%s'",
-            class(filterParam)
-        )
-    }
-    filterParam@min_mapq <- .adjust_arg_length(
-        filterParam,
-        "min_mapq",
-        nFiles
-    )
-    filterParam@only_keep_variants <- .adjust_arg_length(
-        filterParam,
-        "only_keep_variants",
-        nFiles
-    )
-    filterParam@library_type <- .adjust_arg_length(
-        filterParam,
-        "library_type",
-        nFiles
-    )
-    filterParam
-}
 
 
 #' @importFrom methods slot slot<- slotNames
@@ -624,7 +585,7 @@ setMethod(show, "FilterParam", function(object) {
 })
 
 
-.encode_libtype <- function(library_type = c("unstranded",
+encode_libtype <- function(library_type = c("unstranded",
                                              "fr-first-strand",
                                              "fr-second-strand"),
                             n_files) {
@@ -647,8 +608,48 @@ setMethod(show, "FilterParam", function(object) {
     as.integer(lib_code)
 }
 
-.c_args_FilterParam <- function(x, ...) {
-    fp <-.as.list_FilterParam(x)
+adjust_arg_length <- function(obj, name, len) {
+    if (length(slot(obj, name)) != len) {
+        if (length(slot(obj, name)) == 1) {
+            slot(obj, name) <- rep(slot(obj, name), len)
+        } else {
+            stop(
+                "%s requires either 1 value, or individual values,",
+                "for all input bamfiles", slot
+            )
+        }
+    }
+    slot(obj, name)
+}
+## Check validity and adjust
+adjustParams <- function(filterParam, nFiles) {
+    if (!inherits(filterParam, "FilterParam")) {
+        stop(
+            "'filterParam' must inherit from 'FilterParam', got '%s'",
+            class(filterParam)
+        )
+    }
+    filterParam@min_mapq <- adjust_arg_length(
+        filterParam,
+        "min_mapq",
+        nFiles
+    )
+    filterParam@only_keep_variants <- adjust_arg_length(
+        filterParam,
+        "only_keep_variants",
+        nFiles
+    )
+    filterParam@library_type <- adjust_arg_length(
+        filterParam,
+        "library_type",
+        nFiles
+    )
+    filterParam
+}
+
+
+c_args_FilterParam <- function(x, ...) {
+    fp <-as_list_FilterParam(x)
 
     # consistent length args are populated into vectors
     # note that unlisting will increase vector size greater than number of args
@@ -691,10 +692,16 @@ setMethod(show, "FilterParam", function(object) {
     )
 }
 
-.as.list_FilterParam <- function(x, ...) {
+as_list_FilterParam <- function(x, ...) {
     slotnames <- slotNames(x)
     names(slotnames) <- slotnames
     lapply(slotnames, slot, object = x)
+}
+
+cfilterParam <- function(param, nfiles) {
+    fp <- adjustParams(param, nfiles)
+    fp <- c_args_FilterParam(fp)
+    fp
 }
 
 #' @param min_depth min read depth needed to report site
@@ -801,7 +808,7 @@ FilterParam <-
             }
         }
 
-        library_type <- .encode_libtype(library_type)
+        library_type <- encode_libtype(library_type)
 
         ## creation
         .FilterParam(

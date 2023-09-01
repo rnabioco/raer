@@ -172,23 +172,6 @@ pileup_cells <- function(bamfiles,
 
     sites <- sites[seqnames(sites) %in% chroms_to_process, ]
 
-    fp <- .adjustParams(param, 1)
-    fp <- .as.list_FilterParam(fp)
-
-    lib_code <- fp$library_type
-
-    event_filters <- unlist(fp[c(
-        "trim_5p",
-        "trim_3p",
-        "splice_dist",
-        "indel_dist",
-        "homopolymer_len",
-        "max_mismatch_type",
-        "min_read_qual",
-        "min_splice_overhang",
-        "min_variant_reads"
-    )])
-
     if (verbose) cli::cli_alert("Beginning pileup")
     bf <- path.expand(path(bamfiles))
     bfi <- path.expand(index(bamfiles))
@@ -210,9 +193,7 @@ pileup_cells <- function(bamfiles,
                 outfile_prefix = output_directory,
                 cb_tag = cb_tag,
                 umi_tag = umi_tag,
-                libtype_code = lib_code,
-                event_filters = event_filters,
-                fp = fp,
+                param = param,
                 pe = paired_end,
                 verbose = verbose
             ),
@@ -232,9 +213,7 @@ pileup_cells <- function(bamfiles,
                 outfile_prefix = output_directory,
                 cb_tag = cb_tag,
                 umi_tag = umi_tag,
-                libtype_code = lib_code,
-                event_filters = event_filters,
-                fp = fp,
+                param = param,
                 pe = paired_end,
                 verbose = verbose
             ),
@@ -278,8 +257,8 @@ pileup_cells <- function(bamfiles,
 
 get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
                           outfile_prefix, chrom,
-                          umi_tag, cb_tag, libtype_code,
-                          event_filters, fp, pe, verbose) {
+                          umi_tag, cb_tag, param,
+                          pe, verbose) {
     if (length(chrom) > 0) {
         sites <- sites[seqnames(sites) %in% chrom, ]
     }
@@ -293,8 +272,11 @@ get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
     plp_outfns <- path.expand(plp_outfns)
     on.exit(unlink(plp_outfns))
 
-    if (verbose) cli::cli_alert("working on group: {id}")
+    fp <- cfilterParam(param, 1)
     lst <- gr_to_regions(sites)
+
+    if (verbose) cli::cli_alert("working on group: {id}")
+
     res <- .Call(
         ".scpileup",
         bamfn,
@@ -303,17 +285,13 @@ get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
         lst,
         barcodes,
         cb_tag,
-        event_filters,
-        fp$min_mapq,
-        fp$max_depth,
-        fp$min_base_quality,
-        fp$read_bqual,
-        as.integer(libtype_code),
-        fp$bam_flags,
+        fp[["int_args"]],
+        fp[["numeric_args"]],
+        fp[["library_type"]],
         plp_outfns,
         umi_tag,
         pe,
-        max(fp$min_variant_reads, fp$min_depth)
+        max(fp$int_args["min_variant_reads"], fp$int_args["min_depth"])
     )
 
     if (res < 0) cli::cli_abort("pileup failed")
