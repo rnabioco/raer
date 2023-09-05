@@ -4,7 +4,9 @@
 #include <htslib/hts_log.h>
 #include <htslib/regidx.h>
 #include <htslib/khash_str2int.h>
+
 #include <Rinternals.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

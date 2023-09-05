@@ -1,5 +1,5 @@
 #include <Rinternals.h>
-#include "Rdefines.h"
+#include <Rdefines.h>
 #include "plp_data.h"
 
 /* The following code is based on the Rsamtools approach

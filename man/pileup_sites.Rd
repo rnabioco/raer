@@ -12,8 +12,6 @@ pileup_sites(
   region = NULL,
   chroms = NULL,
   param = FilterParam(),
-  outfile_prefix = NULL,
-  return_data = TRUE,
   BPPARAM = SerialParam(),
   umi_tag = NULL,
   verbose = FALSE
@@ -61,14 +59,6 @@ region.}
 
 \item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
 filters to apply to reads and sites during pileup.}
-
-\item{outfile_prefix}{If supplied, pileup data will be written to tabix indexed
-files with  the specified prefix. If \code{NULL}, no files will be produced and data
-will be stored in memory.}
-
-\item{return_data}{if \code{TRUE}, data is returned as a \link{RangedSummarizedExperiment},
-if \code{FALSE} a character vector of tabix-index files, specified by
-\code{outfile_prefix}, will be returned.}
 
 \item{BPPARAM}{A \link{BiocParallel} class to control parallel execution. Parallel
 processing occurs per chromosome and is disabled when run on a single
@@ -138,9 +128,7 @@ reported in ALT assay.}
 filters. If FALSE, site will not be reported.}
 }
 \value{
-A \link{RangedSummarizedExperiment} or a
-vector of the output tabix'ed file names if \code{return_data} is FALSE.
-The \link{RangedSummarizedExperiment} object is populated with multiple assays:
+A \link{RangedSummarizedExperiment} object populated with multiple assays:
 \itemize{
 \item \code{ALT}:  Alternate base(s) found at each position
 \item \code{nRef}: # of reads supporting the reference base
@@ -165,10 +153,6 @@ Odds Ratio test, based on GATK code. Higher values indicate more bias.
 The rownames will be populated with the format
 \verb{site_[seqnames]_[position(1-based)]_[strand]}, with \code{strand} being encoded
 as 1 = +, 2 = -, and 3 = *.
-
-If \code{return_data} is \code{FALSE} then a character vector of paths to the
-pileup files will be returned. These files can be imported using
-\code{read_pileup()}.
 }
 \description{
 Generate base counts using pileup

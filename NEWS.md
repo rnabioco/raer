@@ -1,3 +1,7 @@
+# raer 0.99.10
+
+* The options to write to tabix indexed output files have been removed from `pileup_sites()` as they have limited utility and introduce unwanted code complexity. 
+
 # raer 0.99.9
 
 * The `genomic-unstranded` option for the `library-type` argument in `FilterParam()` has been renamed to `unstranded`, and the `unstranded` option has been removed. 
