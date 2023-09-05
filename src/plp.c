@@ -18,6 +18,17 @@
 #define MPLP_REF_INIT {{NULL,NULL},{-1,-1},{0,0}}
 
 // read processing function for pileup
+
+/*! @function
+ @abstract  Read processing function for pileup, selects reads to populate pileup
+
+ @param  data     pointer to mplp_aux_t configuration
+ @param  bam1_t   pointer to alignment struct
+
+ @return
+ 0 if read passes filters
+ 1 otherwise
+ */
 static int readaln(void* data, bam1_t* b) {
     mplp_aux_t* g = (mplp_aux_t*)data;
     int ret, skip = 0;
@@ -66,7 +77,12 @@ static int readaln(void* data, bam1_t* b) {
     return ret;
 }
 
-// structs for holding counts
+/*! @typedef
+ @abstract Structure for storing count data for  bases
+ @field var variants found at each site
+ @field umi hashset with umi sequences at each site
+
+ */
 typedef struct {
     int total, nr, nv, na, nt, ng, nc, nn, nx;
     int ref_b;
@@ -80,7 +96,10 @@ typedef struct  {
     counts* mc;
 } pcounts;
 
-// library type insensitive strand counts
+/*! @typedef
+ @abstract Structure for storing count data ignoring library-type for calculating
+ strand bias
+ */
 typedef struct {
     int ref_fwd;
     int ref_rev;
@@ -88,7 +107,10 @@ typedef struct {
     int alt_rev;
 } strcounts_t;
 
-// struct for storing per-site data for all samples
+/*! @typedef
+ @abstract Structure for storing per-site data for all samples, used for assessing variant
+ biases, such as strand bias
+ */
 typedef struct {
     int* p_ref_pos; // base position within read, (plus strand) scaled to 100 positions
     int* p_alt_pos; // variant base position within read, (plus strand) scaled to 100 positions
@@ -99,6 +121,9 @@ typedef struct {
     strcounts_t* s; // counts for strandedness test
 } pall_counts;
 
+/*! @function
+ @abstract  reset data to 0
+ */
 static void clear_pall_counts(pall_counts* p) {
     if (p->p_ref_pos) memset(p->p_ref_pos, 0, sizeof(int) * NBASE_POS);
     if (p->p_alt_pos) memset(p->p_alt_pos, 0, sizeof(int) * NBASE_POS);
@@ -108,6 +133,9 @@ static void clear_pall_counts(pall_counts* p) {
     p->p_has_var = p->m_has_var = 0;
 }
 
+/*! @function
+ @abstract  allocate data
+ */
 static pall_counts* init_pall_counts() {
     pall_counts* pall = R_Calloc(1, pall_counts);
     pall->p_ref_pos   = R_Calloc(NBASE_POS, int);
@@ -119,6 +147,9 @@ static pall_counts* init_pall_counts() {
     return (pall);
 }
 
+/*! @function
+ @abstract  reset data to 0
+ */
 static void clear_counts(counts* p) {
     p->na = p->nc = p->ng = p->nn = p->nr = p->nt = p->nv = p->total = p->nx = 0;
     p->ref_b = 0;
@@ -126,12 +157,18 @@ static void clear_counts(counts* p) {
     clear_str_set(p->umi);
 }
 
+/*! @function
+ @abstract  reset data to 0
+ */
 static void clear_pcounts(pcounts* p) {
     clear_counts(p->mc);
     clear_counts(p->pc);
     p->pos = 0;
 }
 
+/*! @function
+ @abstract convert variant hashmap to string for output "AC,AG,AT"
+ */
 static void get_var_string(str2intmap_t* vhash, char* out) {
     const char* reg;
     int z = 1;
@@ -156,6 +193,19 @@ static void get_var_string(str2intmap_t* vhash, char* out) {
     }
 }
 
+/*! @function
+ @abstract Add to count data
+ @param  pd     processed pileup data structure
+ @param  fi     file index
+ @param  p      pointer to counts that are to be added to pd
+ @param  ctig   contig
+ @param  gpos   genomic base position
+ @param  ref    genomic reference base
+ @param  strand strand of base
+
+ @return
+ -1 on error, otherwise 0 if successful
+ */
 static int add_counts(PLP_DATA pd, int fi, counts* p, const char* ctig, int gpos, int ref, int strand) {
 
     int ret = 0;
@@ -235,6 +285,15 @@ static int add_counts(PLP_DATA pd, int fi, counts* p, const char* ctig, int gpos
     return ret;
 }
 
+/*! @function
+ @abstract Add to rowData stats
+ @param  pd     processed pileup data structure
+ @param  idx    vector index
+ @param  rpbz   read position bias z-score
+ @param  vdb    variant distance bias
+ @param  sor    strand bias
+
+ */
 static void add_stats(PLP_DATA pd, int idx, double rpbz, double vdb, double sor) {
     // check if size is sufficient
     get_or_grow_PLP_DATA(pd, -1, SITE_DATA_LST);
@@ -244,7 +303,14 @@ static void add_stats(PLP_DATA pd, int idx, double rpbz, double vdb, double sor)
 }
 
 
-// -1 indicates error;
+/*! @function
+ @abstract Calculate site biases
+ @param  pall   counts
+ @param  res    vector containing statistics (length 6)
+
+ @return
+ -1 on error, 0 otherwise
+ */
 static int calc_biases(pall_counts* pall, double* res) {
     if (NBASE_POS != 100) return -1;
     if (pall->p_has_var) {
@@ -260,6 +326,14 @@ static int calc_biases(pall_counts* pall, double* res) {
     return 0;
 }
 
+/*! @function
+ @abstract Calculate site biases
+ @param  pall   counts
+ @param  res    vector containing statistics (length 6)
+
+ @return
+ -1 on error, 0 otherwise
+ */
 static int store_counts(PLP_DATA pd, pcounts* pc, const char* ctig,
                         const int gpos, int pref, int mref, double* stats,
                         mplp_conf_t* conf) {
@@ -282,7 +356,7 @@ static int store_counts(PLP_DATA pd, pcounts* pc, const char* ctig,
         }
     }
 
-    // write out if any samples are > min_depth and any samples have a variant
+    // store counts if any samples are > min_depth and any samples have a variant
     // predicated on the true or false values in only_variants
     for (i = 0; i < conf->nbam; ++i) {
         // check depth

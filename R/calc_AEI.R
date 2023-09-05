@@ -402,6 +402,8 @@ correct_strand <- function(rse, genes_gr) {
     }
 
     stopifnot(all(strand(rse) == "+"))
+    stopifnot("REF" %in% colnames(rowData(rse)))
+    stopifnot("ALT" %in% names(assays(rse)))
 
     genes_gr$gene_strand <- strand(genes_gr)
     rse <- annot_from_gr(rse, genes_gr, "gene_strand", ignore.strand = TRUE)
@@ -416,6 +418,10 @@ correct_strand <- function(rse, genes_gr) {
     flip_rows <- as.vector(strand(rse) != rowData(rse)$gene_strand)
 
     rowData(rse)$REF[flip_rows] <- comp_bases(rowData(rse)$REF[flip_rows])
+
+    if("ALT" %in% colnames(rowData(rse))) {
+        rowData(rse)$ALT[flip_rows] <- comp_bases(rowData(rse)$ALT[flip_rows])
+    }
 
     # complement the ALT variants
     alts <- assay(rse, "ALT")[flip_rows, , drop = FALSE]
