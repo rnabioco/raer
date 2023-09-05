@@ -1,5 +1,4 @@
 #include <Rinternals.h>
-#include <ctype.h>
 #include <htslib/sam.h>
 #include <htslib/khash.h>
 #include <htslib/hts.h>

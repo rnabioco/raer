@@ -40,5 +40,4 @@ reference:
   - '`correct_strand`'
   - '`get_scAEI_sites`'
   - '`raer_example`'
-  - '`read_pileup`'
   - '`read_sparray`'

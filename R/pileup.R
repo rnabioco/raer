@@ -85,8 +85,7 @@
 #' rse
 #'
 #' @importFrom BiocGenerics path
-#' @importFrom Rsamtools bgzip indexTabix TabixFile index
-#' @importFrom Rsamtools scanTabix scanFaIndex seqinfo BamFile BamFileList
+#' @importFrom Rsamtools index scanFaIndex seqinfo BamFile BamFileList
 #' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges
 #' @importFrom GenomeInfoDb seqlevels seqinfo seqlengths
