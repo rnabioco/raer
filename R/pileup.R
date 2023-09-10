@@ -151,12 +151,7 @@ pileup_sites <- function(bamfiles,
 
     ## set default bam flags if not supplied
     if (identical(param@bam_flags, Rsamtools::scanBamFlag())) {
-        param@bam_flags <- Rsamtools::scanBamFlag(
-            isSecondaryAlignment = FALSE,
-            isNotPassingQualityCont = FALSE,
-            isDuplicate = FALSE,
-            isSupplementaryAlignment = FALSE
-        )
+        param@bam_flags <- defaultBulkBamFlags
     }
 
     fp <- cfilterParam(param, n_files)
@@ -303,6 +298,14 @@ setup_valid_regions <- function(bam, chroms, region = NULL, fasta = NULL) {
 
 # IRanges/GRanges are limited to this max int
 MAX_INT <- 536870912
+
+defaultBulkBamFlags <- Rsamtools::scanBamFlag(
+        isSecondaryAlignment = FALSE,
+        isNotPassingQualityCont = FALSE,
+        isDuplicate = FALSE,
+        isSupplementaryAlignment = FALSE
+)
+
 
 # parses a region string (e.g. "chr1:456-567" or "chr1")
 # using htslib into chrom, start, and end (0-based start)

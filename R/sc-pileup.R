@@ -155,15 +155,10 @@ pileup_cells <- function(bamfiles,
 
     ## set default bam flags if not supplied
     if (identical(param@bam_flags, Rsamtools::scanBamFlag())) {
-        param@bam_flags <- Rsamtools::scanBamFlag(
-            isSecondaryAlignment = FALSE,
-            isSupplementaryAlignment = FALSE,
-            isNotPassingQualityControls = FALSE
-        )
+        param@bam_flags <- defaultScBamFlags
     }
 
     cell_barcodes <- cell_barcodes[!is.na(cell_barcodes)]
-
     cb_tag <- check_tag(cb_tag)
     umi_tag <- check_tag(umi_tag)
 
@@ -254,6 +249,12 @@ pileup_cells <- function(bamfiles,
     }
     res
 }
+
+defaultScBamFlags <- Rsamtools::scanBamFlag(
+    isSecondaryAlignment = FALSE,
+    isSupplementaryAlignment = FALSE,
+    isNotPassingQualityControls = FALSE
+)
 
 get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
                           outfile_prefix, chrom,
