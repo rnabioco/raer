@@ -163,8 +163,7 @@ pileup_cells <- function(bamfiles,
     umi_tag <- check_tag(umi_tag)
 
     valid_regions <- setup_valid_regions(bamfiles[[1]], chroms)
-    chroms_to_process <- valid_regions$chroms
-
+    chroms_to_process <- intersect(valid_regions$chroms, unique(seqnames(sites)))
     sites <- sites[seqnames(sites) %in% chroms_to_process, ]
 
     if (verbose) cli::cli_alert("Beginning pileup")
@@ -197,13 +196,15 @@ pileup_cells <- function(bamfiles,
         )
     } else {
         # operate in parallel over each chromosome
+        sites_grl <- split(sites, seqnames(sites))
+        sites_grl <- sites_grl[intersect(chroms_to_process, names(sites_grl))]
         sces <- bpmapply(get_sc_pileup,
             chrom = chroms_to_process,
             id = chroms_to_process,
+            site = sites_grl,
             MoreArgs = list(
                 bamfn = bf,
                 index = bfi,
-                sites = sites,
                 barcodes = cell_barcodes,
                 outfile_prefix = output_directory,
                 cb_tag = cb_tag,
