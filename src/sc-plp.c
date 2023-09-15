@@ -68,7 +68,8 @@ static void clear_umi(umimap_t uhash) {
 }
 
 /*! @function
- @abstract  free keys, values and clear cbumi_map_t hashmap
+ @abstract  free UMI values and clear cbumi_map_t hashmap. Keys are retained to
+ be freed at end of pileup loop.
  */
 static void clear_cb_umiset(cbumi_map_t cbhash) {
   khint_t k;
@@ -100,6 +101,7 @@ static void free_hashmaps(cbumi_map_t cbhash, str2intmap_t cbidx) {
   if (cbhash) {
     for (k = kh_begin(cbhash); k < kh_end(cbhash); ++k) {
       if (!kh_exist(cbhash, k)) continue;
+      free((char*) kh_key(cbhash, k));
       cdat = kh_value(cbhash, k);
       clear_umi(cdat->umi);
       kh_destroy(umimap, cdat->umi);
@@ -248,13 +250,12 @@ static int count_record(const bam_pileup1_t* p, sc_mplp_conf_t* conf, payload_t*
 
   if (pld->strand != strand) return (1);
 
-  cb_cpy = strdup(cb);
-
-  k = kh_get(str2intmap, conf->cbidx, cb_cpy);
+  k = kh_get(str2intmap, conf->cbidx, cb);
   if (k == kh_end(conf->cbidx)) {
-    free(cb_cpy);
     return (0);
   }
+
+  cb_cpy = strdup(cb);
 
   k = kh_put(cbumimap, conf->cbmap, cb_cpy, &cret);
   if (cret < 0) {
@@ -729,7 +730,7 @@ static int run_scpileup(sc_mplp_conf_t* conf, char* bamfn, char* index, char* ba
 
 fail:
   if (iter) bam_mplp_destroy(iter);
-  bam_hdr_destroy(h);
+  if(h) bam_hdr_destroy(h);
 
   for (i = 0; i < nbam; ++i) {
     sam_close(data[0]->fp);
@@ -737,9 +738,9 @@ fail:
     if (data[0]->idx) hts_idx_destroy(data[0]->idx);
     free(data[0]);
   }
-  free(data);
-  free(plp);
-  free(n_plp);
+  if(data) free(data);
+  if(plp) free(plp);
+  if(n_plp) free(n_plp);
 
   return ret;
 }

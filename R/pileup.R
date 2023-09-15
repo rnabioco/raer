@@ -278,7 +278,7 @@ setup_valid_regions <- function(bam, chroms, region = NULL, fasta = NULL) {
             msg <- paste(missing_chroms, collapse = "\n")
             cli::cli_warn(c(
                 "the following chromosomes are not present in the fasta file:",
-                "msg"
+                "{msg}"
             ))
             chroms_to_process <- setdiff(chroms_to_process, missing_chroms)
         }

@@ -104,7 +104,7 @@ test_that("pileup regional query works", {
     expect_equal(end(res), c(203, 204, 205))
 
     # chr1 does not exist
-    expect_error(suppressWarnings(pileup_sites(bamfn, fafn, region = "chr1")))
+    expect_error(pileup_sites(bamfn, fafn, region = "chr1"))
 
     res <- pileup_sites(bamfn, fafn, chrom = "SSR3")
     expect_equal(nrow(res), 529)
@@ -112,7 +112,7 @@ test_that("pileup regional query works", {
 
 test_that("incorrect regional query is caught", {
     # will produce warning that chrHello is not in bamfile and an error
-    expect_error(suppressWarnings(pileup_sites(bamfn, fafn, region = "chrHello")))
+    expect_error(pileup_sites(bamfn, fafn, region = "chrHello"))
 })
 
 test_that("missing files are caught", {
