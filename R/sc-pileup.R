@@ -292,6 +292,7 @@ get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
         plp_outfns,
         umi_tag,
         pe,
+        fp[["min_mapq"]],
         max(fp$int_args["min_variant_reads"], fp$int_args["min_depth"])
     )
 

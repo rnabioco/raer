@@ -752,7 +752,7 @@ static int set_sc_mplp_conf(sc_mplp_conf_t* conf, int nbams,
                             int n_outfns, char** outfns, char* qregion, regidx_t* idx,
                             int* i_args, double* d_args, int libtype,
                             int n_bcs, char** bcs, char* cbtag, char* umi,
-                            int pe, int min_counts) {
+                            int pe, int min_mapq, int min_counts) {
   conf->is_ss2 = nbams > 1 ? 1 : 0;
 
   conf->fps = R_Calloc(n_outfns, FILE*);
@@ -796,7 +796,6 @@ static int set_sc_mplp_conf(sc_mplp_conf_t* conf, int nbams,
   conf->read_qual.pct    = d_args[3];
   conf->read_qual.minq   = d_args[4];
 
-  conf->min_mq = (conf->min_mq < 0) ? 0 : conf->min_mq;
   conf->min_bq = (conf->min_bq < 0) ? 0 : conf->min_bq;
   conf->max_depth = (!conf->max_depth ) ? 10000: conf->max_depth ;
 
@@ -833,6 +832,7 @@ static int set_sc_mplp_conf(sc_mplp_conf_t* conf, int nbams,
   }
   conf->cb_tag = cbtag;
   conf->pe = pe;
+  conf->min_mq = (min_mapq < 0) ? 0 : min_mapq;
   conf->min_counts = min_counts < 0 ? 0 : min_counts;
   conf->site_idx = 1;
 
@@ -868,7 +868,7 @@ static int write_all_sites(sc_mplp_conf_t* conf) {
  */
 static void check_sc_plp_args(SEXP bampaths, SEXP indexes, SEXP qregion, SEXP lst,
                               SEXP barcodes, SEXP cbtag, SEXP int_args, SEXP dbl_args,
-                              SEXP libtype, SEXP outfns, SEXP umi, SEXP pe,
+                              SEXP libtype, SEXP outfns, SEXP umi, SEXP pe, SEXP min_mapq,
                               SEXP min_counts) {
 
   if (!IS_CHARACTER(bampaths) || (LENGTH(bampaths) < 1)) {
@@ -924,6 +924,10 @@ static void check_sc_plp_args(SEXP bampaths, SEXP indexes, SEXP qregion, SEXP ls
     Rf_error("'pe' must be logical(1)");
   }
 
+  if (!IS_INTEGER(min_mapq) || (LENGTH(min_mapq) != 1)) {
+      Rf_error("'min_mapq' must be integer(1)");
+  }
+
   if (!IS_INTEGER(min_counts) || (LENGTH(min_counts) != 1)) {
     Rf_error("'min_counts' must be integer(1)");
   }
@@ -936,11 +940,11 @@ static void check_sc_plp_args(SEXP bampaths, SEXP indexes, SEXP qregion, SEXP ls
 SEXP scpileup(SEXP bampaths, SEXP indexes, SEXP query_region, SEXP lst,
               SEXP barcodes, SEXP cbtag, SEXP int_args, SEXP dbl_args,
               SEXP libtype,  SEXP outfns, SEXP umi,
-              SEXP pe, SEXP min_counts) {
+              SEXP pe, SEXP min_mapq, SEXP min_counts) {
 
   check_sc_plp_args(bampaths, indexes, query_region, lst,
                     barcodes, cbtag, int_args, dbl_args, libtype,
-                    outfns, umi, pe, min_counts);
+                    outfns, umi, pe, min_mapq, min_counts);
 
   regidx_t* idx = regidx_build(lst, 1);
   if (!idx) Rf_error("Failed to build region index");
@@ -986,7 +990,8 @@ SEXP scpileup(SEXP bampaths, SEXP indexes, SEXP query_region, SEXP lst,
                          cq_region, idx,
                          INTEGER(int_args), REAL(dbl_args),
                          INTEGER(libtype)[0], nbcs, bcs, c_cbtag, c_umi,
-                         LOGICAL(pe)[0], INTEGER(min_counts)[0]);
+                         LOGICAL(pe)[0], INTEGER(min_mapq)[0],
+                         INTEGER(min_counts)[0]);
 
   if (ret >= 0) {
     // write barcodes file, all barcodes will be reported in matrix
