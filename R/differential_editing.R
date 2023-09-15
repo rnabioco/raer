@@ -658,7 +658,7 @@ find_scde_sites <- function(
                                            assay.type = "nAlt",
                                            BPPARAM = BPPARAM)
 
-    grps <- unique(sce[[group]])
+    grps <- unique(as.character(sce[[group]]))
     grp_pairs <- as.data.frame(t(utils::combn(grps, 2)))
     colnames(grp_pairs) <- c("first", "second")
 

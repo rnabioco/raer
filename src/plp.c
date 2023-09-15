@@ -375,6 +375,8 @@ static int store_counts(PLP_DATA pd, pcounts* pc, const char* ctig,
                         nv = kh_value((pc + i)->pc->var, k);
                         vf = (double) nv / (pc + i)->pc->total;
                         if (vf < conf->min_af) {
+                            char *key = (char *)kh_key((pc + i)->pc->var, k);
+                            free(key);
                             kh_del(str2intmap, (pc + i)->pc->var, k);
                         }
                     }
@@ -387,6 +389,8 @@ static int store_counts(PLP_DATA pd, pcounts* pc, const char* ctig,
                         nv = kh_value((pc + i)->mc->var, k);
                         vf = (double) nv / (pc + i)->mc->total;
                         if (vf < conf->min_af) {
+                            char *key = (char *)kh_key((pc + i)->mc->var, k);
+                            free(key);
                             kh_del(str2intmap, (pc + i)->mc->var, k);
                         }
                     }
@@ -631,7 +635,7 @@ static int run_pileup(char** cbampaths, char** cindexes,
 
     const bam_pileup1_t** plp;
     mplp_ref_t mp_ref = MPLP_REF_INIT;
-    bam_mplp_t iter;
+    bam_mplp_t iter = NULL;
     bam_hdr_t* h = NULL; /* header of first file in input list */
     char* ref;
 
@@ -664,13 +668,17 @@ static int run_pileup(char** cbampaths, char** cindexes,
         data[i] = calloc(1, sizeof(mplp_aux_t));
         data[i]->fp = sam_open(cbampaths[i], "rb");
         if (!data[i]->fp) {
-            Rf_error("[raer internal] failed to open %s: %s\n",
+            REprintf("[raer internal] failed to open %s: %s\n",
                      cbampaths[i], strerror(errno));
+            ret = -1;
+            goto fail;
         }
         if (conf->fai_fname) {
             if (hts_set_fai_filename(data[i]->fp, conf->fai_fname) != 0) {
-                Rf_error("[raer internal] failed to process %s: %s\n",
+                REprintf("[raer internal] failed to process %s: %s\n",
                          conf->fai_fname, strerror(errno));
+                ret = -1;
+                goto fail;
             }
         }
         data[i]->conf = conf;
@@ -678,7 +686,9 @@ static int run_pileup(char** cbampaths, char** cindexes,
 
         h_tmp = sam_hdr_read(data[i]->fp);
         if (!h_tmp) {
-            Rf_error("[raer internal] fail to read the header of %s\n", cbampaths[i]);
+            REprintf("[raer internal] fail to read the header of %s\n", cbampaths[i]);
+            ret = -1;
+            goto fail;
         }
 
         if (conf->reg) {
@@ -686,11 +696,18 @@ static int run_pileup(char** cbampaths, char** cindexes,
             idx = sam_index_load2(data[i]->fp, cbampaths[i], cindexes[i]) ;
 
             if (idx == NULL) {
-                Rf_error("[raer internal] fail to load bamfile index for %s\n", cbampaths[i]);
+                bam_hdr_destroy(h_tmp);
+                REprintf("[raer internal] fail to load bamfile index for %s\n", cbampaths[i]);
+                ret = -1;
+                goto fail;
             }
 
             if ((data[i]->iter=sam_itr_querys(idx, h_tmp, conf->reg)) == 0) {
-                Rf_error("[raer internal] fail to parse region '%s' with %s\n", conf->reg, cbampaths[i]);
+                bam_hdr_destroy(h_tmp);
+                hts_idx_destroy(idx);
+                REprintf("[raer internal] fail to parse region '%s' with %s\n", conf->reg, cbampaths[i]);
+                ret = -1;
+                goto fail;
             }
 
             if (i == 0) {
@@ -889,13 +906,13 @@ static int run_pileup(char** cbampaths, char** cindexes,
     }
 
     fail:
-        if (ret >= 0) finish_PLP_DATA(pd);
+        finish_PLP_DATA(pd);
 
-        bam_mplp_destroy(iter);
-        bam_hdr_destroy(h);
+        if(iter) bam_mplp_destroy(iter);
+        if(h) bam_hdr_destroy(h);
 
         for (i = 0; i < conf->nbam; ++i) {
-            sam_close(data[i]->fp);
+            if(data[i]->fp) sam_close(data[i]->fp);
             if (data[i]->iter) hts_itr_destroy(data[i]->iter);
             free(data[i]);
             clear_pcounts(&plpc[i]);
@@ -908,25 +925,27 @@ static int run_pileup(char** cbampaths, char** cindexes,
 
         }
 
-        free(data);
-        free(plp);
-        free(n_plp);
+        if(data) free(data);
+        if(plp) free(plp);
+        if(n_plp) free(n_plp);
         free(mp_ref.ref[0]);
         free(mp_ref.ref[1]);
 
         if (pall) {
             R_Free(pall->p_ref_pos);
             R_Free(pall->p_alt_pos);
+            R_Free(pall->m_ref_pos);
             R_Free(pall->m_alt_pos);
-            R_Free(pall->m_alt_pos);
+            R_Free(pall->s);
             R_Free(pall);
         }
 
-        R_Free(plpc);
-        if (pd->fps) R_Free(pd->fps);
-        R_Free(pd->pdat);
-
-        if (site_stats) R_Free(site_stats);
+        if(plpc) R_Free(plpc);
+        if(pd->fps) R_Free(pd->fps);
+        if(pd->pdat) R_Free(pd->pdat);
+        if(pd->sdat) R_Free(pd->sdat);
+        if(pd) R_Free(pd);
+        if(site_stats) R_Free(site_stats);
 
     return ret;
 }
