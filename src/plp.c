@@ -375,6 +375,8 @@ static int store_counts(PLP_DATA pd, pcounts* pc, const char* ctig,
                         nv = kh_value((pc + i)->pc->var, k);
                         vf = (double) nv / (pc + i)->pc->total;
                         if (vf < conf->min_af) {
+                            char *key = (char *)kh_key((pc + i)->pc->var, k);
+                            free(key);
                             kh_del(str2intmap, (pc + i)->pc->var, k);
                         }
                     }
@@ -387,6 +389,8 @@ static int store_counts(PLP_DATA pd, pcounts* pc, const char* ctig,
                         nv = kh_value((pc + i)->mc->var, k);
                         vf = (double) nv / (pc + i)->mc->total;
                         if (vf < conf->min_af) {
+                            char *key = (char *)kh_key((pc + i)->mc->var, k);
+                            free(key);
                             kh_del(str2intmap, (pc + i)->mc->var, k);
                         }
                     }
@@ -692,12 +696,15 @@ static int run_pileup(char** cbampaths, char** cindexes,
             idx = sam_index_load2(data[i]->fp, cbampaths[i], cindexes[i]) ;
 
             if (idx == NULL) {
+                bam_hdr_destroy(h_tmp);
                 REprintf("[raer internal] fail to load bamfile index for %s\n", cbampaths[i]);
                 ret = -1;
                 goto fail;
             }
 
             if ((data[i]->iter=sam_itr_querys(idx, h_tmp, conf->reg)) == 0) {
+                bam_hdr_destroy(h_tmp);
+                hts_idx_destroy(idx);
                 REprintf("[raer internal] fail to parse region '%s' with %s\n", conf->reg, cbampaths[i]);
                 ret = -1;
                 goto fail;
@@ -899,7 +906,7 @@ static int run_pileup(char** cbampaths, char** cindexes,
     }
 
     fail:
-        if (ret >= 0) finish_PLP_DATA(pd);
+        finish_PLP_DATA(pd);
 
         if(iter) bam_mplp_destroy(iter);
         if(h) bam_hdr_destroy(h);
@@ -927,8 +934,9 @@ static int run_pileup(char** cbampaths, char** cindexes,
         if (pall) {
             R_Free(pall->p_ref_pos);
             R_Free(pall->p_alt_pos);
+            R_Free(pall->m_ref_pos);
             R_Free(pall->m_alt_pos);
-            R_Free(pall->m_alt_pos);
+            R_Free(pall->s);
             R_Free(pall);
         }
 
@@ -936,6 +944,7 @@ static int run_pileup(char** cbampaths, char** cindexes,
         if(pd->fps) R_Free(pd->fps);
         if(pd->pdat) R_Free(pd->pdat);
         if(pd->sdat) R_Free(pd->sdat);
+        if(pd) R_Free(pd);
         if(site_stats) R_Free(site_stats);
 
     return ret;

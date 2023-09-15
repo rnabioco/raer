@@ -860,6 +860,7 @@ static int write_all_sites(sc_mplp_conf_t* conf) {
             pld->alt);
 
   }
+  regitr_destroy(itr);
   return (1);
 }
 
