@@ -87,7 +87,7 @@ static void clear_cb_umiset(cbumi_map_t cbhash) {
  @abstract  initialize cb_t stuct and umimap_t hashmap
  */
 static cb_t* init_umihash() {
-  cb_t* cb = R_Calloc(1, cb_t);
+  cb_t* cb = calloc(1, sizeof(cb_t));
   cb->umi = kh_init(umimap);
   return cb ;
 }
@@ -277,7 +277,7 @@ static int count_record(const bam_pileup1_t* p, sc_mplp_conf_t* conf, payload_t*
       return (-1);
     }
     if (uret == 0) free(umi_val); // umi in hash already
-    if (uret == 1) kh_value(cbdat->umi, k) = R_Calloc(1, base_counts_t);
+    if (uret == 1) kh_value(cbdat->umi, k) = calloc(1, sizeof(base_counts_t));
 
     ucounts = kh_value(cbdat->umi, k);
 
