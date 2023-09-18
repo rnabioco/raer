@@ -391,8 +391,8 @@ Next we will demonstrate how to identify novel RNA editing sites using the *raer
 Aligned BAM files, a genome fasta file, and a GRanges object containing SNPs corresponding to the first 1Mb region of chr4 have been prepared for this vignette and can be downloaded and cached using `NA12878()`.
 
 ```{r}
-wgsrna <- NA12878()
-names(wgsrna)
+rna_wgs <- NA12878()
+names(rna_wgs)
 ```
 
 Additionally we will use the following additional annotation resources:  
@@ -405,13 +405,13 @@ Additionally we will use the following additional annotation resources:
 
 ```{r}
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
-chr4snps <- wgsrna$snps
+chr4snps <- rna_wgs$snps
 ```
 
 The `pileup_sites()` function accept multiple bam files, here we supply one from RNA-seq, and one from whole genome sequencing. A subset of the filtering parameters (`FilterParam()`) can accept multiple arguments matched to each of the input bam files. This allows us to have distinct settings for the WGS and RNA-seq BAM files.
 
 ```{r}
-bams <- wgsrna$bams
+bams <- rna_wgs$bams
 names(bams) <- c("rna", "dna")
 fp <- FilterParam(
     min_depth = 1,               # minimum read depth across all samples
@@ -429,7 +429,7 @@ fp <- FilterParam(
 )
 
 rse <- pileup_sites(bams,
-                    fasta = wgsrna$fasta,
+                    fasta = rna_wgs$fasta,
                     chrom = "chr4",
                     param = fp
 )
@@ -513,6 +513,10 @@ rowRanges(rse)
 ```
 
 Finally once a set of sites has been identified, additional packges in the bioconductor ecosystem, such the [VariantAnnotation](https://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html) package, can be used to determine the genomic context and potential molecular consequences of the editing event. 
+
+## Characterizing other types of mismatch signals
+
+The pileup routines in the raer pacakge are general and can be used to  quantify other types of mismatch signals, such as C-to-U APOBEC mediated RNA editing, or mismatch signals introduced by nucleoside analogs, such as 4SU labeling (e.g. SLAM-seq).
 
 <details style="margin-bottom:10px;">
 <summary>
