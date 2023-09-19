@@ -19,8 +19,8 @@
 #'   calculating the AEI, typically ALU repeats.
 #' @param txdb A [TxDb] object, if supplied, will be used to subset the alu_ranges
 #'   to those found overlapping genes. Alternatively a [GRanges] object with gene
-#'   coordinates.  If the `library_type` specified by
-#'   `FilterParam`, is `unstranded` or `genomic-unstranded`, then the [TxDb] will
+#'   coordinates.  If the `library_type`, specified by
+#'   `FilterParam`, is `unstranded` then the [TxDb] will
 #'   be used to correct the strandness relative to the reference and is a required
 #'   parameter.
 #' @param snp_db either a [SNPlocs], [GPos], or [GRanges] object. If supplied,
@@ -59,8 +59,6 @@
 #' @importFrom rtracklayer export
 #' @importFrom Rsamtools scanBamHeader
 #' @importFrom IRanges subsetByOverlaps
-#' @import S4Vectors
-#' @import GenomicRanges
 #'
 #' @export
 calc_AEI <- function(bamfiles,
@@ -92,11 +90,11 @@ calc_AEI <- function(bamfiles,
 
     genes_gr <- NULL
     alu_bed_fn <- NULL
-    if (param@library_type %in% c(0, 3)) {
+    if (param@library_type == 0) {
         if (is.null(txdb)) {
             cli::cli_abort("txdb required for processing unstranded data")
         }
-        param@library_type <- 0L
+
         if (is(txdb, "TxDb")) {
             genes_gr <- suppressWarnings(GenomicFeatures::genes(txdb))
         } else {
@@ -364,14 +362,14 @@ get_overlapping_snps <- function(gr,
 #'
 #' @description Gene annotations are used to infer the likely strand of editing
 #'   sites. This function will operate on unstranded datasets which have been
-#'   processed using "genomic-unstranded" library type which reports variants
+#'   processed using "unstranded" library type which reports variants
 #'   with respect to the + strand for all sites. The strand of the editing site
 #'   will be assigned the strand of overlapping features in the `genes_gr`
 #'   object. Sites with no-overlap, or overlapping features with conflicting
 #'   strands (+ and -) will be removed.
 #'
 #' @param rse RangedSummarizedExperiment object containing editing sites processed with
-#'   "genomic-unstranded" setting
+#'   "unstranded" setting
 #' @param genes_gr GRanges object containing reference features to annotate the
 #'   strand of the editing sites.
 #'
@@ -383,7 +381,7 @@ get_overlapping_snps <- function(gr,
 #'
 #' bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 #' fafn <- raer_example("human.fasta")
-#' fp <- FilterParam(library_type = "genomic-unstranded")
+#' fp <- FilterParam(library_type = "unstranded")
 #' rse <- pileup_sites(bamfn, fafn, param = fp)
 #'
 #' genes <- GRanges(c(
@@ -402,6 +400,8 @@ correct_strand <- function(rse, genes_gr) {
     }
 
     stopifnot(all(strand(rse) == "+"))
+    stopifnot("REF" %in% colnames(rowData(rse)))
+    stopifnot("ALT" %in% names(assays(rse)))
 
     genes_gr$gene_strand <- strand(genes_gr)
     rse <- annot_from_gr(rse, genes_gr, "gene_strand", ignore.strand = TRUE)
@@ -417,20 +417,14 @@ correct_strand <- function(rse, genes_gr) {
 
     rowData(rse)$REF[flip_rows] <- comp_bases(rowData(rse)$REF[flip_rows])
 
-    flipped_variants <- vector(mode = "list", ncol(rse))
-    to_flip <- assay(rse, "ALT")[flip_rows, , drop = FALSE]
-    flipped_variants <- apply(to_flip, c(1, 2), function(x) {
-        vapply(
-            strsplit(x, ","), function(y) {
-                paste0(comp_bases(y),
-                    collapse = ","
-                )
-            },
-            character(1)
-        )
-    })
+    if("ALT" %in% colnames(rowData(rse))) {
+        rowData(rse)$ALT[flip_rows] <- comp_bases(rowData(rse)$ALT[flip_rows])
+    }
 
-    assay(rse, "ALT")[flip_rows, ] <- flipped_variants
+    # complement the ALT variants
+    alts <- assay(rse, "ALT")[flip_rows, , drop = FALSE]
+    comp_alts <- complement_variant_matrix(alts)
+    assay(rse, "ALT")[flip_rows, ] <- comp_alts
 
     # complement the nucleotide counts by reordering the assays
     assays_to_swap <- c("nA", "nT", "nC", "nG")
@@ -450,3 +444,34 @@ correct_strand <- function(rse, genes_gr) {
     rse
 }
 
+
+# complement the ALT assay matrix, including multiallelics (e.g. c("A", "A,T", "C))
+complement_variant_matrix <- function(alt_mat) {
+    stopifnot(all(!is.na(alt_mat)))
+
+    # find multiallelics
+    n_alleles <- lengths(regmatches(alt_mat, gregexpr(",", alt_mat)))
+
+    # convert to a vector for processing
+    alts <- as.vector(alt_mat)
+    comp_alts <- alts
+
+    # single allele sites
+    comp_alts[n_alleles == 0] <- comp_bases(alts[n_alleles == 0])
+
+    # split and complement multiallelics
+    multialts <- alts[n_alleles > 0]
+    multialts <- vapply(strsplit(multialts, ","), function(y) {
+        paste0(comp_bases(y), collapse = ",")
+    },
+    character(1)
+    )
+    comp_alts[n_alleles > 0] <- multialts
+
+    # get back to a matrix
+    comp_alts <- matrix(comp_alts,
+                        nrow = nrow(alt_mat),
+                        ncol = ncol(alt_mat),
+                        dimnames = dimnames(alt_mat))
+    comp_alts
+}

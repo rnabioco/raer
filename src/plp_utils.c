@@ -1,5 +1,4 @@
 #include <Rinternals.h>
-#include <ctype.h>
 #include <htslib/sam.h>
 #include <htslib/khash.h>
 #include <htslib/hts.h>
@@ -364,10 +363,6 @@ int invert_read_orientation(bam1_t* b, int libtype) {
       if (!(is_neg)) {
         invert = 1;
       }
-    }
-  } else if (libtype == 3) {
-    if (is_neg) {
-      invert = 1;
     }
   } else {
     invert = -1;

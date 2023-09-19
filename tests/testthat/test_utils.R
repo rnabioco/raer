@@ -33,3 +33,55 @@ test_that("filter mispriming works", {
     expect_true(width(res) == 3L)
 })
 
+
+test_that("correct_strand works", {
+    bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+    fafn <- raer_example("human.fasta")
+    fp <- FilterParam(library_type = "unstranded")
+    rse <- pileup_sites(bamfn, fafn, param = fp)
+
+    genes <- GRanges(c(
+        "DHFR:200-400:+",
+        "SPCS3:100-200:-"
+    ))
+
+    ans <- correct_strand(rse, genes)
+    expect_true("-" %in% strand(ans))
+
+    genic_rse <- subsetByOverlaps(rse, genes, ignore.strand = TRUE)
+    expect_equal(nrow(ans), nrow(genic_rse))
+
+    # sites overlapping ambiguous regions are discarded
+    genes <- GRanges(c(
+        "DHFR:200-400:+",
+        "DHFR:200-400:-"
+    ))
+    ans <- correct_strand(rse, genes)
+    expect_true(nrow(ans) == 0L)
+
+    # - strand alts are complemented
+    genes <- GRanges(c(
+        "DHFR:200-400:-"
+    ))
+
+    ans <- correct_strand(rse, genes)
+    alts <- assay(ans, "ALT")[, 1]
+    alts <- alts[alts != "-" & as.vector(strand(ans)) ==  "-"]
+    og_alts <- assay(rse[names(alts), ], "ALT")[, 1]
+    expect_true(all(og_alts != alts))
+    expect_true(all(nchar(og_alts) == nchar(alts)))
+
+    # check all sites are retained if non-disjoint genic regions overlap all sites
+    all_regions <- GRanges(seqinfo(rse))
+    strand(all_regions) <- c("+", "-", "+")
+
+    ans <- correct_strand(rse, all_regions)
+    expect_equal(nrow(ans), nrow(rse))
+    minus_rse <- subsetByOverlaps(ans, all_regions[2])
+    expect_true(all(strand(minus_rse) == "-"))
+
+    alts <- assay(minus_rse, "ALT")[, 1]
+    alts <- alts[alts != "-" & as.vector(strand(minus_rse)) ==  "-"]
+    og_alts <- assay(rse[names(alts), ], "ALT")[, 1]
+    expect_true(all(comp_bases(alts) == og_alts))
+})

@@ -155,61 +155,16 @@ pileup_cells <- function(bamfiles,
 
     ## set default bam flags if not supplied
     if (identical(param@bam_flags, Rsamtools::scanBamFlag())) {
-        param@bam_flags <- Rsamtools::scanBamFlag(
-            isSecondaryAlignment = FALSE,
-            isSupplementaryAlignment = FALSE,
-            isNotPassingQualityControls = FALSE
-        )
+        param@bam_flags <- defaultScBamFlags
     }
 
     cell_barcodes <- cell_barcodes[!is.na(cell_barcodes)]
-    if (is.null(cb_tag)) {
-        cb_tag <- character()
-    } else {
-        check_tag(cb_tag)
-    }
-    if (is.null(umi_tag)) {
-        umi_tag <- character()
-    } else {
-        check_tag(umi_tag)
-    }
+    cb_tag <- check_tag(cb_tag)
+    umi_tag <- check_tag(umi_tag)
 
-    contigs <- seqinfo_from_header(bamfiles[[1]])
-    contig_info <- GenomeInfoDb::seqlengths(contigs)
-    chroms_to_process <- names(contig_info)
-    if (!is.null(chroms)) {
-        missing_chroms <- setdiff(chroms, chroms_to_process)
-        if (length(missing_chroms) > 0) {
-            if (verbose) {
-                msg <- "the following chromosomes are not present in the bamfile(s):\n{missing_chroms}"
-                cli::cli_alert_warning(msg)
-            }
-        }
-        chroms_to_process <- intersect(chroms, chroms_to_process)
-    }
-    chroms_to_process <- as.character(intersect(seqnames(sites), chroms_to_process))
+    valid_regions <- setup_valid_regions(bamfiles[[1]], chroms)
+    chroms_to_process <- intersect(valid_regions$chroms, unique(seqnames(sites)))
     sites <- sites[seqnames(sites) %in% chroms_to_process, ]
-
-    if (length(chroms_to_process) == 0) {
-        cli::cli_abort("there are no shared chromosomes found in the sites provided and bam file")
-    }
-
-    fp <- .adjustParams(param, 1)
-    fp <- .as.list_FilterParam(fp)
-
-    lib_code <- fp$library_type
-
-    event_filters <- unlist(fp[c(
-        "trim_5p",
-        "trim_3p",
-        "splice_dist",
-        "indel_dist",
-        "homopolymer_len",
-        "max_mismatch_type",
-        "min_read_qual",
-        "min_splice_overhang",
-        "min_variant_reads"
-    )])
 
     if (verbose) cli::cli_alert("Beginning pileup")
     bf <- path.expand(path(bamfiles))
@@ -232,9 +187,7 @@ pileup_cells <- function(bamfiles,
                 outfile_prefix = output_directory,
                 cb_tag = cb_tag,
                 umi_tag = umi_tag,
-                libtype_code = lib_code,
-                event_filters = event_filters,
-                fp = fp,
+                param = param,
                 pe = paired_end,
                 verbose = verbose
             ),
@@ -243,20 +196,20 @@ pileup_cells <- function(bamfiles,
         )
     } else {
         # operate in parallel over each chromosome
+        sites_grl <- split(sites, seqnames(sites))
+        sites_grl <- sites_grl[intersect(chroms_to_process, names(sites_grl))]
         sces <- bpmapply(get_sc_pileup,
             chrom = chroms_to_process,
             id = chroms_to_process,
+            site = sites_grl,
             MoreArgs = list(
                 bamfn = bf,
                 index = bfi,
-                sites = sites,
                 barcodes = cell_barcodes,
                 outfile_prefix = output_directory,
                 cb_tag = cb_tag,
                 umi_tag = umi_tag,
-                libtype_code = lib_code,
-                event_filters = event_filters,
-                fp = fp,
+                param = param,
                 pe = paired_end,
                 verbose = verbose
             ),
@@ -276,7 +229,7 @@ pileup_cells <- function(bamfiles,
     names(outfns) <- c("counts", "sites", "bc")
 
     if (length(sces) == 0) {
-        warning("no sites reported in output")
+        cli::cli_warn("no sites reported in output")
         if (return_sce) {
             res <- SingleCellExperiment::SingleCellExperiment()
         } else {
@@ -298,10 +251,16 @@ pileup_cells <- function(bamfiles,
     res
 }
 
+defaultScBamFlags <- Rsamtools::scanBamFlag(
+    isSecondaryAlignment = FALSE,
+    isSupplementaryAlignment = FALSE,
+    isNotPassingQualityControls = FALSE
+)
+
 get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
                           outfile_prefix, chrom,
-                          umi_tag, cb_tag, libtype_code,
-                          event_filters, fp, pe, verbose) {
+                          umi_tag, cb_tag, param,
+                          pe, verbose) {
     if (length(chrom) > 0) {
         sites <- sites[seqnames(sites) %in% chrom, ]
     }
@@ -315,8 +274,11 @@ get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
     plp_outfns <- path.expand(plp_outfns)
     on.exit(unlink(plp_outfns))
 
-    if (verbose) cli::cli_alert("working on group: {id}")
+    fp <- cfilterParam(param, 1)
     lst <- gr_to_regions(sites)
+
+    if (verbose) cli::cli_alert("working on group: {id}")
+
     res <- .Call(
         ".scpileup",
         bamfn,
@@ -325,17 +287,14 @@ get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
         lst,
         barcodes,
         cb_tag,
-        event_filters,
-        fp$min_mapq,
-        fp$max_depth,
-        fp$min_base_quality,
-        fp$read_bqual,
-        as.integer(libtype_code),
-        fp$bam_flags,
+        fp[["int_args"]],
+        fp[["numeric_args"]],
+        fp[["library_type"]],
         plp_outfns,
         umi_tag,
         pe,
-        max(fp$min_variant_reads, fp$min_depth)
+        fp[["min_mapq"]],
+        max(fp$int_args["min_variant_reads"], fp$int_args["min_depth"])
     )
 
     if (res < 0) cli::cli_abort("pileup failed")
@@ -396,7 +355,6 @@ get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
 #'
 #' @importFrom data.table fread
 #' @importFrom Matrix sparseMatrix
-#' @importFrom SingleCellExperiment SingleCellExperiment
 #' @importFrom R.utils gzip
 #' @export
 read_sparray <- function(mtx_fn, sites_fn, bc_fn,

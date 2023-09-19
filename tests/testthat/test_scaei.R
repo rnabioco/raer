@@ -40,3 +40,21 @@ test_that("calc_scaei basic functions work", {
     expect_true(is(res, "SingleCellExperiment"))
 })
 
+test_that("guard against no sites in output when processing unstranded", {
+    genes_gr <- GRanges(c(
+        "2:100-400:-",
+        "2:200-400:+",
+        "2:600-680:+"
+    ))
+
+    sites <- get_scAEI_sites(fa_fn, genes_gr, alus_gr)
+
+    fp <- FilterParam(library_type = "unstranded",
+                      min_mapq = 255)
+    res <- calc_scAEI(bam_fn, sites, cbs, fp)
+    expect_equal(nrow(res), 3L)
+
+    sites <- GRanges(seqnames = "2", IRanges(start = 1:10, end = 1:10), strand = "+", id = 1, gene_strand = "defined", REF = "A", ALT = "G")
+    expect_error(expect_warning(calc_scAEI(bam_fn, sites, cbs, fp)))
+})
+

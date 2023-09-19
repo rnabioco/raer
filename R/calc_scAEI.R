@@ -86,8 +86,8 @@ calc_scAEI <- function(bamfiles, sites, cell_barcodes, param = FilterParam(),
 
     # if unstranded, only query w.r.t + strand
     is_unstranded <- !param@library_type %in% c(1, 2)
-    if(is_unstranded) {
-        is_minus <- strand(sites) == "-"
+    is_minus <- strand(sites) == "-"
+    if(is_unstranded && sum(is_minus) > 0) {
         sites[is_minus]$REF <- comp_bases(edit_from)
         sites[is_minus]$ALT <- comp_bases(edit_to)
         strand(sites[is_minus]) <- "+"
@@ -102,23 +102,29 @@ calc_scAEI <- function(bamfiles, sites, cell_barcodes, param = FilterParam(),
         param = param,
         ...
     )
-     if(is_unstranded) {
+
+    if(nrow(aei_sce) == 0) {
+        cli::cli_abort(c("no sites returned from pileup_cells",
+                         "check input sites and filterParams"))
+    }
+
+    if(is_unstranded) {
         aei_sce <- resolve_aei_regions(aei_sce)
     }
 
-     n_alt <- Matrix::colSums(assay(aei_sce, "nAlt"))
-     n_ref <- Matrix::colSums(assay(aei_sce, "nRef"))
-     aei <- 100 * (n_alt / (n_alt + n_ref))
-     res <- DataFrame(row.names = colnames(aei_sce),
-                      AEI = aei,
-                      n_alt = n_alt,
-                      n_ref = n_ref)
+    n_alt <- Matrix::colSums(assay(aei_sce, "nAlt"))
+    n_ref <- Matrix::colSums(assay(aei_sce, "nRef"))
+    aei <- 100 * (n_alt / (n_alt + n_ref))
+    res <- DataFrame(row.names = colnames(aei_sce),
+                     AEI = aei,
+                     n_alt = n_alt,
+                     n_ref = n_ref)
 
-     if(return_sce) {
-         colData(aei_sce) <- res
-         return(aei_sce)
-     }
-     res
+    if(return_sce) {
+        colData(aei_sce) <- res
+        return(aei_sce)
+    }
+    res
 }
 
 #' @param fasta Path to a genome fasta file
@@ -258,41 +264,47 @@ resolve_aei_regions <- function(sce) {
     vdat <- unlist(vdat)
 
     sites_to_keep <- subset_dat[subset_dat$v == vdat[as.character(subset_dat$id)], ]
-    res_sce <- ud_sce[sites_to_keep$rid, ]
 
-    sce_to_avg <- ud_sce[rowData(ud_sce)$id %in% sites_to_average, ]
-    anr <- rowsum(assay(sce_to_avg, "nRef"),
-                  paste0(rowData(sce_to_avg)$var, "_", rowData(sce_to_avg)$id),
-                  reorder = FALSE)
+    res <- d_sce
+    if(length(sites_to_keep > 0)) {
+        res_sce <- ud_sce[sites_to_keep$rid, ]
+        res <- rbind(res, res_sce)
+    }
 
-    ids <- unlist(lapply(strsplit(rownames(anr), "_"), "[", 2))
-    ns <- lengths(split(ids, ids))
-    anr <- rowsum(anr, ids)
+    if(length(sites_to_average) > 0 ){
+        sce_to_avg <- ud_sce[rowData(ud_sce)$id %in% sites_to_average, ]
+        anr <- rowsum(assay(sce_to_avg, "nRef"),
+                      paste0(rowData(sce_to_avg)$var, "_", rowData(sce_to_avg)$id),
+                      reorder = FALSE)
 
-    stopifnot(length(ns) == nrow(anr))
-    stopifnot(all(names(ns) == rownames(anr)))
+        ids <- unlist(lapply(strsplit(rownames(anr), "_"), "[", 2))
+        ns <- lengths(split(ids, ids))
+        anr <- rowsum(anr, ids)
 
-    avg_nref <- anr / ns
-    avg_nalt <- avg_nref
-    avg_nalt[] <- 0
+        stopifnot(length(ns) == nrow(anr))
+        stopifnot(all(names(ns) == rownames(anr)))
 
-    # figure out ranges and names for average coords
-    rr <- rowRanges(sce_to_avg)
-    stopifnot(all(as.character(rr$id) %in% rownames(avg_nref)))
-    avg_nref <- avg_nref[unique(as.character(rr$id)), , drop = FALSE]
-    avg_nalt <- avg_nalt[unique(as.character(rr$id)), , drop = FALSE]
-    srr <- split(rr, rr$id)
-    new_ranges <- GRanges(unlist(unique(seqnames(srr))),
-                          IRanges(min(start(srr)),
-                                  max(end(srr))),
-                          id = names(srr))
-    names(new_ranges) <- paste0("range_mean_", seq_along(new_ranges))
+        avg_nref <- anr / ns
+        avg_nalt <- avg_nref
+        avg_nalt[] <- 0
 
-    avg_sce_res <- SingleCellExperiment(list(nRef = avg_nref,
-                                             nAlt = avg_nalt))
-    rowRanges(avg_sce_res) <- new_ranges
+        # figure out ranges and names for average coords
+        rr <- rowRanges(sce_to_avg)
+        stopifnot(all(as.character(rr$id) %in% rownames(avg_nref)))
+        avg_nref <- avg_nref[unique(as.character(rr$id)), , drop = FALSE]
+        avg_nalt <- avg_nalt[unique(as.character(rr$id)), , drop = FALSE]
+        srr <- split(rr, rr$id)
+        new_ranges <- GRanges(unlist(unique(seqnames(srr))),
+                              IRanges(min(start(srr)),
+                                      max(end(srr))),
+                              id = names(srr))
+        names(new_ranges) <- paste0("range_mean_", seq_along(new_ranges))
 
-    # put it all back together
-    do.call(rbind, list(d_sce, res_sce, avg_sce_res))
+        avg_sce_res <- SingleCellExperiment(list(nRef = avg_nref,
+                                                 nAlt = avg_nalt))
+        rowRanges(avg_sce_res) <- new_ranges
+        res <- rbind(res, avg_sce_res)
+    }
+    res
 }
 

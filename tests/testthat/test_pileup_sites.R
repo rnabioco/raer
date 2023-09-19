@@ -55,7 +55,7 @@ test_that("n-bam pileup works", {
     res <- pileup_sites(c(bamfn, bamfn), fafn, sites,
         param = FilterParam(library_type = c(
             "fr-first-strand",
-            "genomic-unstranded"
+            "unstranded"
         ))
     )
     expect_equal(dim(res), c(214, 2))
@@ -104,7 +104,7 @@ test_that("pileup regional query works", {
     expect_equal(end(res), c(203, 204, 205))
 
     # chr1 does not exist
-    expect_error(suppressWarnings(pileup_sites(bamfn, fafn, region = "chr1")))
+    expect_error(pileup_sites(bamfn, fafn, region = "chr1"))
 
     res <- pileup_sites(bamfn, fafn, chrom = "SSR3")
     expect_equal(nrow(res), 529)
@@ -112,7 +112,7 @@ test_that("pileup regional query works", {
 
 test_that("incorrect regional query is caught", {
     # will produce warning that chrHello is not in bamfile and an error
-    expect_error(suppressWarnings(pileup_sites(bamfn, fafn, region = "chrHello")))
+    expect_error(pileup_sites(bamfn, fafn, region = "chrHello"))
 })
 
 test_that("missing files are caught", {
@@ -138,14 +138,9 @@ test_that("library types are respected", {
     expect_true(all(strand(res[seqnames(res) == "SPCS3"]) == "-"))
 
     res <- pileup_sites(bamfn, fafn,
-        param = FilterParam(library_type = "genomic-unstranded")
-    )
-    expect_true(all(strand(res) == "+"))
-
-    res <- pileup_sites(bamfn, fafn,
         param = FilterParam(library_type = "unstranded")
     )
-    expect_true(all(strand(res) %in% c("+", "-")))
+    expect_true(all(strand(res) == "+"))
 
     expect_error(pileup_sites(bamfn, fafn, sites,
         param = FilterParam(library_type = "unknown-string")
@@ -194,9 +189,8 @@ check_nRef_calc <- function(input, nts_in = nts) {
 
 test_that("pileup check nRef and nAlt", {
     strds <- c(
-        "fr-first-strand", "fr-second-strand",
-        "unstranded", "genomic-unstranded"
-    )
+        "fr-first-strand", "fr-second-strand","unstranded"
+        )
 
     for (strd in strds) {
         res <- pileup_sites(bamfn, fafn,
@@ -476,7 +470,7 @@ test_that("poor quality reads get excluded with read_bqual", {
     res_no_filter <- pileup_sites(bamfn, fafn,
         param = FilterParam(
             min_base_quality = 0L,
-            library_type = c("genomic-unstranded")
+            library_type = c("unstranded")
         )
     )
 
@@ -496,7 +490,7 @@ test_that("poor quality reads get excluded with read_bqual", {
         param = FilterParam(
             read_bqual = bqual_cutoff,
             min_base_quality = 0L,
-            library_type = c("genomic-unstranded")
+            library_type = c("unstranded")
         )
     )
 
@@ -517,7 +511,7 @@ test_that("poor quality reads get excluded with read_bqual", {
 test_that("sites within short splice overhangs can be excluded", {
     # 5 spliced reads, 2 unspliced
     fp <- FilterParam(
-        library_type = "genomic-unstranded",
+        library_type = "unstranded",
         min_splice_overhang = 0,
         min_base_quality = 0
     )
@@ -527,7 +521,7 @@ test_that("sites within short splice overhangs can be excluded", {
 
     # excludes 1 read 5' of splice site (SRR5564269.2688337, cigar 51M120N100M)
     fp <- FilterParam(
-        library_type = "genomic-unstranded",
+        library_type = "unstranded",
         min_splice_overhang = 52,
         min_base_quality = 0
     )
@@ -536,7 +530,7 @@ test_that("sites within short splice overhangs can be excluded", {
     expect_equal(as.vector(assay(res, "nRef")), 6)
 
     fp <- FilterParam(
-        library_type = "genomic-unstranded",
+        library_type = "unstranded",
         min_splice_overhang = 0,
         min_base_quality = 0
     )
@@ -546,7 +540,7 @@ test_that("sites within short splice overhangs can be excluded", {
 
     # excludes 1 read 3' of splice site (SRR5564269.224850, cigar 73M120N78M)
     fp <- FilterParam(
-        library_type = "genomic-unstranded",
+        library_type = "unstranded",
         min_splice_overhang = 79,
         min_base_quality = 0
     )
@@ -556,7 +550,7 @@ test_that("sites within short splice overhangs can be excluded", {
 
     # excludes all 5 spliced reads
     fp <- FilterParam(
-        library_type = "genomic-unstranded",
+        library_type = "unstranded",
         min_splice_overhang = 101,
         min_base_quality = 0
     )

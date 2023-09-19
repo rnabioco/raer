@@ -5,7 +5,6 @@
 #include <htslib/khash.h>
 #include <htslib/faidx.h>
 #include "regfile.h"
-//#include "samtools/samtools-ext.h"
 #include <Rinternals.h>
 
 SEXP get_region(SEXP region);
@@ -44,17 +43,11 @@ extern const char nt5_str[5];
 
 extern unsigned char comp_base[256];
 
-typedef struct {
-  double f5p;
-  double f3p;
-  int i5p;
-  int i3p;
-} trim_t;
-
 typedef struct  {
-  int nmer, splice_dist, indel_dist, trim_5p_dist, trim_3p_dist;
-  int n_mm_type, n_mm, min_overhang, min_var_reads;
-} efilter;
+    int nmer, splice_dist, indel_dist, trim_i5p, trim_i3p;
+    int n_mm_type, n_mm, min_overhang, min_var_reads;
+    double trim_f5p, trim_f3p;
+} efilter_t;
 
 typedef struct {
   int minq;
@@ -63,9 +56,7 @@ typedef struct {
 
 typedef struct {
   int min_global_mq, flag, min_bq, min_depth, max_depth, output_reads;
-  int report_multiallelics, multi_itr, in_memory;
-  int nmer, splice_dist, indel_dist;
-  int n_mm_type, n_mm, min_overhang, min_var_reads;
+  int report_multiallelics, multi_itr;
   int nbam, nfps;
   double min_af;
   int umi;
@@ -73,7 +64,7 @@ typedef struct {
   int* min_mqs; // across all bam files
   int* libtype; // across all bam files
   int* only_keep_variants; // across all bam files
-  trim_t trim;
+  efilter_t ef;
   read_qual_t read_qual;
   uint32_t keep_flag[2];
   char* reg, *fai_fname, *output_fname;
