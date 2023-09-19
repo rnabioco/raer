@@ -59,8 +59,6 @@
 #' @importFrom rtracklayer export
 #' @importFrom Rsamtools scanBamHeader
 #' @importFrom IRanges subsetByOverlaps
-#' @import S4Vectors
-#' @import GenomicRanges
 #'
 #' @export
 calc_AEI <- function(bamfiles,

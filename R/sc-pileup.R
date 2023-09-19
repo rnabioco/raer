@@ -355,7 +355,6 @@ get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
 #'
 #' @importFrom data.table fread
 #' @importFrom Matrix sparseMatrix
-#' @importFrom SingleCellExperiment SingleCellExperiment
 #' @importFrom R.utils gzip
 #' @export
 read_sparray <- function(mtx_fn, sites_fn, bc_fn,

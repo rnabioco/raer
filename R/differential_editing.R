@@ -34,7 +34,6 @@
 #' rse <- calc_edit_frequency(rse_adar_ifn)
 #' assay(rse, "edit_freq")[1:5, ]
 #'
-#' @import SummarizedExperiment
 #' @importFrom Matrix colSums
 #' @export
 calc_edit_frequency <- function(rse,
@@ -126,7 +125,6 @@ calc_edit_frequency <- function(rse,
 #' @param min_count OPTIONAL the number of reads used to determine the number of
 #'   edited sites. Default is 10.
 #'
-#' @import SummarizedExperiment
 #' @importFrom Matrix colSums
 #' @noRd
 #' @keywords internal
@@ -169,7 +167,6 @@ count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
 #' @param min_samples The minimum number of samples passing the `min_prop` and
 #'   `max_prop` cutoffs to keep a site.
 #'
-#' @import SummarizedExperiment
 #'
 #' @returns  [RangedSummarizedExperiment] for use with `edgeR` or
 #'  `DESeq2`. Contains a `counts` assay with a matrix formatted
