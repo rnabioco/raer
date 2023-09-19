@@ -30,7 +30,6 @@ Imports:
     Rsamtools,
     BSgenome,
     Biostrings,
-    BiocFileCache,
     SummarizedExperiment,
     SingleCellExperiment,
     S4Vectors,
@@ -60,7 +59,8 @@ Suggests:
     scran,
     scuttle,
     AnnotationHub,
-    covr
+    covr,
+    raerdata
 LinkingTo: 
     Rhtslib (>= 2.0.0)
 SystemRequirements:
