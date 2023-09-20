@@ -1,3 +1,7 @@
+# raer 0.99.11
+
+* Replaced base R fisher test with c-wrapper to call htslib fisher test, which speeds up execution many fold. 
+
 # raer 0.99.10
 
 * The options to write to tabix indexed output files have been removed from `pileup_sites()` as they have limited utility and introduce unwanted code complexity. 

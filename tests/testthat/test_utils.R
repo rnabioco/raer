@@ -1,3 +1,29 @@
+test_that("fisher exact test works", {
+    set.seed(42)
+    x <- sample(0:1e4, 400, replace = TRUE)
+    a_ref <- x[1:100]
+    a_alt <-  x[101:200]
+    b_ref <-  x[201:300]
+    b_alt <- x[301:400]
+    a <- cbind(a_ref, a_alt)
+    b <- cbind(b_ref, b_alt)
+    hts_pval <- calc_fisher_exact(a, b)
+
+    r_pval <- lapply(seq_along(a_ref), function(i) {
+        m <- matrix(c(
+            a_ref[i],
+            a_alt[i],
+            b_ref[i],
+            b_alt[i]
+        ), nrow = 2)
+        fisher.test(m, alternative = "two.sided")$p.value
+    }) |> unlist()
+
+    expect_true(all.equal(hts_pval, r_pval))
+    expect_error(calc_fisher_exact(cbind(1, NA), cbind(NA, NA)))
+})
+
+
 test_that("get_region works", {
     x <- get_region("chr1:1-20")
     expect_true(all(names(x) == c("chrom", "start", "end")))

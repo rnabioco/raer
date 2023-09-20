@@ -633,7 +633,14 @@ find_scde_sites <- function(
     if(!(group %in% colnames(colData(sce)))){
         cli::cli_abort("{group} not found in colData")
     }
-    assay(sce, "depth") <- assay(sce, "nRef") + assay(sce, "nAlt")
+
+    if(any(is.na(sce[[group]]))) {
+        cli::cli_abort("NA values not allowed in group column")
+    }
+
+    if(!"depth" %in% names(assays(sce))) {
+        assay(sce, "depth") <- assay(sce, "nRef") + assay(sce, "nAlt")
+    }
 
     no_depth_cells <-  colSums(assay(sce, "depth")) == 0
     if(sum(no_depth_cells) > 0) {
@@ -659,6 +666,9 @@ find_scde_sites <- function(
                                            BPPARAM = BPPARAM)
 
     grps <- unique(as.character(sce[[group]]))
+    if(length(grps) < 2) {
+        cli::cli_abort("At least 2 groups must be present")
+    }
     grp_pairs <- as.data.frame(t(utils::combn(grps, 2)))
     colnames(grp_pairs) <- c("first", "second")
 
@@ -667,7 +677,7 @@ find_scde_sites <- function(
                                         gp <- grp_pairs[i, , drop = TRUE]
                                         ref <- assay(nref, "sum")[, c(gp$first, gp$second)]
                                         alt <- assay(nalt, "sum")[, c(gp$first, gp$second)]
-                                        pvals <- calc_fishers(ref, alt)
+                                        pvals <- calc_fisher_exact(ref, alt)
                                         ef <- alt / (ref + alt)
                                         d_editing_frequency <- ef[, 2] - ef[, 1]
 
@@ -694,14 +704,16 @@ find_scde_sites <- function(
     res
 }
 
+calc_fisher_exact <- function(ref, alt) {
 
-calc_fishers <- function(ref, alt) {
-    nr <- nrow(ref)
-    res <- vector("numeric", length = nr)
-    for(i in seq.int(nr)) {
-        vals <- rbind(ref[i, ], alt[i, ])
-        res[i] <- fisher.test(vals, alternative="two.sided")$p.value
+    vals <- t(cbind(ref, alt))
+    mode(vals) <- "integer"
+
+    if(any(is.na(vals))) {
+        cli::cli_abort("NA values not supported in fisher test")
     }
-    res
+
+    stopifnot(nrow(vals) == 4)
+    .Call(".fisher_exact", vals)
 }
 
