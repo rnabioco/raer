@@ -67,7 +67,7 @@ unlist_w_names <- function(x) {
 #' overlapping independent regions found in each chunk (dictated by `n_reads_per_chunk`).
 #' The `A_freq` column indicates the frequency of A bases within the region.
 #'
-#' @importFrom IRanges grouplengths
+#' @import GenomicRanges S4Vectors IRanges
 #' @importFrom Rsamtools ScanBamParam BamFile
 #' @importFrom GenomicAlignments readGAlignments
 #' @examples
@@ -150,6 +150,7 @@ empty_mispriming_record <- function() {
     gr
 }
 
+#' @import GenomicRanges
 merge_pa_peaks <- function(gr) {
     # get 3' end of read
     start(gr[strand(gr) == "+"]) <- end(gr[strand(gr) == "+"])

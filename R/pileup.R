@@ -86,6 +86,7 @@
 #'
 #' @importFrom BiocGenerics path
 #' @importFrom Rsamtools index scanFaIndex seqinfo BamFile BamFileList
+#' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges
 #' @importFrom GenomeInfoDb seqlevels seqinfo seqlengths
 #' @importFrom BiocParallel SerialParam bpstop bplapply
@@ -663,6 +664,8 @@ gr_to_cregions <- function(gr) {
 #'
 #' @return `RangedSummarizedExperiment` populated with assays specified in
 #'   `assay_cols`.
+#' @import GenomicRanges
+#' @import SummarizedExperiment
 #' @importFrom IRanges extractList
 #' @keywords internal
 #' @noRd

@@ -36,7 +36,7 @@ download_GSE99249 <- function(verbose = TRUE) {
     bfc <- .get_cache()
     fls <- unlist(GSE99249_files)
     fl_paths <- .add_files(fls, paste0(baseURL, fls), bfc, verbose)
-    fl_paths <- utils::relist(fl_paths, GSE99249_files)
+    fl_paths <- relist(fl_paths, GSE99249_files)
     fl_paths
 }
 
