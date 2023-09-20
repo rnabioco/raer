@@ -417,7 +417,7 @@ fp <- FilterParam(
     min_depth = 1,               # minimum read depth across all samples
     min_base_quality = 30,       # minimum base quality
     min_mapq = c(255, 30),       # minimum MAPQ for each bam file
-    library_type = c("fr-first-strand", "genomic-unstranded"), # library-type for each bam file
+    library_type = c("fr-first-strand", "unstranded"), # library-type for each bam file
     trim_5p = 5,                 # bases to trim from 5' end of alignment
     trim_3p = 5,                 # bases to trim from 3' end of alignment
     indel_dist = 4,              # ignore read if contains an indel within distance from site

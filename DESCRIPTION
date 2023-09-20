@@ -62,7 +62,7 @@ Suggests:
     covr,
     raerdata
 LinkingTo: 
-    Rhtslib (>= 2.0.0)
+    Rhtslib
 SystemRequirements:
     GNU make
 VignetteBuilder: knitr
