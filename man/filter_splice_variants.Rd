@@ -26,7 +26,7 @@ splice junctions.
 }
 \examples{
 if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
-    data(rse_adar_ifn)
+    rse_adar_ifn <- mock_rse()
     gr <- GRanges(c(
         "DHFR:310-330:-",
         "DHFR:410-415:-",

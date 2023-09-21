@@ -71,7 +71,7 @@ test_that("annot_snps works", {
 
 
 test_that("annot_from_gr works", {
-    data(rse_adar_ifn)
+    rse_adar_ifn <- mock_rse()
     gr <- GRanges(rep(c("SSR3", "SPCS3"), c(5, 15)),
         IRanges(seq(1, 500, by = 25), width = 50),
         strand = "+"
@@ -91,7 +91,7 @@ test_that("annot_from_gr works", {
 
 
 test_that("filter_multiallelic works", {
-    data(rse_adar_ifn)
+    rse_adar_ifn <- mock_rse()
     x <- sum(grepl(",", assay(rse_adar_ifn, "ALT")))
 
     expect_message(rse <- filter_multiallelic(rse_adar_ifn))
@@ -125,18 +125,18 @@ test_that("get_splice_sites and filtering works", {
     expect_true(all(width(spl_sites) == 6))
     expect_error(get_splice_sites(spl_sites))
 
-    data(rse_adar_ifn)
+    rse_adar_ifn <- mock_rse()
     expect_message(rse <- filter_splice_variants(rse_adar_ifn, txdb))
     n_removed <- nrow(subsetByOverlaps(rse_adar_ifn, rse, invert = TRUE))
     expect_equal(n_removed, 5L)
-    expect_true("DHFR_328_-" %in% rownames(rse_adar_ifn))
-    expect_false("DHFR_328_-" %in% rownames(rse))
+    expect_true("site_DHFR_328_2" %in% rownames(rse_adar_ifn))
+    expect_false("site_DHFR_328_2" %in% rownames(rse))
 })
 
 test_that("removing clustered variants works", {
     txdb <- mock_txdb()
 
-    data(rse_adar_ifn)
+    rse_adar_ifn <- mock_rse()
     expect_message(rse <- filter_multiallelic(rse_adar_ifn))
 
     gr <- rowRanges(rse)
@@ -173,7 +173,7 @@ test_that("removing clustered variants works", {
 })
 
 test_that("calc_confidence works", {
-    data(rse_adar_ifn)
+    rse_adar_ifn <- mock_rse()
     rse <- calc_confidence(rse_adar_ifn)
     expect_true("confidence" %in% names(rowData(rse)))
     expect_true(identical(range(rowData(rse)$confidence), c(0, 1)))

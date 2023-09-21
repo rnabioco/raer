@@ -7,7 +7,7 @@
 #' @param se `SummarizedExperiment::SummarizedExperiment`
 #'
 #' @examples
-#' data(rse_adar_ifn)
+#' rse_adar_ifn <- mock_rse()
 #' filter_multiallelic(rse_adar_ifn)
 #'
 #' @returns `SummarizedExperiment::SummarizedExperiment` with multiallelic sites
@@ -101,7 +101,7 @@ get_splice_sites <- function(txdb, slop = 4) {
 #'
 #' @examples
 #' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
-#'     data(rse_adar_ifn)
+#'     rse_adar_ifn <- mock_rse()
 #'     gr <- GRanges(c(
 #'         "DHFR:310-330:-",
 #'         "DHFR:410-415:-",
@@ -173,7 +173,7 @@ filter_splice_variants <- function(rse, txdb,
 #'
 #' @examples
 #' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
-#'     data(rse_adar_ifn)
+#'     rse_adar_ifn <- mock_rse()
 #'     gr <- GRanges(c(
 #'         "DHFR:310-330:-",
 #'         "DHFR:410-415:-",
@@ -216,7 +216,7 @@ filter_clustered_variants <- function(rse, txdb,
     x <- rowRanges(rse)
 
     if ("genome" %in% regions) {
-        x_extend <- trim(suppressWarnings(x + variant_dist))
+        x_extend <- trim(x + variant_dist)
         fo <- findOverlaps(x, x_extend)
         fo_vars <- paste0(x[subjectHits(fo)]$REF, x[subjectHits(fo)]$ALT)
         vars <- split(fo_vars, queryHits(fo))
@@ -252,7 +252,7 @@ filter_clustered_variants <- function(rse, txdb,
         )
         tx_sites$id <- x_tx[tx_sites$xHits]$id
         tx_sites <- sort(tx_sites)
-        tx_extend <- trim(suppressWarnings(tx_sites + variant_dist))
+        tx_extend <- trim(tx_sites + variant_dist)
 
         fo <- findOverlaps(tx_sites, tx_extend)
         fo_vars <- tx_sites[subjectHits(fo)]$Var
@@ -298,7 +298,7 @@ filter_clustered_variants <- function(rse, txdb,
 #' @param exp_fraction Numeric, confidence margin parameter for
 #'
 #' @examples
-#' data(rse_adar_ifn)
+#' rse_adar_ifn <- mock_rse()
 #' calc_confidence(rse_adar_ifn)
 #' calc_confidence(rse_adar_ifn, per_sample = TRUE)
 #'

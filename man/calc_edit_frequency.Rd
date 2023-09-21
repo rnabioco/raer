@@ -52,7 +52,7 @@ fraction of edits (\code{edit_idx}) is returned.
 }
 \examples{
 library(SummarizedExperiment)
-data(rse_adar_ifn)
+rse_adar_ifn <- mock_rse()
 rse <- calc_edit_frequency(rse_adar_ifn)
 assay(rse, "edit_freq")[1:5, ]
 

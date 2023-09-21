@@ -20,7 +20,7 @@ Remove sites with multiple variant bases from a
 contains the variant allele detected at each site.
 }
 \examples{
-data(rse_adar_ifn)
+rse_adar_ifn <- mock_rse()
 filter_multiallelic(rse_adar_ifn)
 
 }

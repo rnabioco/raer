@@ -21,8 +21,6 @@ Description: Toolkit for identification and statistical testing
 License: MIT + file LICENSE
 Imports: 
     stats,
-    utils,
-    tools,
     methods,
     data.table,
     GenomicRanges,
@@ -51,7 +49,6 @@ Suggests:
     rmarkdown,
     BiocStyle,
     ComplexHeatmap,
-    viridis,
     TxDb.Hsapiens.UCSC.hg38.knownGene,
     SNPlocs.Hsapiens.dbSNP144.GRCh38,
     BSgenome.Hsapiens.NCBI.GRCh38,
@@ -85,5 +82,3 @@ Config/Needs/website:
     pkgdown,
     rnabioco/rbitemplate
 Config/testthat/edition: 3
-Depends: 
-  R (>= 3.5.0)

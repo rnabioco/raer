@@ -98,7 +98,7 @@ calc_AEI <- function(bamfiles,
         }
 
         if (is(txdb, "TxDb")) {
-            genes_gr <- suppressWarnings(GenomicFeatures::genes(txdb))
+            genes_gr <- GenomicFeatures::genes(txdb)
         } else {
             genes_gr <- txdb
         }
@@ -108,7 +108,7 @@ calc_AEI <- function(bamfiles,
         if (is(alu_ranges, "GRanges")) {
             if (!is.null(txdb)) {
                 if (is(txdb, "TxDb")) {
-                    genes_gr <- suppressMessages(GenomicFeatures::genes(txdb))
+                    genes_gr <- GenomicFeatures::genes(txdb)
                 } else {
                     genes_gr <- txdb
                 }

@@ -11,6 +11,44 @@ raer_example <- function(path) {
     system.file("extdata", path, package = "raer", mustWork = TRUE)
 }
 
+#' Generate a small RangedSummarizedExperiment object for tests and examples
+#'
+#' @description
+#' A RangedSummarizedExperiment containing a subset of data from an RNA-seq experiment
+#' to measure the effects of IFN treatment of cell lines with wild-type
+#' or ADAR1-KO.
+#' @examples
+#' mock_rse()
+#'
+#' @returns RangedSummarizedExperiment populated with pileup data
+#' @source <https://www.ncbi.nlm.nih.gov/bioproject/PRJNA386593>
+#' @references <https://pubmed.ncbi.nlm.nih.gov/29395325/>
+#' @export
+mock_rse <- function() {
+    ko_bam <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+    wt_bam <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
+    fafn <- raer_example("human.fasta")
+    bedfn <- raer_example("regions.bed")
+
+    fp <- FilterParam(
+        only_keep_variants = TRUE,
+        library_type = "fr-first-strand",
+        min_depth = 2
+    )
+
+    bams <- c(wt_bam, ko_bam)
+    names(bams) <- c("wt", "adar1_ko")
+
+    rse <- pileup_sites(
+        bams,
+        fafn,
+        param = fp
+    )
+
+    rse
+}
+
+
 # transpose a list
 # https://stackoverflow.com/questions/30164803/fastest-way-to-transpose-a-list-in-r-rcpp
 t_lst <- function(x) {

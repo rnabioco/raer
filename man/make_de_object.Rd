@@ -46,7 +46,7 @@ representing the reference and editing allele counts.
 }
 \examples{
 library(SummarizedExperiment)
-data(rse_adar_ifn)
+rse_adar_ifn <- mock_rse()
 rse <- calc_edit_frequency(rse_adar_ifn)
 dse <- make_de_object(rse, min_samples = 1)
 assay(dse, "counts")[1:5, ]
