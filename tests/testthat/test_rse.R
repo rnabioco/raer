@@ -142,7 +142,7 @@ test_that("removing clustered variants works", {
     gr <- rowRanges(rse)
     nd <- distanceToNearest(gr)
     gr1 <- gr[mcols(nd)$distance > 100]
-    expect_message(gr2 <- filter_clustered_variants(rse, txdb))
+    expect_warning(expect_warning(gr2 <- filter_clustered_variants(rse, txdb)))
     expect_true(identical(rowRanges(gr2), gr1))
 
     # check that transcript based removal works
@@ -150,7 +150,7 @@ test_that("removing clustered variants works", {
     ex <- exons(txdb)
     rse_ex <- subsetByOverlaps(rse, ex)
 
-    expect_message(
+    expect_warning(
         gr2 <- filter_clustered_variants(rse_ex,
             txdb,
             regions = "transcript",
@@ -164,7 +164,7 @@ test_that("removing clustered variants works", {
     ))
     expect_true(all(mcols(ds)$distance < 20))
 
-    expect_message(
+    expect_warning(
         gr2 <- filter_clustered_variants(rse_ex, txdb,
             variant_dist = 25
         )

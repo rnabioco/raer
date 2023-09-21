@@ -49,27 +49,12 @@ mock_rse <- function() {
 }
 
 
-# transpose a list
-# https://stackoverflow.com/questions/30164803/fastest-way-to-transpose-a-list-in-r-rcpp
-t_lst <- function(x) {
-    split(unlist(x), sequence(lengths(x)))
-}
-
 chunk_vec <- function(x, n) {
     if (n == 1) {
         res <- list(`1` = x)
         return(res)
     }
     split(x, cut(seq_along(x), n, labels = FALSE))
-}
-
-
-# flatten top list, keeping names from inner list
-unlist_w_names <- function(x) {
-    nms <- unlist(lapply(x, names))
-    res <- unlist(x, use.names = FALSE)
-    names(res) <- nms
-    res
 }
 
 #' Find regions with oligodT mispriming
