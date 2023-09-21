@@ -16,7 +16,7 @@ representing the reference and editing allele counts."><meta property="og:image"
     
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.13</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,13 +29,6 @@ representing the reference and editing allele counts."><meta property="og:image"
 </li>
 <li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
-</li>
-<li class="nav-item dropdown">
-  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
-  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
-    <a class="dropdown-item" href="../articles/novel-sites.html">Identifying RNA editing sites using RNA and DNA sequencing data</a>
-    <a class="dropdown-item" href="../articles/single-cell.html">Identifying RNA editing sites in droplet single cell datasets</a>
-  </div>
 </li>
 <li class="nav-item">
   <a class="nav-link" href="../news/index.html">Changelog</a>
@@ -125,24 +118,25 @@ with 2 columns per sample (ref and alt counts).</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">rse_adar_ifn</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rse_adar_ifn</span> <span class="op">&lt;-</span> <span class="fu"><a href="mock_rse.html">mock_rse</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">rse_adar_ifn</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> 6 sites had no coverage for calculating editing</span>
 <span class="r-in"><span><span class="va">dse</span> <span class="op">&lt;-</span> <span class="fu">make_de_object</span><span class="op">(</span><span class="va">rse</span>, min_samples <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">dse</span>, <span class="st">"counts"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            wt_ref adar1_ko_ref wt_alt adar1_ko_alt</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_102_-      0            0      0            1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_125_-      0            0      1            0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_156_-      1            0      0            0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_176_-      8           16     16            0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_198_-     24           15      1            0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 wt_ref adar1_ko_ref wt_alt adar1_ko_alt</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_SSR3_102_2      0            0      0            1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_SSR3_125_2      0            0      1            0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_SSR3_156_2      1            0      0            0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_SSR3_176_2      8           16     16            0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_SSR3_198_2     24           15      1            0</span>
 <span class="r-in"><span><span class="va">dse</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> class: RangedSummarizedExperiment </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> dim: 68 4 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assays(1): counts</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(68): SSR3_102_- SSR3_125_- ... DHFR_399_- DHFR_430_-</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rbpz vpb sor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(68): site_SSR3_102_2 site_SSR3_125_2 ... site_DHFR_399_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_DHFR_430_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(4): REF rpbz vdb sor</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(4): wt_ref adar1_ko_ref wt_alt adar1_ko_alt</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colData names(4): sample n_sites edit_idx count</span>
 </code></pre></div>

@@ -22,7 +22,7 @@ fraction of edits (edit_idx) is returned."><meta property="og:image" content="ht
     
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.13</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,13 +35,6 @@ fraction of edits (edit_idx) is returned."><meta property="og:image" content="ht
 </li>
 <li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
-</li>
-<li class="nav-item dropdown">
-  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
-  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
-    <a class="dropdown-item" href="../articles/novel-sites.html">Identifying RNA editing sites using RNA and DNA sequencing data</a>
-    <a class="dropdown-item" href="../articles/single-cell.html">Identifying RNA editing sites in droplet single cell datasets</a>
-  </div>
 </li>
 <li class="nav-item">
   <a class="nav-link" href="../news/index.html">Changelog</a>
@@ -139,16 +132,16 @@ of editing sites detected.</p></dd>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">rse_adar_ifn</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rse_adar_ifn</span> <span class="op">&lt;-</span> <span class="fu"><a href="mock_rse.html">mock_rse</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu">calc_edit_frequency</span><span class="op">(</span><span class="va">rse_adar_ifn</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> 6 sites had no coverage for calculating editing</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"edit_freq"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   wt adar1_ko</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_102_- 0.0000000        1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_125_- 1.0000000        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_156_- 0.0000000        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_176_- 0.6666667        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> SSR3_198_- 0.0400000        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                        wt adar1_ko</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_SSR3_102_2 0.0000000        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_SSR3_125_2 1.0000000        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_SSR3_156_2 0.0000000        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_SSR3_176_2 0.6666667        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_SSR3_198_2 0.0400000        0</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

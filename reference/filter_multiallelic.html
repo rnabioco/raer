@@ -14,7 +14,7 @@ contains the variant allele detected at each site."><meta property="og:image" co
     
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.13</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -27,13 +27,6 @@ contains the variant allele detected at each site."><meta property="og:image" co
 </li>
 <li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
-</li>
-<li class="nav-item dropdown">
-  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
-  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
-    <a class="dropdown-item" href="../articles/novel-sites.html">Identifying RNA editing sites using RNA and DNA sequencing data</a>
-    <a class="dropdown-item" href="../articles/single-cell.html">Identifying RNA editing sites in droplet single cell datasets</a>
-  </div>
 </li>
 <li class="nav-item">
   <a class="nav-link" href="../news/index.html">Changelog</a>
@@ -93,15 +86,16 @@ single allele present at the site.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">rse_adar_ifn</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">rse_adar_ifn</span> <span class="op">&lt;-</span> <span class="fu"><a href="mock_rse.html">mock_rse</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">filter_multiallelic</span><span class="op">(</span><span class="va">rse_adar_ifn</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> `filter_multiallelic()`: removed <span style="color: #0000BB;">2</span> sites from <span style="color: #0000BB;">74</span> (<span style="color: #0000BB;">72</span> remain)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> class: RangedSummarizedExperiment </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> dim: 72 2 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): ALT nRef ... nC nG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(72): SSR3_102_- SSR3_125_- ... DHFR_430_- DHFR_513_-</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(5): REF rbpz vpb sor ALT</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(72): site_SSR3_102_2 site_SSR3_125_2 ... site_DHFR_430_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_DHFR_513_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(5): REF rpbz vdb sor ALT</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(2): wt adar1_ko</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>
 <span class="r-in"><span></span></span>

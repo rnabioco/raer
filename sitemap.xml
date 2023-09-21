@@ -13,13 +13,7 @@
     <loc>https://rnabioco.github.io/raer/articles/index.html</loc>
   </url>
   <url>
-    <loc>https://rnabioco.github.io/raer/articles/novel-sites.html</loc>
-  </url>
-  <url>
     <loc>https://rnabioco.github.io/raer/articles/raer.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/articles/single-cell.html</loc>
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/authors.html</loc>
@@ -52,15 +46,6 @@
     <loc>https://rnabioco.github.io/raer/reference/correct_strand.html</loc>
   </url>
   <url>
-    <loc>https://rnabioco.github.io/raer/reference/download_GSE99249.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/download_NA12878.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/download_human_pbmc.html</loc>
-  </url>
-  <url>
     <loc>https://rnabioco.github.io/raer/reference/filter_clustered_variants.html</loc>
   </url>
   <url>
@@ -91,6 +76,9 @@
     <loc>https://rnabioco.github.io/raer/reference/make_de_object.html</loc>
   </url>
   <url>
+    <loc>https://rnabioco.github.io/raer/reference/mock_rse.html</loc>
+  </url>
+  <url>
     <loc>https://rnabioco.github.io/raer/reference/pileup_cells.html</loc>
   </url>
   <url>
@@ -104,8 +92,5 @@
   </url>
   <url>
     <loc>https://rnabioco.github.io/raer/reference/read_sparray.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/rse_adar_ifn.html</loc>
   </url>
 </urlset>
