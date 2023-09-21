@@ -79,7 +79,7 @@ calc_AEI <- function(bamfiles,
         bamfiles <- BamFileList(bamfiles)
     }
 
-    chroms <- seqinfo_from_header(bamfiles[[1]])
+    chroms <- seqnames(seqinfo_from_header(bamfiles[[1]]))
 
     if (is.null(alu_ranges)) {
         cli::cli_alert_warning(c(
