@@ -1,5 +1,5 @@
 ---
-title: "Introducing the *raer* package"
+title: "Introducing the raer package"
 author: 
   - name: Kent Riemondy
     affiliation: University of Colorado School of Medicine
