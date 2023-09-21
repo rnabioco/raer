@@ -19,9 +19,17 @@ You can install the development version of raer from
 [GitHub](https://github.com/rnabioco/raer) with:
 
 ``` r
-# install.packages("BiocManager")
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+# The following initializes usage of Bioc devel
+BiocManager::install(version='devel')
+
 BiocManager::install("rnabioco/raer")
 ```
+
+**The package is being submitted to Bioconductor. Once it is accepted,
+please use `BiocManager::install("raer")` to install the package**
 
 ## Quick start
 
@@ -166,14 +174,14 @@ assays(sce)$nAlt
 
 Core routines in `raer` are implemented using the `htslib` library and
 methods from `samtools` and `bcftools`. `raer` builds off of approaches
-from other rna editing detection tools:
+from other RNA editing detection tools:
 
 - [REDItools](https://github.com/BioinfoUNIBA/REDItools) from [Picardi
   E, Pesole G](https://doi.org/10.1093/bioinformatics/btt287)  
 - [JACUSA2](https://github.com/dieterich-lab/JACUSA2) from [Piechotta M
   et al](https://doi.org/10.1186/s12859-016-1432-8)  
 - [deNovo-Detect](https://github.com/a2iEditing/deNovo-Detect) from
-  [Gabey O et al](https://doi.org/10.1038/s41467-022-28841-4)  
+  [Gabay O et al](https://doi.org/10.1038/s41467-022-28841-4)  
 - [RNAEditingIndexer](https://github.com/a2iEditing/RNAEditingIndexer)
   from [Roth SH et al](https://doi.org/10.1038/s41592-019-0610-9)  
 - [SAILOR](https://github.com/YeoLab/sailor) from [Washburn MC et

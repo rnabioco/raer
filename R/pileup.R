@@ -319,7 +319,6 @@ get_region <- function(region) {
     .Call(".get_region", region)
 }
 
-
 #' @importFrom methods slot slot<- slotNames
 .FilterParam <- setClass(
     "FilterParam",

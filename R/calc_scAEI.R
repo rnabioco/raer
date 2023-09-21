@@ -148,7 +148,7 @@ get_scAEI_sites <- function(fasta,
                             edit_from = "A",
                             edit_to = "G") {
     if(is(genes, "TxDb")) {
-        genes <- suppressMessages(GenomicFeatures::genes(genes))
+        genes <- GenomicFeatures::genes(genes)
     }
     if(!is(genes, "GRanges")) {
         cli::cli_abort("genes must be a GRanges or TxDb object")

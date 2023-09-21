@@ -488,11 +488,6 @@ write_sparray <- function(sce, mtx_fn, sites_fn, bc_fn) {
 }
 
 
-
-# Utilities -------------------------------------------------------
-
-
-
 gr_to_regions <- function(gr) {
     stopifnot(all(width(gr) == 1))
 
@@ -517,37 +512,4 @@ gr_to_regions <- function(gr) {
         as.character(mcols(gr)$ALT),
         as.integer(mcols(gr)$idx)
     )
-}
-
-id_to_gr <- function(x, seq_info) {
-    xx <- sub("^site_", "", x)
-    xx <- strsplit(xx, "_")
-
-    xx <- lapply(xx, function(x) {
-        l <- length(x)
-        c(seqnames = paste(x[1:(l - 4)], collapse = ""),
-             start = x[[l - 3]],
-             strand = x[[l - 2]],
-             ref = x[[l - 1]],
-             alt = x[[l]])
-    })
-    xx <- do.call(rbind, xx)
-
-    if (ncol(xx) != 5) {
-        cli::cli_abort("unable to decode sites to rownames")
-    }
-
-    gr <- GRanges(
-        seqnames = xx[, 1],
-        IRanges(
-            start = as.integer(xx[, 2]),
-            width = 1L
-        ),
-        strand = c("+", "-")[as.integer(xx[, 3])],
-        ref = xx[, 4],
-        alt = xx[, 5],
-        seqinfo = seq_info
-    )
-    names(gr) <- x
-    gr
 }

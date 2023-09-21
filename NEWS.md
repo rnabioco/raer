@@ -1,3 +1,7 @@
+# raer 0.99.12 
+
+* Changes made to prepare for bioc submission
+
 # raer 0.99.11
 
 * Replaced base R fisher test with c-wrapper to call htslib fisher test, which speeds up execution many fold. 

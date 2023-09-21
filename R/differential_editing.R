@@ -30,7 +30,7 @@
 #'
 #' @examples
 #' library(SummarizedExperiment)
-#' data(rse_adar_ifn)
+#' rse_adar_ifn <- mock_rse()
 #' rse <- calc_edit_frequency(rse_adar_ifn)
 #' assay(rse, "edit_freq")[1:5, ]
 #'
@@ -177,7 +177,7 @@ count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
 #'
 #' @examples
 #' library(SummarizedExperiment)
-#' data(rse_adar_ifn)
+#' rse_adar_ifn <- mock_rse()
 #' rse <- calc_edit_frequency(rse_adar_ifn)
 #' dse <- make_de_object(rse, min_samples = 1)
 #' assay(dse, "counts")[1:5, ]

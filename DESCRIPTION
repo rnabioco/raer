@@ -1,7 +1,7 @@
 Package: raer
 Type: Package
 Title: RNA editing tools in R
-Version: 0.99.11
+Version: 0.99.12
 Authors@R: c(
     person("Kent", "Riemondy", , "kent.riemondy@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-0750-1273")),
@@ -21,8 +21,6 @@ Description: Toolkit for identification and statistical testing
 License: MIT + file LICENSE
 Imports: 
     stats,
-    utils,
-    tools,
     methods,
     data.table,
     GenomicRanges,
@@ -30,7 +28,6 @@ Imports:
     Rsamtools,
     BSgenome,
     Biostrings,
-    BiocFileCache,
     SummarizedExperiment,
     SingleCellExperiment,
     S4Vectors,
@@ -52,7 +49,6 @@ Suggests:
     rmarkdown,
     BiocStyle,
     ComplexHeatmap,
-    viridis,
     TxDb.Hsapiens.UCSC.hg38.knownGene,
     SNPlocs.Hsapiens.dbSNP144.GRCh38,
     BSgenome.Hsapiens.NCBI.GRCh38,
@@ -60,9 +56,10 @@ Suggests:
     scran,
     scuttle,
     AnnotationHub,
-    covr
+    covr,
+    raerdata
 LinkingTo: 
-    Rhtslib (>= 2.0.0)
+    Rhtslib
 SystemRequirements:
     GNU make
 VignetteBuilder: knitr
@@ -85,5 +82,3 @@ Config/Needs/website:
     pkgdown,
     rnabioco/rbitemplate
 Config/testthat/edition: 3
-Depends: 
-  R (>= 3.5.0)

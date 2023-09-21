@@ -79,7 +79,7 @@ calc_AEI <- function(bamfiles,
         bamfiles <- BamFileList(bamfiles)
     }
 
-    chroms <- names(Rsamtools::scanBamHeader(bamfiles[[1]])$targets)
+    chroms <- seqnames(seqinfo_from_header(bamfiles[[1]]))
 
     if (is.null(alu_ranges)) {
         cli::cli_alert_warning(c(
@@ -98,7 +98,7 @@ calc_AEI <- function(bamfiles,
         }
 
         if (is(txdb, "TxDb")) {
-            genes_gr <- suppressWarnings(GenomicFeatures::genes(txdb))
+            genes_gr <- GenomicFeatures::genes(txdb)
         } else {
             genes_gr <- txdb
         }
@@ -108,7 +108,7 @@ calc_AEI <- function(bamfiles,
         if (is(alu_ranges, "GRanges")) {
             if (!is.null(txdb)) {
                 if (is(txdb, "TxDb")) {
-                    genes_gr <- suppressMessages(GenomicFeatures::genes(txdb))
+                    genes_gr <- GenomicFeatures::genes(txdb)
                 } else {
                     genes_gr <- txdb
                 }

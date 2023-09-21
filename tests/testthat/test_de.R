@@ -10,7 +10,7 @@ bamfn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
 bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
 fafn <- raer_example("human.fasta")
 
-data(rse_adar_ifn)
+rse_adar_ifn <- mock_rse()
 
 test_that("calc_edit_frequency works", {
     # 6 sites had no coverage
@@ -28,7 +28,7 @@ test_that("calc_edit_frequency works", {
 })
 
 test_that("make_de_object works", {
-    data(rse_adar_ifn)
+    rse_adar_ifn <- mock_rse()
     expect_message(rse <- calc_edit_frequency(rse_adar_ifn))
     dse <- make_de_object(rse, min_samples = 1)
     expect_true("counts" %in% assayNames(dse))

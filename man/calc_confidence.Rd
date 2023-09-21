@@ -35,7 +35,7 @@ model as described by Washburn et al. Cell Reports. 2015, and implemented
 in the SAILOR pipeline.
 }
 \examples{
-data(rse_adar_ifn)
+rse_adar_ifn <- mock_rse()
 calc_confidence(rse_adar_ifn)
 calc_confidence(rse_adar_ifn, per_sample = TRUE)
 

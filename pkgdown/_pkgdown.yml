@@ -31,13 +31,10 @@ reference:
   contents:
   - '`find_scde_sites`'
   - '`find_mispriming_sites`'
-- title: Data
-  contents:
-  - has_concept('external-data')
-  - rse_adar_ifn
 - title: Utilities
   contents:
   - '`correct_strand`'
   - '`get_scAEI_sites`'
+  - '`mock_rse`'
   - '`raer_example`'
   - '`read_sparray`'
