@@ -107,50 +107,35 @@ object dependent on filtering applied.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va">TxDb.Hsapiens.UCSC.hg38.knownGene</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>    <span class="va">rse_adar_ifn</span> <span class="op">&lt;-</span> <span class="fu"><a href="mock_rse.html">mock_rse</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span>    <span class="va">gr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>        <span class="st">"DHFR:310-330:-"</span>,</span></span>
-<span class="r-in"><span>        <span class="st">"DHFR:410-415:-"</span>,</span></span>
-<span class="r-in"><span>        <span class="st">"SSR3:100-155:-"</span>,</span></span>
-<span class="r-in"><span>        <span class="st">"SSR3:180-190:-"</span></span></span>
-<span class="r-in"><span>    <span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span>    <span class="va">gr</span><span class="op">$</span><span class="va">source</span> <span class="op">&lt;-</span> <span class="st">"raer"</span></span></span>
-<span class="r-in"><span>    <span class="va">gr</span><span class="op">$</span><span class="va">type</span> <span class="op">&lt;-</span> <span class="st">"exon"</span></span></span>
-<span class="r-in"><span>    <span class="va">gr</span><span class="op">$</span><span class="va">source</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span></span>
-<span class="r-in"><span>    <span class="va">gr</span><span class="op">$</span><span class="va">phase</span> <span class="op">&lt;-</span> <span class="cn">NA_integer_</span></span></span>
-<span class="r-in"><span>    <span class="va">gr</span><span class="op">$</span><span class="va">gene_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span></span></span>
-<span class="r-in"><span>    <span class="va">gr</span><span class="op">$</span><span class="va">transcript_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1.1"</span>, <span class="st">"2.1"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
-<span class="r-in"><span>    <span class="va">txdb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicFeatures/man/makeTxDbFromGRanges.html" class="external-link">makeTxDbFromGRanges</a></span><span class="op">(</span><span class="va">gr</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span>    <span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="filter_multiallelic.html">filter_multiallelic</a></span><span class="op">(</span><span class="va">rse_adar_ifn</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span>    <span class="fu">filter_clustered_variants</span><span class="op">(</span><span class="va">rse</span>, <span class="va">txdb</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: TxDb.Hsapiens.UCSC.hg38.knownGene</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: GenomicFeatures</span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/GenomicFeatures" class="external-link">GenomicFeatures</a></span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: AnnotationDbi</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> `filter_multiallelic()`: removed <span style="color: #0000BB;">2</span> sites from <span style="color: #0000BB;">74</span> (<span style="color: #0000BB;">72</span> remain)</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>GRanges object contains 6 out-of-bound ranges located on</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>   sequences SSR3, SPCS3, and DHFR. Note that ranges located on a</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>   sequence whose length is unknown (NA) or on a circular sequence</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>   are not considered out-of-bound (use seqlengths() and</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>   isCircular() to get the lengths and circularity flags of the</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>   underlying sequences). You can use trim() to trim these ranges.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>   See ?`trim,GenomicRanges-method` for more information.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>GRanges object contains 5 out-of-bound ranges located on</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>   sequences 1 and 2. Note that ranges located on a sequence whose</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>   length is unknown (NA) or on a circular sequence are not</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>   considered out-of-bound (use seqlengths() and isCircular() to get</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>   the lengths and circularity flags of the underlying sequences).</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>   You can use trim() to trim these ranges. See</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>   ?`trim,GenomicRanges-method` for more information.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> `filter_clustered_variants()`: removed <span style="color: #0000BB;">70</span> sites from <span style="color: #0000BB;">72</span> (<span style="color: #0000BB;">2</span> remain)</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">rse_adar_ifn</span> <span class="op">&lt;-</span> <span class="fu"><a href="mock_rse.html">mock_rse</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="va">rse_adar_ifn</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/GenomeInfoDb/man/seqinfo.html" class="external-link">seqnames</a></span><span class="op">(</span><span class="va">rse_adar_ifn</span><span class="op">)</span> <span class="op">==</span> <span class="st">"SPCS3"</span><span class="op">]</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># mock up a txdb with genes</span></span></span>
+<span class="r-in"><span><span class="va">gr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="st">"SPCS3:100-120:-"</span>,</span></span>
+<span class="r-in"><span>    <span class="st">"SPCS3:325-350:-"</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">gr</span><span class="op">$</span><span class="va">source</span> <span class="op">&lt;-</span> <span class="st">"raer"</span></span></span>
+<span class="r-in"><span><span class="va">gr</span><span class="op">$</span><span class="va">type</span> <span class="op">&lt;-</span> <span class="st">"exon"</span></span></span>
+<span class="r-in"><span><span class="va">gr</span><span class="op">$</span><span class="va">source</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span></span>
+<span class="r-in"><span><span class="va">gr</span><span class="op">$</span><span class="va">phase</span> <span class="op">&lt;-</span> <span class="cn">NA_integer_</span></span></span>
+<span class="r-in"><span><span class="va">gr</span><span class="op">$</span><span class="va">gene_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">gr</span><span class="op">$</span><span class="va">transcript_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1.1"</span>, <span class="st">"2.1"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">txdb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicFeatures/man/makeTxDbFromGRanges.html" class="external-link">makeTxDbFromGRanges</a></span><span class="op">(</span><span class="va">gr</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="filter_multiallelic.html">filter_multiallelic</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> `filter_multiallelic()`: removed <span style="color: #0000BB;">0</span> sites from <span style="color: #0000BB;">8</span> (<span style="color: #0000BB;">8</span> remain)</span>
+<span class="r-in"><span><span class="fu">filter_clustered_variants</span><span class="op">(</span><span class="va">rse</span>, <span class="va">txdb</span>, variant_dist <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> `filter_clustered_variants()`: removed <span style="color: #0000BB;">3</span> sites from <span style="color: #0000BB;">8</span> (<span style="color: #0000BB;">5</span> remain)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> class: RangedSummarizedExperiment </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> dim: 2 2 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> dim: 5 2 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assays(7): ALT nRef ... nC nG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(2): site_SSR3_502_2 site_SPCS3_99_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(5): site_SPCS3_99_1 site_SPCS3_227_1 site_SPCS3_241_1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_SPCS3_329_1 site_SPCS3_330_1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(5): REF rpbz vdb sor ALT</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(2): wt adar1_ko</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): sample</span>

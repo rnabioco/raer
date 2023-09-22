@@ -89,7 +89,7 @@ Wells-Wrasman</h4>
 Medicine<br><h4 data-toc-skip class="author">Jay
 Hesselberth</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-09-21</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-09-22</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/raer.Rmd" class="external-link"><code>vignettes/raer.Rmd</code></a></small>
       <div class="d-none name"><code>raer.Rmd</code></div>
@@ -149,7 +149,6 @@ data and cell type annotations.</p>
 <span></span>
 <span><span class="va">pbmc_bam</span> <span class="op">&lt;-</span> <span class="va">pbmc</span><span class="op">$</span><span class="va">bam</span></span>
 <span><span class="va">editing_sites</span> <span class="op">&lt;-</span> <span class="va">pbmc</span><span class="op">$</span><span class="va">sites</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">editing_sites</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
 <span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="va">pbmc</span><span class="op">$</span><span class="va">sce</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/scater/man/plot_reddim.html" class="external-link">plotUMAP</a></span><span class="op">(</span><span class="va">sce</span>, colour_by <span class="op">=</span> <span class="st">"celltype"</span><span class="op">)</span></span></code></pre></div>
@@ -229,15 +228,18 @@ cell.</p>
 <p>To exclude duplicate reads derived from PCR,
 <code><a href="../reference/pileup_cells.html">pileup_cells()</a></code> can use a UMI sequence, supplied via the
 <code>umi_tag</code> argument, to only count 1 read for each CB-UMI pair
-at each editing site position.</p>
-<p>Note that by default the <code>bam_flags</code> argument for the
-<code>FilterParam</code> class is set to <strong>include</strong>
-duplicate reads when using <code><a href="../reference/pileup_cells.html">pileup_cells()</a></code>. Droplet single
-cell libraries produce multiple cDNA fragments from a single reverse
-transcription event. The cDNAs fragments have different alignment
-positions despite being derived from a single RNA molecule. If
-duplicates are removed, then only 1 representative fragment for a single
-UMI will be examined, which will exclude many valid regions.</p>
+at each editing site position. Note however that by default the
+<code>bam_flags</code> argument for the <code>FilterParam</code> class
+is set to <strong>include</strong> duplicate reads when using
+<code><a href="../reference/pileup_cells.html">pileup_cells()</a></code>. Droplet single cell libraries produce
+multiple cDNA fragments from a single reverse transcription event. The
+cDNA fragments have different alignment positions due to fragmentation
+despite being derived from a single RNA molecule. scRNA-seq data
+processed by cellranger from 10x Genomics will set the “Not primary
+alignment” bam flag for every read except one read for each UMI. If
+duplicates are removed based on this bam flag, then only 1
+representative fragment for a single UMI will be examined, which will
+exclude many valid regions.</p>
 <p>To reduce processing time many functions in the <em>raer</em> package
 operate in parallel across multiple chromosomes. To enable parallel
 processing, a <code>BiocParallel</code> backend can be supplied via the
@@ -370,13 +372,24 @@ generally unstranded. To process these datasets the
 the reference editing sites need to be reported all on the
 <code>+</code> strand.</p>
 <p>For example, the editing sites on the minus strand will need to be
-complemented (set as T -&gt; C rather than A -&gt; G).</p>
+complemented (set as T -&gt; C rather than A -&gt; G). Additionally the
+<code>umi_tag</code> and <code>cb_tag</code> arguments should be set as
+follows to disable UMI and cell barcode detection.</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># steps not run </span></span>
+<code class="sourceCode R"><span><span class="co"># Note these steps are not run </span></span>
 <span><span class="va">is_minus</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/strand.html" class="external-link">strand</a></span><span class="op">(</span><span class="va">editing_sites</span><span class="op">)</span> <span class="op">==</span> <span class="st">"-"</span></span>
 <span><span class="va">editing_sites</span><span class="op">[</span><span class="va">is_minus</span><span class="op">]</span><span class="op">$</span><span class="va">REF</span> <span class="op">&lt;-</span> <span class="st">"T"</span> </span>
 <span><span class="va">editing_sites</span><span class="op">[</span><span class="va">is_minus</span><span class="op">]</span><span class="op">$</span><span class="va">ALT</span> <span class="op">&lt;-</span> <span class="st">"C"</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/strand.html" class="external-link">strand</a></span><span class="op">(</span><span class="va">editing_sites</span><span class="op">[</span><span class="va">is_minus</span><span class="op">]</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"+"</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/strand.html" class="external-link">strand</a></span><span class="op">(</span><span class="va">editing_sites</span><span class="op">[</span><span class="va">is_minus</span><span class="op">]</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"+"</span></span>
+<span></span>
+<span><span class="va">vector_of_bam_files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cell1.bam"</span>, <span class="st">"cell2.bam"</span>, <span class="st">"cell3.bam"</span><span class="op">)</span></span>
+<span><span class="va">vector_of_cell_ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cell1"</span>, <span class="st">"cell2"</span>, <span class="st">"cell3"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/pileup_cells.html">pileup_cells</a></span><span class="op">(</span>bamfiles <span class="op">=</span> <span class="va">vector_of_bam_files</span>,</span>
+<span>             cell_barcodes <span class="op">=</span> <span class="va">vector_of_cell_ids</span>, </span>
+<span>             sites <span class="op">=</span> <span class="va">editing_sites</span>, </span>
+<span>             umi_tag <span class="op">=</span> <span class="cn">NULL</span>,  <span class="co"># no UMI tag in most smart-seq libraries</span></span>
+<span>             cb_tag <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span>   <span class="co"># no cell barcode in most smart-seq libraries</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">

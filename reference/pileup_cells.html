@@ -152,7 +152,8 @@ apply to reads and sites during pileup. Note that the <code>min_depth</code> and
 from any cell required in order to report a site. E.g. if <code>min_variant_reads</code> is
 set to 2, then at least 2 reads (from any cell) must have a variant in order
 to report the site. Setting <code>min_depth</code> and <code>min_variant_reads</code> to 0 reports
-all sites present in the <code>sites</code> object.</p></dd>
+all sites present in the <code>sites</code> object. The following options are not enabled
+for pileup_cells(): max_mismatch_type, homopolymer_len, and min_allelic_freq.</p></dd>
 
 
 <dt>BPPARAM</dt>

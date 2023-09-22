@@ -86,7 +86,8 @@
 <span>  read_bqual <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
 <span>  min_variant_reads <span class="op">=</span> <span class="fl">0L</span>,</span>
 <span>  min_allelic_freq <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  report_multiallelic <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  report_multiallelic <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  remove_overlaps <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -234,6 +235,13 @@ reported in ALT assay.</p></dd>
 <dt>report_multiallelic</dt>
 <dd><p>if TRUE, report sites with multiple variants passing
 filters. If FALSE, site will not be reported.</p></dd>
+
+
+<dt>remove_overlaps</dt>
+<dd><p>if TRUE, enable read pair overlap detection, which will count only
+1 read in regions where read pairs overlap using the htslib algorithm. In brief
+for each overlapping base pair the base quality of the base with the lower quality
+is set to 0, which discards it from being counted.</p></dd>
 
 </dl></div>
     <div class="section level2">
