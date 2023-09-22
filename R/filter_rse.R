@@ -100,23 +100,26 @@ get_splice_sites <- function(txdb, slop = 4) {
 #' @family se-filters
 #'
 #' @examples
-#' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
-#'     rse_adar_ifn <- mock_rse()
-#'     gr <- GRanges(c(
-#'         "DHFR:310-330:-",
-#'         "DHFR:410-415:-",
-#'         "SSR3:100-155:-",
-#'         "SSR3:180-190:-"
-#'     ))
-#'     gr$source <- "raer"
-#'     gr$type <- "exon"
-#'     gr$source <- NA
-#'     gr$phase <- NA_integer_
-#'     gr$gene_id <- c(1, 1, 2, 2)
-#'     gr$transcript_id <- rep(c("1.1", "2.1"), each = 2)
-#'     txdb <- makeTxDbFromGRanges(gr)
-#'     filter_splice_variants(rse_adar_ifn, txdb)
-#' }
+#' library(GenomicFeatures)
+#' rse_adar_ifn <- mock_rse()
+#' 
+#' # mock up a txdb with genes
+#' gr <- GRanges(c(
+#'     "DHFR:310-330:-",
+#'     "DHFR:410-415:-",
+#'     "SSR3:100-155:-",
+#'     "SSR3:180-190:-"
+#' ))
+#' gr$source <- "raer"
+#' gr$type <- "exon"
+#' gr$source <- NA
+#' gr$phase <- NA_integer_
+#' gr$gene_id <- c(1, 1, 2, 2)
+#' gr$transcript_id <- rep(c("1.1", "2.1"), each = 2)
+#' txdb <- makeTxDbFromGRanges(gr)
+#' 
+#' filter_splice_variants(rse_adar_ifn, txdb)
+#' 
 #'
 #' @returns `SummarizedExperiment::SummarizedExperiment` with sites
 #' adjacent to splice sites removed.
@@ -172,24 +175,26 @@ filter_splice_variants <- function(rse, txdb,
 #'   variants
 #'
 #' @examples
-#' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
-#'     rse_adar_ifn <- mock_rse()
-#'     rse <- rse[seqnames(rse) == "SPCS3"]
-#'     gr <- GRanges(c(
-#'         "SPCS3:100-120:-",
-#'         "SPCS3:325-350:-"
-#'     ))
-#'     gr$source <- "raer"
-#'     gr$type <- "exon"
-#'     gr$source <- NA
-#'     gr$phase <- NA_integer_
-#'     gr$gene_id <- c(1, 2)
-#'     gr$transcript_id <- c("1.1", "2.1")
-#'     txdb <- makeTxDbFromGRanges(gr)
-#'     
-#'     rse <- filter_multiallelic(rse)
-#'     filter_clustered_variants(rse, txdb, variant_dist = 10)
-#' }
+#' library(GenomicFeatures)
+#' 
+#' rse_adar_ifn <- mock_rse()
+#' rse <- rse_adar_ifn[seqnames(rse_adar_ifn) == "SPCS3"]
+#' 
+#' # mock up a txdb with genes
+#' gr <- GRanges(c(
+#'     "SPCS3:100-120:-",
+#'     "SPCS3:325-350:-"
+#' ))
+#' gr$source <- "raer"
+#' gr$type <- "exon"
+#' gr$source <- NA
+#' gr$phase <- NA_integer_
+#' gr$gene_id <- c(1, 2)
+#' gr$transcript_id <- c("1.1", "2.1")
+#' txdb <- makeTxDbFromGRanges(gr)
+#' 
+#' rse <- filter_multiallelic(rse)
+#' filter_clustered_variants(rse, txdb, variant_dist = 10)
 #'
 #' @family se-filters
 #'
