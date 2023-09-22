@@ -174,23 +174,21 @@ filter_splice_variants <- function(rse, txdb,
 #' @examples
 #' if (require(TxDb.Hsapiens.UCSC.hg38.knownGene)) {
 #'     rse_adar_ifn <- mock_rse()
+#'     rse <- rse[seqnames(rse) == "SPCS3"]
 #'     gr <- GRanges(c(
-#'         "DHFR:310-330:-",
-#'         "DHFR:410-415:-",
-#'         "SSR3:100-155:-",
-#'         "SSR3:180-190:-"
+#'         "SPCS3:100-120:-",
+#'         "SPCS3:325-350:-"
 #'     ))
 #'     gr$source <- "raer"
 #'     gr$type <- "exon"
 #'     gr$source <- NA
 #'     gr$phase <- NA_integer_
-#'     gr$gene_id <- c(1, 1, 2, 2)
-#'     gr$transcript_id <- rep(c("1.1", "2.1"), each = 2)
+#'     gr$gene_id <- c(1, 2)
+#'     gr$transcript_id <- c("1.1", "2.1")
 #'     txdb <- makeTxDbFromGRanges(gr)
-#'
-#'     rse <- filter_multiallelic(rse_adar_ifn)
-#'
-#'     filter_clustered_variants(rse, txdb)
+#'     
+#'     rse <- filter_multiallelic(rse)
+#'     filter_clustered_variants(rse, txdb, variant_dist = 10)
 #' }
 #'
 #' @family se-filters

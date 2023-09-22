@@ -1,0 +1,3 @@
+Data files here were generated using code in the raerdata package from these Rmarkdown files:
+https://github.com/rnabioco/raerdata/blob/devel/inst/scripts/10x-data-processing.Rmd
+https://github.com/rnabioco/raerdata/blob/devel/inst/scripts/GSE99249-data-processing.Rmd

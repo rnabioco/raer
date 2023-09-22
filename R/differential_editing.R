@@ -272,7 +272,7 @@ make_de_object <- function(rse,
 #' rse <- calc_edit_frequency(rse)
 #' dse <- make_de_object(rse)
 #' res <- find_de_sites(dse, condition_control = "WT", condition_treatment = "KO")
-#' res$sig_results[1:5, ]
+#' res$sig_results[1:3, ]
 #'
 #' @returns A named list:
 #'   - `de_obj`: The `edgeR` or `deseq` object used for differential editing analysis
