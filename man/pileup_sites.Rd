@@ -37,7 +37,8 @@ FilterParam(
   read_bqual = c(0, 0),
   min_variant_reads = 0L,
   min_allelic_freq = 0,
-  report_multiallelic = TRUE
+  report_multiallelic = TRUE,
+  remove_overlaps = TRUE
 )
 }
 \arguments{
@@ -126,6 +127,11 @@ reported in ALT assay.}
 
 \item{report_multiallelic}{if TRUE, report sites with multiple variants passing
 filters. If FALSE, site will not be reported.}
+
+\item{remove_overlaps}{if TRUE, enable read pair overlap detection, which will count only
+1 read in regions where read pairs overlap using the htslib algorithm. In brief
+for each overlapping base pair the base quality of the base with the lower quality
+is set to 0, which discards it from being counted.}
 }
 \value{
 A \link{RangedSummarizedExperiment} object populated with multiple assays:

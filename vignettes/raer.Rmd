@@ -53,7 +53,6 @@ pbmc <- pbmc_10x()
 
 pbmc_bam <- pbmc$bam
 editing_sites <- pbmc$sites
-names(editing_sites) <- NULL
 sce <- pbmc$sce
 ```
 
@@ -83,9 +82,7 @@ editing_sites
 
 `pileup_cells()` quantifies edited and non-edited UMI counts per cell barcode, then organizes the site counts into a `SingleCellExperiment` object. `pileup_cells()` accepts a `FilterParam()` object that specifies parameters for multiple read-level and site-level filtering and processing options. Note that `pileup_cells()` is strand sensitive by default, so it is important to ensure that the strand of the input sites is correctly annotated, and that the `library-type` is set correctly for the strandedness of the sequencing library. For 10x Genomics data, the library type is set to `fr-second-strand`, indicating that the strand of the BAM alignments is the same strand as the RNA. See [quantifying smart-seq scRNA-seq libraries](#ss2) for an example of using *pileup_cells()* to handle unstranded data and data from libraries that produce 1 BAM file for each cell.  
 
-To exclude duplicate reads derived from PCR, `pileup_cells()` can use a UMI sequence, supplied via the `umi_tag` argument, to only count 1 read for each CB-UMI pair at each editing site position. 
-
-Note that by default the `bam_flags` argument for the `FilterParam` class is set to **include** duplicate reads when using `pileup_cells()`. Droplet single cell libraries produce multiple cDNA fragments from a single reverse transcription event. The cDNAs fragments have different alignment positions despite being derived from a single RNA molecule. If duplicates are removed, then only 1 representative fragment for a single UMI will be examined, which will exclude many valid regions.
+To exclude duplicate reads derived from PCR, `pileup_cells()` can use a UMI sequence, supplied via the `umi_tag` argument, to only count 1 read for each CB-UMI pair at each editing site position. Note however that by default the `bam_flags` argument for the `FilterParam` class is set to **include** duplicate reads when using `pileup_cells()`. Droplet single cell libraries produce multiple cDNA fragments from a single reverse transcription event. The cDNA fragments have different alignment positions due to fragmentation despite being derived from a single RNA molecule. scRNA-seq data processed by cellranger from 10x Genomics will set the "Not primary alignment" bam flag for every read except one read for each UMI. If duplicates are removed based on this bam flag, then only 1 representative fragment for a single UMI will be examined, which will exclude many valid regions.
 
 To reduce processing time many functions in the *raer* package operate in parallel across multiple chromosomes. To enable parallel processing, a `BiocParallel` backend can be supplied via the `BPPARAM` argument (e.g. `MultiCoreParam()`). 
 
@@ -165,13 +162,23 @@ plotGroupedHeatmap(altExp(sce),
 
 `pileup_cells()` can also process Smart-seq style single cell libraries. These datasets typically store data from each cell in separate BAM files and the library type for these alignments are generally unstranded. To process these datasets the `library-type` should be set to `unstranded`, and the reference editing sites need to be reported all on the `+` strand. 
 
-For example, the editing sites on the minus strand will need to be complemented (set as T -> C rather than A -> G).
+For example, the editing sites on the minus strand will need to be complemented (set as T -> C rather than A -> G). Additionally the `umi_tag` and `cb_tag` arguments should be set as follows to disable UMI and cell barcode detection. 
+
 ```{r, eval = FALSE}
-# steps not run 
+# Note these steps are not run 
 is_minus <- strand(editing_sites) == "-"
 editing_sites[is_minus]$REF <- "T" 
 editing_sites[is_minus]$ALT <- "C"
 strand(editing_sites[is_minus]) <- "+"
+
+vector_of_bam_files <- c("cell1.bam", "cell2.bam", "cell3.bam")
+vector_of_cell_ids <- c("cell1", "cell2", "cell3")
+
+pileup_cells(bamfiles = vector_of_bam_files,
+             cell_barcodes = vector_of_cell_ids, 
+             sites = editing_sites, 
+             umi_tag = NULL,  # no UMI tag in most smart-seq libraries
+             cb_tag = NULL)   # no cell barcode in most smart-seq libraries
 ```
 
 

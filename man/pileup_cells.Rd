@@ -50,7 +50,8 @@ apply to reads and sites during pileup. Note that the \code{min_depth} and
 from any cell required in order to report a site. E.g. if \code{min_variant_reads} is
 set to 2, then at least 2 reads (from any cell) must have a variant in order
 to report the site. Setting \code{min_depth} and \code{min_variant_reads} to 0 reports
-all sites present in the \code{sites} object.}
+all sites present in the \code{sites} object. The following options are not enabled
+for pileup_cells(): max_mismatch_type, homopolymer_len, and min_allelic_freq.}
 
 \item{BPPARAM}{BiocParallel instance. Parallel computation occurs across
 chromosomes.}

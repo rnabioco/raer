@@ -33,7 +33,8 @@
 #'   from any cell required in order to report a site. E.g. if `min_variant_reads` is
 #'   set to 2, then at least 2 reads (from any cell) must have a variant in order
 #'   to report the site. Setting `min_depth` and `min_variant_reads` to 0 reports
-#'   all sites present in the `sites` object.
+#'   all sites present in the `sites` object. The following options are not enabled
+#'   for pileup_cells(): max_mismatch_type, homopolymer_len, and min_allelic_freq.
 #' @param umi_tag tag in BAM containing the UMI sequence
 #' @param cb_tag tag in BAM containing the cell-barcode sequence
 #' @param paired_end set to TRUE if data is paired-end to prevent double counting
@@ -165,7 +166,7 @@ pileup_cells <- function(bamfiles,
     valid_regions <- setup_valid_regions(bamfiles[[1]], chroms)
     chroms_to_process <- intersect(valid_regions$chroms, unique(seqnames(sites)))
     sites <- sites[seqnames(sites) %in% chroms_to_process, ]
-
+    
     if (verbose) cli::cli_alert("Beginning pileup")
     bf <- path.expand(path(bamfiles))
     bfi <- path.expand(index(bamfiles))

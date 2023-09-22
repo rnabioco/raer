@@ -337,8 +337,11 @@ get_region <- function(region) {
         homopolymer_len = "integer",
         max_mismatch_type = "integer", # length 2
         min_variant_reads = "integer",
+        
         only_keep_variants = "logical", # variable length
         report_multiallelic = "logical",
+        remove_overlaps = "logical",
+        
         ftrim_5p = "numeric",
         ftrim_3p = "numeric",
         read_bqual = "numeric", # length 2
@@ -355,8 +358,8 @@ setMethod(show, "FilterParam", function(object) {
 
 
 encode_libtype <- function(library_type = c("unstranded",
-                                             "fr-first-strand",
-                                             "fr-second-strand"),
+                                            "fr-first-strand",
+                                            "fr-second-strand"),
                             n_files) {
     # encode libtype as integer
     # 0 = unstranded  all reads on + strand
@@ -446,7 +449,8 @@ c_args_FilterParam <- function(x, ...) {
     )])
 
     lgl_args <- unlist(fp[c(
-        "report_multiallelic"
+        "report_multiallelic",
+        "remove_overlaps"
     )])
     # variable length args
     # passed as separate args to c fxns
@@ -511,7 +515,11 @@ cfilterParam <- function(param, nfiles) {
 #' reported in ALT assay.
 #' @param report_multiallelic if TRUE, report sites with multiple variants passing
 #' filters. If FALSE, site will not be reported.
-#'
+#' @param remove_overlaps if TRUE, enable read pair overlap detection, which will count only 
+#' 1 read in regions where read pairs overlap using the htslib algorithm. In brief 
+#' for each overlapping base pair the base quality of the base with the lower quality
+#' is set to 0, which discards it from being counted. 
+#' 
 #' @rdname pileup_sites
 #' @export
 FilterParam <-
@@ -523,7 +531,7 @@ FilterParam <-
     homopolymer_len = 0L,
     max_mismatch_type = c(0L, 0L), read_bqual = c(0.0, 0.0),
     min_variant_reads = 0L, min_allelic_freq = 0,
-    report_multiallelic = TRUE) {
+    report_multiallelic = TRUE, remove_overlaps = TRUE) {
         stopifnot(isSingleNumber(max_depth))
         stopifnot(isSingleNumber(min_base_quality))
         stopifnot(isSingleNumber(min_depth))
@@ -562,7 +570,8 @@ FilterParam <-
         stopifnot(length(max_mismatch_type) == 2 && !any(is.na(max_mismatch_type)))
         stopifnot(length(read_bqual) == 2 && !any(is.na(read_bqual)))
         stopifnot(isTRUEorFALSE(report_multiallelic))
-
+        stopifnot(isTRUEorFALSE(remove_overlaps))
+        
         # variable length depending on n_files
         stopifnot(is.character(library_type))
         stopifnot(is.integer(min_mapq))
@@ -591,7 +600,7 @@ FilterParam <-
             min_variant_reads = min_variant_reads,
             ftrim_5p = ftrim_5p, ftrim_3p = ftrim_3p,
             min_allelic_freq = min_allelic_freq, report_multiallelic = report_multiallelic,
-            bam_flags = bam_flags
+            bam_flags = bam_flags, remove_overlaps = remove_overlaps
         )
     }
 

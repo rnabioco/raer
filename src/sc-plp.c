@@ -121,6 +121,8 @@ static void free_hashmaps(cbumi_map_t cbhash, str2intmap_t cbidx) {
 
 /*! @typedef
  @abstract single cell pileup configuration
+ 
+ TODO: standardize parameters with mplp_conf_t to reduce duplication
  */
 typedef struct {
   int min_mq, libtype, min_bq, max_depth; // min_mapQ, library type min baseQ max depth
@@ -133,13 +135,13 @@ typedef struct {
   char* bcfn;            // barcodes filename
   char* sitesfn;         // sites filename
   FILE** fps;            // file pointers [0] = mtxfn, [1] = sitefn, [2] = bcfn;
-  efilter_t ef;            // various additional site filters
+  efilter_t ef;          // various additional site filters
   str2intmap_t cbidx;    // hashmap cellbarcode key -> sparsematrix column index
   cbumi_map_t cbmap;     // hashmap cellbarcode key -> cbumi_map_t
   int has_umi;           // bool, library has umi
   char* umi_tag;         // umi tag value
   char* cb_tag;          // cb tag value
-  int pe;                // 1 if paired end, 0 if not
+  int remove_overlaps;   // 1 if enable overlap detection, 0 if not
   int min_counts;        // if 0 report all sites provide in output sparseMatrix
   int site_idx;          // counter of sites written, used for row index if min_counts > 0
   int is_ss2;            // 1 if smart-seq2 mode, 0 otherwise
@@ -676,13 +678,22 @@ static int run_scpileup(sc_mplp_conf_t* conf, char* bamfn, char* index, char* ba
   data[0]->h = h;
 
   iter = bam_mplp_init(nbam, screadaln, (void**)data);
-  // enable overlap detection
-  if (conf->pe) bam_mplp_init_overlaps(iter) ;
-  // set max depth
+  if (!iter) {
+      REprintf("[raer internal] issue initializing iterator");
+      ret = -1;
+      goto fail;
+  }
+  
+  if(conf->remove_overlaps && (bam_mplp_init_overlaps(iter) < 0)) {
+      REprintf("[raer internal] issue setting overlap detection");
+      ret = -1;
+      goto fail;
+  }
+
   bam_mplp_set_maxcnt(iter, conf->max_depth);
 
   if (!iter) {
-    REprintf("[raer interal] issue with iterator");
+    REprintf("[raer interal] issue setting up iterator");
     ret = -1;
     goto fail;
   }
@@ -752,7 +763,7 @@ static int set_sc_mplp_conf(sc_mplp_conf_t* conf, int nbams,
                             int n_outfns, char** outfns, char* qregion, regidx_t* idx,
                             int* i_args, double* d_args, int libtype,
                             int n_bcs, char** bcs, char* cbtag, char* umi,
-                            int pe, int min_mapq, int min_counts) {
+                            int remove_overlaps, int min_mapq, int min_counts) {
   conf->is_ss2 = nbams > 1 ? 1 : 0;
 
   conf->fps = R_Calloc(n_outfns, FILE*);
@@ -793,6 +804,7 @@ static int set_sc_mplp_conf(sc_mplp_conf_t* conf, int nbams,
 
   conf->ef.trim_f5p      = d_args[0];
   conf->ef.trim_f3p      = d_args[1];
+  
   conf->read_qual.pct    = d_args[3];
   conf->read_qual.minq   = d_args[4];
 
@@ -831,7 +843,7 @@ static int set_sc_mplp_conf(sc_mplp_conf_t* conf, int nbams,
     conf->umi_tag = NULL;
   }
   conf->cb_tag = cbtag;
-  conf->pe = pe;
+  conf->remove_overlaps = remove_overlaps;
   conf->min_mq = (min_mapq < 0) ? 0 : min_mapq;
   conf->min_counts = min_counts < 0 ? 0 : min_counts;
   conf->site_idx = 1;
@@ -869,8 +881,8 @@ static int write_all_sites(sc_mplp_conf_t* conf) {
  */
 static void check_sc_plp_args(SEXP bampaths, SEXP indexes, SEXP qregion, SEXP lst,
                               SEXP barcodes, SEXP cbtag, SEXP int_args, SEXP dbl_args,
-                              SEXP libtype, SEXP outfns, SEXP umi, SEXP pe, SEXP min_mapq,
-                              SEXP min_counts) {
+                              SEXP libtype, SEXP outfns, SEXP umi, SEXP remove_overlaps,
+                              SEXP min_mapq, SEXP min_counts) {
 
   if (!IS_CHARACTER(bampaths) || (LENGTH(bampaths) < 1)) {
     Rf_error("'bampaths' must be character");
@@ -921,8 +933,8 @@ static void check_sc_plp_args(SEXP bampaths, SEXP indexes, SEXP qregion, SEXP ls
     Rf_error("'umi' must be character of length 0 or 1");
   }
 
-  if (!IS_LOGICAL(pe) || (LENGTH(pe) != 1)) {
-    Rf_error("'pe' must be logical(1)");
+  if (!IS_LOGICAL(remove_overlaps) || (LENGTH(remove_overlaps) != 1)) {
+    Rf_error("'remove_overlaps' must be logical(1)");
   }
 
   if (!IS_INTEGER(min_mapq) || (LENGTH(min_mapq) != 1)) {
@@ -941,11 +953,11 @@ static void check_sc_plp_args(SEXP bampaths, SEXP indexes, SEXP qregion, SEXP ls
 SEXP scpileup(SEXP bampaths, SEXP indexes, SEXP query_region, SEXP lst,
               SEXP barcodes, SEXP cbtag, SEXP int_args, SEXP dbl_args,
               SEXP libtype,  SEXP outfns, SEXP umi,
-              SEXP pe, SEXP min_mapq, SEXP min_counts) {
+              SEXP remove_overlaps, SEXP min_mapq, SEXP min_counts) {
 
   check_sc_plp_args(bampaths, indexes, query_region, lst,
                     barcodes, cbtag, int_args, dbl_args, libtype,
-                    outfns, umi, pe, min_mapq, min_counts);
+                    outfns, umi, remove_overlaps, min_mapq, min_counts);
 
   regidx_t* idx = regidx_build(lst, 1);
   if (!idx) Rf_error("Failed to build region index");
@@ -991,7 +1003,7 @@ SEXP scpileup(SEXP bampaths, SEXP indexes, SEXP query_region, SEXP lst,
                          cq_region, idx,
                          INTEGER(int_args), REAL(dbl_args),
                          INTEGER(libtype)[0], nbcs, bcs, c_cbtag, c_umi,
-                         LOGICAL(pe)[0], INTEGER(min_mapq)[0],
+                         LOGICAL(remove_overlaps)[0], INTEGER(min_mapq)[0],
                          INTEGER(min_counts)[0]);
 
   if (ret >= 0) {

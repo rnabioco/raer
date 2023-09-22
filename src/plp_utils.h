@@ -32,15 +32,6 @@ void clear_str2int_hashmap(str2intmap_t vhash);
 
 char* get_aux_ztag(bam1_t* b, const char tag[2]);
 
-extern const char nt5_str[5];
-
-// get base as character
-#define nt5_char(i) (nt5_str[i])
-
-// get 0,1,2,3 index from 4bit encoded base
-#define nt16_idx(i) (seq_nt16_int[i])
-
-
 extern unsigned char comp_base[256];
 
 typedef struct  {
@@ -55,22 +46,27 @@ typedef struct {
 } read_qual_t;
 
 typedef struct {
-  int min_global_mq, flag, min_bq, min_depth, max_depth, output_reads;
-  int report_multiallelics, multi_itr;
-  int nbam, nfps;
-  double min_af;
-  int umi;
-  char* umi_tag;
-  int* min_mqs; // across all bam files
-  int* libtype; // across all bam files
-  int* only_keep_variants; // across all bam files
-  efilter_t ef;
-  read_qual_t read_qual;
-  uint32_t keep_flag[2];
-  char* reg, *fai_fname, *output_fname;
-  faidx_t* fai;
-  regidx_t* reg_idx;
-  regitr_t* reg_itr;
+  int min_global_mq;        // min_mapQ across all bams
+  int min_bq;               // min base quality
+  int min_depth;            // min read coverage 
+  int max_depth;            // max # of reads to consider at a site 
+  int report_multiallelics; // if 1, report multiple variants per site, otherwise discard site
+  int remove_overlaps;      // if 1, enable overlap detection
+  int nbam;                 // # of input bam files
+  double min_af;            // min allelic frequency required to report variant
+  int umi;                  // if 1, check umi tag
+  char* umi_tag;            // bam tag containing UMI 
+  int* min_mqs;             // min mapQ values for all bam files
+  int* libtype;             // library type for all bam files
+  int* only_keep_variants;  // if 1, only report variants, setting applies across all bam files
+  efilter_t ef;             // various additional site filters 
+  read_qual_t read_qual;    // read level base quality filter
+  uint32_t keep_flag[2];    // bam flag filter
+  char* reg;                // single region to query 
+  char* fai_fname;          // indexed fasta filename
+  faidx_t* fai;             // fasta index
+  regidx_t* reg_idx;        // multiple region index 
+  regitr_t* reg_itr;        // multiple region iterator 
 } mplp_conf_t;
 
 //From https://stat.ethz.ch/pipermail/r-devel/2011-April/060702.html

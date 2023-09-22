@@ -167,6 +167,27 @@ static void clear_pcounts(pcounts* p) {
 }
 
 /*! @function
+ @abstract  allocate data
+ */
+static pcounts* init_pcounts(int nbam) {
+    int i;
+    pcounts* plpc = R_Calloc(nbam, pcounts);
+    for (i = 0; i < nbam; ++i) {
+        plpc[i].pc = R_Calloc(1, counts);
+        plpc[i].mc = R_Calloc(1, counts);
+        
+        //initialize variant string set (AG, AT, TC) etc.
+        if (plpc[i].pc->var == NULL) plpc[i].pc->var = kh_init(str2intmap);
+        if (plpc[i].mc->var == NULL) plpc[i].mc->var = kh_init(str2intmap);
+        
+        //initialize umi string set
+        if (plpc[i].pc->umi == NULL) plpc[i].pc->umi = kh_init(strset);
+        if (plpc[i].mc->umi == NULL) plpc[i].mc->umi = kh_init(strset);
+    }
+    return(plpc);
+}
+
+/*! @function
  @abstract convert variant hashmap to string for output "AC,AG,AT"
  */
 static void get_var_string(str2intmap_t* vhash, char* out) {
@@ -624,6 +645,162 @@ static int check_umi(const bam_pileup1_t* p, mplp_conf_t* conf,
     return (1);
 }
 
+/*! @function
+ @abstract  Process one pileup site
+ 
+ @param  plp       pointer to array of pileup data
+ @param  conf      pointer to pileup configuration
+ @param  h         pointer to bam header
+ @param  pld       pointer to site data supplied by regidx_t
+
+ @param  tid        contig tid value
+ @param  ref        contig reference sequence
+ @param  ref_len    contig length
+ @param  pos        pileup position
+ @param  n_plp      pileup depth across all files
+ @param  pall       read counts across all files
+ @param  plpc       read counts data per file
+ @param  site_stats length 6 array of read count statistics 
+ @param  pd         data structure storing result
+ 
+ @return 
+   1 success
+   0 if site should be discarded
+   -1 on error
+ */
+static int process_one_site(const bam_pileup1_t** plp, mplp_conf_t* conf, bam_hdr_t* h,
+                            int tid, char* ref, hts_pos_t ref_len, int pos, int* n_plp, 
+                            pall_counts* pall, pcounts* plpc , double* site_stats,
+                            PLP_DATA pd) {
+    int i; 
+    
+    // get reference base on +/- strand
+    int pref_b, mref_b;
+    pref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
+    pref_b = toupper(pref_b);
+    
+    // ignore sites with reference N bases
+    if (pref_b == 'N') return (0);
+    
+    mref_b = comp_base[(unsigned char) pref_b];
+    
+    // reset count structures
+    clear_pall_counts(pall);
+    for(i = 0; i < conf->nbam; i++) {
+        clear_pcounts(&plpc[i]);
+    }
+    memset(site_stats, 0, sizeof(double) * 6);
+    
+    // check if site is in a homopolymer
+    if (conf->ef.nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, conf->ef.nmer)) return(0);
+    
+    // check if read count less than min_depth
+    int pass_reads = 0;
+    for (i = 0; i < conf->nbam; ++i) {
+        if (n_plp[i] >= conf->min_depth) {
+            pass_reads = 1;
+        }
+    }
+    if (!pass_reads) return(0);
+    
+    // iterate through bam files
+    for (i = 0; i < conf->nbam; ++i) {
+        int j;
+        // iterate through reads that overlap position
+        for (j = 0; j < n_plp[i]; ++j) {
+            
+            const bam_pileup1_t* p = plp[i] + j;
+            
+            // get read base
+            int c = p->qpos < p->b->core.l_qseq
+            ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
+            : 'N';
+            if (c == 'N') continue;
+            
+            int invert = invert_read_orientation(p->b, conf->libtype[i]);
+            if (invert < 0) {
+                REprintf("[raer internal] invert read orientation failure %i\n", invert);
+                return(-1);
+            }
+            
+            // remove bad reads
+            int rret = check_read_filters(p, conf, conf->min_bq, conf->min_mqs[i]);
+            
+            // only keep first read with a UMI tag per position
+            if (conf->umi) {
+                int uret = check_umi(p, conf, &plpc[i], invert);
+                if (uret != 1) continue;
+            }
+            
+            if (rret > 0) {
+                if (rret == 1) {
+                    if (invert) {
+                        plpc[i].mc->nx += 1;
+                    } else {
+                        plpc[i].pc->nx += 1;
+                    }
+                }
+                continue;
+            }
+            int ci = c;
+            if (invert) ci = (char)comp_base[(unsigned char)c];
+            
+            // check read for >= mismatch different types and at least n_mm mismatches
+            if (conf->ef.n_mm_type > 0 || conf->ef.n_mm > 0) {
+                if ((invert && mref_b != ci) || pref_b != ci) {
+                    int m = parse_mismatches(p->b, conf->ef.n_mm_type, conf->ef.n_mm);
+                    if (m == -1) {
+                        REprintf("[raer internal] The MD tag is not present and is required for the max_mismatch_type option");
+                        return(-1);
+                    } else if (m > 0) {
+                        continue;
+                    }
+                }
+            }
+            
+            
+            if (pref_b == c) {
+                if (bam_is_rev(p->b)) {
+                    pall->s->ref_rev += 1;
+                } else {
+                    pall->s->ref_fwd += 1;
+                }
+            } else {
+                if (bam_is_rev(p->b)) {
+                    pall->s->alt_rev += 1;
+                } else {
+                    pall->s->alt_fwd += 1;
+                }
+            }
+            
+            // increment counts per sample
+            int cret = count_one_record(p, &plpc[i], conf, pall,
+                                        sam_hdr_tid2name(h, tid), pos,
+                                        pref_b, mref_b,
+                                        ci, invert, i);
+            if (cret < 0) {
+                return(-1);
+            }
+        }
+    }
+    
+    int sres = calc_biases(pall, site_stats);
+    if (sres < 0) {
+        return(-1);
+    }
+    
+    // write or store records if pass depth criteria
+    sres = store_counts(pd, plpc, sam_hdr_tid2name(h, tid),
+                        pos, pref_b, mref_b, site_stats, conf);
+    if (sres < 0) {
+        REprintf("[raer internal] failed storing counts, %s %d\n",
+                 sam_hdr_tid2name(h, tid),
+                 pos);
+        return(-1);
+    }
+    return(1);
+}
+
 static int run_pileup(char** cbampaths, char** cindexes,
                       PLP_DATA pd, mplp_conf_t* conf) {
 
@@ -643,23 +820,8 @@ static int run_pileup(char** cbampaths, char** cindexes,
     plp = calloc(conf->nbam, sizeof(bam_pileup1_t*));
     n_plp = calloc(conf->nbam, sizeof(int));
 
-    pcounts* plpc;
-    plpc = R_Calloc(conf->nbam, pcounts);
-    for (i = 0; i < conf->nbam; ++i) {
-        plpc[i].pc = R_Calloc(1, counts);
-        plpc[i].mc = R_Calloc(1, counts);
-
-        //initialize variant string set (AG, AT, TC) etc.
-        if (plpc[i].pc->var == NULL) plpc[i].pc->var = kh_init(str2intmap);
-        if (plpc[i].mc->var == NULL) plpc[i].mc->var = kh_init(str2intmap);
-
-        //initialize umi string set
-        if (plpc[i].pc->umi == NULL) plpc[i].pc->umi = kh_init(strset);
-        if (plpc[i].mc->umi == NULL) plpc[i].mc->umi = kh_init(strset);
-    }
-
+    pcounts* plpc = init_pcounts(conf->nbam);
     pall_counts* pall = init_pall_counts();
-
     double* site_stats = R_Calloc(6, double);
 
     // read the header of each file in the list and initialize data
@@ -728,10 +890,14 @@ static int run_pileup(char** cbampaths, char** cindexes,
     }
 
     iter = bam_mplp_init(conf->nbam, readaln, (void**)data);
-
-    ret = bam_mplp_init_overlaps(iter) ;
-    if (ret < 0) {
+    if (!iter) {
         REprintf("[raer internal] issue initializing iterator");
+        ret = -1;
+        goto fail;
+    }
+    
+    if(conf->remove_overlaps && (bam_mplp_init_overlaps(iter) < 0)) {
+        REprintf("[raer internal] issue setting overlap detection");
         ret = -1;
         goto fail;
     }
@@ -745,18 +911,17 @@ static int run_pileup(char** cbampaths, char** cindexes,
         goto fail;
     }
 
-
     int n_iter = 0;
     while ((ret = bam_mplp64_auto(iter, &tid, &pos, n_plp, plp)) > 0) {
         ++n_iter;
-
+        
         if (conf->reg && (pos < beg0 || pos >= end0)) continue;
 
         mplp_get_ref(data[0], tid, &ref, &ref_len);
 
         if (tid < 0) break;
 
-        // check user interrupt, using a 2^k value is faster
+        // check user interrupt
         if (n_iter % 262144 == 0) {
             if(checkInterrupt()){
                 REprintf("[raer internal] user interrupt detected, exiting\n");
@@ -774,135 +939,14 @@ static int run_pileup(char** cbampaths, char** cindexes,
                                     conf->reg_itr);
             if (!ol) continue;
         }
-
-        // get reference base on +/- strand
-        int pref_b, mref_b;
-        pref_b = (ref && pos < ref_len)? ref[pos] : 'N' ;
-        pref_b = toupper(pref_b);
-
-        if (pref_b == 'N') continue;
-
-        mref_b = comp_base[(unsigned char) pref_b];
-
-        // reset count structure
-        clear_pall_counts(pall);
-        memset(site_stats, 0, sizeof(double) * 6);
-        for (i = 0; i < conf->nbam; ++i) {
-            clear_pcounts(&plpc[i]);
-        }
-
-        // check if site is in a homopolymer
-        if (conf->ef.nmer > 0 && check_simple_repeat(&ref, &ref_len, pos, conf->ef.nmer)) continue;
-
-        // check if read count less than min_depth
-        int pass_reads = 0;
-        for (i = 0; i < conf->nbam; ++i) {
-            if (n_plp[i] >= conf->min_depth) {
-                pass_reads = 1;
-            }
-        }
-        if (!pass_reads) continue;
-
-        // iterate through bam files
-        for (i = 0; i < conf->nbam; ++i) {
-            int j;
-            // iterate through reads that overlap position
-            for (j = 0; j < n_plp[i]; ++j) {
-
-                const bam_pileup1_t* p = plp[i] + j;
-
-                // get read base
-                int c = p->qpos < p->b->core.l_qseq
-                ? seq_nt16_str[bam_seqi(bam_get_seq(p->b), p->qpos)]
-                : 'N';
-                if (c == 'N') continue;
-
-                int invert = invert_read_orientation(p->b, conf->libtype[i]);
-                if (invert < 0) {
-                    REprintf("[raer internal] invert read orientation failure %i\n", invert);
-                    ret = -1;
-                    goto fail;
-                }
-
-                // remove bad reads
-                int rret = check_read_filters(p, conf, conf->min_bq, conf->min_mqs[i]);
-
-                // only keep first read with a UMI tag per position
-                if (conf->umi) {
-                    int uret = check_umi(p, conf, &plpc[i], invert);
-                    if (uret != 1) continue;
-                }
-
-                if (rret > 0) {
-                    if (rret == 1) {
-                        if (invert) {
-                            plpc[i].mc->nx += 1;
-                        } else {
-                            plpc[i].pc->nx += 1;
-                        }
-                    }
-                    continue;
-                }
-                int ci = c;
-                if (invert) ci = (char)comp_base[(unsigned char)c];
-
-                // check read for >= mismatch different types and at least n_mm mismatches
-                if (conf->ef.n_mm_type > 0 || conf->ef.n_mm > 0) {
-                    if ((invert && mref_b != ci) || pref_b != ci) {
-                        int m = parse_mismatches(p->b, conf->ef.n_mm_type, conf->ef.n_mm);
-                        if (m == -1) {
-                            ret = -1;
-                            goto fail;
-                        } else if (m > 0) {
-                            continue;
-                        }
-                    }
-                }
-
-
-                if (pref_b == c) {
-                    if (bam_is_rev(p->b)) {
-                        pall->s->ref_rev += 1;
-                    } else {
-                        pall->s->ref_fwd += 1;
-                    }
-                } else {
-                    if (bam_is_rev(p->b)) {
-                        pall->s->alt_rev += 1;
-                    } else {
-                        pall->s->alt_fwd += 1;
-                    }
-                }
-
-                // increment counts per sample
-                int cret = count_one_record(p, &plpc[i], conf, pall,
-                                            sam_hdr_tid2name(h, tid), pos,
-                                            pref_b, mref_b,
-                                            ci, invert, i);
-                if (cret < 0) {
-                    ret = -1;
-                    goto fail;
-                }
-
-            }
-        }
-
-        int sres = calc_biases(pall, site_stats);
-        if (sres < 0) {
+        
+        int pret = process_one_site(plp, conf, h, tid, ref, ref_len, pos, 
+                                    n_plp, pall, plpc , site_stats, pd);
+        if(pret < 0) {
             ret = -1;
             goto fail;
         }
-
-        // write or store records if pass depth criteria
-        sres = store_counts(pd, plpc, sam_hdr_tid2name(h, tid),
-                            pos, pref_b, mref_b, site_stats, conf);
-        if (sres < 0) {
-            REprintf("[raer internal] failed storing counts, %s %d\n",
-                     sam_hdr_tid2name(h, tid),
-                     pos);
-            ret = -1;
-            goto fail;
-        }
+                        
     }
 
     fail:
@@ -985,8 +1029,8 @@ static void check_plp_args(SEXP bampaths, SEXP indexes, SEXP n, SEXP fapath, SEX
         Rf_error("'dbl_args' must be numeric of length 5");
     }
 
-    if (!IS_LOGICAL(lgl_args) || (LENGTH(lgl_args) != 1)) {
-        Rf_error("'lgl_args' must be logical of length 1");
+    if (!IS_LOGICAL(lgl_args) || (LENGTH(lgl_args) != 2)) {
+        Rf_error("'lgl_args' must be logical of length 2");
     }
 
     // args depending on n_files
@@ -1021,7 +1065,7 @@ static int set_mplp_conf(mplp_conf_t* conf, int n_bams,
         return -1;
     }
     conf->nbam = n_bams;
-    conf->nfps = n_bams + 1; // 1 extra file stores the rowdata information
+   // conf->nfps = n_bams + 1; // 1 extra file stores the rowdata information
 
     if (fafn) {
         conf->fai_fname = fafn;
@@ -1069,7 +1113,8 @@ static int set_mplp_conf(mplp_conf_t* conf, int n_bams,
     conf->read_qual.minq   = d_args[4];
 
     conf->report_multiallelics = b_args[0];
-
+    conf->remove_overlaps      = b_args[1];
+    
     conf->libtype            = libtypes;
     conf->only_keep_variants = keep_variants;
 
