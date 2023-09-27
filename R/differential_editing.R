@@ -692,7 +692,9 @@ find_scde_sites <- function(
                                                BPPARAM = BPPARAM)
 
     for(nm in names(res)) {
-        res[[nm]] <- cbind(depth_summary[[nm]], res[[nm]])
+        de_stats <- res[[nm]]
+        depths <- depth_summary[[nm]][rownames(de_stats), ]
+        res[[nm]] <- cbind(depths, de_stats)
     }
 
     res
