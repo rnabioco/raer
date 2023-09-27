@@ -602,7 +602,6 @@ run_edger <- function(deobj, condition_control = NULL,
 #' sce$clusters <- paste0("cluster_", sample(1:3, ncol(sce), replace = TRUE))
 #' res <- find_scde_sites(sce, "clusters")
 #' res[[1]]
-#' @importFrom stats fisher.test
 #' @export
 find_scde_sites <- function(
         sce,
@@ -664,14 +663,9 @@ find_scde_sites <- function(
                                            statistics = c("sum", "prop.detected"),
                                            assay.type = "nAlt",
                                            BPPARAM = BPPARAM)
-
-    grps <- unique(as.character(sce[[group]]))
-    if(length(grps) < 2) {
-        cli::cli_abort("At least 2 groups must be present")
-    }
-    grp_pairs <- as.data.frame(t(utils::combn(grps, 2)))
-    colnames(grp_pairs) <- c("first", "second")
-
+   
+    grp_pairs <- group_combinations(sce[[group]])
+    
     stats <- BiocParallel::bplapply(seq_len(nrow(grp_pairs)),
                                     function(i) {
                                         gp <- grp_pairs[i, , drop = TRUE]
@@ -715,5 +709,24 @@ calc_fisher_exact <- function(ref, alt) {
 
     stopifnot(nrow(vals) == 4)
     .Call(".fisher_exact", vals)
+}
+
+group_combinations <- function(x) {
+    if(length(x) < 2) {
+        cli::cli_abort("At least 2 groups must be present")
+    }
+    
+    if(is.factor(x)) {
+        grps <- levels(droplevels(x))
+    } else {
+        grps <- levels(as.factor(x))
+    }
+    
+    grp_pairs <- expand.grid(grps, grps, stringsAsFactors = FALSE)
+    colnames(grp_pairs) <- c("first", "second")
+    grp_pairs <- grp_pairs[grp_pairs[, 1] != grp_pairs[, 2], ]
+    grp_pairs <- grp_pairs[order(grp_pairs$first, grp_pairs$second), ]
+    rownames(grp_pairs) <- NULL
+    grp_pairs
 }
 
