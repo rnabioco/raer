@@ -63,7 +63,7 @@ comparison using <a href="https://rdrr.io/pkg/scran/man/combineMarkers.html" cla
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">find_scde_sites</span><span class="op">(</span><span class="va">sce</span>, <span class="va">group</span>, BPPARAM <span class="op">=</span> <span class="fu">SerialParam</span><span class="op">(</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">find_scde_sites</span><span class="op">(</span><span class="va">sce</span>, <span class="va">group</span>, rowData <span class="op">=</span> <span class="cn">FALSE</span>, BPPARAM <span class="op">=</span> <span class="fu">SerialParam</span><span class="op">(</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -74,6 +74,11 @@ comparison using <a href="https://rdrr.io/pkg/scran/man/combineMarkers.html" cla
 
 <dt>group</dt>
 <dd><p>column name from colData used to define groups to compare.</p></dd>
+
+
+<dt>rowData</dt>
+<dd><p>if TRUE,  <a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a> from the input SingleCellExperiment will be
+included in the output DataFrames</p></dd>
 
 
 <dt>BPPARAM</dt>
@@ -131,16 +136,16 @@ See <a href="https://rdrr.io/pkg/scran/man/combineMarkers.html" class="external-
 <span class="r-out co"><span class="r-pr">#&gt;</span> site_2_601_2_TC     0.838316      0.850864      0.858586       0.871928</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                       Top   p.value       FDR summary.dEF dEF.cluster_2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 &lt;integer&gt; &lt;numeric&gt; &lt;numeric&gt;   &lt;numeric&gt;     &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_579_2_AG         1  0.872535         1 -0.01784427   -0.02257960</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_625_2_AG         1  1.000000         1  0.03537552    0.03537552</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_589_2_AG         2  1.000000         1  0.00772495    0.00772495</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_601_2_TC         3  1.000000         1  0.00121012    0.00121012</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_579_2_AG         1  0.872535         1  0.01784427    0.02257960</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_625_2_AG         1  1.000000         1 -0.03537552   -0.03537552</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_589_2_AG         2  1.000000         1 -0.00772495   -0.00772495</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_601_2_TC         3  1.000000         1 -0.00121012   -0.00121012</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 dEF.cluster_3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                     &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_579_2_AG  -0.017844268</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_625_2_AG   0.008314991</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_589_2_AG   0.000749251</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_601_2_TC  -0.000124844</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_579_2_AG   0.017844268</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_625_2_AG  -0.008314991</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_589_2_AG  -0.000749251</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> site_2_601_2_TC   0.000124844</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
