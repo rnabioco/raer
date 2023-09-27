@@ -4,12 +4,15 @@
 \alias{find_scde_sites}
 \title{Identify sites with differential editing between cells in single cell datasets}
 \usage{
-find_scde_sites(sce, group, BPPARAM = SerialParam(), ...)
+find_scde_sites(sce, group, rowData = FALSE, BPPARAM = SerialParam(), ...)
 }
 \arguments{
 \item{sce}{\link{SingleCellExperiment} object with \code{nRef} and \code{nAlt} assays.}
 
 \item{group}{column name from colData used to define groups to compare.}
+
+\item{rowData}{if TRUE,  \link{rowData} from the input \link{SingleCellExperiment} will be
+included in the output DataFrames}
 
 \item{BPPARAM}{BiocParallel backend for control how paralllel computations are
 performed.}

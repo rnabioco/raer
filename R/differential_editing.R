@@ -565,6 +565,8 @@ run_edger <- function(deobj, condition_control = NULL,
 #'
 #' @param sce [SingleCellExperiment] object with `nRef` and `nAlt` assays.
 #' @param group column name from colData used to define groups to compare.
+#' @param rowData if TRUE,  [rowData] from the input [SingleCellExperiment] will be 
+#' included in the output DataFrames
 #' @param BPPARAM BiocParallel backend for control how paralllel computations are
 #' performed.
 #' @param ... Additional arguments passed to [scran::combineMarkers]
@@ -606,6 +608,7 @@ run_edger <- function(deobj, condition_control = NULL,
 find_scde_sites <- function(
         sce,
         group,
+        rowData = FALSE,
         BPPARAM = SerialParam(),
         ...) {
 
@@ -673,7 +676,7 @@ find_scde_sites <- function(
                                         alt <- assay(nalt, "sum")[, c(gp$first, gp$second)]
                                         pvals <- calc_fisher_exact(ref, alt)
                                         ef <- alt / (ref + alt)
-                                        d_editing_frequency <- ef[, 2] - ef[, 1]
+                                        d_editing_frequency <- ef[, 1] - ef[, 2]
 
                                         res <- data.frame(p.value = pvals,
                                                           dEF = d_editing_frequency,
@@ -693,16 +696,26 @@ find_scde_sites <- function(
 
     for(nm in names(res)) {
         de_stats <- res[[nm]]
-        depths <- depth_summary[[nm]][rownames(de_stats), ]
-        res[[nm]] <- cbind(depths, de_stats)
+        out_rows <- rownames(de_stats)
+        depths <- depth_summary[[nm]][out_rows, ]
+        de_stats <- cbind(depths, de_stats)
+        
+        if(rowData) {
+            rd <- rowData(sce)[out_rows, ]
+            de_stats <- cbind(de_stats, rd)
+        }
+        res[[nm]] <- de_stats
     }
-
     res
 }
 
 calc_fisher_exact <- function(ref, alt) {
-
-    vals <- t(cbind(ref, alt))
+    stopifnot(ncol(ref) == 2L)
+    stopifnot(ncol(alt) == 2L)
+    
+    vals <- cbind(ref, alt)[, c(1, 3, 2, 4), drop = FALSE]
+    vals <- t(vals)
+    
     mode(vals) <- "integer"
 
     if(any(is.na(vals))) {
