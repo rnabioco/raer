@@ -26,29 +26,23 @@ knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 
 The *raer* (RNA Adenosine editing in R) package provides tools to characterize A-to-I editing in single cell and bulk RNA-sequencing datasets. Both novel and known editing sites can be detected and quantified beginning with BAM alignment files. At it's core the *raer* package uses the pileup routines from the HTSlib C library (@Bonfield2021-yo) to identify candidate RNA editing sites, and leverages the annotation resources in the Bioconductor ecosystem to further characterize and identify high-confidence RNA editing sites.  
 
-Here we demonstrate how to use the *raer* package to a) quantify known RNA editing in droplet scRNA-seq dataset,  b) identify editing sites with condition specific editing in bulk RNA-seq data, and c) predict novel editing sites from bulk RNA-seq. 
+Here we demonstrate how to use the *raer* package to a) quantify RNA editing sites in droplet scRNA-seq dataset,  b) identify editing sites with condition specific editing in bulk RNA-seq data, and c) predict novel editing sites from bulk RNA-seq. 
 
 # Characterizing RNA editing sites in scRNA-seq data
 
-Here we will use the *raer* package to examine RNA editing in droplet-based single cell RNA-seq data. For this example we will examine a scRNA-seq dataset from human PBMC cells provided by [10x Genomics](https://www.10xgenomics.com/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-x-with-intronic-reads-3-1-high). The single cell data was aligned and processed using the 10x Genomics cellranger pipeline. 
+Here we will use the *raer* package to examine RNA editing in droplet-based single cell RNA-seq data. `pileup_cells()` enables quantification of edited and non-edited bases at specified sites from scRNA-seq data. 
+
+For this example we will examine a scRNA-seq dataset from human PBMC cells provided by [10x Genomics](https://www.10xgenomics.com/resources/datasets/10k-human-pbmcs-3-v3-1-chromium-x-with-intronic-reads-3-1-high). The single cell data was aligned and processed using the 10x Genomics cellranger pipeline. 
 
 The PBMC scRNA-seq dataset from 10x Genomics, along with other
 needed files will downloaded and cached using  `pbmc_10x()`from the *raerdata* ExperimentHub package. For this vignette, the BAM file was subset to retain 2 million alignments that overlap human RNA editing sites on chromosome 16.
 
+`pbmc_10x()` returns a list containing a `BamFile` object, a `GRanges` object with known RNA editing sites from the `REDIportal` database @Mansi2021-za, and a `SingleCellExperiment` populated with the gene expression data and cell type annotations. 
+
 ```{r message=FALSE}
 library(raer)
 library(raerdata)
-library(scater)
-library(SingleCellExperiment)
-library(TxDb.Hsapiens.UCSC.hg38.knownGene)
-library(AnnotationHub)
-library(SNPlocs.Hsapiens.dbSNP144.GRCh38)
-library(ComplexHeatmap)
-```
 
-`pbmc_10x()` returns a list containing a `BamFile` object, a `GRanges` object with known RNA editing sites from the `REDIportal` database, and a `SingleCellExperiment` populated with the gene expression data and cell type annotations. 
-
-```{r}
 pbmc <- pbmc_10x()
 
 pbmc_bam <- pbmc$bam
@@ -56,14 +50,17 @@ editing_sites <- pbmc$sites
 sce <- pbmc$sce
 ```
 
+This dataset contains T-cell, B-cells, and monocyte cell populations. 
 
 ```{r}
+library(scater)
+library(SingleCellExperiment)
 plotUMAP(sce, colour_by = "celltype")
 ```
 
 ## Specifying sites to quantify
 
-Next we'll select editing sites to query. For this analysis we will use RNA editing sites cataloged in the REDIportal database @Mansi2021-za.
+Next we'll select editing sites to quantify. For this analysis we will use RNA editing sites cataloged in the REDIportal database @Mansi2021-za.
 
 ```{r}
 editing_sites
@@ -80,9 +77,9 @@ editing_sites
 
 ## Quantifying sites in single cells using *pileup_cells*
 
-`pileup_cells()` quantifies edited and non-edited UMI counts per cell barcode, then organizes the site counts into a `SingleCellExperiment` object. `pileup_cells()` accepts a `FilterParam()` object that specifies parameters for multiple read-level and site-level filtering and processing options. Note that `pileup_cells()` is strand sensitive by default, so it is important to ensure that the strand of the input sites is correctly annotated, and that the `library-type` is set correctly for the strandedness of the sequencing library. For 10x Genomics data, the library type is set to `fr-second-strand`, indicating that the strand of the BAM alignments is the same strand as the RNA. See [quantifying smart-seq scRNA-seq libraries](#ss2) for an example of using *pileup_cells()* to handle unstranded data and data from libraries that produce 1 BAM file for each cell.  
+`pileup_cells()` quantifies edited and non-edited UMI counts per cell barcode, then organizes the site counts into a `SingleCellExperiment` object. `pileup_cells()` accepts a `FilterParam()` object that specifies parameters for multiple read-level and site-level filtering and processing options. Note that `pileup_cells()` is strand sensitive by default, so it is important to ensure that the strand of the input sites is correctly annotated, and that the `library-type` is set correctly for the strandedness of the sequencing library. For 10x Genomics data, the library type is set to `fr-second-strand`, indicating that the strand of the BAM alignments is the same strand as the RNA. See [quantifying Smart-seq2 scRNA-seq libraries](#ss2) for an example of using *pileup_cells()* to handle unstranded data and data from libraries that produce 1 BAM file for each cell.  
 
-To exclude duplicate reads derived from PCR, `pileup_cells()` can use a UMI sequence, supplied via the `umi_tag` argument, to only count 1 read for each CB-UMI pair at each editing site position. Note however that by default the `bam_flags` argument for the `FilterParam` class is set to **include** duplicate reads when using `pileup_cells()`. Droplet single cell libraries produce multiple cDNA fragments from a single reverse transcription event. The cDNA fragments have different alignment positions due to fragmentation despite being derived from a single RNA molecule. scRNA-seq data processed by cellranger from 10x Genomics will set the "Not primary alignment" bam flag for every read except one read for each UMI. If duplicates are removed based on this bam flag, then only 1 representative fragment for a single UMI will be examined, which will exclude many valid regions.
+To exclude duplicate reads derived from PCR, `pileup_cells()` can use a UMI sequence, supplied via the `umi_tag` argument, to only count 1 read for each CB-UMI pair at each editing site position. Note however that by default the `bam_flags` argument for the `FilterParam` class is set to **include** duplicate reads when using `pileup_cells()`. Droplet single cell libraries produce multiple cDNA fragments from a single reverse transcription event. The cDNA fragments have different alignment positions due to fragmentation despite being derived from a single RNA molecule. scRNA-seq data processed by cellranger from 10x Genomics will set the "Not primary alignment" BAM flag for every read except one read for each UMI. If duplicates are removed based on this BAM flag, then only 1 representative fragment for a single UMI will be examined, which will exclude many valid regions.
 
 To reduce processing time many functions in the *raer* package operate in parallel across multiple chromosomes. To enable parallel processing, a `BiocParallel` backend can be supplied via the `BPPARAM` argument (e.g. `MultiCoreParam()`). 
 
@@ -156,11 +153,11 @@ plotGroupedHeatmap(altExp(sce),
 
 - `calc_scAEI()` will calculate the Alu Editing Index (`AEI`) metric in single cells.   
 
-**If the editing sites of interest are not known, we recommend the following approach. First, treat the single cell data as a bulk RNA-seq experiment, and follow the  [bulk RNA-seq workflow](#bulk) to identify putative editing sites. Then query these sites in single cell mode using `pileup_cells()`**
+**If the editing sites of interest are not known, we recommend the following approach. First, treat the single cell data as a bulk RNA-seq experiment, and follow approaches described in the [Novel editing site detection](#novel) to identify putative editing sites. Then query these sites in single cell mode using `pileup_cells()`**
 
-## Quantifying sites in Smart-seq libaries {#ss2}
+## Quantifying sites in Smart-seq2 libaries {#ss2}
 
-`pileup_cells()` can also process Smart-seq style single cell libraries. These datasets typically store data from each cell in separate BAM files and the library type for these alignments are generally unstranded. To process these datasets the `library-type` should be set to `unstranded`, and the reference editing sites need to be reported all on the `+` strand. 
+`pileup_cells()` can also process Smart-seq2 single cell libraries. These datasets typically store data from each cell in separate BAM files and the library type for these alignments are generally unstranded. To process these datasets the `library-type` should be set to `unstranded`, and the reference editing sites need to be reported all on the `+` strand. 
 
 For example, the editing sites on the minus strand will need to be complemented (set as T -> C rather than A -> G). Additionally the `umi_tag` and `cb_tag` arguments should be set as follows to disable UMI and cell barcode detection. 
 
@@ -177,14 +174,16 @@ vector_of_cell_ids <- c("cell1", "cell2", "cell3")
 pileup_cells(bamfiles = vector_of_bam_files,
              cell_barcodes = vector_of_cell_ids, 
              sites = editing_sites, 
-             umi_tag = NULL,  # no UMI tag in most smart-seq libraries
-             cb_tag = NULL)   # no cell barcode in most smart-seq libraries
+             umi_tag = NULL,  # no UMI tag in most Smart-seq2 libraries
+             cb_tag = NULL)   # no cell barcode in most Smart-seq2 libraries
 ```
 
 
 # Quantifying RNA editing sites in bulk RNA-Seq {#bulk}
 
-Next we will perform a reanalysis of a published bulk RNA-seq dataset, [GSE99249](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE99249), which consists of ADAR1 mutants and control human cell lines, conditionally treated with Interferon-Beta. We will examine data from two genotypes, ADAR1 WT and KO, both treated with Ifn-B, with triplicate samples. 
+Next we will perform a reanalysis of a published bulk RNA-seq dataset using the *raer* package. The `pileup_sites()` function enable quantification of base counts from bulk RNA-seq data and can be used to identify novel sites (see [Novel editing site detection](#novel)).
+
+For this reanalysis, we will examine a bulk RNA-seq dataset from accession [GSE99249](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE99249), which consists of RNA-seq data from ADAR1 mutants and control human cell lines, conditionally treated with Interferon-Beta. We will examine data from two genotypes, ADAR1 WT and KO, both treated with Interferon-B, with triplicate samples. 
 
 Aligned BAM files and other necessary files have been preprocessed for this vignette and are available using `GSE99249()` from the `raerdata` package. Calling `GSE99249()` will downloaded and cache the necessary files and return a list containing the data. 
 
@@ -310,6 +309,7 @@ de_results$sig_results[1:5, ]
 ```
 
 ```{r, fig.height=7, fig.width=5}
+library(ComplexHeatmap)
 top_sites <- rownames(de_results$sig_results)[1:20]
 
 Heatmap(assay(rse, "edit_freq")[top_sites, ], 
@@ -333,6 +333,9 @@ First we will use the `AnnotationHub` package to obtain coordinates for ALU elem
 
 
 ```{r}
+library(AnnotationHub)
+library(SNPlocs.Hsapiens.dbSNP144.GRCh38)
+
 ah <- AnnotationHub()
 rmsk_hg38 <- ah[["AH99003"]]
 
@@ -375,11 +378,13 @@ Heatmap(alu_index$AEI,
 The AEI in the `Wildtype` samples is highest for `A-to-G`, and sharply 
 reduced in the `ADAR1KO` samples as expected.
 
-# Novel RNA editing site detection
+# Novel RNA editing site detection {#novel}
 
-Next we will demonstrate how to identify novel RNA editing sites using the *raer* package. In this analysis a published RNA-seq and whole genome sequencing dataset will be analyzed. High coverage whole-genome sequencing was conducted [ERR262997](https://www.ebi.ac.uk/ena/browser/view/ERR262997?show=reads) along with paired-end RNA-seq [SRR1258218](https://www.ebi.ac.uk/ena/browser/view/SRR1258218?show=reads) in a human cell line (`NA12878`).
+Next we will demonstrate how to identify novel RNA editing sites using the *raer* package. It is best practice to have a matched DNA sequencing dataset to exclude sample specific genetic variation and common alignment artifacts. However, high confidence editing sites can also be identified if the dataset contains many samples and there are high coverage SNP databases for the organism queried. Additionally high confidence editing sites can also be identified if a dataset contains a sample with reduced or absent ADAR activity. A false-positive rate estimate can be obtained by examining the proportion of A->I editing sites recovered, relative to other variants, (e.g. G->C, C->A).
 
-Aligned BAM files, a genome fasta file, and a GRanges object containing SNPs corresponding to the first 1Mb region of chr4 have been prepared for this vignette and can be downloaded and cached using `NA12878()`.
+In this analysis a published RNA-seq and whole genome sequencing dataset will be analyzed. High coverage whole-genome sequencing was conducted [ERR262997](https://www.ebi.ac.uk/ena/browser/view/ERR262997?show=reads) along with paired-end RNA-seq [SRR1258218](https://www.ebi.ac.uk/ena/browser/view/SRR1258218?show=reads) in a human cell line (`NA12878`).
+
+Aligned BAM files, a genome FASTA file, and a GRanges object containing SNPs corresponding to the first 1Mb region of chr4 have been prepared for this vignette and can be downloaded and cached using `NA12878()`.
 
 ```{r}
 rna_wgs <- NA12878()
@@ -388,18 +393,20 @@ names(rna_wgs)
 
 Additionally we will use the following additional annotation resources:  
   
-  - A database of known SNPs, for example  the `SNPlocs.Hsapiens.dbSNP155.GRCh38` package. Due to space and memory constraints in this vignette we will only examine SNPs from the first 1Mb region of chr4.  
+  - A database of known SNPs, for example from the `SNPlocs.Hsapiens.dbSNP144.GRCh38` package. Due to space and memory constraints in this vignette we will only examine SNPs from the first 1Mb region of chr4.  
   
   - `TxDb.Hsapiens.UCSC.hg38.knownGene`, a database of transcript models. Alternatively these can be generated from a `.gtf` file using `makeTxDbFromGRanges()` from the `GenomicFeatures` package.   
   
   - RepeatMasker annotations, which can be obtained from the `AnnotationHub()` for hg38, as shown in the [bulk RNA-seq](#bulk) tutorial. 
 
 ```{r}
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 chr4snps <- rna_wgs$snps
 ```
 
-The `pileup_sites()` function accept multiple bam files, here we supply one from RNA-seq, and one from whole genome sequencing. A subset of the filtering parameters (`FilterParam()`) can accept multiple arguments matched to each of the input bam files. This allows us to have distinct settings for the WGS and RNA-seq BAM files.
+The `pileup_sites()` function accept multiple BAM files, here we supply one from RNA-seq, and one from whole genome sequencing. A subset of the filtering parameters (`FilterParam()`) can accept multiple arguments matched to each of the input BAM files. This allows us to have distinct settings for the WGS and RNA-seq BAM files.
 
 ```{r}
 bams <- rna_wgs$bams
@@ -407,14 +414,14 @@ names(bams) <- c("rna", "dna")
 fp <- FilterParam(
     min_depth = 1,               # minimum read depth across all samples
     min_base_quality = 30,       # minimum base quality
-    min_mapq = c(255, 30),       # minimum MAPQ for each bam file
-    library_type = c("fr-first-strand", "unstranded"), # library-type for each bam file
+    min_mapq = c(255, 30),       # minimum MAPQ for each BAM file
+    library_type = c("fr-first-strand", "unstranded"), # library-type for each BAM file
     trim_5p = 5,                 # bases to trim from 5' end of alignment
     trim_3p = 5,                 # bases to trim from 3' end of alignment
     indel_dist = 4,              # ignore read if contains an indel within distance from site
     min_splice_overhang = 10,    # required alignment overhang in order to count read with splice 
     read_bqual = c(0.25, 20),    # minimum fraction of the read (0.25) that must have base quality of (20)
-    only_keep_variants = c(TRUE, FALSE), # report site if rnaseq bam has variant
+    only_keep_variants = c(TRUE, FALSE), # report site if rnaseq BAM has variant
     report_multiallelic = FALSE, # do not report sites with multiple variant alleles
 )
 
@@ -502,7 +509,7 @@ With the above filtering approach we obtain a set of putative editing sites. The
 rowRanges(rse)
 ```
 
-Finally once a set of sites has been identified, additional packges in the bioconductor ecosystem, such the [VariantAnnotation](https://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html) package, can be used to determine the genomic context and potential molecular consequences of the editing event. 
+Finally once a set of sites has been identified, additional packages in the bioconductor ecosystem, such the [VariantAnnotation](https://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html) package, can be used to determine the genomic context and potential molecular consequences of the editing event. 
 
 
 <details style="margin-bottom:10px;">

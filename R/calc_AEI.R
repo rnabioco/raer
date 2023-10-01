@@ -6,7 +6,7 @@
 #'   ALU elements in the human genome, and these regions have a high A-to-I
 #'   editing signal compared to other regions such as coding exons. This
 #'   function will perform pileup at specified repeat regions and return a
-#'   summary AEI metric.
+#'   summary AEI metric. 
 #'
 #' @references Roth, S.H., Levanon, E.Y. & Eisenberg, E. Genome-wide
 #' quantification of ADAR adenosine-to-inosine RNA editing activity. Nat Methods

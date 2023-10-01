@@ -27,10 +27,10 @@ variants}
 object dependent on filtering applied.
 }
 \description{
-Sequence variants of multiple allele types (e.g., \code{A>G}, \code{A>C})
-in nearby regions can be due to mis-alignment. Remove variants if multiple
-allele types are present within a given distance in genomic or
-transcriptome coordinate space.
+Sequence variants of multiple allele types (e.g., \code{A -> G}, \code{A -> C})
+proximal to a putative editing site can be indicative of a region prone to mis-alignment
+artifacts. Sites will be removed if variants of multiple allele types are present
+within a given distance in genomic or transcriptome coordinate space.
 }
 \examples{
 library(GenomicFeatures)

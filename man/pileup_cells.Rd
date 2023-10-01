@@ -2,7 +2,7 @@
 % Please edit documentation in R/sc-pileup.R
 \name{pileup_cells}
 \alias{pileup_cells}
-\title{Pileup sites per cell}
+\title{Generate base counts per cell}
 \usage{
 pileup_cells(
   bamfiles,
@@ -12,7 +12,6 @@ pileup_cells(
   chroms = NULL,
   umi_tag = "UB",
   cb_tag = "CB",
-  paired_end = FALSE,
   param = FilterParam(),
   BPPARAM = SerialParam(),
   return_sce = TRUE,
@@ -20,15 +19,15 @@ pileup_cells(
 )
 }
 \arguments{
-\item{bamfiles}{a path to a BAM file (for 10x libraries), or a vector of paths
-to BAM files (smart-seq2). Can be supplied as a character vector, \link{BamFile}, or
+\item{bamfiles}{a path to a BAM file (for droplet scRNA-seq), or a vector of paths
+to BAM files (Smart-seq2). Can be supplied as a character vector, \link{BamFile}, or
 \link{BamFileList}.}
 
 \item{sites}{a GRanges object containing sites to process. See examples for
 valid formatting.}
 
 \item{cell_barcodes}{A character vector of single cell barcodes to process. If
-processing multiple BAM files (e.g. smart-seq-2), provide a character vector
+processing multiple BAM files (e.g. Smart-seq2), provide a character vector
 of unique identifiers for each input BAM, to name each BAM file in the output files.}
 
 \item{output_directory}{Output directory for output matrix files. The directory
@@ -41,9 +40,6 @@ sites present in the listed chromosomes will be processed}
 
 \item{cb_tag}{tag in BAM containing the cell-barcode sequence}
 
-\item{paired_end}{set to TRUE if data is paired-end to prevent double counting
-overlapping read pairs.}
-
 \item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various filters to
 apply to reads and sites during pileup. Note that the \code{min_depth} and
 \code{min_variant_reads} parameters if set > 0 specify the number of reads
@@ -51,7 +47,7 @@ from any cell required in order to report a site. E.g. if \code{min_variant_read
 set to 2, then at least 2 reads (from any cell) must have a variant in order
 to report the site. Setting \code{min_depth} and \code{min_variant_reads} to 0 reports
 all sites present in the \code{sites} object. The following options are not enabled
-for pileup_cells(): max_mismatch_type, homopolymer_len, and min_allelic_freq.}
+for pileup_cells(): \code{max_mismatch_type}, \code{homopolymer_len}, and \code{min_allelic_freq}.}
 
 \item{BPPARAM}{BiocParallel instance. Parallel computation occurs across
 chromosomes.}
@@ -77,16 +73,16 @@ sparseMatrix files (\code{barcodes.txt.gz}, \code{sites.txt.gz}, \code{counts.mt
 will be returned. These files can be imported using \code{\link[=read_sparray]{read_sparray()}}.
 }
 \description{
-This function performs a pileup operation at specified
-sites, returning counts for Reference (e.g. unedited) or Alternate (e.g.
-edited) bases. \code{pileup_cells} can process either a 10x Genomic's style
-library, from a aligned BAM file containing a tag with a cell-barcode and a
-tag with a UMI, or smart-seq style libraries without cell-barcodes.
+This function processes scRNA-seq library to enumerate base counts
+for Reference (unedited) or Alternate (
+edited) bases at specified sites in single cells. \code{pileup_cells} can process
+droplet scRNA-seq libraries, from a BAM file containing a cell-barcode and UMI,
+or well-based libraries that do not contain cell-barcodes.
 
-The \code{sites} parameter specifies sites to pileup. This must be a \link{GRanges}
+The \code{sites} parameter specifies sites to quantify. This must be a \link{GRanges}
 object with 1 base intervals, a strand (+ or -), and supplemented with
 metadata columns named \code{REF} and \code{ALT} containing the reference and
-alternate base to query. See examples for an example format.
+alternate base to query. See examples for the required format.
 
 At each site, bases from overlapping reads will be examined, and counts of
 each ref and alt base enumerated for each cell-barcode present. A single
@@ -111,16 +107,19 @@ fp <- FilterParam(library_type = "fr-second-strand")
 sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
 sce
 
-# example of processing multiple smart-seq2 style libraries
+# example of processing multiple Smart-seq2 style libraries
 
 many_small_bams <- rep(bam_fn, 10)
 bam_ids <- LETTERS[1:10]
+
+fp <- FilterParam(library_type = "unstranded",
+                  remove_overlaps = TRUE)
+
 pileup_cells(many_small_bams,
     sites = gr,
     cell_barcodes = bam_ids,
     cb_tag = NULL,
     umi_tag = NULL,
-    paired_end = TRUE,
     outdir,
     param = fp
 )

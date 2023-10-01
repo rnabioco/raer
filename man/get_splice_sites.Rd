@@ -17,7 +17,7 @@ extract}
 flanking bases.
 }
 \description{
-Find intervals containing splice sites and their adjacent
+Extract intervals at splice sites and their adjacent
 regions.
 }
 \examples{

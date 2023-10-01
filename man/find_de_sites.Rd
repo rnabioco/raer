@@ -45,11 +45,8 @@ A named list:
 }
 \description{
 Use \code{edgeR} or \code{DESeq2} to perform differential editing
-analysis. This will work for simple designs that have 1 treatment and 1
-control. For more complex designs, we suggest you perform your own.
-
-At the moment, this function will only find editing events specific to the
-treatment.
+analysis. This will work for designs that have 1 treatment and 1
+control group. For more complex designs, we suggest you perform your own modeling.
 }
 \examples{
 library(SummarizedExperiment)

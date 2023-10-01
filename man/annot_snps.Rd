@@ -48,7 +48,7 @@ comparing against the SNP db (which always returns sequences w.r.t the
 plus strand).}
 
 \item{RLE}{If TRUE, columns added will returned as \code{\link[S4Vectors:Rle-class]{S4Vectors::Rle()}} vectors
-to reduce memory}
+to reduce memory usage.}
 }
 \value{
 Either a GRanges or SummarizedExperiment object with

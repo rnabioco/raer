@@ -1,22 +1,22 @@
-#' Pileup sites per cell
+#' Generate base counts per cell
 #'
-#' @description This function performs a pileup operation at specified
-#'   sites, returning counts for Reference (e.g. unedited) or Alternate (e.g.
-#'   edited) bases. `pileup_cells` can process either a 10x Genomic's style
-#'   library, from a aligned BAM file containing a tag with a cell-barcode and a
-#'   tag with a UMI, or smart-seq style libraries without cell-barcodes.
+#' @description This function processes scRNA-seq library to enumerate base counts 
+#'   for Reference (unedited) or Alternate (
+#'   edited) bases at specified sites in single cells. `pileup_cells` can process 
+#'   droplet scRNA-seq libraries, from a BAM file containing a cell-barcode and UMI, 
+#'   or well-based libraries that do not contain cell-barcodes.
 #'
-#'   The `sites` parameter specifies sites to pileup. This must be a [GRanges]
+#'   The `sites` parameter specifies sites to quantify. This must be a [GRanges]
 #'   object with 1 base intervals, a strand (+ or -), and supplemented with
 #'   metadata columns named `REF` and `ALT` containing the reference and
-#'   alternate base to query. See examples for an example format.
+#'   alternate base to query. See examples for the required format.
 #'
 #'   At each site, bases from overlapping reads will be examined, and counts of
 #'   each ref and alt base enumerated for each cell-barcode present. A single
 #'   base will be counted once for each UMI sequence present in each cell.
 #'
-#' @param bamfiles a path to a BAM file (for 10x libraries), or a vector of paths
-#' to BAM files (smart-seq2). Can be supplied as a character vector, [BamFile], or
+#' @param bamfiles a path to a BAM file (for droplet scRNA-seq), or a vector of paths
+#' to BAM files (Smart-seq2). Can be supplied as a character vector, [BamFile], or
 #' [BamFileList].
 #' @param sites a GRanges object containing sites to process. See examples for
 #'   valid formatting.
@@ -25,7 +25,7 @@
 #' @param chroms A character vector of chromosomes to process. If supplied, only
 #'   sites present in the listed chromosomes will be processed
 #' @param cell_barcodes A character vector of single cell barcodes to process. If
-#' processing multiple BAM files (e.g. smart-seq-2), provide a character vector
+#' processing multiple BAM files (e.g. Smart-seq2), provide a character vector
 #' of unique identifiers for each input BAM, to name each BAM file in the output files.
 #' @param param object of class [FilterParam()] which specify various filters to
 #'   apply to reads and sites during pileup. Note that the `min_depth` and
@@ -34,11 +34,9 @@
 #'   set to 2, then at least 2 reads (from any cell) must have a variant in order
 #'   to report the site. Setting `min_depth` and `min_variant_reads` to 0 reports
 #'   all sites present in the `sites` object. The following options are not enabled
-#'   for pileup_cells(): max_mismatch_type, homopolymer_len, and min_allelic_freq.
+#'   for pileup_cells(): `max_mismatch_type`, `homopolymer_len`, and `min_allelic_freq`.
 #' @param umi_tag tag in BAM containing the UMI sequence
 #' @param cb_tag tag in BAM containing the cell-barcode sequence
-#' @param paired_end set to TRUE if data is paired-end to prevent double counting
-#' overlapping read pairs.
 #' @param return_sce if `TRUE`, data is returned as a SingleCellExperiment, if
 #'   `FALSE` a character vector of the output files, specified by
 #'   `outfile_prefix`, will be returned.
@@ -78,16 +76,19 @@
 #' sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = fp)
 #' sce
 #'
-#' # example of processing multiple smart-seq2 style libraries
+#' # example of processing multiple Smart-seq2 style libraries
 #'
 #' many_small_bams <- rep(bam_fn, 10)
 #' bam_ids <- LETTERS[1:10]
+#' 
+#' fp <- FilterParam(library_type = "unstranded",
+#'                   remove_overlaps = TRUE)
+#' 
 #' pileup_cells(many_small_bams,
 #'     sites = gr,
 #'     cell_barcodes = bam_ids,
 #'     cb_tag = NULL,
 #'     umi_tag = NULL,
-#'     paired_end = TRUE,
 #'     outdir,
 #'     param = fp
 #' )
@@ -107,7 +108,6 @@ pileup_cells <- function(bamfiles,
     chroms = NULL,
     umi_tag = "UB",
     cb_tag = "CB",
-    paired_end = FALSE,
     param = FilterParam(),
     BPPARAM = SerialParam(),
     return_sce = TRUE,
@@ -189,7 +189,6 @@ pileup_cells <- function(bamfiles,
                 cb_tag = cb_tag,
                 umi_tag = umi_tag,
                 param = param,
-                pe = paired_end,
                 verbose = verbose
             ),
             BPPARAM = BPPARAM,
@@ -211,7 +210,6 @@ pileup_cells <- function(bamfiles,
                 cb_tag = cb_tag,
                 umi_tag = umi_tag,
                 param = param,
-                pe = paired_end,
                 verbose = verbose
             ),
             BPPARAM = BPPARAM,
@@ -261,7 +259,7 @@ defaultScBamFlags <- Rsamtools::scanBamFlag(
 get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
                           outfile_prefix, chrom,
                           umi_tag, cb_tag, param,
-                          pe, verbose) {
+                          verbose) {
     if (length(chrom) > 0) {
         sites <- sites[seqnames(sites) %in% chrom, ]
     }
@@ -293,7 +291,7 @@ get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
         fp[["library_type"]],
         plp_outfns,
         umi_tag,
-        pe,
+        fp$lgl_args[["remove_overlaps"]],
         fp[["min_mapq"]],
         max(fp$int_args["min_variant_reads"], fp$int_args["min_depth"])
     )

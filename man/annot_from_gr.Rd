@@ -4,18 +4,20 @@
 \alias{annot_from_gr}
 \title{Annotate sites using GRanges object}
 \usage{
-annot_from_gr(obj, gr, cols_to_map, RLE = TRUE, ...)
+annot_from_gr(obj, gr, cols_to_map, RLE = TRUE, sep = ",", ...)
 }
 \arguments{
 \item{obj}{RangedSummarizedExperiment or GRanges object}
 
 \item{gr}{GRanges with annotations to map to obj}
 
-\item{cols_to_map}{character vector of columns from gr to map to obj. If the
-vector has names, the names will be the column names in the output obj}
+\item{cols_to_map}{character vector of columns from GRanges to map to SummarizedExperiment.
+If the vector has names, the names will be the column names in the output.}
 
 \item{RLE}{If TRUE, columns added will returned as \code{\link[S4Vectors:Rle-class]{S4Vectors::Rle()}} vectors
 to reduce memory}
+
+\item{sep}{separator string, defaults to comma.}
 
 \item{...}{additional arguments to pass to \code{\link[GenomicRanges:findOverlaps-methods]{GenomicRanges::findOverlaps()}}}
 }
@@ -26,7 +28,7 @@ annotations provided by the supplied GRanges object.
 \description{
 Utility function to map annotations from GRanges to rowData of
 SummarizedExperiment or to mcols of GRanges object. If multiple features overlap then
-they will be concatenated as comma separated values.
+they will be concatenated with the specified separtor string .
 }
 \examples{
 library(SummarizedExperiment)

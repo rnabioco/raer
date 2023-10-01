@@ -9,7 +9,9 @@ calc_confidence(
   edit_to = "G",
   edit_from = "A",
   per_sample = FALSE,
-  exp_fraction = 0.01
+  exp_fraction = 0.01,
+  alpha = 0L,
+  beta = 0L
 )
 }
 \arguments{
@@ -22,7 +24,12 @@ calc_confidence(
 \item{per_sample}{if TRUE, calculate confidence per sample, otherwise edited
 and non-edited counts will be summed across all samples.}
 
-\item{exp_fraction}{Numeric, confidence margin parameter for}
+\item{exp_fraction}{Numeric value between 0 and 1, specifying the expected error
+rate}
+
+\item{alpha}{Pseudo-count to add to non-edited base counts}
+
+\item{beta}{Pseudo-count to add to edited base counts}
 }
 \value{
 \code{SummarizedExperiment::SummarizedExperiment} with either a new assay

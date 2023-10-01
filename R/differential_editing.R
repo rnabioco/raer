@@ -6,7 +6,7 @@
 #' for each site (`edit_freq`), depth of coverage computed
 #' using the indicated edited nucleotides (`depth`) and new `colData`
 #' columns with the number of edited sites (`n_sites`) and the
-#' fraction of edits (`edit_idx`) is returned.
+#' fraction of edits (`edit_idx`) is returned. 
 #'
 #' @param rse A [RangedSummarizedExperiment] object created by [pileup_sites()]
 #' @param edit_from This should correspond to a nucleotide or assay
@@ -234,11 +234,8 @@ make_de_object <- function(rse,
 #' Perform differential editing
 #'
 #' @description Use `edgeR` or `DESeq2` to perform differential editing
-#'   analysis. This will work for simple designs that have 1 treatment and 1
-#'   control. For more complex designs, we suggest you perform your own.
-#'
-#'   At the moment, this function will only find editing events specific to the
-#'   treatment.
+#'   analysis. This will work for designs that have 1 treatment and 1
+#'   control group. For more complex designs, we suggest you perform your own modeling.
 #'
 #' @param deobj A [RangedSummarizedExperiment] object prepared for differential
 #' editing analysis by [make_de_object()]

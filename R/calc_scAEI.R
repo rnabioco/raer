@@ -5,8 +5,9 @@
 #'   bases) observed at A positions. The vast majority A-to-I editing occurs in
 #'   ALU elements in the human genome, and these regions have a high A-to-I
 #'   editing signal compared to other regions such as coding exons. This
-#'   function will examine potential editing sites and return
-#'   summary AEI metric per cell.
+#'   function will examine enumerate edited and non-edited base counts at the supplied
+#'   sites and return summary AEI metric per cell. Potential editing sites within
+#'   repeat regions can be generated using `get_scAEI_sites()`.
 #'
 #' @references Roth, S.H., Levanon, E.Y. & Eisenberg, E. Genome-wide
 #' quantification of ADAR adenosine-to-inosine RNA editing activity. Nat Methods

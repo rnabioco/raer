@@ -41,7 +41,7 @@ filter_multiallelic <- function(se) {
 
 #' Extract regions surrounding splice sites
 #'
-#' @description Find intervals containing splice sites and their adjacent
+#' @description Extract intervals at splice sites and their adjacent
 #'   regions.
 #'
 #' @param txdb `GenomicFeatures::TxDb`
@@ -162,10 +162,10 @@ filter_splice_variants <- function(rse, txdb,
 
 #' Filter out clustered sequence variants
 #'
-#' @description Sequence variants of multiple allele types (e.g., `A>G`, `A>C`)
-#'   in nearby regions can be due to mis-alignment. Remove variants if multiple
-#'   allele types are present within a given distance in genomic or
-#'   transcriptome coordinate space.
+#' @description Sequence variants of multiple allele types (e.g., `A -> G`, `A -> C`)
+#'   proximal to a putative editing site can be indicative of a region prone to mis-alignment
+#'   artifacts. Sites will be removed if variants of multiple allele types are present 
+#'   within a given distance in genomic or transcriptome coordinate space.
 #'
 #' @param rse `SummarizedExperiment::SummarizedExperiment` containing editing sites
 #' @param txdb `GenomicFeatures::TxDb`
@@ -298,7 +298,10 @@ filter_clustered_variants <- function(rse, txdb,
 #' @param edit_from non-edited base
 #' @param per_sample if TRUE, calculate confidence per sample, otherwise edited
 #' and non-edited counts will be summed across all samples.
-#' @param exp_fraction Numeric, confidence margin parameter for
+#' @param exp_fraction Numeric value between 0 and 1, specifying the expected error
+#' rate 
+#' @param alpha Pseudo-count to add to non-edited base counts
+#' @param beta  Pseudo-count to add to edited base counts
 #'
 #' @examples
 #' rse_adar_ifn <- mock_rse()
@@ -319,14 +322,21 @@ calc_confidence <- function(se,
     edit_to = "G",
     edit_from = "A",
     per_sample = FALSE,
-    exp_fraction = 0.01) {
-    if (length(exp_fraction) != 1) {
-        cli::cli_abort("exp_fraction must be numeric(1)")
+    exp_fraction = 0.01,
+    alpha = 0L,
+    beta = 0L) {
+    if (length(exp_fraction) != 1 || (exp_fraction < 0 || exp_fraction > 1)) {
+        cli::cli_abort("exp_fraction must be numeric(1) and between 0 and 1")
     }
+    
+    if (length(alpha) != 1 || length(beta) != 1) {
+        cli::cli_abort("alpha and beta must be length 1")
+    }
+    
     edit_to <- paste0("n", edit_to)
     edit_from <- paste0("n", edit_from)
-    alt <- assay(se, edit_to)
-    ref <- assay(se, edit_from)
+    alt <- assay(se, edit_to) + as.integer(beta)
+    ref <- assay(se, edit_from) + as.integer(alpha)
     if (per_sample) {
         nc <- ncol(se)
         res <- vapply(seq_len(nc), function(i) {

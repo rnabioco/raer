@@ -1,19 +1,26 @@
 #' Generate base counts using pileup
-#'
+#' 
+#' @description This function uses a pileup routine to examine numerate base counts from
+#'   alignments at specified sites, regions, or across all read alignments, from one or 
+#'   more BAM files. Alignment and site filtering
+#'   options are controlled by the `FilterParam` class.A [RangedSummarizedExperiment] object 
+#'   is returned, populated with base count statistics for each supplied BAM file.
+#'   
 #' @param bamfiles a character vector, [BamFile] or [BamFileList] indicating 1 or
 #' more BAM files to process. If named, the names will be included in the [colData]
 #' of the [RangedSummarizedExperiment] as a `sample` column, otherwise the names will
 #' be taken from the basename of the BAM file.
-#' @param fasta path to genome fasta file used for read alignment. Can be in
-#' gzip or bgzip format.
+#' @param fasta path to genome fasta file used for read alignment. Can be provided in 
+#' compressed gzip or bgzip format.
 #' @param sites a [GRanges] object containing regions or sites to process.
 #' @param region samtools region query string (i.e. `chr1:100-1000`). Can be combined
 #' with sites, in which case sites will be filtered to keep only sites within the
 #' region.
-#' @param chroms chromosomes to process, not to be used with region.
+#' @param chroms chromosomes to process, provided as a character vector. Not to be used with the
+#' region parameter.
 #' @param param object of class [FilterParam()] which specify various
 #'   filters to apply to reads and sites during pileup.
-#' @param umi_tag The bam tag containing a UMI sequence. If supplied, multiple
+#' @param umi_tag The BAM tag containing a UMI sequence. If supplied, multiple
 #'   reads with the same UMI sequence will only be counted once per position.
 #' @param BPPARAM A [BiocParallel] class to control parallel execution. Parallel
 #'   processing occurs per chromosome and is disabled when run on a single
@@ -33,7 +40,7 @@
 #'   * `REF`: The reference base
 #'   * `rpbz`: Mann-Whitney U test of Read Position Bias from bcftools,
 #'     extreme negative or positive values indicate more bias.
-#'   * `vdb`: Variant Distance Bias for filtering splice-site artefacts from
+#'   * `vdb`: Variant Distance Bias for filtering splice-site artifacts from
 #'     bcftools, lower values indicate more bias.
 #'   * `sor` Strand Odds Ratio Score, strand bias estimated by the Symmetric
 #'     Odds Ratio test, based on GATK code. Higher values indicate more bias.

@@ -47,8 +47,8 @@ more BAM files to process. If named, the names will be included in the \link{col
 of the \link{RangedSummarizedExperiment} as a \code{sample} column, otherwise the names will
 be taken from the basename of the BAM file.}
 
-\item{fasta}{path to genome fasta file used for read alignment. Can be in
-gzip or bgzip format.}
+\item{fasta}{path to genome fasta file used for read alignment. Can be provided in
+compressed gzip or bgzip format.}
 
 \item{sites}{a \link{GRanges} object containing regions or sites to process.}
 
@@ -56,7 +56,8 @@ gzip or bgzip format.}
 with sites, in which case sites will be filtered to keep only sites within the
 region.}
 
-\item{chroms}{chromosomes to process, not to be used with region.}
+\item{chroms}{chromosomes to process, provided as a character vector. Not to be used with the
+region parameter.}
 
 \item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
 filters to apply to reads and sites during pileup.}
@@ -65,7 +66,7 @@ filters to apply to reads and sites during pileup.}
 processing occurs per chromosome and is disabled when run on a single
 region.}
 
-\item{umi_tag}{The bam tag containing a UMI sequence. If supplied, multiple
+\item{umi_tag}{The BAM tag containing a UMI sequence. If supplied, multiple
 reads with the same UMI sequence will only be counted once per position.}
 
 \item{verbose}{if TRUE, then report progress and warnings.}
@@ -150,7 +151,7 @@ The \code{\link[=rowRanges]{rowRanges()}} contains the genomic interval for each
 \item \code{REF}: The reference base
 \item \code{rpbz}: Mann-Whitney U test of Read Position Bias from bcftools,
 extreme negative or positive values indicate more bias.
-\item \code{vdb}: Variant Distance Bias for filtering splice-site artefacts from
+\item \code{vdb}: Variant Distance Bias for filtering splice-site artifacts from
 bcftools, lower values indicate more bias.
 \item \code{sor} Strand Odds Ratio Score, strand bias estimated by the Symmetric
 Odds Ratio test, based on GATK code. Higher values indicate more bias.
@@ -161,7 +162,11 @@ The rownames will be populated with the format
 as 1 = +, 2 = -, and 3 = *.
 }
 \description{
-Generate base counts using pileup
+This function uses a pileup routine to examine numerate base counts from
+alignments at specified sites, regions, or across all read alignments, from one or
+more BAM files. Alignment and site filtering
+options are controlled by the \code{FilterParam} class.A \link{RangedSummarizedExperiment} object
+is returned, populated with base count statistics for each supplied BAM file.
 }
 \examples{
 library(SummarizedExperiment)

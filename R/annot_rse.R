@@ -20,7 +20,7 @@
 #' plus strand).
 #' @param drop If TRUE, remove sites overlapping SNPs
 #' @param RLE If TRUE, columns added will returned as [S4Vectors::Rle()] vectors
-#' to reduce memory
+#' to reduce memory usage.
 #'
 #' @param ... For the generic, further arguments to pass to specific methods.
 #' Unused for now.
@@ -179,14 +179,15 @@ annot_snps.SummarizedExperiment <- function(obj, ...) {
 #'
 #' @description Utility function to map annotations from GRanges to rowData of
 #'   SummarizedExperiment or to mcols of GRanges object. If multiple features overlap then
-#'   they will be concatenated as comma separated values.
+#'   they will be concatenated with the specified separtor string .
 #'
 #' @param obj RangedSummarizedExperiment or GRanges object
 #' @param gr GRanges with annotations to map to obj
-#' @param cols_to_map character vector of columns from gr to map to obj. If the
-#'   vector has names, the names will be the column names in the output obj
+#' @param cols_to_map character vector of columns from GRanges to map to SummarizedExperiment. 
+#' If the vector has names, the names will be the column names in the output.
 #' @param RLE If TRUE, columns added will returned as [S4Vectors::Rle()] vectors
 #' to reduce memory
+#' @param sep separator string, defaults to comma. 
 #' @param ... additional arguments to pass to [GenomicRanges::findOverlaps()]
 #'
 #' @return Either a SummarizedExperiment or GRanges object with additional
@@ -210,7 +211,7 @@ annot_snps.SummarizedExperiment <- function(obj, ...) {
 #' @importFrom GenomeInfoDb seqlevelsStyle seqlevelsStyle<- seqlevels
 #'
 #' @export
-annot_from_gr <- function(obj, gr, cols_to_map, RLE = TRUE, ...) {
+annot_from_gr <- function(obj, gr, cols_to_map, RLE = TRUE, sep = ",", ...) {
     if (is(obj, "RangedSummarizedExperiment")) {
         gr_sites <- rowRanges(obj)
         return_se <- TRUE
@@ -241,7 +242,7 @@ annot_from_gr <- function(obj, gr, cols_to_map, RLE = TRUE, ...) {
             overlaps,
             tmp = unstrsplit(
                 unique(eval(parse(text = col))),
-                ","
+                sep = sep
             ),
             drop = FALSE
         )
