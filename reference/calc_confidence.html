@@ -65,7 +65,9 @@ in the SAILOR pipeline.</p>
 <span>  edit_to <span class="op">=</span> <span class="st">"G"</span>,</span>
 <span>  edit_from <span class="op">=</span> <span class="st">"A"</span>,</span>
 <span>  per_sample <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  exp_fraction <span class="op">=</span> <span class="fl">0.01</span></span>
+<span>  exp_fraction <span class="op">=</span> <span class="fl">0.01</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="fl">0L</span>,</span>
+<span>  beta <span class="op">=</span> <span class="fl">0L</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -89,7 +91,16 @@ and non-edited counts will be summed across all samples.</p></dd>
 
 
 <dt>exp_fraction</dt>
-<dd><p>Numeric, confidence margin parameter for</p></dd>
+<dd><p>Numeric value between 0 and 1, specifying the expected error
+rate</p></dd>
+
+
+<dt>alpha</dt>
+<dd><p>Pseudo-count to add to non-edited base counts</p></dd>
+
+
+<dt>beta</dt>
+<dd><p>Pseudo-count to add to edited base counts</p></dd>
 
 </dl></div>
     <div class="section level2">
