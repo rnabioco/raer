@@ -44,7 +44,7 @@
 #' library(GenomicRanges)
 #'
 #' bam_fn <- raer_example("5k_neuron_mouse_possort.bam")
-#' indexBam(bam_fn)
+#' bai <- indexBam(bam_fn)
 #'
 #' # cell barcodes to query
 #' cbs <- c("TGTTTGTTCCATCCGT-1", "CAACCAACATAATCGC-1", "TGGAACTCAAGCTGTT-1")
@@ -71,7 +71,7 @@
 #'
 #' fp <- FilterParam(library_type = "fr-second-strand",
 #'                   min_mapq = 255)
-#' #calc_scAEI(bam_fn, sites, cbs, fp)
+#' calc_scAEI(bam_fn, sites, cbs, fp)
 #'
 #' @rdname calc_scAEI
 #' @export
@@ -82,7 +82,9 @@ calc_scAEI <- function(bamfiles, sites, cell_barcodes, param = FilterParam(),
 
     if(is.null(output_dir)) {
         output_dir <- tempdir()
-        on.exit(unlink(output_dir, recursive = TRUE))
+        outfns <- c("counts.mtx.gz", "sites.txt.gz", "barcodes.txt.gz")
+        outfns <- file.path(output_dir, outfns)
+        on.exit(unlink(outfns))
     }
 
     # if unstranded, only query w.r.t + strand

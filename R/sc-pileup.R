@@ -93,7 +93,7 @@
 #'     param = fp
 #' )
 #'
-#' unlink(c(outdir, bai))
+#' unlink(bai)
 #'
 #' @importFrom GenomeInfoDb  seqinfo seqlengths
 #' @importFrom Rsamtools ScanBamParam scanBamFlag
@@ -350,7 +350,7 @@ get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
 #' sce <- read_sparray(mtx_fns[1], mtx_fns[2], mtx_fns[3])
 #' sce
 #'
-#' unlink(c(outdir, bai))
+#' unlink(bai)
 #'
 #' @importFrom data.table fread
 #' @importFrom Matrix sparseMatrix
