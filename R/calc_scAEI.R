@@ -84,7 +84,7 @@ calc_scAEI <- function(bamfiles, sites, cell_barcodes, param = FilterParam(),
         output_dir <- tempdir()
         outfns <- c("counts.mtx.gz", "sites.txt.gz", "barcodes.txt.gz")
         outfns <- file.path(output_dir, outfns)
-        on.exit(unlink(outfns, recursive = TRUE))
+        on.exit(unlink(outfns))
     }
 
     # if unstranded, only query w.r.t + strand
