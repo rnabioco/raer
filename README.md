@@ -117,7 +117,7 @@ single cell libraries.
 
 ``` r
 scbam_fn <- raer_example("5k_neuron_mouse_possort.bam")
-outdir <- tempdir("sc_editing")
+outdir <- tempdir()
 
 editing_sites <- GRanges(
     c(

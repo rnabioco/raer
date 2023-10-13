@@ -54,6 +54,6 @@ mtx_fns <- pileup_cells(bam_fn, gr, cbs, outdir,  return_sce = FALSE)
 sce <- read_sparray(mtx_fns[1], mtx_fns[2], mtx_fns[3])
 sce
 
-unlink(c(outdir, bai))
+unlink(bai)
 
 }

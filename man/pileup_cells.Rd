@@ -124,7 +124,7 @@ pileup_cells(many_small_bams,
     param = fp
 )
 
-unlink(c(outdir, bai))
+unlink(bai)
 
 }
 \seealso{
