@@ -28,7 +28,7 @@ values for sparseMatrix #2 (nAlt)
     
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.14</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.15</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -128,7 +128,7 @@ intervals, whereas `index`` will only add row indices to the rownames.</p></dd>
 <span class="r-in"><span><span class="va">bai</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/scanBam.html" class="external-link">indexBam</a></span><span class="op">(</span><span class="va">bam_fn</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="pileup_sites.html">FilterParam</a></span><span class="op">(</span>library_type <span class="op">=</span> <span class="st">"fr-second-strand"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mtx_fns</span> <span class="op">&lt;-</span> <span class="fu"><a href="pileup_cells.html">pileup_cells</a></span><span class="op">(</span><span class="va">bam_fn</span>, <span class="va">gr</span>, <span class="va">cbs</span>, <span class="va">outdir</span>,  return_sce <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">mtx_fns</span> <span class="op">&lt;-</span> <span class="fu"><a href="pileup_cells.html">pileup_cells</a></span><span class="op">(</span><span class="va">bam_fn</span>, <span class="va">gr</span>, <span class="va">cbs</span>, <span class="va">outdir</span>, return_sce <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu">read_sparray</span><span class="op">(</span><span class="va">mtx_fns</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">mtx_fns</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="va">mtx_fns</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sce</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> class: SingleCellExperiment </span>

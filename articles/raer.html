@@ -35,7 +35,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.14</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.15</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -89,7 +89,7 @@ Wells-Wrasman</h4>
 Medicine<br><h4 data-toc-skip class="author">Jay
 Hesselberth</h4>
             <address class="author_afil">
-      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-10-13</h4>
+      University of Colorado School of Medicine<br><h4 data-toc-skip class="date">2023-10-16</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/rnabioco/raer/blob/HEAD/vignettes/raer.Rmd" class="external-link"><code>vignettes/raer.Rmd</code></a></small>
       <div class="d-none name"><code>raer.Rmd</code></div>
@@ -118,6 +118,23 @@ editing sites with condition specific editing in bulk RNA-seq data, and
 c) predict novel editing sites from bulk RNA-seq.</p>
 </div>
 <div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
+<p>The <code>raer</code> package can be installed from Bioconductor
+using <code>BiocManager</code>.</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://bioconductor.github.io/BiocManager/" class="external-link">"BiocManager"</a></span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="co"># The following initializes usage of Bioc devel</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span>version <span class="op">=</span> <span class="st">"devel"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"raer"</span><span class="op">)</span></span></code></pre></div>
+<p>Alternatively <code>raer</code> can be installed from github using
+<code>BiocManager::install("rnabioco/raer")</code>.</p>
+</div>
+<div class="section level2">
 <h2 id="characterizing-rna-editing-sites-in-scrna-seq-data">Characterizing RNA editing sites in scRNA-seq data<a class="anchor" aria-label="anchor" href="#characterizing-rna-editing-sites-in-scrna-seq-data"></a>
 </h2>
 <p>Here we will use the <em>raer</em> package to examine RNA editing in
@@ -138,7 +155,7 @@ sites on chromosome 16.</p>
 RNA editing sites from the <code>REDIportal</code> database <span class="citation">Mansi et al. (2021)</span>, and a
 <code>SingleCellExperiment</code> populated with the gene expression
 data and cell type annotations.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rnabioco.github.io/raer">raer</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/rnabioco/raerdata" class="external-link">raerdata</a></span><span class="op">)</span></span>
 <span></span>
@@ -149,17 +166,17 @@ data and cell type annotations.</p>
 <span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="va">pbmc</span><span class="op">$</span><span class="va">sce</span></span></code></pre></div>
 <p>This dataset contains T-cell, B-cells, and monocyte cell
 populations.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://bioconductor.org/packages/scater/" class="external-link">scater</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/scater/man/plot_reddim.html" class="external-link">plotUMAP</a></span><span class="op">(</span><span class="va">sce</span>, colour_by <span class="op">=</span> <span class="st">"celltype"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="raer_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
+<p><img src="raer_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
 <div class="section level3">
 <h3 id="specifying-sites-to-quantify">Specifying sites to quantify<a class="anchor" aria-label="anchor" href="#specifying-sites-to-quantify"></a>
 </h3>
 <p>Next we’ll select editing sites to quantify. For this analysis we
 will use RNA editing sites cataloged in the REDIportal database <span class="citation">Mansi et al. (2021)</span>.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">editing_sites</span></span></code></pre></div>
 <pre><code><span><span class="co">## GRanges object with 15638648 ranges and 0 metadata columns:</span></span>
 <span><span class="co">##              seqnames    ranges strand</span></span>
@@ -187,7 +204,7 @@ interested in A-&gt;I editing, so we set the ref and alt to
 strand interval the bases should be the complement of the <code>+</code>
 strand bases. Also note that these bases can be stored as traditional
 character vectors or as <code><a href="https://rdrr.io/pkg/S4Vectors/man/Rle-class.html" class="external-link">Rle()</a></code> objects to save memory.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">editing_sites</span><span class="op">$</span><span class="va">REF</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/Rle-class.html" class="external-link">Rle</a></span><span class="op">(</span><span class="st">"A"</span><span class="op">)</span></span>
 <span><span class="va">editing_sites</span><span class="op">$</span><span class="va">ALT</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/Rle-class.html" class="external-link">Rle</a></span><span class="op">(</span><span class="st">"G"</span><span class="op">)</span></span>
 <span><span class="va">editing_sites</span></span></code></pre></div>
@@ -244,14 +261,16 @@ exclude many valid regions.</p>
 <p>To reduce processing time many functions in the <em>raer</em> package
 operate in parallel across multiple chromosomes. To enable parallel
 processing, a <code>BiocParallel</code> backend can be supplied via the
-<code>BPPARAM</code> argument (e.g. <code>MultiCoreParam()</code>).</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code>BPPARAM</code> argument (e.g.  <code>MultiCoreParam()</code>).</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"sc_edits"</span><span class="op">)</span></span>
 <span><span class="va">cbs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">params</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pileup_sites.html">FilterParam</a></span><span class="op">(</span>min_mapq <span class="op">=</span> <span class="fl">255</span>, <span class="co"># required alignment MAPQ score</span></span>
-<span>                      library_type <span class="op">=</span> <span class="st">"fr-second-strand"</span>, <span class="co">#library type</span></span>
-<span>                      min_variant_reads <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">params</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pileup_sites.html">FilterParam</a></span><span class="op">(</span></span>
+<span>    min_mapq <span class="op">=</span> <span class="fl">255</span>, <span class="co"># required alignment MAPQ score</span></span>
+<span>    library_type <span class="op">=</span> <span class="st">"fr-second-strand"</span>, <span class="co"># library type</span></span>
+<span>    min_variant_reads <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">e_sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pileup_cells.html">pileup_cells</a></span><span class="op">(</span></span>
 <span>    bamfile <span class="op">=</span> <span class="va">pbmc_bam</span>,</span>
@@ -259,7 +278,7 @@ processing, a <code>BiocParallel</code> backend can be supplied via the
 <span>    cell_barcodes <span class="op">=</span> <span class="va">cbs</span>,</span>
 <span>    output_directory <span class="op">=</span> <span class="va">outdir</span>,</span>
 <span>    cb_tag <span class="op">=</span> <span class="st">"CB"</span>,</span>
-<span>    umi_tag <span class="op">=</span> <span class="st">"UB"</span>, </span>
+<span>    umi_tag <span class="op">=</span> <span class="st">"UB"</span>,</span>
 <span>    param <span class="op">=</span> <span class="va">params</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">e_sce</span></span></code></pre></div>
@@ -284,13 +303,15 @@ each position.</p>
 <p>The sparseMatrices are also written to files, at a directory
 specified by <code>output_directory</code>, which can be loaded into R
 using the <code><a href="../reference/read_sparray.html">read_sparray()</a></code> function.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">dir</a></span><span class="op">(</span><span class="va">outdir</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "barcodes.txt.gz" "counts.mtx.gz"   "sites.txt.gz"</span></span></code></pre>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/read_sparray.html">read_sparray</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"counts.mtx.gz"</span><span class="op">)</span>,</span>
-<span>             <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"sites.txt.gz"</span><span class="op">)</span>,</span>
-<span>             <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"barcodes.txt.gz"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/read_sparray.html">read_sparray</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"counts.mtx.gz"</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"sites.txt.gz"</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"barcodes.txt.gz"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: SingleCellExperiment </span></span>
 <span><span class="co">## dim: 3849 500 </span></span>
 <span><span class="co">## metadata(0):</span></span>
@@ -307,38 +328,44 @@ using the <code><a href="../reference/read_sparray.html">read_sparray()</a></cod
 <p>Next we’ll filter the single cell editing dataset to find sites with
 an editing event in at least 5 cells and add the editing counts to the
 gene expression SingleCellExperiment as an <code><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp()</a></code>.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">e_sce</span> <span class="op">&lt;-</span> <span class="va">e_sce</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">e_sce</span><span class="op">)</span><span class="op">$</span><span class="va">nAlt</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">5</span>, <span class="op">]</span></span>
-<span><span class="va">e_sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">e_sce</span>, edit_from <span class="op">=</span> <span class="st">"Ref"</span>, edit_to <span class="op">=</span> <span class="st">"Alt"</span>, replace_na <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">e_sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">e_sce</span>,</span>
+<span>    edit_from <span class="op">=</span> <span class="st">"Ref"</span>,</span>
+<span>    edit_to <span class="op">=</span> <span class="st">"Alt"</span>,</span>
+<span>    replace_na <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">e_sce</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
 <p>With the editing sites added to the gene expression
 SingleCellExperiment we can use plotting and other methods previously
 developed for single cell analysis. Here we’ll visualize editing sites
 with the highest edited read counts.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">to_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/order.html" class="external-link">order</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span>, <span class="st">"nAlt"</span><span class="op">)</span><span class="op">)</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">]</span></span>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">to_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/order.html" class="external-link">order</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span>, <span class="st">"nAlt"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    decreasing <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">to_plot</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/scater/man/plot_reddim.html" class="external-link">plotUMAP</a></span><span class="op">(</span><span class="va">sce</span>, colour_by <span class="op">=</span> <span class="va">x</span>, by_exprs_values <span class="op">=</span> <span class="st">"nAlt"</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [[1]]</span></span></code></pre>
-<p><img src="raer_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
+<p><img src="raer_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## [[2]]</span></span></code></pre>
-<p><img src="raer_files/figure-html/unnamed-chunk-8-2.png" width="700"></p>
+<p><img src="raer_files/figure-html/unnamed-chunk-9-2.png" width="700"></p>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## [[3]]</span></span></code></pre>
-<p><img src="raer_files/figure-html/unnamed-chunk-8-3.png" width="700"></p>
+<p><img src="raer_files/figure-html/unnamed-chunk-9-3.png" width="700"></p>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## [[4]]</span></span></code></pre>
-<p><img src="raer_files/figure-html/unnamed-chunk-8-4.png" width="700"></p>
+<p><img src="raer_files/figure-html/unnamed-chunk-9-4.png" width="700"></p>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## [[5]]</span></span></code></pre>
-<p><img src="raer_files/figure-html/unnamed-chunk-8-5.png" width="700"></p>
+<p><img src="raer_files/figure-html/unnamed-chunk-9-5.png" width="700"></p>
 <p>Alternatively we can view these top edited sites as a Heatmap,
 showing the average number of edited reads per site in each cell
 type.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">celltype</span> <span class="op">&lt;-</span> <span class="va">sce</span><span class="op">$</span><span class="va">celltype</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/scater/man/plotGroupedHeatmap.html" class="external-link">plotGroupedHeatmap</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html" class="external-link">altExp</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span>,</span>
@@ -346,7 +373,7 @@ type.</p>
 <span>    group <span class="op">=</span> <span class="st">"celltype"</span>,</span>
 <span>    exprs_values <span class="op">=</span> <span class="st">"nAlt"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="raer_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
+<p><img src="raer_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
 <p><em>raer</em> provides additional tools to examine cell type specific
 editing.</p>
 <ul>
@@ -376,21 +403,45 @@ the reference editing sites need to be reported all on the
 complemented (set as T -&gt; C rather than A -&gt; G). Additionally the
 <code>umi_tag</code> and <code>cb_tag</code> arguments should be set as
 follows to disable UMI and cell barcode detection.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Note these steps are not run </span></span>
-<span><span class="va">is_minus</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/strand.html" class="external-link">strand</a></span><span class="op">(</span><span class="va">editing_sites</span><span class="op">)</span> <span class="op">==</span> <span class="st">"-"</span></span>
-<span><span class="va">editing_sites</span><span class="op">[</span><span class="va">is_minus</span><span class="op">]</span><span class="op">$</span><span class="va">REF</span> <span class="op">&lt;-</span> <span class="st">"T"</span> </span>
+<p>To illustrate this functionality, we will reprocess the 10x Genomics
+pbmc dataset, treating the data as mock Smart-seq2 data from 3
+cells.</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">is_minus</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/strand.html" class="external-link">strand</a></span><span class="op">(</span><span class="va">editing_sites</span><span class="op">)</span> <span class="op">==</span> <span class="st">"-"</span></span>
+<span><span class="va">editing_sites</span><span class="op">[</span><span class="va">is_minus</span><span class="op">]</span><span class="op">$</span><span class="va">REF</span> <span class="op">&lt;-</span> <span class="st">"T"</span></span>
 <span><span class="va">editing_sites</span><span class="op">[</span><span class="va">is_minus</span><span class="op">]</span><span class="op">$</span><span class="va">ALT</span> <span class="op">&lt;-</span> <span class="st">"C"</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/strand.html" class="external-link">strand</a></span><span class="op">(</span><span class="va">editing_sites</span><span class="op">[</span><span class="va">is_minus</span><span class="op">]</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"+"</span></span>
 <span></span>
-<span><span class="va">vector_of_bam_files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cell1.bam"</span>, <span class="st">"cell2.bam"</span>, <span class="st">"cell3.bam"</span><span class="op">)</span></span>
-<span><span class="va">vector_of_cell_ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cell1"</span>, <span class="st">"cell2"</span>, <span class="st">"cell3"</span><span class="op">)</span></span>
+<span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pileup_sites.html">FilterParam</a></span><span class="op">(</span></span>
+<span>    library_type <span class="op">=</span> <span class="st">"unstranded"</span>,</span>
+<span>    min_mapq <span class="op">=</span> <span class="fl">255</span>,</span>
+<span>    min_variant_reads <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/pileup_cells.html">pileup_cells</a></span><span class="op">(</span>bamfiles <span class="op">=</span> <span class="va">vector_of_bam_files</span>,</span>
-<span>             cell_barcodes <span class="op">=</span> <span class="va">vector_of_cell_ids</span>, </span>
-<span>             sites <span class="op">=</span> <span class="va">editing_sites</span>, </span>
-<span>             umi_tag <span class="op">=</span> <span class="cn">NULL</span>,  <span class="co"># no UMI tag in most Smart-seq2 libraries</span></span>
-<span>             cb_tag <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span>   <span class="co"># no cell barcode in most Smart-seq2 libraries</span></span></code></pre></div>
+<span><span class="va">ss2_bams</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">pbmc_bam</span>, <span class="va">pbmc_bam</span>, <span class="va">pbmc_bam</span><span class="op">)</span></span>
+<span><span class="va">cell_ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cell1"</span>, <span class="st">"cell2"</span>, <span class="st">"cell3"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/pileup_cells.html">pileup_cells</a></span><span class="op">(</span></span>
+<span>    bamfiles <span class="op">=</span> <span class="va">ss2_bams</span>,</span>
+<span>    cell_barcodes <span class="op">=</span> <span class="va">cell_ids</span>,</span>
+<span>    sites <span class="op">=</span> <span class="va">editing_sites</span>,</span>
+<span>    umi_tag <span class="op">=</span> <span class="cn">NULL</span>, <span class="co"># no UMI tag in most Smart-seq2 libraries</span></span>
+<span>    cb_tag <span class="op">=</span> <span class="cn">NULL</span>, <span class="co"># no cell barcode tag</span></span>
+<span>    param <span class="op">=</span> <span class="va">fp</span>,</span>
+<span>    output_directory <span class="op">=</span> <span class="va">outdir</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## class: SingleCellExperiment </span></span>
+<span><span class="co">## dim: 161913 3 </span></span>
+<span><span class="co">## metadata(0):</span></span>
+<span><span class="co">## assays(2): nRef nAlt</span></span>
+<span><span class="co">## rownames(161913): site_chr16_22107_1_TC site_chr16_22140_1_TC ...</span></span>
+<span><span class="co">##   site_chr16_31454310_1_TC site_chr16_31454314_1_TC</span></span>
+<span><span class="co">## rowData names(2): REF ALT</span></span>
+<span><span class="co">## colnames(3): cell1 cell2 cell3</span></span>
+<span><span class="co">## colData names(0):</span></span>
+<span><span class="co">## reducedDimNames(0):</span></span>
+<span><span class="co">## mainExpName: NULL</span></span>
+<span><span class="co">## altExpNames(0):</span></span></code></pre>
 </div>
 </div>
 <div class="section level2">
@@ -412,14 +463,14 @@ for this vignette and are available using <code><a href="https://rdrr.io/pkg/rae
 the <code>raerdata</code> package. Calling <code><a href="https://rdrr.io/pkg/raerdata/man/GSE99249.html" class="external-link">GSE99249()</a></code> will
 downloaded and cache the necessary files and return a list containing
 the data.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ifnb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/raerdata/man/GSE99249.html" class="external-link">GSE99249</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">ifnb</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "bams"  "fasta" "sites"</span></span></code></pre>
 <p><code>bams</code> contains a vector of <code>BamFile</code> objects
 with the paths to each BAM file. These BAM files are a subset of the
 full BAM files, containing alignments from chromosome 18.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bam_files</span> <span class="op">&lt;-</span> <span class="va">ifnb</span><span class="op">$</span><span class="va">bams</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">bam_files</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "SRR5564260" "SRR5564261" "SRR5564269" "SRR5564270" "SRR5564271"</span></span>
@@ -427,13 +478,15 @@ full BAM files, containing alignments from chromosome 18.</p>
 <p>To quantify editing sites we will need a FASTA file to compare read
 alignments to the reference sequence. For space reasons we’ll use a
 FASTA file containing only chromosome 18 for this demo.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fafn</span> <span class="op">&lt;-</span> <span class="va">ifnb</span><span class="op">$</span><span class="va">fasta</span></span></code></pre></div>
 <p>We will again use the database of known human editing sites from
 REDIPortal, only processing those from <code>chr18</code>.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">editing_sites</span> <span class="op">&lt;-</span> <span class="va">ifnb</span><span class="op">$</span><span class="va">sites</span></span>
-<span><span class="va">chr_18_editing_sites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomeInfoDb/man/seqlevels-wrappers.html" class="external-link">keepSeqlevels</a></span><span class="op">(</span><span class="va">editing_sites</span>, <span class="st">"chr18"</span>, pruning.mode<span class="op">=</span><span class="st">"coarse"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">chr_18_editing_sites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomeInfoDb/man/seqlevels-wrappers.html" class="external-link">keepSeqlevels</a></span><span class="op">(</span><span class="va">editing_sites</span>, <span class="st">"chr18"</span>,</span>
+<span>    pruning.mode <span class="op">=</span> <span class="st">"coarse"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="generate-editing-site-read-counts-using-pileup_sites">Generate editing site read counts using <em>pileup_sites</em><a class="anchor" aria-label="anchor" href="#generate-editing-site-read-counts-using-pileup_sites"></a>
 </h3>
@@ -445,15 +498,15 @@ RNA-editing events. Specific regions can also be queried using the
 <code>region</code> argument which accepts a samtools style region
 specification string (e.g. <code>chr</code> or
 <code>chr:start-end</code>).</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pileup_sites.html">FilterParam</a></span><span class="op">(</span></span>
-<span>    only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span>,        <span class="co"># only report sites with variants</span></span>
-<span>    trim_5p <span class="op">=</span> <span class="fl">5</span>,                      <span class="co"># bases to remove from 5' or 3' end </span></span>
+<span>    only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span>, <span class="co"># only report sites with variants</span></span>
+<span>    trim_5p <span class="op">=</span> <span class="fl">5</span>, <span class="co"># bases to remove from 5' or 3' end</span></span>
 <span>    trim_3p <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>    min_base_quality <span class="op">=</span> <span class="fl">30</span>,           <span class="co"># minimum base quality score</span></span>
-<span>    min_mapq <span class="op">=</span> <span class="fl">255</span>,                  <span class="co"># minimum MAPQ read score</span></span>
+<span>    min_base_quality <span class="op">=</span> <span class="fl">30</span>, <span class="co"># minimum base quality score</span></span>
+<span>    min_mapq <span class="op">=</span> <span class="fl">255</span>, <span class="co"># minimum MAPQ read score</span></span>
 <span>    library_type <span class="op">=</span> <span class="st">"fr-first-strand"</span>, <span class="co"># library type</span></span>
-<span>    min_splice_overhang <span class="op">=</span> <span class="fl">10</span>          <span class="co"># minimum required splice site overhang</span></span>
+<span>    min_splice_overhang <span class="op">=</span> <span class="fl">10</span> <span class="co"># minimum required splice site overhang</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pileup_sites.html">pileup_sites</a></span><span class="op">(</span><span class="va">bam_files</span>,</span>
@@ -485,11 +538,11 @@ within the object. <code>REF</code> and <code>ALT</code> bases and base
 count data are all provided in a stand specific fashion depending on the
 supplied <code>library-type</code> parameter. The <code>REF</code> and
 <code>ALT</code> bases are in reference to the strand.</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## List of length 7</span></span>
 <span><span class="co">## names(7): ALT nRef nAlt nA nT nC nG</span></span></code></pre>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"nA"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">##                     SRR5564260 SRR5564261 SRR5564269 SRR5564270</span></span>
 <span><span class="co">## site_chr18_178100_1          2          0          0          1</span></span>
@@ -503,7 +556,7 @@ supplied <code>library-type</code> parameter. The <code>REF</code> and
 <span><span class="co">## site_chr18_184659_1          2          1</span></span>
 <span><span class="co">## site_chr18_184747_1          3          2</span></span>
 <span><span class="co">## site_chr18_185203_1          1          0</span></span></code></pre>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"nG"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">##                     SRR5564260 SRR5564261 SRR5564269 SRR5564270</span></span>
 <span><span class="co">## site_chr18_178100_1          0          0          0          0</span></span>
@@ -519,9 +572,9 @@ supplied <code>library-type</code> parameter. The <code>REF</code> and
 <span><span class="co">## site_chr18_185203_1          0          0</span></span></code></pre>
 <p>Next we’ll add sample information which will be needed for identify
 sites with differential editing frequencies across genotypes.</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">treatment</span> <span class="op">&lt;-</span> <span class="st">"Interferon beta"</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">genotype</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ADAR1KO"</span>,<span class="st">"Wildtype"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">genotype</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ADAR1KO"</span>, <span class="st">"Wildtype"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## DataFrame with 6 rows and 3 columns</span></span>
 <span><span class="co">##                 sample       treatment genotype</span></span>
@@ -546,7 +599,7 @@ counts, however these are useful for filtering and visualization.
 object, the editing frequency (<code>edit_freq</code>) and read
 <code>depth</code>, both computed based on the <code>edit_to</code> and
 <code>edit_from</code> counts.</p>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">rse</span>,</span>
 <span>    edit_from <span class="op">=</span> <span class="st">"A"</span>,</span>
 <span>    edit_to <span class="op">=</span> <span class="st">"G"</span>,</span>
@@ -555,7 +608,7 @@ object, the editing frequency (<code>edit_freq</code>) and read
 <p>We’ll next filter to exclude low frequency editing events. For this
 analysis we require that an editing site shows editing in at least 1
 sample and has at least 5 counts in each sample.</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">has_editing</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"edit_freq"</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">1</span></span>
 <span><span class="va">has_depth</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"depth"</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">5</span><span class="op">)</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span>
 <span></span>
@@ -574,10 +627,10 @@ sample and has at least 5 counts in each sample.</p>
 alternative data structure for differential editing analysis that
 contains an assay with read counts of both the <code>ALT</code> and
 <code>REF</code> alleles in a single matrix.</p>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">deobj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_de_object.html">make_de_object</a></span><span class="op">(</span><span class="va">rse</span>, min_prop <span class="op">=</span> <span class="fl">0.05</span>, min_samples <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">deobj</span>, <span class="st">"counts"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">7</span>,<span class="fl">2</span>,<span class="fl">8</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">deobj</span>, <span class="st">"counts"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">7</span>, <span class="fl">2</span>, <span class="fl">8</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">##                     SRR5564260_ref SRR5564260_alt SRR5564261_ref</span></span>
 <span><span class="co">## site_chr18_691546_2              8              0              6</span></span>
 <span><span class="co">## site_chr18_691578_2              8              0              7</span></span>
@@ -597,9 +650,9 @@ For differential editing, we use the design
 <code>design &lt;- ~0 + condition:sample + condition:count</code> and
 perform testing to compare the edited read counts against unedited read
 counts.</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">deobj</span><span class="op">$</span><span class="va">sample</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">deobj</span><span class="op">$</span><span class="va">sample</span><span class="op">)</span></span>
-<span><span class="va">de_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_de_sites.html">find_de_sites</a></span><span class="op">(</span><span class="va">deobj</span>, </span>
+<span><span class="va">de_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_de_sites.html">find_de_sites</a></span><span class="op">(</span><span class="va">deobj</span>,</span>
 <span>    test <span class="op">=</span> <span class="st">"DESeq2"</span>,</span>
 <span>    sample_col <span class="op">=</span> <span class="st">"sample"</span>,</span>
 <span>    condition_col <span class="op">=</span> <span class="st">"genotype"</span>,</span>
@@ -608,7 +661,7 @@ counts.</p>
 <span><span class="op">)</span></span></code></pre></div>
 <p>This returns a list containing the dds object, the full results, the
 significant results, and the model matrix.</p>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">de_results</span><span class="op">$</span><span class="va">sig_results</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">##                        baseMean log2FoldChange     lfcSE      stat</span></span>
 <span><span class="co">## site_chr18_23296417_2 15.500000      -2.450652 0.8459822 -2.896813</span></span>
@@ -622,15 +675,15 @@ significant results, and the model matrix.</p>
 <span><span class="co">## site_chr18_21632030_1 0.023959185 0.036474262</span></span>
 <span><span class="co">## site_chr18_21631237_1 0.029545546 0.044059148</span></span>
 <span><span class="co">## site_chr18_35263230_2 0.022309459 0.035633191</span></span></code></pre>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jokergoo/ComplexHeatmap" class="external-link">ComplexHeatmap</a></span><span class="op">)</span></span>
 <span><span class="va">top_sites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">de_results</span><span class="op">$</span><span class="va">sig_results</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">20</span><span class="op">]</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/ComplexHeatmap/man/Heatmap.html" class="external-link">Heatmap</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"edit_freq"</span><span class="op">)</span><span class="op">[</span><span class="va">top_sites</span>, <span class="op">]</span>, </span>
-<span>        name <span class="op">=</span> <span class="st">"editing frequency"</span>,</span>
-<span>        column_labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">rse</span><span class="op">$</span><span class="va">genotype</span>, <span class="st">"-"</span>, <span class="va">rse</span><span class="op">$</span><span class="va">treatment</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/ComplexHeatmap/man/Heatmap.html" class="external-link">Heatmap</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"edit_freq"</span><span class="op">)</span><span class="op">[</span><span class="va">top_sites</span>, <span class="op">]</span>,</span>
+<span>    name <span class="op">=</span> <span class="st">"editing frequency"</span>,</span>
+<span>    column_labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">rse</span><span class="op">$</span><span class="va">genotype</span>, <span class="st">"-"</span>, <span class="va">rse</span><span class="op">$</span><span class="va">treatment</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="raer_files/figure-html/unnamed-chunk-23-1.png" width="480"></p>
+<p><img src="raer_files/figure-html/unnamed-chunk-24-1.png" width="480"></p>
 <p>As anticipated the top identified sites are those with greatly
 reduced editing in the ADAR1KO samples.</p>
 </div>
@@ -656,7 +709,7 @@ The SNP coordinates are <code>NCBI</code> based, whereas the
 <code>ALU</code> elements are based on <code>hg38</code>, we will
 therefore convert between the two as needed to obtain SNP and ALU
 element coordinates based on <code>hg38</code>.</p>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">AnnotationHub</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SNPlocs.Hsapiens.dbSNP144.GRCh38</span><span class="op">)</span></span>
 <span></span>
@@ -665,7 +718,7 @@ element coordinates based on <code>hg38</code>.</p>
 <span></span>
 <span><span class="va">alus</span> <span class="op">&lt;-</span> <span class="va">rmsk_hg38</span><span class="op">[</span><span class="va">rmsk_hg38</span><span class="op">$</span><span class="va">repFamily</span> <span class="op">==</span> <span class="st">"Alu"</span>, <span class="op">]</span></span>
 <span><span class="va">alus</span> <span class="op">&lt;-</span> <span class="va">alus</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/GenomeInfoDb/man/seqinfo.html" class="external-link">seqnames</a></span><span class="op">(</span><span class="va">alus</span><span class="op">)</span> <span class="op">==</span> <span class="st">"chr18"</span>, <span class="op">]</span></span>
-<span><span class="va">alus</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomeInfoDb/man/seqlevels-wrappers.html" class="external-link">keepStandardChromosomes</a></span><span class="op">(</span><span class="va">alus</span><span class="op">)</span> </span>
+<span><span class="va">alus</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomeInfoDb/man/seqlevels-wrappers.html" class="external-link">keepStandardChromosomes</a></span><span class="op">(</span><span class="va">alus</span><span class="op">)</span></span>
 <span><span class="va">alus</span> <span class="op">&lt;-</span> <span class="va">alus</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">1000</span>, <span class="op">]</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/GenomeInfoDb/man/seqlevelsStyle.html" class="external-link">seqlevelsStyle</a></span><span class="op">(</span><span class="va">alus</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"NCBI"</span></span>
@@ -683,7 +736,7 @@ element coordinates based on <code>hg38</code>.</p>
 <span><span class="co">##   [3]    chr18     21667      *</span></span>
 <span><span class="co">##   -------</span></span>
 <span><span class="co">##   seqinfo: 25 sequences (1 circular) from hg38 genome</span></span></code></pre>
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/GenomeInfoDb/man/seqlevelsStyle.html" class="external-link">seqlevelsStyle</a></span><span class="op">(</span><span class="va">alus</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"UCSC"</span></span>
 <span><span class="va">alus</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">## GRanges object with 3 ranges and 11 metadata columns:</span></span>
@@ -707,20 +760,21 @@ element coordinates based on <code>hg38</code>.</p>
 <p><code><a href="../reference/calc_AEI.html">calc_AEI()</a></code> returns a matrix containing the AEI
 calculated for all allelic combinations and a more detailed table
 containing values for each chromosome.</p>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">alu_index</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_AEI.html">calc_AEI</a></span><span class="op">(</span><span class="va">bam_files</span>, </span>
-<span>                      fasta <span class="op">=</span> <span class="va">fafn</span>, </span>
-<span>                      snp_db <span class="op">=</span> <span class="va">alu_snps</span>,</span>
-<span>                      alu_ranges <span class="op">=</span> <span class="va">alus</span>, </span>
-<span>                      param <span class="op">=</span> <span class="va">fp</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">alu_index</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_AEI.html">calc_AEI</a></span><span class="op">(</span><span class="va">bam_files</span>,</span>
+<span>    fasta <span class="op">=</span> <span class="va">fafn</span>,</span>
+<span>    snp_db <span class="op">=</span> <span class="va">alu_snps</span>,</span>
+<span>    alu_ranges <span class="op">=</span> <span class="va">alus</span>,</span>
+<span>    param <span class="op">=</span> <span class="va">fp</span></span>
+<span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">alu_index</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "AEI"           "AEI_per_chrom"</span></span></code></pre>
-<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/ComplexHeatmap/man/Heatmap.html" class="external-link">Heatmap</a></span><span class="op">(</span><span class="va">alu_index</span><span class="op">$</span><span class="va">AEI</span>, </span>
-<span>        name <span class="op">=</span> <span class="st">"AEI"</span>,</span>
-<span>        row_labels <span class="op">=</span> <span class="va">rse</span><span class="op">$</span><span class="va">genotype</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">match</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">alu_index</span><span class="op">$</span><span class="va">AEI</span><span class="op">)</span>, <span class="va">rse</span><span class="op">$</span><span class="va">sample</span><span class="op">)</span><span class="op">]</span></span>
+<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/ComplexHeatmap/man/Heatmap.html" class="external-link">Heatmap</a></span><span class="op">(</span><span class="va">alu_index</span><span class="op">$</span><span class="va">AEI</span>,</span>
+<span>    name <span class="op">=</span> <span class="st">"AEI"</span>,</span>
+<span>    row_labels <span class="op">=</span> <span class="va">rse</span><span class="op">$</span><span class="va">genotype</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">match</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">alu_index</span><span class="op">$</span><span class="va">AEI</span><span class="op">)</span>, <span class="va">rse</span><span class="op">$</span><span class="va">sample</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="raer_files/figure-html/unnamed-chunk-26-1.png" width="700"></p>
+<p><img src="raer_files/figure-html/unnamed-chunk-27-1.png" width="700"></p>
 <p>The AEI in the <code>Wildtype</code> samples is highest for
 <code>A-to-G</code>, and sharply reduced in the <code>ADAR1KO</code>
 samples as expected.</p>
@@ -749,7 +803,7 @@ in a human cell line (<code>NA12878</code>).</p>
 containing SNPs corresponding to the first 1Mb region of chr4 have been
 prepared for this vignette and can be downloaded and cached using
 <code><a href="https://rdrr.io/pkg/raerdata/man/NA12878.html" class="external-link">NA12878()</a></code>.</p>
-<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rna_wgs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/raerdata/man/NA12878.html" class="external-link">NA12878</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">rna_wgs</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "bams"  "fasta" "snps"</span></span></code></pre>
@@ -767,7 +821,7 @@ transcript models. Alternatively these can be generated from a
 <li><p>RepeatMasker annotations, which can be obtained from the
 <code><a href="https://rdrr.io/pkg/AnnotationHub/man/AnnotationHub-class.html" class="external-link">AnnotationHub()</a></code> for hg38, as shown in the <a href="#bulk">bulk RNA-seq</a> tutorial.</p></li>
 </ul>
-<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">TxDb.Hsapiens.UCSC.hg38.knownGene</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">txdb</span> <span class="op">&lt;-</span> <span class="va">TxDb.Hsapiens.UCSC.hg38.knownGene</span></span>
@@ -778,27 +832,27 @@ subset of the filtering parameters (<code><a href="../reference/pileup_sites.htm
 accept multiple arguments matched to each of the input BAM files. This
 allows us to have distinct settings for the WGS and RNA-seq BAM
 files.</p>
-<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bams</span> <span class="op">&lt;-</span> <span class="va">rna_wgs</span><span class="op">$</span><span class="va">bams</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">bams</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rna"</span>, <span class="st">"dna"</span><span class="op">)</span></span>
 <span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pileup_sites.html">FilterParam</a></span><span class="op">(</span></span>
-<span>    min_depth <span class="op">=</span> <span class="fl">1</span>,               <span class="co"># minimum read depth across all samples</span></span>
-<span>    min_base_quality <span class="op">=</span> <span class="fl">30</span>,       <span class="co"># minimum base quality</span></span>
-<span>    min_mapq <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">255</span>, <span class="fl">30</span><span class="op">)</span>,       <span class="co"># minimum MAPQ for each BAM file</span></span>
-<span>    library_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"fr-first-strand"</span>, <span class="st">"unstranded"</span><span class="op">)</span>, <span class="co"># library-type for each BAM file</span></span>
-<span>    trim_5p <span class="op">=</span> <span class="fl">5</span>,                 <span class="co"># bases to trim from 5' end of alignment</span></span>
-<span>    trim_3p <span class="op">=</span> <span class="fl">5</span>,                 <span class="co"># bases to trim from 3' end of alignment</span></span>
-<span>    indel_dist <span class="op">=</span> <span class="fl">4</span>,              <span class="co"># ignore read if contains an indel within distance from site</span></span>
-<span>    min_splice_overhang <span class="op">=</span> <span class="fl">10</span>,    <span class="co"># required alignment overhang in order to count read with splice </span></span>
-<span>    read_bqual <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">20</span><span class="op">)</span>,    <span class="co"># minimum fraction of the read (0.25) that must have base quality of (20)</span></span>
+<span>    min_depth <span class="op">=</span> <span class="fl">1</span>, <span class="co"># minimum read depth across all samples</span></span>
+<span>    min_base_quality <span class="op">=</span> <span class="fl">30</span>, <span class="co"># minimum base quality</span></span>
+<span>    min_mapq <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">255</span>, <span class="fl">30</span><span class="op">)</span>, <span class="co"># minimum MAPQ for each BAM file</span></span>
+<span>    library_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"fr-first-strand"</span>, <span class="st">"unstranded"</span><span class="op">)</span>, <span class="co"># sample library-types</span></span>
+<span>    trim_5p <span class="op">=</span> <span class="fl">5</span>, <span class="co"># bases to trim from 5' end of alignment</span></span>
+<span>    trim_3p <span class="op">=</span> <span class="fl">5</span>, <span class="co"># bases to trim from 3' end of alignment</span></span>
+<span>    indel_dist <span class="op">=</span> <span class="fl">4</span>, <span class="co"># ignore read if contains an indel within distance from site</span></span>
+<span>    min_splice_overhang <span class="op">=</span> <span class="fl">10</span>, <span class="co"># required spliced alignment overhang</span></span>
+<span>    read_bqual <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">20</span><span class="op">)</span>, <span class="co"># fraction of the read with base quality</span></span>
 <span>    only_keep_variants <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">TRUE</span>, <span class="cn">FALSE</span><span class="op">)</span>, <span class="co"># report site if rnaseq BAM has variant</span></span>
-<span>    report_multiallelic <span class="op">=</span> <span class="cn">FALSE</span>, <span class="co"># do not report sites with multiple variant alleles</span></span>
+<span>    report_multiallelic <span class="op">=</span> <span class="cn">FALSE</span>, <span class="co"># exclude sites with multiple variant alleles</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pileup_sites.html">pileup_sites</a></span><span class="op">(</span><span class="va">bams</span>,</span>
-<span>                    fasta <span class="op">=</span> <span class="va">rna_wgs</span><span class="op">$</span><span class="va">fasta</span>,</span>
-<span>                    chroms <span class="op">=</span> <span class="st">"chr4"</span>,</span>
-<span>                    param <span class="op">=</span> <span class="va">fp</span></span>
+<span>    fasta <span class="op">=</span> <span class="va">rna_wgs</span><span class="op">$</span><span class="va">fasta</span>,</span>
+<span>    chroms <span class="op">=</span> <span class="st">"chr4"</span>,</span>
+<span>    param <span class="op">=</span> <span class="va">fp</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">rse</span></span></code></pre></div>
@@ -818,8 +872,10 @@ reported on the “+” strand whereas the RNA-seq data will be reported on
 expressing RNA strand. We therefore use
 <code>subsetByOverlaps(..., ignore.strand = TRUE)</code> to retain sites
 passing these DNA-seq based filters independent of strand.</p>
-<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">to_keep</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"nRef"</span><span class="op">)</span><span class="op">[</span>, <span class="st">"dna"</span><span class="op">]</span> <span class="op">&gt;=</span> <span class="fl">5</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"ALT"</span><span class="op">)</span><span class="op">[</span>, <span class="st">"dna"</span><span class="op">]</span> <span class="op">==</span> <span class="st">"-"</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">to_keep</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"nRef"</span><span class="op">)</span><span class="op">[</span>, <span class="st">"dna"</span><span class="op">]</span> <span class="op">&gt;=</span> <span class="fl">5</span> <span class="op">&amp;</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"ALT"</span><span class="op">)</span><span class="op">[</span>, <span class="st">"dna"</span><span class="op">]</span> <span class="op">==</span> <span class="st">"-"</span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/findOverlaps-methods.html" class="external-link">subsetByOverlaps</a></span><span class="op">(</span><span class="va">rse</span>, <span class="va">rse</span><span class="op">[</span><span class="va">to_keep</span>, <span class="op">]</span>, ignore.strand <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] 339</span></span></code></pre>
@@ -832,7 +888,7 @@ multiple variants in the samples present in the
 the <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData()</a></code> to indicate the variant for each site, and
 will calculate an <code>edit_freq</code> assay with variant allele
 frequencies for each sample.</p>
-<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_multiallelic.html">filter_multiallelic</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span>
 <span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_edit_frequency.html">calc_edit_frequency</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></code></pre></div>
@@ -853,12 +909,15 @@ frequencies for each sample.</p>
 <p>Next we’ll remove sites in simple repeat regions. We will add repeat
 information to the <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData()</a></code> using the
 <code><a href="../reference/annot_from_gr.html">annot_from_gr()</a></code> function.</p>
-<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb65"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># subset both to chromosome 4 to avoid warning about different seqlevels</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/GenomeInfoDb/man/seqinfo.html" class="external-link">seqlevels</a></span><span class="op">(</span><span class="va">rse</span>, pruning.mode <span class="op">=</span> <span class="st">"coarse"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"chr4"</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/GenomeInfoDb/man/seqinfo.html" class="external-link">seqlevels</a></span><span class="op">(</span><span class="va">rmsk_hg38</span>, pruning.mode <span class="op">=</span> <span class="st">"coarse"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"chr4"</span></span>
 <span></span>
-<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/annot_from_gr.html">annot_from_gr</a></span><span class="op">(</span><span class="va">rse</span>, <span class="va">rmsk_hg38</span>, cols_to_map <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"repName"</span>, <span class="st">"repClass"</span>, <span class="st">"repFamily"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/annot_from_gr.html">annot_from_gr</a></span><span class="op">(</span><span class="va">rse</span>,</span>
+<span>    <span class="va">rmsk_hg38</span>,</span>
+<span>    cols_to_map <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"repName"</span>, <span class="st">"repClass"</span>, <span class="st">"repFamily"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"repName"</span>, <span class="st">"repFamily"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">## DataFrame with 260 rows and 2 columns</span></span>
@@ -875,12 +934,12 @@ information to the <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/S
 <span><span class="co">## site_chr4_994239_1   AluJr       Alu</span></span>
 <span><span class="co">## site_chr4_995144_1      NA        NA</span></span>
 <span><span class="co">## site_chr4_995145_1      NA        NA</span></span></code></pre>
-<div class="sourceCode" id="cb65"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="va">rse</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">repFamily</span> <span class="op"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Simple_repeat"</span>, <span class="st">"Low_complexity"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
 <p>Next we’ll remove sites adjacent to other sites with different
 variant types. For example if an A-&gt;G variant is located proximal to
 a C-&gt;T variant then the variants will be removed.</p>
-<div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/GenomeInfoDb/man/seqinfo.html" class="external-link">seqlevels</a></span><span class="op">(</span><span class="va">txdb</span>, pruning.mode <span class="op">=</span> <span class="st">"coarse"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"chr4"</span></span>
 <span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_clustered_variants.html">filter_clustered_variants</a></span><span class="op">(</span><span class="va">rse</span>, <span class="va">txdb</span>, variant_dist <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="va">rse</span></span></code></pre></div>
@@ -900,7 +959,7 @@ variant base to the SNP variant base. Here we will use the
 <code><a href="../reference/annot_from_gr.html">annot_from_gr()</a></code> function to annotate using the
 <code>chr4snps</code> object and coarsely remove any editing sites
 overlapping the same position as a SNP.</p>
-<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/annot_from_gr.html">annot_from_gr</a></span><span class="op">(</span><span class="va">rse</span>, <span class="va">chr4snps</span>, <span class="st">"name"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"name"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">## DataFrame with 159 rows and 1 column</span></span>
@@ -917,7 +976,7 @@ overlapping the same position as a SNP.</p>
 <span><span class="co">## site_chr4_994239_1           NA</span></span>
 <span><span class="co">## site_chr4_995144_1 rs1217215121</span></span>
 <span><span class="co">## site_chr4_995145_1           NA</span></span></code></pre>
-<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="va">rse</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">name</span><span class="op">)</span>, <span class="op">]</span></span>
 <span><span class="va">rse</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: RangedSummarizedExperiment </span></span>
@@ -932,7 +991,7 @@ overlapping the same position as a SNP.</p>
 <p>Lastly, we’ll further filter the edit sites to require that the
 editing frequency is &gt; 0.05 and that at least 2 reads support the
 editing site.</p>
-<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb74"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">to_keep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rse</span>, <span class="st">"edit_freq"</span><span class="op">)</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">&gt;</span> <span class="fl">0.05</span></span>
 <span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="va">rse</span><span class="op">[</span><span class="va">to_keep</span>, <span class="op">]</span></span>
 <span></span>
@@ -944,7 +1003,7 @@ editing is more common than other types of editing (e.g. C-&gt;U editing
 by APOBEC enzymes) in human datasets so the majority of the variants
 should by A-to-G. In this vignette data all of the identified sites are
 A-to-G.</p>
-<div class="sourceCode" id="cb73"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb75"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">rowRanges</span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## GRanges object with 10 ranges and 9 metadata columns:</span></span>
 <span><span class="co">##                      seqnames    ranges strand |         REF      rpbz</span></span>
@@ -986,12 +1045,14 @@ A-to-G.</p>
 <span><span class="co">##   -------</span></span>
 <span><span class="co">##   seqinfo: 1 sequence from an unspecified genome</span></span></code></pre>
 <p>Finally once a set of sites has been identified, additional packages
-in the bioconductor ecosystem, such the <a href="https://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html" class="external-link">VariantAnnotation</a>
+in the Bioconductor ecosystem, such as the <a href="https://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html" class="external-link">VariantAnnotation</a>
 package, can be used to determine the genomic context and potential
 molecular consequences of the editing event.</p>
-<details style="margin-bottom:10px;"><summary>
-Session info
-</summary><div class="sourceCode" id="cb75"><pre class="downlit sourceCode r">
+</div>
+<div class="section level2">
+<h2 id="r-session-information">R session information<a class="anchor" aria-label="anchor" href="#r-session-information"></a>
+</h2>
+<div class="sourceCode" id="cb77"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.3.1 (2023-06-16)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu (64-bit)</span></span>
@@ -1044,7 +1105,7 @@ Session info
 <span><span class="co">## [25] S4Vectors_0.39.3                        </span></span>
 <span><span class="co">## [26] BiocGenerics_0.47.0                     </span></span>
 <span><span class="co">## [27] raerdata_0.99.3                         </span></span>
-<span><span class="co">## [28] raer_0.99.14                            </span></span>
+<span><span class="co">## [28] raer_0.99.15                            </span></span>
 <span><span class="co">## [29] BiocStyle_2.29.2                        </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
@@ -1107,13 +1168,13 @@ Session info
 <span><span class="co">## [113] fs_1.6.3                      ggbeeswarm_0.7.2             </span></span>
 <span><span class="co">## [115] stringi_1.7.12                viridisLite_0.4.2            </span></span>
 <span><span class="co">## [117] BiocParallel_1.35.4           munsell_0.5.0                </span></span>
-<span><span class="co">## [119] Matrix_1.6-1.1                ExperimentHub_2.8.1          </span></span>
+<span><span class="co">## [119] Matrix_1.6-1.1                ExperimentHub_2.9.1          </span></span>
 <span><span class="co">## [121] hms_1.1.3                     sparseMatrixStats_1.13.4     </span></span>
 <span><span class="co">## [123] bit64_4.0.5                   KEGGREST_1.41.4              </span></span>
-<span><span class="co">## [125] shiny_1.7.5                   interactiveDisplayBase_1.39.0</span></span>
+<span><span class="co">## [125] shiny_1.7.5.1                 interactiveDisplayBase_1.39.0</span></span>
 <span><span class="co">## [127] memoise_2.0.1                 bslib_0.5.1                  </span></span>
 <span><span class="co">## [129] bit_4.0.5</span></span></code></pre>
-</details><div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-Bonfield2021-yo" class="csl-entry">
 Bonfield, James K, John Marshall, Petr Danecek, Heng Li, Valeriu Ohan,
 Andrew Whitwham, Thomas Keane, and Robert M Davies. 2021.

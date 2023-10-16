@@ -22,7 +22,7 @@ summary AEI metric."><meta property="og:image" content="https://rnabioco.github.
     
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.14</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.15</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -101,11 +101,12 @@ calculating the AEI, typically ALU repeats.</p></dd>
 
 
 <dt>txdb</dt>
-<dd><p>A TxDb object, if supplied, will be used to subset the alu_ranges
-to those found overlapping genes. Alternatively a <a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a> object with gene
-coordinates.  If the <code>library_type</code>, specified by
+<dd><p>A TxDb object, if supplied, will be used to subset the
+alu_ranges to those found overlapping genes. Alternatively a <a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a>
+object with gene coordinates.  If the <code>library_type</code>, specified by
 <code>FilterParam</code>, is <code>unstranded</code> then the TxDb will
-be used to correct the strandness relative to the reference and is a required
+be used to correct the strandness relative to the reference and is a
+required
 parameter.</p></dd>
 
 
@@ -113,8 +114,8 @@ parameter.</p></dd>
 <dd><p>either a <a href="https://rdrr.io/pkg/BSgenome/man/SNPlocs-class.html" class="external-link">SNPlocs</a>, <a href="https://rdrr.io/pkg/GenomicRanges/man/GPos-class.html" class="external-link">GPos</a>, or <a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a> object. If supplied,
 will be used to exclude polymorphic positions prior to calculating the AEI.
 If <code>calc_AEI()</code> will be used many times, one will save time by first
-identifying SNPs that overlap the supplied <code>alu_ranges</code>, and passing these as
-a <a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a> to <code>snp_db</code> rather than supplying all known SNPs (see
+identifying SNPs that overlap the supplied <code>alu_ranges</code>, and passing these
+as a <a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a> to <code>snp_db</code> rather than supplying all known SNPs (see
 <code><a href="get_overlapping_snps.html">get_overlapping_snps()</a></code>).</p></dd>
 
 
@@ -138,7 +139,8 @@ for operating over chromosomes.</p></dd>
 
 <p>A named list containing:</p><ul><li><p><code>AEI</code>: a matrix of AEI index values computed for all allelic
 combinations, one row for each supplied bam file.</p></li>
-<li><p><code>AEI_per_chrom</code>: a data.frame containing values computed for each chromosome</p></li>
+<li><p><code>AEI_per_chrom</code>: a data.frame containing values computed for each
+chromosome</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
