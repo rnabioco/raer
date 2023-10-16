@@ -39,23 +39,26 @@ find_mispriming_sites(
 \value{
 A GenomicsRanges containing regions enriched for putative mispriming
 events. The \code{n_reads} column specifies the number of polyA trimmed reads
-overlapping the mispriming region. \code{mean_pal} indicates the mean length of polyA
-sequence trimmed from reads overlapping the region. The \code{n_regions} column specifies the number
-overlapping independent regions found in each chunk (dictated by \code{n_reads_per_chunk}).
-The \code{A_freq} column indicates the frequency of A bases within the region.
+overlapping the mispriming region. \code{mean_pal} indicates the mean length of
+polyA sequence trimmed from reads overlapping the region. The \code{n_regions}
+column specifies the number overlapping independent regions found in each
+chunk (dictated by \code{n_reads_per_chunk}). The \code{A_freq} column indicates the
+frequency of A bases within the region.
 }
 \description{
-OligodT will prime at A-rich regions in an RNA. Reverse transcription
-from these internal priming sites will install an oligodT sequence at the 3' end
-of the cDNA. Sequence variants within these internal priming sites are enriched
-for variants converting the genomic sequence to the A encoded by the oligodT primer.
-Trimming poly(A) from the 3' ends of reads reduces but does not eliminate these signals
+OligodT will prime at A-rich regions in an RNA. Reverse
+transcription from these internal priming sites will install an oligodT
+sequence at the 3' end of the cDNA. Sequence variants within these internal
+priming sites are enriched for variants converting the genomic sequence to
+the A encoded by the oligodT primer. Trimming poly(A) from the 3' ends of
+reads reduces but does not eliminate these signals
 
-This function will identify regions that are enriched for mispriming events. Reads
-that were trimmed to remove poly(A) (encoded in the pa tag by 10x genomics) are
-identified. The aligned 3' positions of these reads are counted, and sites passing
-thresholds (at least 2 reads) are retained as possible sites of mispriming. Be default
-regions 5 bases upstream and 20 bases downstream of these putative mispriming sites
+This function will identify regions that are enriched for mispriming events.
+Reads that were trimmed to remove poly(A) (encoded in the pa tag by
+10x Genomics) are identified. The aligned 3' positions of these reads are
+counted, and sites passing thresholds (at least 2 reads) are retained as
+possible sites of mispriming. Be default regions 5 bases upstream and
+20 bases downstream of these putative mispriming sites
 are returned.
 }
 \examples{

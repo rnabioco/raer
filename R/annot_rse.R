@@ -63,11 +63,15 @@ annot_snps.GRanges <- function(obj,
     RLE = TRUE,
     ...) {
     if (!is(dbsnp, "ODLT_SNPlocs")) {
-        cli::cli_abort("supplied dbSNP not valid SNP package, please install SNP db")
+        cli::cli_abort(
+            "supplied dbSNP not valid SNP package, please install SNP db"
+        )
     }
 
     if (any(col_to_aggr %in% colnames(mcols(obj)))) {
-        cli::cli_abort("supplied column name in col_to_aggr already exists in input")
+        cli::cli_abort(
+            "supplied column name in col_to_aggr already exists in input"
+        )
     }
 
     if (!is.null(chrom)) {
@@ -108,16 +112,16 @@ annot_snps.GRanges <- function(obj,
             drop = FALSE
         )$snp
 
-        if(RLE) {
-            mcols(sites)[col_to_aggr] <- S4Vectors::Rle(mcols(sites)[[col_to_aggr]])
+        if (RLE) {
+            col_rle <- S4Vectors::Rle(mcols(sites)[[col_to_aggr]])
+            mcols(sites)[col_to_aggr] <- col_rle
         }
-
     } else {
         cols_exist <- any(c("snp_ref_allele", "snp_alt_alleles") %in%
             colnames(mcols(obj)))
         if (cols_exist) {
             cli::cli_abort(
-                c("snp_ref_allele or snp_alt_alleles columns already exist in input")
+                "snp_ref/alt_allele columns(s) already exist in input"
             )
         }
 
@@ -125,8 +129,9 @@ annot_snps.GRanges <- function(obj,
         alt_alleles <- ref_allele <- NULL
 
         snps$alt_alleles <- vapply(snps$alt_alleles,
-                                   function(x) paste0(unique(x), collapse = ","),
-                                   FUN.VALUE = character(1))
+            function(x) paste0(unique(x), collapse = ","),
+            FUN.VALUE = character(1)
+        )
 
         snp_info <- aggregate(
             snps,
@@ -138,21 +143,25 @@ annot_snps.GRanges <- function(obj,
         )
 
         snp_info$grouping <- NULL
-        snp_cols <- c(col_to_aggr,
-                      "snp_ref_allele",
-                      "snp_alt_alleles")
+        snp_cols <- c(
+            col_to_aggr,
+            "snp_ref_allele",
+            "snp_alt_alleles"
+        )
         colnames(snp_info) <- snp_cols
 
         mcols(sites) <- cbind(mcols(sites), snp_info)
 
-        if("ALT" %in% colnames(mcols(sites))) {
+        if ("ALT" %in% colnames(mcols(sites))) {
             snp_cols <- c(snp_cols, "snp_matches_site")
             mcols(sites)$snp_matches_site <- check_snp_match(sites)
         }
 
-        if(RLE) {
-            mcols(sites)[snp_cols] <- lapply(mcols(sites)[snp_cols],
-                                             S4Vectors::Rle)
+        if (RLE) {
+            mcols(sites)[snp_cols] <- lapply(
+                mcols(sites)[snp_cols],
+                S4Vectors::Rle
+            )
         }
     }
 
@@ -178,16 +187,17 @@ annot_snps.SummarizedExperiment <- function(obj, ...) {
 #' Annotate sites using GRanges object
 #'
 #' @description Utility function to map annotations from GRanges to rowData of
-#'   SummarizedExperiment or to mcols of GRanges object. If multiple features overlap then
-#'   they will be concatenated with the specified separtor string .
+#'   SummarizedExperiment or to mcols of GRanges object. If multiple features
+#'   overlap then they will be concatenated with the specified separtor string.
 #'
 #' @param obj RangedSummarizedExperiment or GRanges object
 #' @param gr GRanges with annotations to map to obj
-#' @param cols_to_map character vector of columns from GRanges to map to SummarizedExperiment. 
+#' @param cols_to_map character vector of columns from GRanges to map to
+#' SummarizedExperiment.
 #' If the vector has names, the names will be the column names in the output.
 #' @param RLE If TRUE, columns added will returned as [S4Vectors::Rle()] vectors
 #' to reduce memory
-#' @param sep separator string, defaults to comma. 
+#' @param sep separator string, defaults to comma.
 #' @param ... additional arguments to pass to [GenomicRanges::findOverlaps()]
 #'
 #' @return Either a SummarizedExperiment or GRanges object with additional
@@ -250,9 +260,11 @@ annot_from_gr <- function(obj, gr, cols_to_map, RLE = TRUE, sep = ",", ...) {
         mcols(gr_sites)[[col_id]] <- x$tmp
     }
 
-    if(RLE) {
+    if (RLE) {
         col_nms <- names(cols_to_map)
-        rls_clms <- lapply(col_nms, function(x) S4Vectors::Rle(mcols(gr_sites)[[x]]))
+        rls_clms <- lapply(col_nms, function(x) {
+            S4Vectors::Rle(mcols(gr_sites)[[x]])
+        })
         mcols(gr_sites)[col_nms] <- rls_clms
     }
 

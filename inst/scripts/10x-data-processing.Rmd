@@ -1,0 +1,123 @@
+---
+title: "10x Genomics datasets"
+output: html_document
+date: "2023-05-22"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(R.utils)
+library(SingleCellExperiment)
+library(DropletUtils)
+library(rtracklayer)
+```
+
+## Raer package data
+
+### Mouse 10x single cell RNA-seq
+
+Make a tiny bam file from a 10x experiment, in this case a mouse brain single cell RNA-seq experiment.
+
+First, make a tiny fasta file from a few regions with editing sites. Note that database files used here were downloaded using the script provided at `inst/scripts/dbases/get_databases.sh`.
+
+```{r}
+regions <- c("chr2:116032569-116033683",
+             "chr6:48079510-48079909",
+             "chr11:75300212-75300704",
+             "chr8:65639891-65640286")
+regions <- GRanges(regions)
+strand(regions) <- "+"
+
+seqs <- getSeq(FaFile("dbases/GRCm38.primary_assembly.genome.fa"), regions)
+names(seqs) <- sub("chr", "", names(seqs))
+export(seqs, "../extdata/mouse_tiny.fasta")
+
+
+gtf_lines <- c(
+    '2\tunknown\texon\t1\t1115\t.\t-\t.\tgene_id Meis2; transcript_id Meis2; gene_name Meis2; gene_biotype "protein_coding";',
+    '6\tunknown\texon\t1\t400\t.\t-\t.\tgene_id Zfp746; transcript_id Zfp746; gene_name Zfp746; gene_biotype "protein_coding";',
+    '10\tunknown\texon\t1\t616\t.\t+\t.\tgene_id Ppfia2; transcript_id Ppfia2; gene_name Ppfia2; gene_biotype "protein_coding";',
+    '11\tunknown\texon\t1\t493\t.\t-\t.\tgene_id Rpa1; transcript_id Rpa1; gene_name Rpa1; gene_biotype "protein_coding";')
+writeLines(gtf_lines, "../extdata/mouse_tiny.gtf")
+```
+
+Next, build a cellranger reference for the tiny fasta
+
+```{bash}
+mkdir -p mouse_5k_neuron
+cd mouse_5k_neuron
+
+cellranger mkref --genome=mm10_tiny --fasta=../extdata/mouse_tiny.fasta --genes=../extdata/mouse_tiny.gtf
+```
+
+Download bam file, downsample to 1%, convert to fastqs, and requantify using cellranger count. 
+
+```{bash}
+cd mouse_5k_neuron
+wget https://cg.10xgenomics.com/samples/cell-exp/3.0.2/5k_neuron_v3_nextgem/5k_neuron_v3_nextgem_possorted_genome_bam.bam 
+wget https://cg.10xgenomics.com/samples/cell-exp/3.0.2/5k_neuron_v3_nextgem/5k_neuron_v3_nextgem_possorted_genome_bam.bam.bai 
+
+# downsample
+samtools view -@ 8 -b -s 42.01 5k_neuron_v3_nextgem_possorted_genome_bam.bam > 5k_neuron_v3_nextgem_possorted_genome_bam_0.1.bam
+
+# bamtofastq from 10x genomics
+~/bin/bamtofastq-1.3.2 5k_neuron_v3_nextgem_possorted_genome_bam_0.1.bam ./fastq/
+
+# cellranger from 10x genomics
+cellranger count \
+ --id 5k_neuron_tiny \
+ --transcriptome=mouse_5k_neuron/mm10_tiny \
+ --fastqs fastq/5k_neuron_v3_nextgem_0_1_HKF7VDSXX \
+ --sample bamtofastq \
+ --jobmode local \
+ --localcores 6 \
+ --localmem 4 \
+ --chemistry SC3Pv3
+```
+
+Next extract a small subset of reads. 
+
+```{bash}
+cd mouse_5k_neuron/5k_neuron_tiny/outs 
+
+# find UMIs duplicated in file
+samtools view -f 1024 possorted_genome_bam.bam 2 \
+    | egrep -o "UB:Z:[A-Z]+" \
+    | sed 's/UB:Z://'g > umi_tags_to_keep.txt
+
+# get reads from UMIs
+samtools view -b -D UB:umi_tags_to_keep.txt possorted_genome_bam.bam > tmp.bam
+
+# get all other reads from cbs with these reads
+samtools view tmp.bam | cut -f 1 | sort | uniq > tmp_reads.txt
+
+# and a few random reads
+samtools view -s 42.01 possorted_genome_bam.bam 2 | head -n 500 >> tmp_reads.txt
+cat tmp_reads.txt | sort | uniq > tmp_uniq_reads.txt
+
+samtools view -b -N tmp_uniq_reads.txt possorted_genome_bam.bam > tmp2.bam
+samtools merge -f -o 5k_neuron_mouse_possort.bam tmp.bam tmp2.bam
+samtools index 5k_neuron_mouse_possort.bam
+
+cd ../../../
+
+mv 5k_neuron_mouse_possort.bam* ../extdata/
+```
+
+
+clean up 
+
+```{bash}
+rm -rf mouse_5k_neuron extdata/mouse_tiny.gtf
+```
+
+
+<details><summary>Show session info</summary>
+
+```{r code}
+sessionInfo()
+```
+</details>

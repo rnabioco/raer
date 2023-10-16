@@ -45,7 +45,6 @@ txdb <- makeTxDbFromGRanges(gr)
 
 filter_splice_variants(rse_adar_ifn, txdb)
 
-
 }
 \seealso{
 Other se-filters: 

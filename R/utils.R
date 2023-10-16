@@ -14,9 +14,9 @@ raer_example <- function(path) {
 #' Generate a small RangedSummarizedExperiment object for tests and examples
 #'
 #' @description
-#' A RangedSummarizedExperiment containing a subset of data from an RNA-seq experiment
-#' to measure the effects of IFN treatment of cell lines with wild-type
-#' or ADAR1-KO.
+#' A RangedSummarizedExperiment containing a subset of data from an RNA-seq
+#' experiment to measure the effects of IFN treatment of cell lines with
+#' wild-type or ADAR1-KO.
 #' @examples
 #' mock_rse()
 #'
@@ -59,17 +59,19 @@ chunk_vec <- function(x, n) {
 
 #' Find regions with oligodT mispriming
 #'
-#' @description OligodT will prime at A-rich regions in an RNA. Reverse transcription
-#' from these internal priming sites will install an oligodT sequence at the 3' end
-#' of the cDNA. Sequence variants within these internal priming sites are enriched
-#' for variants converting the genomic sequence to the A encoded by the oligodT primer.
-#' Trimming poly(A) from the 3' ends of reads reduces but does not eliminate these signals
+#' @description OligodT will prime at A-rich regions in an RNA. Reverse
+#' transcription from these internal priming sites will install an oligodT
+#' sequence at the 3' end of the cDNA. Sequence variants within these internal
+#' priming sites are enriched for variants converting the genomic sequence to
+#' the A encoded by the oligodT primer. Trimming poly(A) from the 3' ends of
+#' reads reduces but does not eliminate these signals
 #'
-#' This function will identify regions that are enriched for mispriming events. Reads
-#' that were trimmed to remove poly(A) (encoded in the pa tag by 10x genomics) are
-#' identified. The aligned 3' positions of these reads are counted, and sites passing
-#' thresholds (at least 2 reads) are retained as possible sites of mispriming. Be default
-#' regions 5 bases upstream and 20 bases downstream of these putative mispriming sites
+#' This function will identify regions that are enriched for mispriming events.
+#' Reads that were trimmed to remove poly(A) (encoded in the pa tag by
+#' 10x Genomics) are identified. The aligned 3' positions of these reads are
+#' counted, and sites passing thresholds (at least 2 reads) are retained as
+#' possible sites of mispriming. Be default regions 5 bases upstream and
+#' 20 bases downstream of these putative mispriming sites
 #' are returned.
 #'
 #' @param bamfile path to bamfile
@@ -85,10 +87,11 @@ chunk_vec <- function(x, n) {
 #'
 #' @returns A GenomicsRanges containing regions enriched for putative mispriming
 #' events. The `n_reads` column specifies the number of polyA trimmed reads
-#' overlapping the mispriming region. `mean_pal` indicates the mean length of polyA
-#' sequence trimmed from reads overlapping the region. The `n_regions` column specifies the number
-#' overlapping independent regions found in each chunk (dictated by `n_reads_per_chunk`).
-#' The `A_freq` column indicates the frequency of A bases within the region.
+#' overlapping the mispriming region. `mean_pal` indicates the mean length of
+#' polyA sequence trimmed from reads overlapping the region. The `n_regions`
+#' column specifies the number overlapping independent regions found in each
+#' chunk (dictated by `n_reads_per_chunk`). The `A_freq` column indicates the
+#' frequency of A bases within the region.
 #'
 #' @import GenomicRanges S4Vectors IRanges
 #' @importFrom Rsamtools ScanBamParam BamFile
@@ -100,16 +103,15 @@ chunk_vec <- function(x, n) {
 #'
 #' @export
 find_mispriming_sites <- function(bamfile, fasta, pos_5p = 5, pos_3p = 20,
-                                  min_reads = 2, tag = "pa", tag_values = 3:300,
-                                  n_reads_per_chunk = 1e6, verbose = TRUE){
-
-    if(pos_5p < 0 || pos_3p < 0) {
+    min_reads = 2, tag = "pa", tag_values = 3:300,
+    n_reads_per_chunk = 1e6, verbose = TRUE) {
+    if (pos_5p < 0 || pos_3p < 0) {
         cli::cli_abort("pos_5p and pos_3p must be positive integers")
     }
 
     tg_lst <- list(tag_values)
     names(tg_lst) <- tag
-    sbp <- Rsamtools::ScanBamParam(tagFilter = tg_lst,tag = tag)
+    sbp <- Rsamtools::ScanBamParam(tagFilter = tg_lst, tag = tag)
     bf <- Rsamtools::BamFile(bamfile, yieldSize = n_reads_per_chunk)
     open(bf)
     pa_pks <- GRanges()
@@ -119,7 +121,7 @@ find_mispriming_sites <- function(bamfile, fasta, pos_5p = 5, pos_3p = 20,
 
         if (length(galn) == 0) break
         gr <- as(galn, "GRanges")
-        if(verbose) {
+        if (verbose) {
             s_ivl <- gr[1]
             e_ivl <- gr[length(gr)]
             message("working on ", s_ivl, " to ", e_ivl)
@@ -134,14 +136,15 @@ find_mispriming_sites <- function(bamfile, fasta, pos_5p = 5, pos_3p = 20,
     mean_pal <- n_reads <- NULL
     ans <- reduce(pa_pks, with.revmap = TRUE)
     mcols(ans) <- aggregate(pa_pks,
-                            mcols(ans)$revmap,
-                            mean_pal = mean(mean_pal),
-                            n_reads = sum(n_reads),
-                            drop = FALSE)
+        mcols(ans)$revmap,
+        mean_pal = mean(mean_pal),
+        n_reads = sum(n_reads),
+        drop = FALSE
+    )
 
     # keep reads above threshold, slop, and merge adjacent misprimed regions
     ans <- ans[ans$n_reads >= min_reads]
-    if(length(ans) == 0) {
+    if (length(ans) == 0) {
         return(empty_mispriming_record())
     }
 
@@ -151,10 +154,11 @@ find_mispriming_sites <- function(bamfile, fasta, pos_5p = 5, pos_3p = 20,
 
     res <- reduce(ans, with.revmap = TRUE)
     mcols(res) <- aggregate(ans,
-                            mcols(res)$revmap,
-                            mean_pal = mean(mean_pal),
-                            n_reads = sum(n_reads),
-                            drop = FALSE)
+        mcols(res)$revmap,
+        mean_pal = mean(mean_pal),
+        n_reads = sum(n_reads),
+        drop = FALSE
+    )
     res$n_regions <- IRanges::grouplengths(res$grouping)
     res$grouping <- NULL
     res <- pa_seq_context(res, fasta)
@@ -183,19 +187,21 @@ merge_pa_peaks <- function(gr) {
     pa <- NULL
     ans <- reduce(gr, with.revmap = TRUE)
     mcols(ans) <- aggregate(gr,
-                            mcols(ans)$revmap,
-                            mean_pal = mean(pa),
-                            drop = FALSE)
+        mcols(ans)$revmap,
+        mean_pal = mean(pa),
+        drop = FALSE
+    )
     mcols(ans)$n_reads <- grouplengths(ans$grouping)
     ans
 }
 
 #' @importFrom Rsamtools FaFile scanFa
 #' @importFrom Biostrings letterFrequency reverseComplement
-pa_seq_context <- function(gr, fasta){
+pa_seq_context <- function(gr, fasta) {
     fa <- Rsamtools::FaFile(fasta)
     seqs <- Rsamtools::scanFa(fa, gr)
-    seqs[strand(gr) == "-"] <- Biostrings::reverseComplement(seqs[strand(gr) == "-"])
+    rvcomp <- Biostrings::reverseComplement(seqs[strand(gr) == "-"])
+    seqs[strand(gr) == "-"] <- rvcomp
     a_prop <- Biostrings::letterFrequency(seqs, "A") / width(gr)
     mcols(gr)$A_freq <- a_prop[, 1]
     gr
@@ -213,7 +219,8 @@ seqinfo_from_header <- function(bam) {
     stopifnot(length(bam) == 1)
     stopifnot(is(bam, "BamFile"))
     ctigs <- Rsamtools::scanBamHeader(path(bam),
-                                      index = index(bam))[[1]]$targets
+        index = index(bam)
+    )[[1]]$targets
     GenomeInfoDb::Seqinfo(names(ctigs), ctigs)
 }
 
@@ -226,19 +233,22 @@ comp_bases <- function(x) {
 # Check is ALT allele matches snpDB allele
 check_snp_match <- function(x, snp_col = "snp_alt_alleles", stranded = TRUE) {
     stopifnot(all(c(snp_col, "ALT") %in%
-                      colnames(mcols(x))))
+        colnames(mcols(x))))
 
     alt <- mcols(x)$ALT
     snp_seq_str <- mcols(x)[[snp_col]]
     snp_seqs <- strsplit(snp_seq_str, ",")
 
-    # convert ALT to + strand representation to match SNP sequence representation
-    if(stranded) {
+    # convert ALT to + strand representation to match SNP sequence
+    # representation
+    if (stranded) {
         is_minus <- as.logical(strand(x) == "-")
         alt[is_minus] <- comp_bases(alt[is_minus])
     }
 
-    res <- mapply(function(x, y) {x %in% y}, decode(alt), snp_seqs, USE.NAMES = FALSE)
+    res <- mapply(function(x, y) {
+        x %in% y
+    }, decode(alt), snp_seqs, USE.NAMES = FALSE)
     # set sites without a SNP to NA
     res[snp_seq_str == ""] <- NA
     res
@@ -248,11 +258,12 @@ check_tag <- function(tag) {
     if (!is.null(tag)) {
         if (length(tag) != 1 && nchar(tag) != 2) {
             tag_variable <- as.list(match.call())$tag
-            cli::cli_abort("{tag_variable} must be a character(1) with nchar of 2 ")
+            cli::cli_abort(
+                "{tag_variable} must be a character(1) with nchar of 2"
+            )
         }
     } else {
         tag <- character()
     }
     tag
 }
-

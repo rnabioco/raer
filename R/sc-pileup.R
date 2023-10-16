@@ -1,10 +1,10 @@
 #' Generate base counts per cell
 #'
-#' @description This function processes scRNA-seq library to enumerate base counts 
-#'   for Reference (unedited) or Alternate (
-#'   edited) bases at specified sites in single cells. `pileup_cells` can process 
-#'   droplet scRNA-seq libraries, from a BAM file containing a cell-barcode and UMI, 
-#'   or well-based libraries that do not contain cell-barcodes.
+#' @description This function processes scRNA-seq library to enumerate base
+#' counts for Reference (unedited) or Alternate (edited) bases at specified
+#' sites in single cells. `pileup_cells` can process droplet scRNA-seq
+#' libraries, from a BAM file containing a cell-barcode and UMI, or well-based
+#' libraries that do not contain cell-barcodes.
 #'
 #'   The `sites` parameter specifies sites to quantify. This must be a [GRanges]
 #'   object with 1 base intervals, a strand (+ or -), and supplemented with
@@ -15,26 +15,28 @@
 #'   each ref and alt base enumerated for each cell-barcode present. A single
 #'   base will be counted once for each UMI sequence present in each cell.
 #'
-#' @param bamfiles a path to a BAM file (for droplet scRNA-seq), or a vector of paths
-#' to BAM files (Smart-seq2). Can be supplied as a character vector, [BamFile], or
-#' [BamFileList].
+#' @param bamfiles a path to a BAM file (for droplet scRNA-seq), or a vector of
+#' paths to BAM files (Smart-seq2). Can be supplied as a character vector,
+#' [BamFile], or [BamFileList].
 #' @param sites a GRanges object containing sites to process. See examples for
 #'   valid formatting.
-#' @param output_directory Output directory for output matrix files. The directory
-#' will be generated if it doesn't exist.
+#' @param output_directory Output directory for output matrix files. The
+#' directory will be generated if it doesn't exist.
 #' @param chroms A character vector of chromosomes to process. If supplied, only
 #'   sites present in the listed chromosomes will be processed
-#' @param cell_barcodes A character vector of single cell barcodes to process. If
-#' processing multiple BAM files (e.g. Smart-seq2), provide a character vector
-#' of unique identifiers for each input BAM, to name each BAM file in the output files.
+#' @param cell_barcodes A character vector of single cell barcodes to process.
+#' If processing multiple BAM files (e.g. Smart-seq2), provide a character
+#' vector of unique identifiers for each input BAM, to name each BAM file in the
+#' output files.
 #' @param param object of class [FilterParam()] which specify various filters to
 #'   apply to reads and sites during pileup. Note that the `min_depth` and
 #'   `min_variant_reads` parameters if set > 0 specify the number of reads
-#'   from any cell required in order to report a site. E.g. if `min_variant_reads` is
-#'   set to 2, then at least 2 reads (from any cell) must have a variant in order
-#'   to report the site. Setting `min_depth` and `min_variant_reads` to 0 reports
-#'   all sites present in the `sites` object. The following options are not enabled
-#'   for pileup_cells(): `max_mismatch_type`, `homopolymer_len`, and `min_allelic_freq`.
+#'   from any cell required in order to report a site. E.g. if
+#'   `min_variant_reads` is set to 2, then at least 2 reads (from any cell) must
+#'    have a variant in order to report the site. Setting `min_depth` and
+#'    `min_variant_reads` to 0 reports all sites present in the `sites` object.
+#'    The following options are not enabled for pileup_cells():
+#'    `max_mismatch_type`, `homopolymer_len`, and `min_allelic_freq`.
 #' @param umi_tag tag in BAM containing the UMI sequence
 #' @param cb_tag tag in BAM containing the cell-barcode sequence
 #' @param return_sce if `TRUE`, data is returned as a SingleCellExperiment, if
@@ -50,8 +52,8 @@
 #'   for the reference and alternate alleles. The [rowRanges()] will contain the
 #'   genomic interval for each site, along with `REF` and `ALT` columns. The
 #'   rownames will be populated with the format
-#'   `site_[seqnames]_[position(1-based)]_[strand]_[allele]`, with `strand` being encoded
-#'   as 1 = +, 2 = -, and 3 = *, and allele being `REF` + `ALT`.
+#'   `site_[seqnames]_[position(1-based)]_[strand]_[allele]`, with `strand`
+#'   being encoded as 1 = +, 2 = -, and 3 = *, and allele being `REF` + `ALT`.
 #'
 #'   If `return_sce` is `FALSE` then a character vector of paths to the
 #'   sparseMatrix files (`barcodes.txt.gz`, `sites.txt.gz`, `counts.mtx.gz`),
@@ -80,10 +82,12 @@
 #'
 #' many_small_bams <- rep(bam_fn, 10)
 #' bam_ids <- LETTERS[1:10]
-#' 
-#' fp <- FilterParam(library_type = "unstranded",
-#'                   remove_overlaps = TRUE)
-#' 
+#'
+#' fp <- FilterParam(
+#'     library_type = "unstranded",
+#'     remove_overlaps = TRUE
+#' )
+#'
 #' pileup_cells(many_small_bams,
 #'     sites = gr,
 #'     cell_barcodes = bam_ids,
@@ -112,8 +116,7 @@ pileup_cells <- function(bamfiles,
     BPPARAM = SerialParam(),
     return_sce = TRUE,
     verbose = FALSE) {
-
-    if(!is(bamfiles, "BamFileList")) {
+    if (!is(bamfiles, "BamFileList")) {
         bamfiles <- BamFileList(bamfiles)
     }
 
@@ -164,9 +167,12 @@ pileup_cells <- function(bamfiles,
     umi_tag <- check_tag(umi_tag)
 
     valid_regions <- setup_valid_regions(bamfiles[[1]], chroms)
-    chroms_to_process <- intersect(valid_regions$chroms, unique(seqnames(sites)))
+    chroms_to_process <- intersect(
+        valid_regions$chroms,
+        unique(seqnames(sites))
+    )
     sites <- sites[seqnames(sites) %in% chroms_to_process, ]
-    
+
     if (verbose) cli::cli_alert("Beginning pileup")
     bf <- path.expand(path(bamfiles))
     bfi <- path.expand(index(bamfiles))
@@ -257,9 +263,9 @@ defaultScBamFlags <- Rsamtools::scanBamFlag(
 )
 
 get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
-                          outfile_prefix, chrom,
-                          umi_tag, cb_tag, param,
-                          verbose) {
+    outfile_prefix, chrom,
+    umi_tag, cb_tag, param,
+    verbose) {
     if (length(chrom) > 0) {
         sites <- sites[seqnames(sites) %in% chrom, ]
     }
@@ -302,7 +308,8 @@ get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
     # alternatively can regenerate gr regions using data in files, however
     # using the indexes is likely less error prone
     sce <- read_sparray(plp_outfns[1], plp_outfns[2], plp_outfns[3],
-                        site_format = "index")
+        site_format = "index"
+    )
 
     ridx <- as.integer(rownames(sce))
     rowRanges(sce) <- sites[ridx]
@@ -346,7 +353,7 @@ get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
 #' bai <- indexBam(bam_fn)
 #'
 #' fp <- FilterParam(library_type = "fr-second-strand")
-#' mtx_fns <- pileup_cells(bam_fn, gr, cbs, outdir,  return_sce = FALSE)
+#' mtx_fns <- pileup_cells(bam_fn, gr, cbs, outdir, return_sce = FALSE)
 #' sce <- read_sparray(mtx_fns[1], mtx_fns[2], mtx_fns[3])
 #' sce
 #'
@@ -358,30 +365,35 @@ get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
 #' @importFrom R.utils gzip
 #' @export
 read_sparray <- function(mtx_fn, sites_fn, bc_fn,
-                         site_format = c("coordinate", "index")) {
-
+    site_format = c("coordinate", "index")) {
     if (!file.size(sites_fn) > 0) {
         return(SingleCellExperiment::SingleCellExperiment())
     }
 
     rnames <- data.table::fread(sites_fn,
-                                sep = "\t",
-                                col.names = c("index", "seqnames", "start",
-                                              "strand", "REF", "ALT"),
-                                colClasses = c("integer", "character", "integer",
-                                               "integer", "character", "character"),
-                                data.table = FALSE)
+        sep = "\t",
+        col.names = c(
+            "index", "seqnames", "start",
+            "strand", "REF", "ALT"
+        ),
+        colClasses = c(
+            "integer", "character", "integer",
+            "integer", "character", "character"
+        ),
+        data.table = FALSE
+    )
     site_format <- match.arg(site_format)
 
     # reconstruct rowRanges using index value or
-    if(site_format == "index") {
+    if (site_format == "index") {
         rnames <- rnames$index
     } else if (site_format == "coordinate") {
         rnames <- rnames[, -1]
         rnames$strand <- c("+", "-")[rnames$strand]
         gr <- makeGRangesFromDataFrame(rnames,
-                                       end.field = "start",
-                                       keep.extra.columns = TRUE)
+            end.field = "start",
+            keep.extra.columns = TRUE
+        )
         rnames <- site_names(gr, allele = TRUE)
     }
 
@@ -391,12 +403,13 @@ read_sparray <- function(mtx_fn, sites_fn, bc_fn,
     sp_mtx_names <- c("nRef", "nAlt")
     n_sp_cols <- 2 + length(sp_mtx_names)
 
-    if(file.size(mtx_fn) > 0) {
+    if (file.size(mtx_fn) > 0) {
         dt <- data.table::fread(mtx_fn,
-                                sep = " ",
-                                colClasses = "integer",
-                                skip = n_skip,
-                                header = FALSE)
+            sep = " ",
+            colClasses = "integer",
+            skip = n_skip,
+            header = FALSE
+        )
 
         if (ncol(dt) != n_sp_cols) cli::cli_abort("malformed sparseMatrix")
 
@@ -413,17 +426,17 @@ read_sparray <- function(mtx_fn, sites_fn, bc_fn,
         # handle case where sites were queried, but no counts
         sps <- lapply(seq_along(sp_mtx_names), function(x) {
             sparseMatrix(integer(0),
-                         integer(0),
-                         x = 0L,
-                         dims = c(length(rnames), length(cnames)))
+                integer(0),
+                x = 0L,
+                dims = c(length(rnames), length(cnames))
+            )
         })
-
     }
     names(sps) <- sp_mtx_names
 
     res <- SingleCellExperiment::SingleCellExperiment(sps)
     colnames(res) <- cnames
-    if(site_format == "coordinate") {
+    if (site_format == "coordinate") {
         rowRanges(res) <- gr
     }
     rownames(res) <- rnames
@@ -431,42 +444,46 @@ read_sparray <- function(mtx_fn, sites_fn, bc_fn,
 }
 
 write_sparray <- function(sce, mtx_fn, sites_fn, bc_fn) {
-    if(!all(c("nRef", "nAlt") %in% assayNames(sce))) {
+    if (!all(c("nRef", "nAlt") %in% assayNames(sce))) {
         cli::cli_abort("missing required asssays nRef or nAlt")
     }
     nref <- assay(sce, "nRef")
     nalt <- assay(sce, "nAlt")
 
-    if(!is(nref, 'sparseMatrix')) {
+    if (!is(nref, "sparseMatrix")) {
         cli::cli_abort("nRef must be a sparseMatrix")
     }
 
-    if(!is(nalt, 'sparseMatrix')) {
+    if (!is(nalt, "sparseMatrix")) {
         cli::cli_abort("nAlt must be a sparseMatrix")
     }
 
     nref_trpl <- summary(nref)
     nalt_trpl <- summary(nalt)
     conforms <- identical(dim(nref_trpl), dim(nalt_trpl))
-    if(!conforms){
+    if (!conforms) {
         cli::cli_abort("nRef and nAlt sparseMatrices triplet dimensions differ")
     }
 
     writeLines(
-        c("%%% raer MatrixMarket-like matrix coordinate integer general",
-          paste("%%% ", nref@Dim[1], nref@Dim[2], length(nref@x)),
-          "%%% x y nRef nAlt"),
-        gzfile(mtx_fn))
+        c(
+            "%%% raer MatrixMarket-like matrix coordinate integer general",
+            paste("%%% ", nref@Dim[1], nref@Dim[2], length(nref@x)),
+            "%%% x y nRef nAlt"
+        ),
+        gzfile(mtx_fn)
+    )
 
     mtx <- matrix(0L, nrow = dim(nref_trpl)[1], ncol = 4L)
     mtx <- cbind(nref_trpl, nalt = nalt_trpl$x)
 
     data.table::fwrite(mtx, mtx_fn,
-                       append = TRUE,
-                       sep = " ",
-                       row.names = FALSE,
-                       col.names = FALSE,
-                       showProgress = FALSE)
+        append = TRUE,
+        sep = " ",
+        row.names = FALSE,
+        col.names = FALSE,
+        showProgress = FALSE
+    )
 
     sites <- data.frame(
         seq_along(sce),
@@ -478,10 +495,11 @@ write_sparray <- function(sce, mtx_fn, sites_fn, bc_fn) {
     )
 
     data.table::fwrite(sites, sites_fn,
-                       sep = "\t",
-                       row.names = FALSE,
-                       col.names = FALSE,
-                       showProgress = FALSE)
+        sep = "\t",
+        row.names = FALSE,
+        col.names = FALSE,
+        showProgress = FALSE
+    )
 
     writeLines(colnames(sce), gzfile(bc_fn))
 }
@@ -499,7 +517,9 @@ gr_to_regions <- function(gr) {
     }
 
     if (any(strand(gr) == "*")) {
-        cli::cli_alert_warning("missing strand not found in input, coercing strand to '+'")
+        cli::cli_alert_warning(
+            "missing strand not found in input, coercing strand to '+'"
+        )
         strand(gr) <- "+"
     }
     gr$idx <- seq(1, nr) # is one-based index

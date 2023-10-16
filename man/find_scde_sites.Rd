@@ -2,7 +2,8 @@
 % Please edit documentation in R/differential_editing.R
 \name{find_scde_sites}
 \alias{find_scde_sites}
-\title{Identify sites with differential editing between cells in single cell datasets}
+\title{Identify sites with differential editing between cells in single cell
+datasets}
 \usage{
 find_scde_sites(sce, group, rowData = FALSE, BPPARAM = SerialParam(), ...)
 }
@@ -11,23 +12,25 @@ find_scde_sites(sce, group, rowData = FALSE, BPPARAM = SerialParam(), ...)
 
 \item{group}{column name from colData used to define groups to compare.}
 
-\item{rowData}{if TRUE,  \link{rowData} from the input \link{SingleCellExperiment} will be
-included in the output DataFrames}
+\item{rowData}{if TRUE,  \link{rowData} from the input \link{SingleCellExperiment} will
+be included in the output DataFrames}
 
-\item{BPPARAM}{BiocParallel backend for control how paralllel computations are
-performed.}
+\item{BPPARAM}{BiocParallel backend for control how parallel computations
+are performed.}
 
 \item{...}{Additional arguments passed to \link[scran:combineMarkers]{scran::combineMarkers}}
 }
 \value{
-A named list of \link{DataFrame}s containing results for each cluster specified by \code{group}.
-The difference in editing frequencies between cluster pairs are denoted as \code{dEF}.
-See \link[scran:combineMarkers]{scran::combineMarkers} for a description of additional output fields.
+A named list of \link{DataFrame}s containing results for each cluster specified by
+\code{group}. The difference in editing frequencies between cluster pairs are
+denoted as \code{dEF}. See \link[scran:combineMarkers]{scran::combineMarkers} for a description of additional
+output fields.
 }
 \description{
 Compare editing frequencies between clusters or celltypes. REF and ALT counts
-from each cluster are pooled to create pseudobulk estimates. Each pair of clusters
-are compared using fisher exact tests. Statistics are aggregated across each pairwise
+from each cluster are pooled to create pseudobulk estimates. Each pair of
+clusters are compared using fisher exact tests. Statistics are aggregated
+across each pairwise
 comparison using \link[scran:combineMarkers]{scran::combineMarkers}.
 }
 \examples{

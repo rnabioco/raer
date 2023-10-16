@@ -11,7 +11,8 @@ annot_from_gr(obj, gr, cols_to_map, RLE = TRUE, sep = ",", ...)
 
 \item{gr}{GRanges with annotations to map to obj}
 
-\item{cols_to_map}{character vector of columns from GRanges to map to SummarizedExperiment.
+\item{cols_to_map}{character vector of columns from GRanges to map to
+SummarizedExperiment.
 If the vector has names, the names will be the column names in the output.}
 
 \item{RLE}{If TRUE, columns added will returned as \code{\link[S4Vectors:Rle-class]{S4Vectors::Rle()}} vectors
@@ -27,8 +28,8 @@ annotations provided by the supplied GRanges object.
 }
 \description{
 Utility function to map annotations from GRanges to rowData of
-SummarizedExperiment or to mcols of GRanges object. If multiple features overlap then
-they will be concatenated with the specified separtor string .
+SummarizedExperiment or to mcols of GRanges object. If multiple features
+overlap then they will be concatenated with the specified separtor string.
 }
 \examples{
 library(SummarizedExperiment)

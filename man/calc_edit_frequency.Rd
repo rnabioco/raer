@@ -18,18 +18,18 @@ calc_edit_frequency(
 \item{rse}{A \link{RangedSummarizedExperiment} object created by \code{\link[=pileup_sites]{pileup_sites()}}}
 
 \item{edit_from}{This should correspond to a nucleotide or assay
-(\code{A}, \code{C}, \code{G}, \code{T}, \code{Ref}, or \code{Alt}) you expect in the reference. Ex. for A to I
-editing events, this would be \code{A}.}
+(\code{A}, \code{C}, \code{G}, \code{T}, \code{Ref}, or \code{Alt}) you expect in the reference. Ex. for
+A to I editing events, this would be \code{A}.}
 
 \item{edit_to}{This should correspond to a nucleotide or assay
-(\code{A}, \code{C}, \code{G}, \code{T}, \code{Ref}, or \code{Alt})  you expect in the editing site. Ex. for A
-to I editing events, this would be \code{G}.}
+(\code{A}, \code{C}, \code{G}, \code{T}, \code{Ref}, or \code{Alt})  you expect in the editing site. Ex.
+for A to I editing events, this would be \code{G}.}
 
-\item{drop}{If \code{TRUE}, the \link{RangedSummarizedExperiment} returned will only retain sites
-matching the specified \code{edit_from} and \code{edit_to} bases.}
+\item{drop}{If \code{TRUE}, the \link{RangedSummarizedExperiment} returned will only
+retain sites matching the specified \code{edit_from} and \code{edit_to} bases.}
 
-\item{replace_na}{If \code{TRUE}, \code{NA} and \code{NaN} editing frequencies will be coerced to
-\code{0}.}
+\item{replace_na}{If \code{TRUE}, \code{NA} and \code{NaN} editing frequencies will be
+coerced to \code{0}.}
 
 \item{edit_frequency}{The edit frequency cutoff used when calculating the
 number of sites. Set to \code{0} to require any non-zero editing frequency. The

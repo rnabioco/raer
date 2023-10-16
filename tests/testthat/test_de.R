@@ -23,8 +23,9 @@ test_that("calc_edit_frequency works", {
     # depth already exists
     expect_message(calc_edit_frequency(rse))
     expect_error(calc_edit_frequency(rse,
-                                       edit_from = "garbage-in",
-                                       edit_to = "garbage-out"))
+        edit_from = "garbage-in",
+        edit_to = "garbage-out"
+    ))
 })
 
 test_that("make_de_object works", {

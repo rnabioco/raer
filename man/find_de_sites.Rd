@@ -37,7 +37,8 @@ a variable in your \code{condition_col} of \code{colData(deobj)}.}
 \value{
 A named list:
 \itemize{
-\item \code{de_obj}: The \code{edgeR} or \code{deseq} object used for differential editing analysis
+\item \code{de_obj}: The \code{edgeR} or \code{deseq} object used for differential editing
+analysis
 \item \code{results_full}: Unfiltered differential editing results
 \item \code{sig_results}: Filtered differential editing (FDR < 0.05)
 \item \code{model_matrix}: The model matrix used for generating DE results
@@ -46,7 +47,8 @@ A named list:
 \description{
 Use \code{edgeR} or \code{DESeq2} to perform differential editing
 analysis. This will work for designs that have 1 treatment and 1
-control group. For more complex designs, we suggest you perform your own modeling.
+control group. For more complex designs, we suggest you perform your own
+modeling.
 }
 \examples{
 library(SummarizedExperiment)
@@ -64,7 +66,9 @@ rse$condition <- substr(rse$sample, 1, 2)
 
 rse <- calc_edit_frequency(rse)
 dse <- make_de_object(rse)
-res <- find_de_sites(dse, condition_control = "WT", condition_treatment = "KO")
+res <- find_de_sites(dse, 
+                     condition_control = "WT", 
+                     condition_treatment = "KO")
 res$sig_results[1:3, ]
 
 }
