@@ -28,6 +28,23 @@ The *raer* (RNA Adenosine editing in R) package provides tools to characterize A
 
 Here we demonstrate how to use the *raer* package to a) quantify RNA editing sites in droplet scRNA-seq dataset,  b) identify editing sites with condition specific editing in bulk RNA-seq data, and c) predict novel editing sites from bulk RNA-seq. 
 
+# Installation
+
+The `raer` package can be installed from Bioconductor using `BiocManager`. 
+
+```{r, eval = FALSE}
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+# The following initializes usage of Bioc devel
+BiocManager::install(version='devel')
+
+BiocManager::install("raer")
+```
+
+Alternatively `raer` can be installed from github using
+`BiocManager::install("rnabioco/raer")`.
+
 # Characterizing RNA editing sites in scRNA-seq data
 
 Here we will use the *raer* package to examine RNA editing in droplet-based single cell RNA-seq data. `pileup_cells()` enables quantification of edited and non-edited bases at specified sites from scRNA-seq data. 
@@ -161,21 +178,28 @@ plotGroupedHeatmap(altExp(sce),
 
 For example, the editing sites on the minus strand will need to be complemented (set as T -> C rather than A -> G). Additionally the `umi_tag` and `cb_tag` arguments should be set as follows to disable UMI and cell barcode detection. 
 
-```{r, eval = FALSE}
-# Note these steps are not run 
+To illustrate this functionality, we will reprocess the 10x Genomics pbmc dataset, treating the data as mock Smart-seq2 data from 3 cells.
+
+```{r}
 is_minus <- strand(editing_sites) == "-"
 editing_sites[is_minus]$REF <- "T" 
 editing_sites[is_minus]$ALT <- "C"
 strand(editing_sites[is_minus]) <- "+"
 
-vector_of_bam_files <- c("cell1.bam", "cell2.bam", "cell3.bam")
-vector_of_cell_ids <- c("cell1", "cell2", "cell3")
+fp <- FilterParam(library_type = "unstranded",
+            min_mapq = 255, 
+            min_variant_reads = 1)
 
-pileup_cells(bamfiles = vector_of_bam_files,
-             cell_barcodes = vector_of_cell_ids, 
+ss2_bams <- c(pbmc_bam, pbmc_bam, pbmc_bam)
+cell_ids <- c("cell1", "cell2", "cell3")
+
+pileup_cells(bamfiles = ss2_bams,
+             cell_barcodes = cell_ids, 
              sites = editing_sites, 
              umi_tag = NULL,  # no UMI tag in most Smart-seq2 libraries
-             cb_tag = NULL)   # no cell barcode in most Smart-seq2 libraries
+             cb_tag = NULL, # no cell barcode tag 
+             param = fp,
+             output_directory = outdir)   
 ```
 
 
@@ -512,15 +536,8 @@ rowRanges(rse)
 Finally once a set of sites has been identified, additional packages in the bioconductor ecosystem, such the [VariantAnnotation](https://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html) package, can be used to determine the genomic context and potential molecular consequences of the editing event. 
 
 
-<details style="margin-bottom:10px;">
-<summary>
-    Session info
-</summary>
+# R session information
 
 ```{r}
 sessionInfo()
 ```
-
-</details>
-
-

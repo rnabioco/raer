@@ -1,0 +1,230 @@
+---
+title: "GSE99249: ADAR1 KO 293FT"
+author: Kent Riemondy
+date: "2023-05-22"
+output:
+    BiocStyle::html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+realign_data <- TRUE
+```
+
+```{r}
+library(glue)
+library(rtracklayer)
+library(Rsamtools)
+library(raer)
+
+output_dir <- "../extdata"
+
+sra_ids <- c("SRR5564269",
+             "SRR5564277")
+```
+
+## Obtaining fastq files
+
+FASTQ files will be downloaded using the fasterq-dump command-line tool from the sratoolkit.
+
+```{r, eval = realign_data}
+
+fq_suffixes <- paste0("_", 1:2, ".fastq")
+fq_files <- list()
+
+for(i in seq_along(sra_ids)) {
+    sra_id <- sra_ids[i]
+    dir.create(file.path("GSE99249", sra_id), recursive = TRUE, showWarnings = FALSE)
+    outfiles <- file.path("GSE99249", sra_id, paste0(sra_id, fq_suffixes))
+    fq_files[[sra_id]] <- outfiles
+        
+    if(all(file.exists(outfiles))) next;
+    
+    message("downloading sra id: ", sra_id)
+    rc <- system(paste("fasterq-dump -S -O", file.path("GSE99249", sra_id),  sra_id))
+    stopifnot(rc == 0L)
+}
+```
+
+
+## Read alignment
+
+Reads are next aligned to the genome using STAR supplemented with splice junctions defined for the hg38 genome. The STAR index and gene annotations in GTF format were generated using the script provided at `inst/scripts/dbases/get_databases.sh`.
+
+```{r, eval = realign_data}
+star_idx <- "dbases/star/GRCh38"
+gtf <- "dbases/gencode.v37.annotation.gtf"
+star_bam_files <- list()
+
+for(i in seq_along(sra_ids)){
+
+    sra_id <- sra_ids[[i]]
+    r1 <- fq_files[[sra_id]][1]
+    r2 <- fq_files[[sra_id]][2]
+    out_prefix <- file.path("GSE99249", sra_id, paste0(sra_id, "_"))
+    tmp_bam_file <- paste0(out_prefix, "Aligned.out.bam")
+    srted_bam_file <- paste0(out_prefix, "sorted")
+    out_bam <- paste0(srted_bam_file, ".bam")
+    
+    if(file.exists(out_bam)) {
+        star_bam_files[[sra_id]] <- out_bam
+        next;
+    } 
+    
+    message("aligning sra_id: ", sra_id)
+    
+    star_cmd <- glue("STAR",
+                     "--genomeDir {star_idx}",
+                     "--sjdbGTFfile {gtf}",
+                     "--runThreadN 12",
+                     "--readFilesIn {r1} {r2}",
+                     "--outFileNamePrefix {out_prefix}",
+                     "--outSAMattributes NH HI AS nM MD",
+                     "--outSAMtype BAM Unsorted",
+                     "--outFilterType BySJout",
+                     "--alignSJoverhangMin 8",
+                     "--alignSJDBoverhangMin 2",
+                     "--outFilterMismatchNoverLmax 0.04",
+                     "--alignIntronMin 20",
+                     "--alignIntronMax 1000000",
+                     "--alignMatesGapMax 1000000", 
+                     .sep = " ")
+    rc <- system(star_cmd)
+    stopifnot(rc == 0L)
+    
+    out_bam <- sortBam(tmp_bam_file, srted_bam_file)
+    unlink(tmp_bam_file)
+    
+    star_bam_files[[sra_id]] <- out_bam
+}
+```
+
+# Identify duplicate reads
+
+Duplicate reads are next identified using `MarkDuplicates` from picard, and bam file index files generated from final output bam files.
+
+```{r, eval = realign_data}
+for(i in seq_along(sra_ids)){
+    sra_id <- sra_ids[[i]]
+    inbam <- star_bam_files[[sra_id]]
+    outbam <- file.path("GSE99249", paste0(sra_id, ".bam"))
+    if(file.exists(outbam)) next;
+    
+    dedup_log <- file.path("GSE99249", sra_id, "dedup.log")
+    picard_cmd <- glue("picard MarkDuplicates", 
+                       "-Xms2g -Xmx8g -XX:ParallelGCThreads=2",
+                       "-I {inbam}",
+                       "-M {dedup_log}", 
+                       "--MAX_FILE_HANDLES_FOR_READ_ENDS_MAP 1000",
+                       "-O {outbam}",
+                       "--REMOVE_DUPLICATES false",
+                       "--CREATE_INDEX false",
+                       "--VALIDATION_STRINGENCY SILENT",
+                       .sep = " ")
+    rc <- system(picard_cmd)
+    stopifnot(rc == 0L)
+    indexBam(outbam)
+}
+```
+
+# Make tiny dataset for testing package
+
+These files will be included directly in the `raer` package to be used for tests and examples. 
+
+```{r}
+regions <- c("chr3:156540241-156540769",
+             "chr4:176330847-176331494",
+             "chr5:80627251-80627768")
+regions <- GRanges(regions)
+strand(regions) <- "+"
+
+seqs <- BSgenome::getSeq(FaFile(fasta_fn), regions)
+names(seqs) <- c("SSR3", "SPCS3", "DHFR")
+export(seqs, file.path(output_dir, "human.fasta"))
+
+strand(regions) <- c("-", "+", "-")
+regions$name <- names(seqs)
+regions$score <- 0L
+export(regions, file.path(output_dir, "regions.bed"))
+```
+
+```{bash}
+mkdir -p GSE99249/temp_data
+
+## build star index
+STAR --runMode genomeGenerate --genomeDir GSE99249/star/ --genomeFastaFiles ../extdata/human.fasta --genomeSAindexNbases 4 
+
+regions=../extdata/regions.bed
+
+## extract reads in fasta file regions
+samtools view  -M -L $regions GSE99249/SRR5564269.bam \
+    | cut -f 1 \
+    | uniq > GSE99249/temp_data/reads_to_get.txt
+
+samtools view -b -N GSE99249/temp_data/reads_to_get.txt GSE99249/SRR5564269.bam \
+    | samtools sort -n \
+    | samtools fastq \
+      -1 GSE99249/temp_data/SRR5564269_1.fastq.gz \
+      -2 GSE99249/temp_data/SRR5564269_2.fastq.gz
+
+samtools view  -M -L $regions GSE99249/SRR5564277.bam \
+    | cut -f 1 \
+    | uniq > GSE99249/temp_data/reads_to_get.txt
+
+samtools view -b -N GSE99249/temp_data/reads_to_get.txt GSE99249/SRR5564277.bam \
+    | samtools sort -n \
+    | samtools fastq \
+      -1 GSE99249/temp_data/SRR5564277_1.fastq.gz \
+      -2 GSE99249/temp_data/SRR5564277_2.fastq.gz
+
+## remap
+
+STAR \
+    --readMapNumber 500 \
+    --outSAMtype BAM SortedByCoordinate \
+    --outSAMunmapped Within \
+    --outSAMmode Full \
+    --outSAMattributes NH HI AS nM MD \
+    --outFileNamePrefix ../extdata/SRR5564277_ \
+    --readFilesCommand "gunzip -c" \
+    --genomeDir GSE99249/star/ \
+    --readFilesIn  \
+      GSE99249/temp_data/SRR5564277_1.fastq.gz \
+      GSE99249/temp_data/SRR5564277_2.fastq.gz
+
+samtools index ../extdata/SRR5564277_Aligned.sortedByCoord.out.bam
+
+STAR \
+    --readMapNumber 500 \
+    --outSAMtype BAM SortedByCoordinate \
+    --outSAMunmapped Within \
+    --outSAMmode Full \
+    --outSAMattributes NH HI AS nM MD \
+    --outFileNamePrefix ../extdata/SRR5564269_ \
+    --readFilesCommand "gunzip -c" \
+    --genomeDir GSE99249/star/ \
+    --readFilesIn \
+       GSE99249/temp_data/SRR5564269_1.fastq.gz \
+       GSE99249/temp_data/SRR5564269_2.fastq.gz
+
+samtools index ../extdata/SRR5564269_Aligned.sortedByCoord.out.bam
+
+
+rm -rf GSE99249/temp_data GSE99249/star GSE99249/test_data_regions.bed
+```
+
+# Clean up
+
+Unneeded temporary files are next deleted, keeping only the bam and bam index files. 
+
+```{r, eval = realign_data}
+unlink(file.path("GSE99249", sra_ids), recursive = TRUE)
+```
+
+
+<details><summary>Show session info</summary>
+
+```{r code}
+sessionInfo()
+```
+</details>
