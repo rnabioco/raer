@@ -1,23 +1,24 @@
 #' Generate base counts using pileup
-#' 
-#' @description This function uses a pileup routine to examine numerate base counts from
-#'   alignments at specified sites, regions, or across all read alignments, from one or 
-#'   more BAM files. Alignment and site filtering
-#'   options are controlled by the `FilterParam` class.A [RangedSummarizedExperiment] object 
-#'   is returned, populated with base count statistics for each supplied BAM file.
-#'   
-#' @param bamfiles a character vector, [BamFile] or [BamFileList] indicating 1 or
-#' more BAM files to process. If named, the names will be included in the [colData]
-#' of the [RangedSummarizedExperiment] as a `sample` column, otherwise the names will
-#' be taken from the basename of the BAM file.
-#' @param fasta path to genome fasta file used for read alignment. Can be provided in 
-#' compressed gzip or bgzip format.
+#'
+#' @description This function uses a pileup routine to examine numerate base
+#' counts from alignments at specified sites, regions, or across all read
+#' alignments, from one or more BAM files. Alignment and site filtering
+#'   options are controlled by the `FilterParam` class. A
+#'   [RangedSummarizedExperiment] object is returned, populated with base count
+#'   statistics for each supplied BAM file.
+#'
+#' @param bamfiles a character vector, [BamFile] or [BamFileList] indicating 1
+#' or more BAM files to process. If named, the names will be included in the
+#' [colData] of the [RangedSummarizedExperiment] as a `sample` column, otherwise
+#' the names will be taken from the basename of the BAM file.
+#' @param fasta path to genome fasta file used for read alignment. Can be
+#' provided in compressed gzip or bgzip format.
 #' @param sites a [GRanges] object containing regions or sites to process.
-#' @param region samtools region query string (i.e. `chr1:100-1000`). Can be combined
-#' with sites, in which case sites will be filtered to keep only sites within the
-#' region.
-#' @param chroms chromosomes to process, provided as a character vector. Not to be used with the
-#' region parameter.
+#' @param region samtools region query string (i.e. `chr1:100-1000`). Can be
+#' combined with sites, in which case sites will be filtered to keep only sites
+#' within the region.
+#' @param chroms chromosomes to process, provided as a character vector. Not to
+#' be used with the region parameter.
 #' @param param object of class [FilterParam()] which specify various
 #'   filters to apply to reads and sites during pileup.
 #' @param umi_tag The BAM tag containing a UMI sequence. If supplied, multiple
@@ -27,7 +28,8 @@
 #'   region.
 #' @param verbose if TRUE, then report progress and warnings.
 #'
-#' @returns A [RangedSummarizedExperiment] object populated with multiple assays:
+#' @returns A [RangedSummarizedExperiment] object populated with
+#' multiple assays:
 #'   * `ALT`:  Alternate base(s) found at each position
 #'   * `nRef`: # of reads supporting the reference base
 #'   * `nAlt`: # of reads supporting an alternate base
@@ -110,7 +112,6 @@ pileup_sites <- function(bamfiles,
     BPPARAM = SerialParam(),
     umi_tag = NULL,
     verbose = FALSE) {
-
     if (!is(bamfiles, "BamFileList")) {
         bamfiles <- BamFileList(bamfiles)
     }
@@ -124,7 +125,9 @@ pileup_sites <- function(bamfiles,
 
     if (!is.null(sites) && !is(sites, "GRanges")) {
         cl <- class(sites)
-        cli::cli_abort("invalid object passed to sites, expecting GRanges found {cl}")
+        cli::cli_abort(
+            "invalid object passed to sites, expecting GRanges found {cl}"
+        )
     }
 
     bf_exists <- file.exists(path(bamfiles))
@@ -198,12 +201,11 @@ pileup_sites <- function(bamfiles,
         res <- res[2:length(res)]
         res <- lists_to_grs(res, contigs)
         res <- merge_pileups(res,
-                             sample_names = sample_ids)
+            sample_names = sample_ids
+        )
         rowData(res) <- cbind(rowData(res), rdat)
-
     } else {
         res <- bplapply(chroms_to_process, function(ctig) {
-
             if (is.null(ctig)) {
                 ctig <- character()
             }
@@ -268,15 +270,15 @@ setup_valid_regions <- function(bam, chroms, region = NULL, fasta = NULL) {
         chroms_to_process[!chroms_to_process %in% names(contig_info)]
 
     if (length(missing_chroms) > 0) {
-         msg <- paste(missing_chroms, collapse = "\n")
-            cli::cli_warn(c(
-                "the following chromosomes are not present in the bamfile(s):",
-                "{msg}"
-            ))
+        msg <- paste(missing_chroms, collapse = "\n")
+        cli::cli_warn(c(
+            "the following chromosomes are not present in the bamfile(s):",
+            "{msg}"
+        ))
         chroms_to_process <- setdiff(chroms_to_process, missing_chroms)
     }
 
-    if(!is.null(fasta)){
+    if (!is.null(fasta)) {
         chroms_in_fa <- seqnames(Rsamtools::scanFaIndex(fasta))
         missing_chroms <-
             chroms_to_process[!chroms_to_process %in% levels(chroms_in_fa)]
@@ -298,19 +300,21 @@ setup_valid_regions <- function(bam, chroms, region = NULL, fasta = NULL) {
         cli::cli_abort("There are no valid chromosomes to process")
     }
 
-    list(chroms = chroms_to_process,
-         all_contigs = contigs,
-         region = region)
+    list(
+        chroms = chroms_to_process,
+        all_contigs = contigs,
+        region = region
+    )
 }
 
 # IRanges/GRanges are limited to this max int
 MAX_INT <- 536870912
 
 defaultBulkBamFlags <- Rsamtools::scanBamFlag(
-        isSecondaryAlignment = FALSE,
-        isNotPassingQualityCont = FALSE,
-        isDuplicate = FALSE,
-        isSupplementaryAlignment = FALSE
+    isSecondaryAlignment = FALSE,
+    isNotPassingQualityCont = FALSE,
+    isDuplicate = FALSE,
+    isSupplementaryAlignment = FALSE
 )
 
 
@@ -344,11 +348,9 @@ get_region <- function(region) {
         homopolymer_len = "integer",
         max_mismatch_type = "integer", # length 2
         min_variant_reads = "integer",
-        
         only_keep_variants = "logical", # variable length
         report_multiallelic = "logical",
         remove_overlaps = "logical",
-        
         ftrim_5p = "numeric",
         ftrim_3p = "numeric",
         read_bqual = "numeric", # length 2
@@ -364,10 +366,12 @@ setMethod(show, "FilterParam", function(object) {
 })
 
 
-encode_libtype <- function(library_type = c("unstranded",
-                                            "fr-first-strand",
-                                            "fr-second-strand"),
-                            n_files) {
+encode_libtype <- function(library_type = c(
+        "unstranded",
+        "fr-first-strand",
+        "fr-second-strand"
+    ),
+    n_files) {
     # encode libtype as integer
     # 0 = unstranded  all reads on + strand
     # 1 = fr-first-strand     strand based on R1/antisense, R2/sense
@@ -428,7 +432,7 @@ adjustParams <- function(filterParam, nFiles) {
 
 
 c_args_FilterParam <- function(x, ...) {
-    fp <-as_list_FilterParam(x)
+    fp <- as_list_FilterParam(x)
 
     # consistent length args are populated into vectors
     # note that unlisting will increase vector size greater than number of args
@@ -494,7 +498,8 @@ cfilterParam <- function(param, nfiles) {
 #' type will be reported with variants w.r.t the + strand. Values for each
 #' input BAM file can be provided as a vector.
 #' @param only_keep_variants if TRUE, then only variant sites will be reported
-#' (FALSE by default). Values for each input BAM file can be provided as a vector.
+#' (FALSE by default). Values for each input BAM file can be provided as a
+#' vector.
 #' @param bam_flags bam flags to filter or keep, use [Rsamtools::scanBamFlag()]
 #'   to generate.
 #' @param trim_5p Bases to trim from 5' end of read alignments
@@ -515,18 +520,19 @@ cfilterParam <- function(param, nfiles) {
 #' c(X, Y).
 #' @param read_bqual Exclude read if more than X percent of the bases have
 #' base qualities less than Y. Numeric vector of length 2. e.g. c(0.25, 20)
-#' @param min_variant_reads Required number of reads containing a variant for a site
-#' to be reported. Calculated per bam file, such that if 1 bam file has >= min_variant_reads,
-#' then the site will be reported.
-#' @param min_allelic_freq minimum allelic frequency required for a variant to be
-#' reported in ALT assay.
-#' @param report_multiallelic if TRUE, report sites with multiple variants passing
-#' filters. If FALSE, site will not be reported.
-#' @param remove_overlaps if TRUE, enable read pair overlap detection, which will count only 
-#' 1 read in regions where read pairs overlap using the htslib algorithm. In brief 
-#' for each overlapping base pair the base quality of the base with the lower quality
-#' is set to 0, which discards it from being counted. 
-#' 
+#' @param min_variant_reads Required number of reads containing a variant for a
+#' site to be reported. Calculated per bam file, such that if 1 bam file has >=
+#' min_variant_reads, then the site will be reported.
+#' @param min_allelic_freq minimum allelic frequency required for a variant to
+#' be reported in ALT assay.
+#' @param report_multiallelic if TRUE, report sites with multiple variants
+#' passing filters. If FALSE, site will not be reported.
+#' @param remove_overlaps if TRUE, enable read pair overlap detection, which
+#' will count only 1 read in regions where read pairs overlap using the htslib
+#' algorithm. In brief for each overlapping base pair the base quality of the
+#' base with the lower quality is set to 0, which discards it from being
+#' counted.
+#'
 #' @rdname pileup_sites
 #' @export
 FilterParam <-
@@ -574,11 +580,12 @@ FilterParam <-
         stopifnot(ftrim_5p >= 0 && ftrim_5p <= 1)
         stopifnot(ftrim_3p >= 0 && ftrim_3p <= 1)
 
-        stopifnot(length(max_mismatch_type) == 2 && !any(is.na(max_mismatch_type)))
+        stopifnot(length(max_mismatch_type) == 2 &&
+            !any(is.na(max_mismatch_type)))
         stopifnot(length(read_bqual) == 2 && !any(is.na(read_bqual)))
         stopifnot(isTRUEorFALSE(report_multiallelic))
         stopifnot(isTRUEorFALSE(remove_overlaps))
-        
+
         # variable length depending on n_files
         stopifnot(is.character(library_type))
         stopifnot(is.integer(min_mapq))
@@ -588,8 +595,11 @@ FilterParam <-
             # defaults to allowing all reads
             bam_flags <- Rsamtools::scanBamFlag()
         } else {
-            if (length(bam_flags) != 2 || !all(names(bam_flags) == c("keep0", "keep1"))) {
-                stop("bam_flags must be generated using Rsamtools::scanBamFlag()")
+            if (length(bam_flags) != 2 ||
+                !all(names(bam_flags) == c("keep0", "keep1"))) {
+                stop(
+                    "bam_flags must be generated using Rsamtools::scanBamFlag()"
+                )
             }
         }
 
@@ -597,17 +607,27 @@ FilterParam <-
 
         ## creation
         .FilterParam(
-            max_depth = max_depth, min_base_quality = min_base_quality,
-            min_mapq = min_mapq, min_depth = min_depth,
-            library_type = library_type, only_keep_variants = only_keep_variants,
-            trim_5p = trim_5p, trim_3p = trim_3p, indel_dist = indel_dist,
-            splice_dist = splice_dist, homopolymer_len = homopolymer_len,
-            max_mismatch_type = max_mismatch_type, read_bqual = read_bqual,
+            max_depth = max_depth,
+            min_base_quality = min_base_quality,
+            min_mapq = min_mapq,
+            min_depth = min_depth,
+            library_type = library_type,
+            only_keep_variants = only_keep_variants,
+            trim_5p = trim_5p,
+            trim_3p = trim_3p,
+            indel_dist = indel_dist,
+            splice_dist = splice_dist,
+            homopolymer_len = homopolymer_len,
+            max_mismatch_type = max_mismatch_type,
+            read_bqual = read_bqual,
             min_splice_overhang = min_splice_overhang,
             min_variant_reads = min_variant_reads,
-            ftrim_5p = ftrim_5p, ftrim_3p = ftrim_3p,
-            min_allelic_freq = min_allelic_freq, report_multiallelic = report_multiallelic,
-            bam_flags = bam_flags, remove_overlaps = remove_overlaps
+            ftrim_5p = ftrim_5p,
+            ftrim_3p = ftrim_3p,
+            min_allelic_freq = min_allelic_freq,
+            report_multiallelic = report_multiallelic,
+            bam_flags = bam_flags,
+            remove_overlaps = remove_overlaps
         )
     }
 
@@ -663,9 +683,9 @@ gr_to_cregions <- function(gr) {
 #' @description Create a `RangedSummarizedExperiment` from a single or list of
 #'   pileups (e.g., for different samples) generated by `pileup_sites()`.
 #'
-#' @param plps results from running [pileup_sites()], can be one result, a list of
-#'   results, or a named list of results. If a named list is given, the colData
-#'   will be named using the names in the list.
+#' @param plps results from running [pileup_sites()], can be one result, a
+#' list of results, or a named list of results. If a named list is given, the
+#' colData will be named using the names in the list.
 #' @param assay_cols character vector of columns to store as assays
 #' @param sample_names A list of names to be added to the SE object. If no
 #'   sample names are given and plps is not a named list, then default names (ie
@@ -702,7 +722,8 @@ merge_pileups <- function(plps,
     } else {
         if (length(plps) != length(sample_names)) {
             cli::cli_abort(c(
-                "You must provide the same number of sample names as pileup results",
+                "You must provide the same number of sample names ",
+                "as pileup results.",
                 "You supplied {length(plps)} pileup results but supplied ",
                 "{length(sample_names} sample names."
             ))
@@ -860,7 +881,7 @@ site_names <- function(gr, allele = FALSE) {
     if (length(gr) == 0) {
         return(NULL)
     }
-    if(allele) {
+    if (allele) {
         stopifnot(all(c("ALT", "REF") %in% colnames(mcols(gr))))
         res <- paste0(
             "site", "_",
@@ -880,5 +901,4 @@ site_names <- function(gr, allele = FALSE) {
         )
     }
     res
-
 }

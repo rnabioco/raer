@@ -17,18 +17,18 @@ make_de_object(
 \item{rse}{A \link{RangedSummarizedExperiment} object}
 
 \item{edit_from}{This should correspond to a nucleotide or assay
-(\code{A}, \code{C}, \code{G}, \code{T}, \code{Ref}, or \code{Alt}) you expect in the reference. Ex. for A to I
-editing events, this would be \code{A}.}
+(\code{A}, \code{C}, \code{G}, \code{T}, \code{Ref}, or \code{Alt}) you expect in the reference.
+Ex. for A to I editing events, this would be \code{A}.}
 
 \item{edit_to}{This should correspond to a nucleotide or assay
-(\code{A}, \code{C}, \code{G}, \code{T}, \code{Ref}, or \code{Alt}) you expect in the editing site. Ex. for A
-to I editing events, this would be \code{G}.}
+(\code{A}, \code{C}, \code{G}, \code{T}, \code{Ref}, or \code{Alt}) you expect in the editing site.
+Ex. for A to I editing events, this would be \code{G}.}
 
 \item{min_prop}{The minimum required proportion of reads edited at a site. At
 least \code{min_samples} need to pass this to keep the site.}
 
-\item{max_prop}{The maximum allowable proportion of reads edited at a site. At
-least \code{min_samples} need to pass this to keep the site.}
+\item{max_prop}{The maximum allowable proportion of reads edited at a site.
+At least \code{min_samples} need to pass this to keep the site.}
 
 \item{min_samples}{The minimum number of samples passing the \code{min_prop} and
 \code{max_prop} cutoffs to keep a site.}

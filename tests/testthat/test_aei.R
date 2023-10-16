@@ -17,7 +17,7 @@ mock_snps <- GRanges("SPCS3", IRanges(matchPattern("A", scanFa(fafn)[["SPCS3"]])
 mock_snps_gpos <- as(mock_snps, "GPos")
 
 mock_genes <- mock_alu_ranges
-strand(mock_genes) <- c("-","+", "-")
+strand(mock_genes) <- c("-", "+", "-")
 
 test_that("calc_aei basic options work", {
     fp <- FilterParam(library_type = "fr-first-strand")
@@ -61,7 +61,6 @@ test_that("calc_aei basic options work", {
 
     us_aei <- calc_AEI(bams, fafn, mock_alu_ranges, mock_genes, param = fp)
     expect_true(all(us_aei$AEI[, "A_G"] > us_aei$AEI[, "T_C"]))
-
 })
 
 test_that("BamFile class works", {

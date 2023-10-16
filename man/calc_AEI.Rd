@@ -24,18 +24,19 @@ character vector is supplied the names will be used in the output.}
 \item{alu_ranges}{\link{GRanges} with regions to query for
 calculating the AEI, typically ALU repeats.}
 
-\item{txdb}{A \link{TxDb} object, if supplied, will be used to subset the alu_ranges
-to those found overlapping genes. Alternatively a \link{GRanges} object with gene
-coordinates.  If the \code{library_type}, specified by
+\item{txdb}{A \link{TxDb} object, if supplied, will be used to subset the
+alu_ranges to those found overlapping genes. Alternatively a \link{GRanges}
+object with gene coordinates.  If the \code{library_type}, specified by
 \code{FilterParam}, is \code{unstranded} then the \link{TxDb} will
-be used to correct the strandness relative to the reference and is a required
+be used to correct the strandness relative to the reference and is a
+required
 parameter.}
 
 \item{snp_db}{either a \link{SNPlocs}, \link{GPos}, or \link{GRanges} object. If supplied,
 will be used to exclude polymorphic positions prior to calculating the AEI.
 If \code{calc_AEI()} will be used many times, one will save time by first
-identifying SNPs that overlap the supplied \code{alu_ranges}, and passing these as
-a \link{GRanges} to \code{snp_db} rather than supplying all known SNPs (see
+identifying SNPs that overlap the supplied \code{alu_ranges}, and passing these
+as a \link{GRanges} to \code{snp_db} rather than supplying all known SNPs (see
 \code{\link[=get_overlapping_snps]{get_overlapping_snps()}}).}
 
 \item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
@@ -51,7 +52,8 @@ A named list containing:
 \itemize{
 \item \code{AEI}: a matrix of AEI index values computed for all allelic
 combinations, one row for each supplied bam file.
-\item \code{AEI_per_chrom}: a data.frame containing values computed for each chromosome
+\item \code{AEI_per_chrom}: a data.frame containing values computed for each
+chromosome
 }
 }
 \description{

@@ -2,8 +2,8 @@ test_that("fisher exact test works", {
     set.seed(42)
     x <- sample(0:1e4, 400, replace = TRUE)
     a_ref <- x[1:100]
-    a_alt <-  x[101:200]
-    b_ref <-  x[201:300]
+    a_alt <- x[101:200]
+    b_ref <- x[201:300]
     b_alt <- x[301:400]
     a <- cbind(a_ref, a_alt)
     b <- cbind(b_ref, b_alt)
@@ -52,10 +52,11 @@ test_that("filter mispriming works", {
     expect_error(find_mispriming_sites(bam_fn, fa_fn, tag_values = "more-nonsense"))
 
     res <- find_mispriming_sites(bam_fn, fa_fn,
-                                 min_reads = 1,
-                                 pos_5p = 1,
-                                 pos_3p = 1,
-                                 verbose = FALSE)
+        min_reads = 1,
+        pos_5p = 1,
+        pos_3p = 1,
+        verbose = FALSE
+    )
     expect_true(width(res) == 3L)
 })
 
@@ -92,7 +93,7 @@ test_that("correct_strand works", {
 
     ans <- correct_strand(rse, genes)
     alts <- assay(ans, "ALT")[, 1]
-    alts <- alts[alts != "-" & as.vector(strand(ans)) ==  "-"]
+    alts <- alts[alts != "-" & as.vector(strand(ans)) == "-"]
     og_alts <- assay(rse[names(alts), ], "ALT")[, 1]
     expect_true(all(og_alts != alts))
     expect_true(all(nchar(og_alts) == nchar(alts)))
@@ -107,7 +108,7 @@ test_that("correct_strand works", {
     expect_true(all(strand(minus_rse) == "-"))
 
     alts <- assay(minus_rse, "ALT")[, 1]
-    alts <- alts[alts != "-" & as.vector(strand(minus_rse)) ==  "-"]
+    alts <- alts[alts != "-" & as.vector(strand(minus_rse)) == "-"]
     og_alts <- assay(rse[names(alts), ], "ALT")[, 1]
     expect_true(all(comp_bases(alts) == og_alts))
 })

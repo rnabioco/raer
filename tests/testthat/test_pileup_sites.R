@@ -189,8 +189,8 @@ check_nRef_calc <- function(input, nts_in = nts) {
 
 test_that("pileup check nRef and nAlt", {
     strds <- c(
-        "fr-first-strand", "fr-second-strand","unstranded"
-        )
+        "fr-first-strand", "fr-second-strand", "unstranded"
+    )
 
     for (strd in strds) {
         res <- pileup_sites(bamfn, fafn,
@@ -618,7 +618,6 @@ test_that("BamFile and BamFileList input work", {
     res <- pileup_sites(bfl, fafn, sites)
     expect_equal(length(rowData(res)$REF), 182)
     expect_equal(length(assays(res)), 7)
-
 })
 
 test_that("custom indexes work", {

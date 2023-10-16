@@ -54,17 +54,24 @@ test_that("annot_snps works", {
 
             # check for snp matching
             # first 5 are SNPS, 6th is not
-            gr <- GRanges(c("1:14653", "1:14677", "1:16495",
-                            "1:99166", "1:99180", "1:100000"),
-                          strand = c(rep("+", 3), rep("-", 3)),
-                          seqinfo = seqinfo(SNPlocs.Hsapiens.dbSNP144.GRCh38),
-                          ALT = c("T", "T", "C", "A", "C", "C"))
+            gr <- GRanges(
+                c(
+                    "1:14653", "1:14677", "1:16495",
+                    "1:99166", "1:99180", "1:100000"
+                ),
+                strand = c(rep("+", 3), rep("-", 3)),
+                seqinfo = seqinfo(SNPlocs.Hsapiens.dbSNP144.GRCh38),
+                ALT = c("T", "T", "C", "A", "C", "C")
+            )
             res <- annot_snps(gr,
-                              SNPlocs.Hsapiens.dbSNP144.GRCh38,
-                              genome = BSgenome.Hsapiens.NCBI.GRCh38)
-            expect_true("snp_matches_site" %in%  colnames(mcols(res)))
-            expect_equal(decode(res$snp_matches_site),
-                         c(TRUE, FALSE, TRUE, TRUE, FALSE, NA))
+                SNPlocs.Hsapiens.dbSNP144.GRCh38,
+                genome = BSgenome.Hsapiens.NCBI.GRCh38
+            )
+            expect_true("snp_matches_site" %in% colnames(mcols(res)))
+            expect_equal(
+                decode(res$snp_matches_site),
+                c(TRUE, FALSE, TRUE, TRUE, FALSE, NA)
+            )
         }
     }
 })

@@ -20,15 +20,17 @@ calc_scAEI(
 get_scAEI_sites(fasta, genes, alus, edit_from = "A", edit_to = "G")
 }
 \arguments{
-\item{bamfiles}{a path to a BAM file (for 10x libraries), or a vector of paths
-to BAM files (smart-seq2). Can be supplied as a character vector, \code{BamFile}, or
-\code{BamFileList}.}
+\item{bamfiles}{a path to a BAM file (for 10x libraries), or a vector of
+paths to BAM files (smart-seq2). Can be supplied as a character vector,
+\code{BamFile}, or \code{BamFileList}.}
 
-\item{sites}{a GRanges object produced by \code{\link[=get_scAEI_sites]{get_scAEI_sites()}} containing sites to process.}
+\item{sites}{a GRanges object produced by \code{\link[=get_scAEI_sites]{get_scAEI_sites()}} containing
+sites to process.}
 
-\item{cell_barcodes}{A character vector of single cell barcodes to process. If
-processing multiple BAM files (e.g. smart-seq-2), provide a character vector
-of unique identifiers for each input BAM, to name each BAM file in the output files.}
+\item{cell_barcodes}{A character vector of single cell barcodes to process.
+If processing multiple BAM files (e.g. smart-seq-2), provide a character
+vector of unique identifiers for each input BAM, to name each BAM file in the
+output files.}
 
 \item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various filters to
 apply to reads and sites during pileup.}
@@ -51,18 +53,18 @@ If NULL, a temporary directory will be used.}
 
 \item{fasta}{Path to a genome fasta file}
 
-\item{genes}{A \code{GRanges} object with gene coordinates.Alternatively a \code{TxDb} object,
-which if supplied, will be used extract gene coordinates.}
+\item{genes}{A \code{GRanges} object with gene coordinates.Alternatively a \code{TxDb}
+object, which if supplied, will be used extract gene coordinates.}
 
 \item{alus}{\code{GRanges} with repeat regions to query for calculating the AEI,
-typically ALU repeats. The strand of the supplied intervals will be ignored for
-defining repeat regions.}
+typically ALU repeats. The strand of the supplied intervals will be ignored
+for defining repeat regions.}
 }
 \value{
 A \code{DataFrame} containing computed \code{AEI} values,
-count of editing events (\code{n_alt}), and count of reference events (\code{n_ref}) per cell.
-If \code{return_sce} is \code{TRUE}, then a \code{SingleCellExperiment} is returned with the
-AEI values stored in the \code{colData}.
+count of editing events (\code{n_alt}), and count of reference events (\code{n_ref})
+per cell. If \code{return_sce} is \code{TRUE}, then a \code{SingleCellExperiment} is
+returned with the AEI values stored in the \code{colData}.
 }
 \description{
 The Adenosine Editing Index describes the magnitude of A-to-I
@@ -70,9 +72,9 @@ editing in a sample. The index is a weighted average of editing events (G
 bases) observed at A positions. The vast majority A-to-I editing occurs in
 ALU elements in the human genome, and these regions have a high A-to-I
 editing signal compared to other regions such as coding exons. This
-function will examine enumerate edited and non-edited base counts at the supplied
-sites and return summary AEI metric per cell. Potential editing sites within
-repeat regions can be generated using \code{get_scAEI_sites()}.
+function will examine enumerate edited and non-edited base counts at the
+supplied sites and return summary AEI metric per cell. Potential editing
+sites within repeat regions can be generated using \code{get_scAEI_sites()}.
 }
 \examples{
 suppressPackageStartupMessages(library(Rsamtools))
@@ -92,7 +94,7 @@ genes_gr <- GRanges(c(
 ))
 
 # alu intervals
-alus_gr <-  GRanges(c(
+alus_gr <- GRanges(c(
     "2:110-380",
     "2:510-600",
     "2:610-670"
@@ -104,8 +106,10 @@ fa_fn <- raer_example("mouse_tiny.fasta")
 # get positions of potential A -> G changes in alus
 sites <- get_scAEI_sites(fa_fn, genes_gr, alus_gr)
 
-fp <- FilterParam(library_type = "fr-second-strand",
-                  min_mapq = 255)
+fp <- FilterParam(
+    library_type = "fr-second-strand",
+    min_mapq = 255
+)
 calc_scAEI(bam_fn, sites, cbs, fp)
 
 }

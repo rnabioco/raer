@@ -27,9 +27,15 @@ filter_multiallelic <- function(se) {
         !grepl(",", x)
     })
     se <- se[which(is_not_multiallelic), ]
-    rowData(se)$ALT <- apply(assay(se, "ALT"), 1, function(x) unique(x[x != "-"]))
+    rowData(se)$ALT <- apply(
+        assay(se, "ALT"),
+        1,
+        function(x) unique(x[x != "-"])
+    )
 
-    n_filt <- sum(c(is.na(is_not_multiallelic), !is_not_multiallelic), na.rm = TRUE)
+    n_filt <- sum(c(is.na(is_not_multiallelic), !is_not_multiallelic),
+        na.rm = TRUE
+    )
     cli::cli_alert_info(
         c(
             "{.fun filter_multiallelic}: removed {.val {n_filt}} sites",
@@ -102,7 +108,7 @@ get_splice_sites <- function(txdb, slop = 4) {
 #' @examples
 #' library(GenomicFeatures)
 #' rse_adar_ifn <- mock_rse()
-#' 
+#'
 #' # mock up a txdb with genes
 #' gr <- GRanges(c(
 #'     "DHFR:310-330:-",
@@ -117,9 +123,8 @@ get_splice_sites <- function(txdb, slop = 4) {
 #' gr$gene_id <- c(1, 1, 2, 2)
 #' gr$transcript_id <- rep(c("1.1", "2.1"), each = 2)
 #' txdb <- makeTxDbFromGRanges(gr)
-#' 
+#'
 #' filter_splice_variants(rse_adar_ifn, txdb)
-#' 
 #'
 #' @returns `SummarizedExperiment::SummarizedExperiment` with sites
 #' adjacent to splice sites removed.
@@ -152,7 +157,8 @@ filter_splice_variants <- function(rse, txdb,
     n_filt <- length(to_keep)
     cli::cli_alert_info(
         c(
-            "{.fun filter_splice_variants}: removed {.val {n_in - n_filt}} sites",
+            "{.fun filter_splice_variants}: ",
+            " removed {.val {n_in - n_filt}} sites",
             " from {.val {n_in}} ({.val {n_filt}} remain)"
         )
     )
@@ -162,12 +168,14 @@ filter_splice_variants <- function(rse, txdb,
 
 #' Filter out clustered sequence variants
 #'
-#' @description Sequence variants of multiple allele types (e.g., `A -> G`, `A -> C`)
-#'   proximal to a putative editing site can be indicative of a region prone to mis-alignment
-#'   artifacts. Sites will be removed if variants of multiple allele types are present 
-#'   within a given distance in genomic or transcriptome coordinate space.
+#' @description Sequence variants of multiple allele types (e.g., `A -> G`,
+#'  `A -> C`) proximal to a putative editing site can be indicative of a region
+#'  prone to mis-alignment artifacts. Sites will be removed if variants of
+#'  multiple allele types are present within a given distance in genomic or
+#'  transcriptome coordinate space.
 #'
-#' @param rse `SummarizedExperiment::SummarizedExperiment` containing editing sites
+#' @param rse `SummarizedExperiment::SummarizedExperiment` containing editing
+#' sites
 #' @param txdb `GenomicFeatures::TxDb`
 #' @param regions One of `transcript` or `genome`, specifying the coordinate
 #'   system for calculating distances between variants.
@@ -176,10 +184,10 @@ filter_splice_variants <- function(rse, txdb,
 #'
 #' @examples
 #' library(GenomicFeatures)
-#' 
+#'
 #' rse_adar_ifn <- mock_rse()
 #' rse <- rse_adar_ifn[seqnames(rse_adar_ifn) == "SPCS3"]
-#' 
+#'
 #' # mock up a txdb with genes
 #' gr <- GRanges(c(
 #'     "SPCS3:100-120:-",
@@ -192,7 +200,7 @@ filter_splice_variants <- function(rse, txdb,
 #' gr$gene_id <- c(1, 2)
 #' gr$transcript_id <- c("1.1", "2.1")
 #' txdb <- makeTxDbFromGRanges(gr)
-#' 
+#'
 #' rse <- filter_multiallelic(rse)
 #' filter_clustered_variants(rse, txdb, variant_dist = 10)
 #'
@@ -211,7 +219,9 @@ filter_clustered_variants <- function(rse, txdb,
     }
 
     if (length(setdiff(regions, c("transcript", "genome"))) > 0) {
-        cli::cli_abort("only transcript and/or genome are valid arguments for region")
+        cli::cli_abort(
+            "only transcript and/or genome are valid arguments for region"
+        )
     }
 
     n_in <- nrow(rse)
@@ -278,7 +288,8 @@ filter_clustered_variants <- function(rse, txdb,
 
     cli::cli_alert_info(
         c(
-            "{.fun filter_clustered_variants}: removed {.val {n_in - n_out}} sites",
+            "{.fun filter_clustered_variants}: ",
+            " removed {.val {n_in - n_out}} sites",
             " from {.val {n_in}} ({.val {n_out}} remain)"
         )
     )
@@ -289,17 +300,18 @@ filter_clustered_variants <- function(rse, txdb,
 
 #' Calculate confidence score for observing editing
 #'
-#' @description Calculate a confidence score based on a Bayesian inverse probability
-#' model as described by Washburn et al. Cell Reports. 2015, and implemented
-#' in the SAILOR pipeline.
+#' @description Calculate a confidence score based on a Bayesian inverse
+#' probability model as described by Washburn et al. Cell Reports. 2015, and
+#' implemented in the SAILOR pipeline.
 #'
-#' @param se `SummarizedExperiment::SummarizedExperiment` containing editing sites
+#' @param se `SummarizedExperiment::SummarizedExperiment` containing editing
+#' sites
 #' @param edit_to edited base
 #' @param edit_from non-edited base
 #' @param per_sample if TRUE, calculate confidence per sample, otherwise edited
 #' and non-edited counts will be summed across all samples.
-#' @param exp_fraction Numeric value between 0 and 1, specifying the expected error
-#' rate 
+#' @param exp_fraction Numeric value between 0 and 1, specifying the expected
+#' error rate
 #' @param alpha Pseudo-count to add to non-edited base counts
 #' @param beta  Pseudo-count to add to edited base counts
 #'
@@ -313,26 +325,31 @@ filter_clustered_variants <- function(rse, txdb,
 #'  calculated `per_sample`.
 #'
 #' @references
-#' Washburn MC, Kakaradov B, Sundararaman B, Wheeler E, Hoon S, Yeo GW, Hundley HA. The dsRBP and inactive editor ADR-1 utilizes dsRNA binding to regulate A-to-I RNA editing across the C. elegans transcriptome. Cell Rep. 2014 Feb 27;6(4):599-607. doi: 10.1016/j.celrep.2014.01.011. Epub 2014 Feb 6. PMID: 24508457; PMCID: PMC3959997.
+#' Washburn MC, Kakaradov B, Sundararaman B, Wheeler E, Hoon S, Yeo GW, Hundley
+#' HA. The dsRBP and inactive editor ADR-1 utilizes dsRNA binding to regulate
+#' A-to-I RNA editing across the C. elegans transcriptome. Cell Rep. 2014
+#' Feb 27;6(4):599-607. doi: 10.1016/j.celrep.2014.01.011. Epub 2014 Feb 6.
+#' PMID: 24508457; PMCID: PMC3959997.
 #'
 #' SAILOR pipeline: https://github.com/YeoLab/sailor
 #' @importFrom stats pbeta
 #' @export
-calc_confidence <- function(se,
-    edit_to = "G",
-    edit_from = "A",
-    per_sample = FALSE,
-    exp_fraction = 0.01,
-    alpha = 0L,
-    beta = 0L) {
+calc_confidence <- function(
+        se,
+        edit_to = "G",
+        edit_from = "A",
+        per_sample = FALSE,
+        exp_fraction = 0.01,
+        alpha = 0L,
+        beta = 0L) {
     if (length(exp_fraction) != 1 || (exp_fraction < 0 || exp_fraction > 1)) {
         cli::cli_abort("exp_fraction must be numeric(1) and between 0 and 1")
     }
-    
+
     if (length(alpha) != 1 || length(beta) != 1) {
         cli::cli_abort("alpha and beta must be length 1")
     }
-    
+
     edit_to <- paste0("n", edit_to)
     edit_from <- paste0("n", edit_from)
     alt <- assay(se, edit_to) + as.integer(beta)

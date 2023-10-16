@@ -13,9 +13,9 @@ mock_rse()
 RangedSummarizedExperiment populated with pileup data
 }
 \description{
-A RangedSummarizedExperiment containing a subset of data from an RNA-seq experiment
-to measure the effects of IFN treatment of cell lines with wild-type
-or ADAR1-KO.
+A RangedSummarizedExperiment containing a subset of data from an RNA-seq
+experiment to measure the effects of IFN treatment of cell lines with
+wild-type or ADAR1-KO.
 }
 \examples{
 mock_rse()

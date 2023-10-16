@@ -44,15 +44,17 @@ test_that("basic functionality works", {
     expect_warning(pileup_cells(bam_fn, gr,
         c("non", "existent", "barcodes"),
         outdir,
-        param = FilterParam(library_type = "fr-second-strand",
-                            min_depth = 1)
+        param = FilterParam(
+            library_type = "fr-second-strand",
+            min_depth = 1
+        )
     ))
 
     # returns empty matrices
     sce <- pileup_cells(bam_fn, gr,
-                        c("non", "existent", "barcodes"),
-                        outdir,
-                        param = fp
+        c("non", "existent", "barcodes"),
+        outdir,
+        param = fp
     )
     expect_equal(sum(assay(sce, "nRef")) + sum(assay(sce, "nAlt")), 0L)
 
@@ -144,12 +146,16 @@ test_that("if multiple bams are supplied, require nbam = # of barcodes", {
 
 test_that("output files are generated", {
     sce <- pileup_cells(bam_fn, gr, cbs, outdir)
-    mtx_fns <- file.path(outdir,
-                         c("counts.mtx.gz",
-                           "sites.txt.gz",
-                           "barcodes.txt.gz"))
+    mtx_fns <- file.path(
+        outdir,
+        c(
+            "counts.mtx.gz",
+            "sites.txt.gz",
+            "barcodes.txt.gz"
+        )
+    )
     expect_true(all(file.exists(mtx_fns)))
-    are_gzipped <- lapply(mtx_fns, function(x){
+    are_gzipped <- lapply(mtx_fns, function(x) {
         fo <- file(x)
         xx <- summary(fo)$class == "gzfile"
         close(fo)
@@ -161,10 +167,14 @@ test_that("output files are generated", {
 
 test_that("read_sparray reconstructs rse from output files", {
     sce <- pileup_cells(bam_fn, gr, cbs, outdir, param = FilterParam(min_depth = 0))
-    mtx_fns <- file.path(outdir,
-                         c("counts.mtx.gz",
-                           "sites.txt.gz",
-                           "barcodes.txt.gz"))
+    mtx_fns <- file.path(
+        outdir,
+        c(
+            "counts.mtx.gz",
+            "sites.txt.gz",
+            "barcodes.txt.gz"
+        )
+    )
     sp_sce <- read_sparray(mtx_fns[1], mtx_fns[2], mtx_fns[3], "coordinate")
     expect_true(identical(sce, sp_sce))
 
@@ -183,7 +193,6 @@ test_that("BamFile and BamFileList input work", {
     sce <- pileup_cells(bfl, gr, cbs, outdir)
     expect_true(is(sce, "SingleCellExperiment"))
     expect_equal(dim(sce), c(4, 556))
-
 })
 
 test_that("custom indexes work", {
@@ -194,12 +203,12 @@ test_that("custom indexes work", {
 
     bfl <- BamFileList(rep(bam_fn, 2), c(bai_2, bai_2))
     sce <- pileup_cells(bfl,
-                        sites = gr,
-                        cell_barcodes = LETTERS[1:2],
-                        cb_tag = NULL,
-                        umi_tag = NULL,
-                        outdir,
-                        param = FilterParam(min_depth = 0)
+        sites = gr,
+        cell_barcodes = LETTERS[1:2],
+        cb_tag = NULL,
+        umi_tag = NULL,
+        outdir,
+        param = FilterParam(min_depth = 0)
     )
     expect_true(all(gr == rowRanges(sce)))
     unlink(c(bai_1, bai_2))
@@ -208,15 +217,19 @@ test_that("custom indexes work", {
 
 # get larger set of sites to query
 fa_fn <- raer_example("mouse_tiny.fasta")
-bulkfp <- FilterParam(min_mapq = 255L,
-                  min_variant_reads = 1,
-                  min_allelic_freq = 0.01,
-                  only_keep_variants = TRUE,
-                  report_multiallelic = FALSE,
-                  library_type = "fr-second-strand",
-                  bam_flags = scanBamFlag(isSecondaryAlignment = FALSE,
-                                          isSupplementaryAlignment = FALSE,
-                                          isNotPassingQualityControls =  FALSE))
+bulkfp <- FilterParam(
+    min_mapq = 255L,
+    min_variant_reads = 1,
+    min_allelic_freq = 0.01,
+    only_keep_variants = TRUE,
+    report_multiallelic = FALSE,
+    library_type = "fr-second-strand",
+    bam_flags = scanBamFlag(
+        isSecondaryAlignment = FALSE,
+        isSupplementaryAlignment = FALSE,
+        isNotPassingQualityControls = FALSE
+    )
+)
 rse <- pileup_sites(bam_fn, fa_fn, chrom = "2", param = bulkfp)
 rowData(rse)$ALT <- assay(rse, "ALT")[, 1]
 sites <- rowRanges(rse)
@@ -230,9 +243,10 @@ test_that("rownames are not duplicated", {
 test_that("multiple alleles per site can be queried", {
     fp <- FilterParam(library_type = "fr-second-strand", min_depth = 0)
     ol_sites <- GRanges(rep(c("2:261", "2:262", "2:279"), each = 2),
-                        strand = rep(c("+", "-"), 3),
-                        REF = c("G", "C", "C", "G", "G", "C"),
-                        ALT = c("T", "A", "T", "A", "T", "A"))
+        strand = rep(c("+", "-"), 3),
+        REF = c("G", "C", "C", "G", "G", "C"),
+        ALT = c("T", "A", "T", "A", "T", "A")
+    )
     sce <- pileup_cells(bam_fn, ol_sites, cbs, outdir, param = fp)
     expect_true(nrow(sce) == 6)
     expect_true(all(Matrix::rowSums(assay(sce, "nAlt")) > 0))
@@ -245,7 +259,8 @@ mouse_sam_hdr <- c(
     "@SQ\tSN:2\tLN:1115",
     "@SQ\tSN:6\tLN:400",
     "@SQ\tSN:11\tLN:493",
-    "@SQ\tSN:8\tLN:396")
+    "@SQ\tSN:8\tLN:396"
+)
 
 change_base <- function(aln, pos, new_base) {
     rec <- strsplit(aln, "\t")[[1]]
@@ -275,13 +290,16 @@ test_that("UMI consensus base selection works", {
 
     fp <- FilterParam(library_type = "fr-first-strand", min_depth = 0)
     ol_sites <- GRanges(c("2:20", "2:645", "2:646"),
-                        strand = "+",
-                        REF = "A",
-                        ALT = "G")
+        strand = "+",
+        REF = "A",
+        ALT = "G"
+    )
     # 1 reads support ref 1 alt
     sce <- pileup_cells(tbam, ol_sites,
-                        "AGGGAGTAGGCTATCT-1",
-                        outdir, param = fp)
+        "AGGGAGTAGGCTATCT-1",
+        outdir,
+        param = fp
+    )
     expect_true(all(assay(sce, "nRef")[, 1] == c(0, 0, 1)))
     expect_true(all(assay(sce, "nAlt")[, 1] == c(0, 1, 0)))
 
@@ -290,8 +308,10 @@ test_that("UMI consensus base selection works", {
     tbam <- asBam(tf, overwrite = TRUE)
     tbai <- indexBam(tbam)
     sce <- pileup_cells(tbam, ol_sites,
-                        "AGGGAGTAGGCTATCT-1",
-                        outdir, param = fp)
+        "AGGGAGTAGGCTATCT-1",
+        outdir,
+        param = fp
+    )
     expect_true(all(assay(sce, "nRef")[, 1] == c(0, 1, 1)))
     expect_true(all(assay(sce, "nAlt")[, 1] == c(0, 0, 0)))
 
@@ -302,17 +322,20 @@ test_that("UMI consensus base selection works", {
     tbai <- indexBam(tbam)
 
     sce <- pileup_cells(tbam, ol_sites,
-                        "AGGGAGTAGGCTATCT-1",
-                        outdir, param = fp)
+        "AGGGAGTAGGCTATCT-1",
+        outdir,
+        param = fp
+    )
     expect_true(all(assay(sce, "nRef")[, 1] == c(0, 0, 1)))
     expect_true(all(assay(sce, "nAlt")[, 1] == c(0, 1, 0)))
 
     # no UMI tag disables consensus
     fp <- FilterParam(library_type = "fr-first-strand", min_base_quality = 10, min_depth = 0)
     sce <- pileup_cells(tbam, ol_sites,
-                        "AGGGAGTAGGCTATCT-1",
-                        umi_tag = NULL,
-                        outdir, param = fp)
+        "AGGGAGTAGGCTATCT-1",
+        umi_tag = NULL,
+        outdir, param = fp
+    )
     expect_true(all(assay(sce, "nRef")[, 1] == c(0, 2, 3)))
     expect_true(all(assay(sce, "nAlt")[, 1] == c(0, 1, 0)))
 
@@ -323,15 +346,10 @@ test_that("UMI consensus base selection works", {
     tbai <- indexBam(tbam)
 
     sce <- pileup_cells(tbam, ol_sites,
-                        "AGGGAGTAGGCTATCT-1",
-                        outdir, param = fp)
+        "AGGGAGTAGGCTATCT-1",
+        outdir,
+        param = fp
+    )
     expect_true(all(assay(sce, "nRef")[, 1] == c(0, 0, 1)))
     expect_true(all(assay(sce, "nAlt")[, 1] == c(0, 0, 0)))
 })
-
-
-
-
-
-
-

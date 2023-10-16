@@ -50,7 +50,7 @@ outdir <- tempdir()
 bai <- indexBam(bam_fn)
 
 fp <- FilterParam(library_type = "fr-second-strand")
-mtx_fns <- pileup_cells(bam_fn, gr, cbs, outdir,  return_sce = FALSE)
+mtx_fns <- pileup_cells(bam_fn, gr, cbs, outdir, return_sce = FALSE)
 sce <- read_sparray(mtx_fns[1], mtx_fns[2], mtx_fns[3])
 sce
 

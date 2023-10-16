@@ -42,22 +42,22 @@ FilterParam(
 )
 }
 \arguments{
-\item{bamfiles}{a character vector, \link{BamFile} or \link{BamFileList} indicating 1 or
-more BAM files to process. If named, the names will be included in the \link{colData}
-of the \link{RangedSummarizedExperiment} as a \code{sample} column, otherwise the names will
-be taken from the basename of the BAM file.}
+\item{bamfiles}{a character vector, \link{BamFile} or \link{BamFileList} indicating 1
+or more BAM files to process. If named, the names will be included in the
+\link{colData} of the \link{RangedSummarizedExperiment} as a \code{sample} column, otherwise
+the names will be taken from the basename of the BAM file.}
 
-\item{fasta}{path to genome fasta file used for read alignment. Can be provided in
-compressed gzip or bgzip format.}
+\item{fasta}{path to genome fasta file used for read alignment. Can be
+provided in compressed gzip or bgzip format.}
 
 \item{sites}{a \link{GRanges} object containing regions or sites to process.}
 
-\item{region}{samtools region query string (i.e. \code{chr1:100-1000}). Can be combined
-with sites, in which case sites will be filtered to keep only sites within the
-region.}
+\item{region}{samtools region query string (i.e. \code{chr1:100-1000}). Can be
+combined with sites, in which case sites will be filtered to keep only sites
+within the region.}
 
-\item{chroms}{chromosomes to process, provided as a character vector. Not to be used with the
-region parameter.}
+\item{chroms}{chromosomes to process, provided as a character vector. Not to
+be used with the region parameter.}
 
 \item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
 filters to apply to reads and sites during pileup.}
@@ -89,7 +89,8 @@ input BAM file can be provided as a vector.}
 to generate.}
 
 \item{only_keep_variants}{if TRUE, then only variant sites will be reported
-(FALSE by default). Values for each input BAM file can be provided as a vector.}
+(FALSE by default). Values for each input BAM file can be provided as a
+vector.}
 
 \item{trim_5p}{Bases to trim from 5' end of read alignments}
 
@@ -119,23 +120,25 @@ c(X, Y).}
 \item{read_bqual}{Exclude read if more than X percent of the bases have
 base qualities less than Y. Numeric vector of length 2. e.g. c(0.25, 20)}
 
-\item{min_variant_reads}{Required number of reads containing a variant for a site
-to be reported. Calculated per bam file, such that if 1 bam file has >= min_variant_reads,
-then the site will be reported.}
+\item{min_variant_reads}{Required number of reads containing a variant for a
+site to be reported. Calculated per bam file, such that if 1 bam file has >=
+min_variant_reads, then the site will be reported.}
 
-\item{min_allelic_freq}{minimum allelic frequency required for a variant to be
-reported in ALT assay.}
+\item{min_allelic_freq}{minimum allelic frequency required for a variant to
+be reported in ALT assay.}
 
-\item{report_multiallelic}{if TRUE, report sites with multiple variants passing
-filters. If FALSE, site will not be reported.}
+\item{report_multiallelic}{if TRUE, report sites with multiple variants
+passing filters. If FALSE, site will not be reported.}
 
-\item{remove_overlaps}{if TRUE, enable read pair overlap detection, which will count only
-1 read in regions where read pairs overlap using the htslib algorithm. In brief
-for each overlapping base pair the base quality of the base with the lower quality
-is set to 0, which discards it from being counted.}
+\item{remove_overlaps}{if TRUE, enable read pair overlap detection, which
+will count only 1 read in regions where read pairs overlap using the htslib
+algorithm. In brief for each overlapping base pair the base quality of the
+base with the lower quality is set to 0, which discards it from being
+counted.}
 }
 \value{
-A \link{RangedSummarizedExperiment} object populated with multiple assays:
+A \link{RangedSummarizedExperiment} object populated with
+multiple assays:
 \itemize{
 \item \code{ALT}:  Alternate base(s) found at each position
 \item \code{nRef}: # of reads supporting the reference base
@@ -162,11 +165,12 @@ The rownames will be populated with the format
 as 1 = +, 2 = -, and 3 = *.
 }
 \description{
-This function uses a pileup routine to examine numerate base counts from
-alignments at specified sites, regions, or across all read alignments, from one or
-more BAM files. Alignment and site filtering
-options are controlled by the \code{FilterParam} class.A \link{RangedSummarizedExperiment} object
-is returned, populated with base count statistics for each supplied BAM file.
+This function uses a pileup routine to examine numerate base
+counts from alignments at specified sites, regions, or across all read
+alignments, from one or more BAM files. Alignment and site filtering
+options are controlled by the \code{FilterParam} class. A
+\link{RangedSummarizedExperiment} object is returned, populated with base count
+statistics for each supplied BAM file.
 }
 \examples{
 library(SummarizedExperiment)

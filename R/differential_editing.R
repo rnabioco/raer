@@ -6,19 +6,19 @@
 #' for each site (`edit_freq`), depth of coverage computed
 #' using the indicated edited nucleotides (`depth`) and new `colData`
 #' columns with the number of edited sites (`n_sites`) and the
-#' fraction of edits (`edit_idx`) is returned. 
+#' fraction of edits (`edit_idx`) is returned.
 #'
 #' @param rse A [RangedSummarizedExperiment] object created by [pileup_sites()]
 #' @param edit_from This should correspond to a nucleotide or assay
-#'  (`A`, `C`, `G`, `T`, `Ref`, or `Alt`) you expect in the reference. Ex. for A to I
-#'   editing events, this would be `A`.
+#'  (`A`, `C`, `G`, `T`, `Ref`, or `Alt`) you expect in the reference. Ex. for
+#'  A to I editing events, this would be `A`.
 #' @param edit_to This should correspond to a nucleotide or assay
-#'  (`A`, `C`, `G`, `T`, `Ref`, or `Alt`)  you expect in the editing site. Ex. for A
-#'   to I editing events, this would be `G`.
-#' @param drop If `TRUE`, the [RangedSummarizedExperiment] returned will only retain sites
-#'   matching the specified `edit_from` and `edit_to` bases.
-#' @param replace_na If `TRUE`, `NA` and `NaN` editing frequencies will be coerced to
-#'   `0`.
+#'  (`A`, `C`, `G`, `T`, `Ref`, or `Alt`)  you expect in the editing site. Ex.
+#'  for A to I editing events, this would be `G`.
+#' @param drop If `TRUE`, the [RangedSummarizedExperiment] returned will only
+#' retain sites matching the specified `edit_from` and `edit_to` bases.
+#' @param replace_na If `TRUE`, `NA` and `NaN` editing frequencies will be
+#' coerced to `0`.
 #' @param edit_frequency  The edit frequency cutoff used when calculating the
 #'   number of sites. Set to `0` to require any non-zero editing frequency. The
 #'   number of sites is stored as `n_sites` in the `colData`.
@@ -44,12 +44,13 @@ calc_edit_frequency <- function(rse,
     replace_na = TRUE,
     edit_frequency = 0,
     min_count = 1) {
-
     valid_assays <- c("A", "T", "C", "G", "Ref", "Alt")
 
     if (!(edit_from %in% valid_assays) | !(edit_to %in% valid_assays)) {
-        cli::cli_abort("`edit_to` and `edit_from` must be one of: ",
-                       "'A', 'T', 'C', 'G', 'Ref', or 'Alt'")
+        cli::cli_abort(
+            "`edit_to` and `edit_from` must be one of: ",
+            "'A', 'T', 'C', 'G', 'Ref', or 'Alt'"
+        )
     }
 
     from_col <- paste0("n", edit_from)
@@ -61,8 +62,8 @@ calc_edit_frequency <- function(rse,
 
     if ("depth" %in% names(assays(rse))) {
         cli::cli_alert_info(
-            "depth has been overwritten with sum of {to_col} and {from_col} assays"
-            )
+            "depth overwritten with sum of {to_col} and {from_col} assays"
+        )
     }
 
     assay(rse, "depth") <- assay(rse, to_col) + assay(rse, from_col)
@@ -130,8 +131,9 @@ calc_edit_frequency <- function(rse,
 #' @importFrom Matrix colSums
 #' @noRd
 #' @keywords internal
-count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
-    edit_from = NULL, edit_to = NULL) {
+count_edits <- function(
+        se, edit_frequency = 0.01, min_count = 10,
+        edit_from = NULL, edit_to = NULL) {
     n_pass_filter <- Matrix::colSums((assay(se, "edit_freq") > edit_frequency) &
         ((assay(se, paste0("n", edit_from)) +
             assay(se, paste0("n", edit_to))) >=
@@ -157,15 +159,15 @@ count_edits <- function(se, edit_frequency = 0.01, min_count = 10,
 #'
 #' @param rse A [RangedSummarizedExperiment] object
 #' @param edit_from This should correspond to a nucleotide or assay
-#'  (`A`, `C`, `G`, `T`, `Ref`, or `Alt`) you expect in the reference. Ex. for A to I
-#'   editing events, this would be `A`.
+#'  (`A`, `C`, `G`, `T`, `Ref`, or `Alt`) you expect in the reference.
+#'  Ex. for A to I editing events, this would be `A`.
 #' @param edit_to This should correspond to a nucleotide or assay
-#'  (`A`, `C`, `G`, `T`, `Ref`, or `Alt`) you expect in the editing site. Ex. for A
-#'   to I editing events, this would be `G`.
+#'  (`A`, `C`, `G`, `T`, `Ref`, or `Alt`) you expect in the editing site.
+#'  Ex. for A to I editing events, this would be `G`.
 #' @param min_prop The minimum required proportion of reads edited at a site. At
 #'   least `min_samples` need to pass this to keep the site.
-#' @param max_prop The maximum allowable proportion of reads edited at a site. At
-#'   least `min_samples` need to pass this to keep the site.
+#' @param max_prop The maximum allowable proportion of reads edited at a site.
+#'  At least `min_samples` need to pass this to keep the site.
 #' @param min_samples The minimum number of samples passing the `min_prop` and
 #'   `max_prop` cutoffs to keep a site.
 #'
@@ -189,17 +191,21 @@ make_de_object <- function(rse,
     min_prop = 0.0,
     max_prop = 1.0,
     min_samples = 1) {
-
     valid_assays <- c("A", "T", "C", "G", "Ref", "Alt")
 
     if (!(edit_from %in% valid_assays) | !(edit_to %in% valid_assays)) {
-        cli::cli_abort("`edit_to` and `edit_from` must be one of: ",
-                       "'A', 'T', 'C', 'G', 'Ref', or 'Alt'")
+        cli::cli_abort(
+            "`edit_to` and `edit_from` must be one of: ",
+            "'A', 'T', 'C', 'G', 'Ref', or 'Alt'"
+        )
     }
 
     # Only keep locations that pass cutoffs in a certain number of samples
-    if(!"edit_freq" %in% assayNames(rse)) {
-        cli::cli_abort("`edit_freq` not present in assay, please run calc_edit_frequency()")
+    if (!"edit_freq" %in% assayNames(rse)) {
+        cli::cli_abort(c("`edit_freq` not present in assay",
+            "please run calc_edit_frequency()",
+            collapse = ","
+        ))
     }
     pass_cutoff <- (assay(rse, "edit_freq") >= min_prop) &
         (assay(rse, "edit_freq") <= max_prop)
@@ -235,7 +241,8 @@ make_de_object <- function(rse,
 #'
 #' @description Use `edgeR` or `DESeq2` to perform differential editing
 #'   analysis. This will work for designs that have 1 treatment and 1
-#'   control group. For more complex designs, we suggest you perform your own modeling.
+#'   control group. For more complex designs, we suggest you perform your own
+#'   modeling.
 #'
 #' @param deobj A [RangedSummarizedExperiment] object prepared for differential
 #' editing analysis by [make_de_object()]
@@ -268,23 +275,28 @@ make_de_object <- function(rse,
 #'
 #' rse <- calc_edit_frequency(rse)
 #' dse <- make_de_object(rse)
-#' res <- find_de_sites(dse, condition_control = "WT", condition_treatment = "KO")
+#' res <- find_de_sites(dse,
+#'     condition_control = "WT",
+#'     condition_treatment = "KO"
+#' )
 #' res$sig_results[1:3, ]
 #'
 #' @returns A named list:
-#'   - `de_obj`: The `edgeR` or `deseq` object used for differential editing analysis
+#'   - `de_obj`: The `edgeR` or `deseq` object used for differential editing
+#'   analysis
 #'   - `results_full`: Unfiltered differential editing results
 #'   - `sig_results`: Filtered differential editing (FDR < 0.05)
 #'   - `model_matrix`: The model matrix used for generating DE results
 #'
 #' @importFrom stats model.matrix
 #' @export
-find_de_sites <- function(deobj,
-                       test = c("edgeR", "DESeq2"),
-                       sample_col = "sample",
-                       condition_col = "condition",
-                       condition_control = NULL,
-                       condition_treatment = NULL) {
+find_de_sites <- function(
+        deobj,
+        test = c("edgeR", "DESeq2"),
+        sample_col = "sample",
+        condition_col = "condition",
+        condition_control = NULL,
+        condition_treatment = NULL) {
     # Make sure all variables are present
     if (!sample_col %in% colnames(colData(deobj))) {
         cli::cli_abort(
@@ -350,7 +362,7 @@ find_de_sites <- function(deobj,
         cli::cli_abort(
             c(
                 "condition_control must be a column in your deobj colData.",
-                "'{condition_control}' not found in the levels of the condition",
+                "'{condition_control}' not found in levels of the condition",
                 " column of colData(deobj). Possible",
                 " options from your experiment are: {cond_options}"
             )
@@ -362,7 +374,7 @@ find_de_sites <- function(deobj,
         cli::cli_abort(
             c(
                 "condition_treatment must be a column in your deobj colData ",
-                "'{condition_treatment}' not found in the levels of the condition",
+                "'{condition_treatment}' not found in levels of the condition",
                 " column of colData(deobj)! Possible",
                 " options from your experiment are: {cond_options}"
             )
@@ -390,7 +402,8 @@ find_de_sites <- function(deobj,
 #   complex designs, we suggest you perform your own. It will test if your
 #   sample column makes the model matrix not full rank. If that happens, the
 #   model matrix will be modified to be full rank. This is not intended to be
-#   called directly by the user, instead, this should be called by `find_de_sites`
+#   called directly by the user, instead, this should be called by
+#   `find_de_sites`
 #
 #   At the moment, this function will only find editing events specific to the
 #   treatment, but it will be pretty straight forward to add other possible
@@ -403,8 +416,9 @@ find_de_sites <- function(deobj,
 #   a variable in your condition_col of colData(deobj).
 #
 #
-run_deseq2 <- function(deobj, condition_control = NULL,
-    condition_treatment = NULL) {
+run_deseq2 <- function(
+        deobj, condition_control = NULL,
+        condition_treatment = NULL) {
     if (!requireNamespace("DESeq2", quietly = TRUE)) {
         cli::cli_abort("Package \"DESeq2\" needed for differential editing.")
     }
@@ -496,8 +510,9 @@ run_deseq2 <- function(deobj, condition_control = NULL,
 #   variable in your condition_col of colData(deobj). No default provided.
 # @param condition_treatment The name of the treatment condition. This must be
 #   a variable in your condition_col of colData(deobj).
-run_edger <- function(deobj, condition_control = NULL,
-    condition_treatment = NULL) {
+run_edger <- function(
+        deobj, condition_control = NULL,
+        condition_treatment = NULL) {
     if (!requireNamespace("edgeR", quietly = TRUE)) {
         cli::cli_abort("Package \"edgeR\" needed to run differential analysis.")
     }
@@ -515,7 +530,8 @@ run_edger <- function(deobj, condition_control = NULL,
     }
 
     dge <- edgeR::DGEList(assay(deobj, "counts"),
-                          lib.size = rep(1, ncol(deobj)))
+        lib.size = rep(1, ncol(deobj))
+    )
     dge <- edgeR::estimateDisp(dge)
     fit <- edgeR::glmFit(dge, design)
 
@@ -531,10 +547,10 @@ run_edger <- function(deobj, condition_control = NULL,
         deobj$count == "ref", ])
 
     treatment_vs_control <- edgeR::glmLRT(fit,
-                                          contrast = (
-                                              alt_treatment - ref_treatment) -
-                                              (alt_control - ref_control)
-                                          )
+        contrast = (
+            alt_treatment - ref_treatment) -
+            (alt_control - ref_control)
+    )
 
     treatment_vs_control <- edgeR::topTags(treatment_vs_control,
         n = nrow(treatment_vs_control)
@@ -552,26 +568,29 @@ run_edger <- function(deobj, condition_control = NULL,
     ))
 }
 
-#' Identify sites with differential editing between cells in single cell datasets
+#' Identify sites with differential editing between cells in single cell
+#' datasets
 #'
 #' @description
 #' Compare editing frequencies between clusters or celltypes. REF and ALT counts
-#' from each cluster are pooled to create pseudobulk estimates. Each pair of clusters
-#' are compared using fisher exact tests. Statistics are aggregated across each pairwise
+#' from each cluster are pooled to create pseudobulk estimates. Each pair of
+#' clusters are compared using fisher exact tests. Statistics are aggregated
+#' across each pairwise
 #' comparison using [scran::combineMarkers].
 #'
 #' @param sce [SingleCellExperiment] object with `nRef` and `nAlt` assays.
 #' @param group column name from colData used to define groups to compare.
-#' @param rowData if TRUE,  [rowData] from the input [SingleCellExperiment] will be 
-#' included in the output DataFrames
-#' @param BPPARAM BiocParallel backend for control how paralllel computations are
-#' performed.
+#' @param rowData if TRUE,  [rowData] from the input [SingleCellExperiment] will
+#' be included in the output DataFrames
+#' @param BPPARAM BiocParallel backend for control how parallel computations
+#' are performed.
 #' @param ... Additional arguments passed to [scran::combineMarkers]
 #'
 #' @returns
-#' A named list of [DataFrame]s containing results for each cluster specified by `group`.
-#' The difference in editing frequencies between cluster pairs are denoted as `dEF`.
-#' See [scran::combineMarkers] for a description of additional output fields.
+#' A named list of [DataFrame]s containing results for each cluster specified by
+#' `group`. The difference in editing frequencies between cluster pairs are
+#' denoted as `dEF`. See [scran::combineMarkers] for a description of additional
+#'  output fields.
 #'
 #'
 #'
@@ -602,13 +621,11 @@ run_edger <- function(deobj, condition_control = NULL,
 #' res <- find_scde_sites(sce, "clusters")
 #' res[[1]]
 #' @export
-find_scde_sites <- function(
-        sce,
-        group,
-        rowData = FALSE,
-        BPPARAM = SerialParam(),
-        ...) {
-
+find_scde_sites <- function(sce,
+    group,
+    rowData = FALSE,
+    BPPARAM = SerialParam(),
+    ...) {
     if (!requireNamespace("scran", quietly = TRUE)) {
         cli::cli_abort("Package \"scran\" needed for differential editing.")
     }
@@ -617,87 +634,98 @@ find_scde_sites <- function(
         cli::cli_abort("Package \"scran\" needed for differential editing.")
     }
 
-    if(!is(sce, "SingleCellExperiment")) {
+    if (!is(sce, "SingleCellExperiment")) {
         cli::cli_abort("sce must be a SingleCellExperiment object")
     }
 
-    if(!all(c("nRef", "nAlt") %in% assayNames(sce))) {
+    if (!all(c("nRef", "nAlt") %in% assayNames(sce))) {
         cli::cli_abort("sce must contain nRef and nAlt assays")
     }
 
-    if(length(group) != 1) {
+    if (length(group) != 1) {
         cli::cli_abort("group must be a single value")
     }
 
-    if(!(group %in% colnames(colData(sce)))){
+    if (!(group %in% colnames(colData(sce)))) {
         cli::cli_abort("{group} not found in colData")
     }
 
-    if(any(is.na(sce[[group]]))) {
+    if (any(is.na(sce[[group]]))) {
         cli::cli_abort("NA values not allowed in group column")
     }
 
-    if(!"depth" %in% names(assays(sce))) {
+    if (!"depth" %in% names(assays(sce))) {
         assay(sce, "depth") <- assay(sce, "nRef") + assay(sce, "nAlt")
     }
 
-    no_depth_cells <-  colSums(assay(sce, "depth")) == 0
-    if(sum(no_depth_cells) > 0) {
-        cli::cli_alert(c("{sum(no_depth_cells)} cells had no REF or ALT counts ",
-                         "and were excluded from the analysis"))
+    no_depth_cells <- colSums(assay(sce, "depth")) == 0
+    if (sum(no_depth_cells) > 0) {
+        cli::cli_alert(c(
+            "{sum(no_depth_cells)} cells had no REF or ALT counts ",
+            "and were excluded from the analysis"
+        ))
         sce <- sce[, !no_depth_cells]
     }
 
     assay(sce, "depth") <- scuttle::normalizeCounts(sce,
-                                                    assay.type = "depth",
-                                                    BPPARAM = BPPARAM)
+        assay.type = "depth",
+        BPPARAM = BPPARAM
+    )
 
     nref <- scuttle::summarizeAssayByGroup(sce,
-                                           sce[[group]],
-                                           statistics = c("sum", "prop.detected"),
-                                           assay.type = "nRef",
-                                           BPPARAM = BPPARAM)
+        sce[[group]],
+        statistics = c("sum", "prop.detected"),
+        assay.type = "nRef",
+        BPPARAM = BPPARAM
+    )
 
     nalt <- scuttle::summarizeAssayByGroup(sce,
-                                           sce[[group]],
-                                           statistics = c("sum", "prop.detected"),
-                                           assay.type = "nAlt",
-                                           BPPARAM = BPPARAM)
-   
-    grp_pairs <- group_combinations(sce[[group]])
-    
-    stats <- BiocParallel::bplapply(seq_len(nrow(grp_pairs)),
-                                    function(i) {
-                                        gp <- grp_pairs[i, , drop = TRUE]
-                                        ref <- assay(nref, "sum")[, c(gp$first, gp$second)]
-                                        alt <- assay(nalt, "sum")[, c(gp$first, gp$second)]
-                                        pvals <- calc_fisher_exact(ref, alt)
-                                        ef <- alt / (ref + alt)
-                                        d_editing_frequency <- ef[, 1] - ef[, 2]
+        sce[[group]],
+        statistics = c("sum", "prop.detected"),
+        assay.type = "nAlt",
+        BPPARAM = BPPARAM
+    )
 
-                                        res <- data.frame(p.value = pvals,
-                                                          dEF = d_editing_frequency,
-                                                          row.names = rownames(ref))
-                                        res
-                                    }, BPPARAM = BPPARAM)
+    grp_pairs <- group_combinations(sce[[group]])
+
+    stats <- BiocParallel::bplapply(seq_len(nrow(grp_pairs)),
+        function(i) {
+            gp <- grp_pairs[i, , drop = TRUE]
+            ref <- assay(nref, "sum")[, c(gp$first, gp$second)]
+            alt <- assay(nalt, "sum")[, c(gp$first, gp$second)]
+            pvals <- calc_fisher_exact(ref, alt)
+            ef <- alt / (ref + alt)
+            d_editing_frequency <- ef[, 1] - ef[, 2]
+
+            res <- data.frame(
+                p.value = pvals,
+                dEF = d_editing_frequency,
+                row.names = rownames(ref)
+            )
+            res
+        },
+        BPPARAM = BPPARAM
+    )
     res <- scran::combineMarkers(stats,
-                                 grp_pairs,
-                                 effect.field = "dEF",
-                                 BPPARAM = BPPARAM,
-                                 ...)
+        grp_pairs,
+        effect.field = "dEF",
+        BPPARAM = BPPARAM,
+        ...
+    )
 
     depth_summary <- scran::summaryMarkerStats(sce,
-                                               sce[[group]],
-                                               assay.type = "depth",
-                                               BPPARAM = BPPARAM)
+        sce[[group]],
+        assay.type = "depth",
+        BPPARAM = BPPARAM
+    )
 
-    for(nm in names(res)) {
+    for (nm in names(res)) {
         de_stats <- res[[nm]]
         out_rows <- rownames(de_stats)
         depths <- depth_summary[[nm]][out_rows, ]
         de_stats <- cbind(depths, de_stats)
-        
-        if(rowData) {
+
+        if (rowData) {
             rd <- rowData(sce)[out_rows, ]
             de_stats <- cbind(de_stats, rd)
         }
@@ -709,13 +737,13 @@ find_scde_sites <- function(
 calc_fisher_exact <- function(ref, alt) {
     stopifnot(ncol(ref) == 2L)
     stopifnot(ncol(alt) == 2L)
-    
+
     vals <- cbind(ref, alt)[, c(1, 3, 2, 4), drop = FALSE]
     vals <- t(vals)
-    
+
     mode(vals) <- "integer"
 
-    if(any(is.na(vals))) {
+    if (any(is.na(vals))) {
         cli::cli_abort("NA values not supported in fisher test")
     }
 
@@ -724,16 +752,16 @@ calc_fisher_exact <- function(ref, alt) {
 }
 
 group_combinations <- function(x) {
-    if(length(x) < 2) {
+    if (length(x) < 2) {
         cli::cli_abort("At least 2 groups must be present")
     }
-    
-    if(is.factor(x)) {
+
+    if (is.factor(x)) {
         grps <- levels(droplevels(x))
     } else {
         grps <- levels(as.factor(x))
     }
-    
+
     grp_pairs <- expand.grid(grps, grps, stringsAsFactors = FALSE)
     colnames(grp_pairs) <- c("first", "second")
     grp_pairs <- grp_pairs[grp_pairs[, 1] != grp_pairs[, 2], ]
@@ -741,4 +769,3 @@ group_combinations <- function(x) {
     rownames(grp_pairs) <- NULL
     grp_pairs
 }
-

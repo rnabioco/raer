@@ -7,8 +7,8 @@
 correct_strand(rse, genes_gr)
 }
 \arguments{
-\item{rse}{RangedSummarizedExperiment object containing editing sites processed with
-"unstranded" setting}
+\item{rse}{RangedSummarizedExperiment object containing editing sites
+processed with "unstranded" setting}
 
 \item{genes_gr}{GRanges object containing reference features to annotate the
 strand of the editing sites.}

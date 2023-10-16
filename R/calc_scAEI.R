@@ -5,21 +5,23 @@
 #'   bases) observed at A positions. The vast majority A-to-I editing occurs in
 #'   ALU elements in the human genome, and these regions have a high A-to-I
 #'   editing signal compared to other regions such as coding exons. This
-#'   function will examine enumerate edited and non-edited base counts at the supplied
-#'   sites and return summary AEI metric per cell. Potential editing sites within
-#'   repeat regions can be generated using `get_scAEI_sites()`.
+#'   function will examine enumerate edited and non-edited base counts at the
+#'   supplied sites and return summary AEI metric per cell. Potential editing
+#'   sites within repeat regions can be generated using `get_scAEI_sites()`.
 #'
 #' @references Roth, S.H., Levanon, E.Y. & Eisenberg, E. Genome-wide
 #' quantification of ADAR adenosine-to-inosine RNA editing activity. Nat Methods
 #' 16, 1131–1138 (2019). https://doi.org/10.1038/s41592-019-0610-9
 #'
-#' @param bamfiles a path to a BAM file (for 10x libraries), or a vector of paths
-#' to BAM files (smart-seq2). Can be supplied as a character vector, `BamFile`, or
-#' `BamFileList`.
-#' @param sites a GRanges object produced by [get_scAEI_sites()] containing sites to process.
-#' @param cell_barcodes A character vector of single cell barcodes to process. If
-#' processing multiple BAM files (e.g. smart-seq-2), provide a character vector
-#' of unique identifiers for each input BAM, to name each BAM file in the output files.
+#' @param bamfiles a path to a BAM file (for 10x libraries), or a vector of
+#' paths to BAM files (smart-seq2). Can be supplied as a character vector,
+#' `BamFile`, or `BamFileList`.
+#' @param sites a GRanges object produced by [get_scAEI_sites()] containing
+#' sites to process.
+#' @param cell_barcodes A character vector of single cell barcodes to process.
+#' If processing multiple BAM files (e.g. smart-seq-2), provide a character
+#' vector of unique identifiers for each input BAM, to name each BAM file in the
+#' output files.
 #' @param param object of class [FilterParam()] which specify various filters to
 #'   apply to reads and sites during pileup.
 #' @param edit_from This should correspond to the base
@@ -35,9 +37,9 @@
 #' @param ... additional arguments to [pileup_cells()]
 #'
 #' @returns A `DataFrame` containing computed `AEI` values,
-#' count of editing events (`n_alt`), and count of reference events (`n_ref`) per cell.
-#' If `return_sce` is `TRUE`, then a `SingleCellExperiment` is returned with the
-#' AEI values stored in the `colData`.
+#' count of editing events (`n_alt`), and count of reference events (`n_ref`)
+#' per cell. If `return_sce` is `TRUE`, then a `SingleCellExperiment` is
+#' returned with the AEI values stored in the `colData`.
 #'
 #' @examples
 #' suppressPackageStartupMessages(library(Rsamtools))
@@ -57,7 +59,7 @@
 #' ))
 #'
 #' # alu intervals
-#' alus_gr <-  GRanges(c(
+#' alus_gr <- GRanges(c(
 #'     "2:110-380",
 #'     "2:510-600",
 #'     "2:610-670"
@@ -69,18 +71,19 @@
 #' # get positions of potential A -> G changes in alus
 #' sites <- get_scAEI_sites(fa_fn, genes_gr, alus_gr)
 #'
-#' fp <- FilterParam(library_type = "fr-second-strand",
-#'                   min_mapq = 255)
+#' fp <- FilterParam(
+#'     library_type = "fr-second-strand",
+#'     min_mapq = 255
+#' )
 #' calc_scAEI(bam_fn, sites, cbs, fp)
 #'
 #' @rdname calc_scAEI
 #' @export
 calc_scAEI <- function(bamfiles, sites, cell_barcodes, param = FilterParam(),
-                       edit_from = "A", edit_to = "G",
-                       output_dir = NULL, return_sce = FALSE,
-                       ...) {
-
-    if(is.null(output_dir)) {
+    edit_from = "A", edit_to = "G",
+    output_dir = NULL, return_sce = FALSE,
+    ...) {
+    if (is.null(output_dir)) {
         output_dir <- tempdir()
         outfns <- c("counts.mtx.gz", "sites.txt.gz", "barcodes.txt.gz")
         outfns <- file.path(output_dir, outfns)
@@ -90,7 +93,7 @@ calc_scAEI <- function(bamfiles, sites, cell_barcodes, param = FilterParam(),
     # if unstranded, only query w.r.t + strand
     is_unstranded <- !param@library_type %in% c(1, 2)
     is_minus <- strand(sites) == "-"
-    if(is_unstranded && sum(is_minus) > 0) {
+    if (is_unstranded && sum(is_minus) > 0) {
         sites[is_minus]$REF <- comp_bases(edit_from)
         sites[is_minus]$ALT <- comp_bases(edit_to)
         strand(sites[is_minus]) <- "+"
@@ -106,24 +109,28 @@ calc_scAEI <- function(bamfiles, sites, cell_barcodes, param = FilterParam(),
         ...
     )
 
-    if(nrow(aei_sce) == 0) {
-        cli::cli_abort(c("no sites returned from pileup_cells",
-                         "check input sites and filterParams"))
+    if (nrow(aei_sce) == 0) {
+        cli::cli_abort(c(
+            "no sites returned from pileup_cells",
+            "check input sites and filterParams"
+        ))
     }
 
-    if(is_unstranded) {
+    if (is_unstranded) {
         aei_sce <- resolve_aei_regions(aei_sce)
     }
 
     n_alt <- Matrix::colSums(assay(aei_sce, "nAlt"))
     n_ref <- Matrix::colSums(assay(aei_sce, "nRef"))
     aei <- 100 * (n_alt / (n_alt + n_ref))
-    res <- DataFrame(row.names = colnames(aei_sce),
-                     AEI = aei,
-                     n_alt = n_alt,
-                     n_ref = n_ref)
+    res <- DataFrame(
+        row.names = colnames(aei_sce),
+        AEI = aei,
+        n_alt = n_alt,
+        n_ref = n_ref
+    )
 
-    if(return_sce) {
+    if (return_sce) {
         colData(aei_sce) <- res
         return(aei_sce)
     }
@@ -131,11 +138,11 @@ calc_scAEI <- function(bamfiles, sites, cell_barcodes, param = FilterParam(),
 }
 
 #' @param fasta Path to a genome fasta file
-#' @param genes  A `GRanges` object with gene coordinates.Alternatively a `TxDb` object,
-#' which if supplied, will be used extract gene coordinates.
+#' @param genes  A `GRanges` object with gene coordinates.Alternatively a `TxDb`
+#' object, which if supplied, will be used extract gene coordinates.
 #' @param alus `GRanges` with repeat regions to query for calculating the AEI,
-#' typically ALU repeats. The strand of the supplied intervals will be ignored for
-#' defining repeat regions.
+#' typically ALU repeats. The strand of the supplied intervals will be ignored
+#' for defining repeat regions.
 #' @param edit_from This should correspond to the base
 #'  (`A`, `C`, `G`, `T`) you expect in the reference. Ex. for A to I
 #'   editing events, this would be `A`.
@@ -145,29 +152,33 @@ calc_scAEI <- function(bamfiles, sites, cell_barcodes, param = FilterParam(),
 #'
 #' @rdname calc_scAEI
 #' @export
-get_scAEI_sites <- function(fasta,
-                            genes,
-                            alus,
-                            edit_from = "A",
-                            edit_to = "G") {
-    if(is(genes, "TxDb")) {
+get_scAEI_sites <- function(
+        fasta,
+        genes,
+        alus,
+        edit_from = "A",
+        edit_to = "G") {
+    if (is(genes, "TxDb")) {
         genes <- GenomicFeatures::genes(genes)
     }
-    if(!is(genes, "GRanges")) {
+    if (!is(genes, "GRanges")) {
         cli::cli_abort("genes must be a GRanges or TxDb object")
     }
-    if(!is(alus, "GRanges")) {
+    if (!is(alus, "GRanges")) {
         cli::cli_abort("alus must be a GRanges or TxDb object")
     }
 
     mcols(alus) <- NULL
 
-    # store an integer id to allow user to track sites corresponding to supplied alu
+    # store an integer id to allow user to track sites corresponding to
+    # supplied alu
     alus$id <- seq_along(alus)
     gn_alus <- prep_genic_alu_regions(genes, alus)
-    aei_sites <- get_aei_site_positions(gn_alus,
-                                        fasta,
-                                        edit_from)
+    aei_sites <- get_aei_site_positions(
+        gn_alus,
+        fasta,
+        edit_from
+    )
 
     aei_sites$ALT <- edit_to
 
@@ -179,7 +190,7 @@ get_scAEI_sites <- function(fasta,
 
 prep_genic_alu_regions <- function(genes_gr, alu_gr) {
     # annotate gene region strandedness
-    gns_ovl <- disjoin(genes_gr, with.revmap=TRUE, ignore.strand=TRUE)
+    gns_ovl <- disjoin(genes_gr, with.revmap = TRUE, ignore.strand = TRUE)
     gn_strands <- unique(extractList(strand(genes_gr), gns_ovl$revmap))
     gn_strands[lengths(gn_strands) > 1] <- "*"
     strand(gns_ovl) <- unlist(gn_strands)
@@ -220,7 +231,7 @@ aei_site_positions <- function(base, seqs, gr) {
 }
 
 get_aei_site_positions <- function(gr, fasta, base) {
-    if(any(strand(gr) == "*")) {
+    if (any(strand(gr) == "*")) {
         cli::cli_abort("strand must be set to + or -")
     }
     alu_seqs <- Rsamtools::scanFa(fasta, gr)
@@ -234,9 +245,9 @@ get_aei_site_positions <- function(gr, fasta, base) {
 
 
 # figure out which strand should be used for each ALU region
-# follows approach described by Roth et al @ https://doi.org/10.1038/s41592-019-0610-9
+# follows approach described by Roth et al
+# https://doi.org/10.1038/s41592-019-0610-9
 resolve_aei_regions <- function(sce) {
-
     # general approach for regions with overlapping annotations
     # if there are mismatches, select strand with most mismatches
     # if not, average the counts from the two strands
@@ -252,33 +263,36 @@ resolve_aei_regions <- function(sce) {
     dat <- data.frame(rid = rownames(ud_sce), nr, na, v, id)
 
     sums <- rowsum(data.frame(nr, na),
-                   decode(id),
-                   reorder = FALSE)
+        decode(id),
+        reorder = FALSE
+    )
     sites_to_average <- rownames(sums[sums$na == 0, ])
 
     subset_dat <- dat[!dat$id %in% sites_to_average, ]
     sdat <- split(subset_dat, subset_dat$id)
 
     # select strand based on most mismatches
-    vdat <- vapply(sdat, function(x){
+    vdat <- vapply(sdat, function(x) {
         rs <- rowsum(x$na, x$v)
         rownames(rs)[which.max(rs)]
     }, FUN.VALUE = character(1))
     vdat <- unlist(vdat)
 
-    sites_to_keep <- subset_dat[subset_dat$v == vdat[as.character(subset_dat$id)], ]
+    vvals <- vdat[as.character(subset_dat$id)]
+    sites_to_keep <- subset_dat[subset_dat$v == vvals, ]
 
     res <- d_sce
-    if(length(sites_to_keep > 0)) {
+    if (length(sites_to_keep > 0)) {
         res_sce <- ud_sce[sites_to_keep$rid, ]
         res <- rbind(res, res_sce)
     }
 
-    if(length(sites_to_average) > 0 ){
+    if (length(sites_to_average) > 0) {
         sce_to_avg <- ud_sce[rowData(ud_sce)$id %in% sites_to_average, ]
         anr <- rowsum(assay(sce_to_avg, "nRef"),
-                      paste0(rowData(sce_to_avg)$var, "_", rowData(sce_to_avg)$id),
-                      reorder = FALSE)
+            paste0(rowData(sce_to_avg)$var, "_", rowData(sce_to_avg)$id),
+            reorder = FALSE
+        )
 
         ids <- unlist(lapply(strsplit(rownames(anr), "_"), "[", 2))
         ns <- lengths(split(ids, ids))
@@ -298,16 +312,20 @@ resolve_aei_regions <- function(sce) {
         avg_nalt <- avg_nalt[unique(as.character(rr$id)), , drop = FALSE]
         srr <- split(rr, rr$id)
         new_ranges <- GRanges(unlist(unique(seqnames(srr))),
-                              IRanges(min(start(srr)),
-                                      max(end(srr))),
-                              id = names(srr))
+            IRanges(
+                min(start(srr)),
+                max(end(srr))
+            ),
+            id = names(srr)
+        )
         names(new_ranges) <- paste0("range_mean_", seq_along(new_ranges))
 
-        avg_sce_res <- SingleCellExperiment(list(nRef = avg_nref,
-                                                 nAlt = avg_nalt))
+        avg_sce_res <- SingleCellExperiment(list(
+            nRef = avg_nref,
+            nAlt = avg_nalt
+        ))
         rowRanges(avg_sce_res) <- new_ranges
         res <- rbind(res, avg_sce_res)
     }
     res
 }
-

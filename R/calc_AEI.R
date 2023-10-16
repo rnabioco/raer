@@ -6,7 +6,7 @@
 #'   ALU elements in the human genome, and these regions have a high A-to-I
 #'   editing signal compared to other regions such as coding exons. This
 #'   function will perform pileup at specified repeat regions and return a
-#'   summary AEI metric. 
+#'   summary AEI metric.
 #'
 #' @references Roth, S.H., Levanon, E.Y. & Eisenberg, E. Genome-wide
 #' quantification of ADAR adenosine-to-inosine RNA editing activity. Nat Methods
@@ -17,17 +17,18 @@
 #' @param fasta fasta filename
 #' @param alu_ranges [GRanges] with regions to query for
 #'   calculating the AEI, typically ALU repeats.
-#' @param txdb A [TxDb] object, if supplied, will be used to subset the alu_ranges
-#'   to those found overlapping genes. Alternatively a [GRanges] object with gene
-#'   coordinates.  If the `library_type`, specified by
+#' @param txdb A [TxDb] object, if supplied, will be used to subset the
+#'   alu_ranges to those found overlapping genes. Alternatively a [GRanges]
+#'   object with gene coordinates.  If the `library_type`, specified by
 #'   `FilterParam`, is `unstranded` then the [TxDb] will
-#'   be used to correct the strandness relative to the reference and is a required
+#'   be used to correct the strandness relative to the reference and is a
+#'   required
 #'   parameter.
 #' @param snp_db either a [SNPlocs], [GPos], or [GRanges] object. If supplied,
 #'   will be used to exclude polymorphic positions prior to calculating the AEI.
 #'   If `calc_AEI()` will be used many times, one will save time by first
-#'   identifying SNPs that overlap the supplied `alu_ranges`, and passing these as
-#'   a [GRanges] to `snp_db` rather than supplying all known SNPs (see
+#'   identifying SNPs that overlap the supplied `alu_ranges`, and passing these
+#'   as a [GRanges] to `snp_db` rather than supplying all known SNPs (see
 #'   [get_overlapping_snps()]).
 #' @param param object of class [FilterParam()] which specify various
 #'   filters to apply to reads and sites during pileup.
@@ -38,7 +39,8 @@
 #' @returns A named list containing:
 #'   - `AEI`: a matrix of AEI index values computed for all allelic
 #'   combinations, one row for each supplied bam file.
-#'   - `AEI_per_chrom`: a data.frame containing values computed for each chromosome
+#'   - `AEI_per_chrom`: a data.frame containing values computed for each
+#'   chromosome
 #'
 #' @examples
 #' suppressPackageStartupMessages(library(Rsamtools))
@@ -71,7 +73,6 @@ calc_AEI <- function(bamfiles,
     param = FilterParam(),
     BPPARAM = SerialParam(),
     verbose = FALSE) {
-
     if (!is(bamfiles, "BamFileList")) {
         if (is.null(names(bamfiles))) {
             names(bamfiles) <- bamfiles
@@ -112,10 +113,17 @@ calc_AEI <- function(bamfiles,
                 } else {
                     genes_gr <- txdb
                 }
-                alu_ranges <- subsetByOverlaps(alu_ranges, genes_gr, ignore.strand = TRUE)
+                alu_ranges <- subsetByOverlaps(alu_ranges,
+                    genes_gr,
+                    ignore.strand = TRUE
+                )
                 alu_ranges <- reduce(alu_ranges)
             }
-            chroms <- intersect(chroms, as.character(unique(seqnames(alu_ranges))))
+            chroms <- intersect(
+                chroms,
+                as.character(unique(seqnames(alu_ranges)))
+            )
+
             alu_ranges <- alu_ranges[seqnames(alu_ranges) %in% chroms]
         } else {
             cli::cli_abort("unrecognized format for alu_ranges")
@@ -148,7 +156,7 @@ calc_AEI <- function(bamfiles,
                 }
             } else {
                 cli::cli_abort(
-                    "removing snps using a SNPloc package requires alu_ranges to be supplied "
+                    "removing snps using a SNPloc package requires alu_ranges"
                 )
             }
         } else {
@@ -156,7 +164,7 @@ calc_AEI <- function(bamfiles,
         }
         snp_lst <- split(snps, seqnames(snps))
         missing_chroms <- setdiff(chroms, names(snp_lst))
-        if(length(missing_chroms) > 0){
+        if (length(missing_chroms) > 0) {
             missing_snp_lst <- lapply(missing_chroms, function(x) GRanges())
             names(missing_snp_lst) <- missing_chroms
             snp_lst <- c(snp_lst, missing_snp_lst)
@@ -165,15 +173,17 @@ calc_AEI <- function(bamfiles,
         snps <- snp_lst[chroms]
     }
     res <- list()
-    for(i in seq_along(bamfiles)) {
+    for (i in seq_along(bamfiles)) {
         bam_fn <- bamfiles[i]
-        aei <- .AEI_per_bam(bam_fn = bam_fn, fasta = fasta, chroms = chroms,
-                     alu_ranges = alu_ranges, snps = snps, param = param,
-                     genes_gr = genes_gr, verbose = verbose, BPPARAM = BPPARAM)
+        aei <- .AEI_per_bam(
+            bam_fn = bam_fn, fasta = fasta, chroms = chroms,
+            alu_ranges = alu_ranges, snps = snps, param = param,
+            genes_gr = genes_gr, verbose = verbose, BPPARAM = BPPARAM
+        )
         res[[path(bam_fn)]] <- aei
     }
 
-    aei <- do.call(rbind, lapply(res, '[[', 1))
+    aei <- do.call(rbind, lapply(res, "[[", 1))
     rownames(aei) <- names(bamfiles)
 
     aei_per_chrom <- lapply(seq_along(res), function(i) {
@@ -186,42 +196,42 @@ calc_AEI <- function(bamfiles,
 }
 
 
-.AEI_per_bam <- function(bam_fn, fasta, chroms, alu_ranges, snps, param,
-                         genes_gr, verbose,
-                         BPPARAM = BiocParallel::SerialParam()) {
-
+.AEI_per_bam <- function(
+        bam_fn, fasta, chroms, alu_ranges, snps, param,
+        genes_gr, verbose,
+        BPPARAM = BiocParallel::SerialParam()) {
     if (is.null(snps)) {
         aei <- bpmapply(.calc_AEI_per_chrom,
-                        chroms,
-                        MoreArgs = list(
-                            bam_fn = bam_fn,
-                            fasta = fasta,
-                            alu_sites = alu_ranges,
-                            param = param,
-                            snp_gr = NULL,
-                            genes_gr = genes_gr,
-                            verbose = verbose
-                        ),
-                        BPPARAM = BPPARAM,
-                        SIMPLIFY = FALSE
+            chroms,
+            MoreArgs = list(
+                bam_fn = bam_fn,
+                fasta = fasta,
+                alu_sites = alu_ranges,
+                param = param,
+                snp_gr = NULL,
+                genes_gr = genes_gr,
+                verbose = verbose
+            ),
+            BPPARAM = BPPARAM,
+            SIMPLIFY = FALSE
         )
     } else {
         if (length(chroms) != length(snps)) {
             cli::cli_abort("issue subsetting snpDb and chromosomes")
         }
         aei <- bpmapply(.calc_AEI_per_chrom,
-                        chroms,
-                        snps,
-                        MoreArgs = list(
-                            bam_fn = bam_fn,
-                            fasta = fasta,
-                            alu_sites = alu_ranges,
-                            param = param,
-                            genes_gr = genes_gr,
-                            verbose = verbose
-                        ),
-                        BPPARAM = BPPARAM,
-                        SIMPLIFY = FALSE
+            chroms,
+            snps,
+            MoreArgs = list(
+                bam_fn = bam_fn,
+                fasta = fasta,
+                alu_sites = alu_ranges,
+                param = param,
+                genes_gr = genes_gr,
+                verbose = verbose
+            ),
+            BPPARAM = BPPARAM,
+            SIMPLIFY = FALSE
         )
     }
     bpstop(BPPARAM)
@@ -231,9 +241,11 @@ calc_AEI <- function(bamfiles,
         vals <- aei[[x]]
         id <- names(aei)[x]
         xx <- as.data.frame(t(do.call(data.frame, vals)))
-        xx <- cbind(chrom = id,
-                    allele = rownames(xx),
-                    xx)
+        xx <- cbind(
+            chrom = id,
+            allele = rownames(xx),
+            xx
+        )
         rownames(xx) <- NULL
         xx
     })
@@ -241,12 +253,14 @@ calc_AEI <- function(bamfiles,
     aei <- do.call(rbind, aei)
     aei <- split(aei, aei$allele)
 
-    aei_summary <- lapply(aei, function(x) 100 * (sum(x$alt) / (sum(x$ref) + sum(x$alt))))
+    aei_summary <- lapply(aei, function(x) {
+        100 * (sum(x$alt) / (sum(x$ref) + sum(x$alt)))
+    })
     aei_summary <- t(do.call(rbind, aei_summary))
 
     aei_per_chrom <- do.call(rbind, aei)
 
-    if(is.null(names(bam_fn))){
+    if (is.null(names(bam_fn))) {
         rownames(aei_summary) <- bam_fn
         aei_per_chrom$bam_file <- bam_fn
     } else {
@@ -258,7 +272,7 @@ calc_AEI <- function(bamfiles,
 }
 
 .calc_AEI_per_chrom <- function(bam_fn, fasta, alu_sites, chrom, param,
-                                snp_gr, genes_gr, verbose) {
+    snp_gr, genes_gr, verbose) {
     if (verbose) {
         start <- Sys.time()
         cli::cli_progress_step("working on: {chrom}")
@@ -349,7 +363,11 @@ get_overlapping_snps <- function(gr,
         mcols(xx) <- NULL
 
         if (!is.null(output_file)) {
-            rtracklayer::export(xx, output_file, append = TRUE, ignore.strand = TRUE)
+            rtracklayer::export(xx,
+                output_file,
+                append = TRUE,
+                ignore.strand = TRUE
+            )
         } else {
             alu_snps[[i]] <- xx
         }
@@ -370,8 +388,8 @@ get_overlapping_snps <- function(gr,
 #'   object. Sites with no-overlap, or overlapping features with conflicting
 #'   strands (+ and -) will be removed.
 #'
-#' @param rse RangedSummarizedExperiment object containing editing sites processed with
-#'   "unstranded" setting
+#' @param rse RangedSummarizedExperiment object containing editing sites
+#' processed with "unstranded" setting
 #' @param genes_gr GRanges object containing reference features to annotate the
 #'   strand of the editing sites.
 #'
@@ -419,7 +437,7 @@ correct_strand <- function(rse, genes_gr) {
 
     rowData(rse)$REF[flip_rows] <- comp_bases(rowData(rse)$REF[flip_rows])
 
-    if("ALT" %in% colnames(rowData(rse))) {
+    if ("ALT" %in% colnames(rowData(rse))) {
         rowData(rse)$ALT[flip_rows] <- comp_bases(rowData(rse)$ALT[flip_rows])
     }
 
@@ -447,7 +465,8 @@ correct_strand <- function(rse, genes_gr) {
 }
 
 
-# complement the ALT assay matrix, including multiallelics (e.g. c("A", "A,T", "C))
+# complement the ALT assay matrix,
+# including multiallelics (e.g. c("A", "A,T", "C"))
 complement_variant_matrix <- function(alt_mat) {
     stopifnot(all(!is.na(alt_mat)))
 
@@ -463,17 +482,19 @@ complement_variant_matrix <- function(alt_mat) {
 
     # split and complement multiallelics
     multialts <- alts[n_alleles > 0]
-    multialts <- vapply(strsplit(multialts, ","), function(y) {
-        paste0(comp_bases(y), collapse = ",")
-    },
-    character(1)
+    multialts <- vapply(
+        strsplit(multialts, ","), function(y) {
+            paste0(comp_bases(y), collapse = ",")
+        },
+        character(1)
     )
     comp_alts[n_alleles > 0] <- multialts
 
     # get back to a matrix
     comp_alts <- matrix(comp_alts,
-                        nrow = nrow(alt_mat),
-                        ncol = ncol(alt_mat),
-                        dimnames = dimnames(alt_mat))
+        nrow = nrow(alt_mat),
+        ncol = ncol(alt_mat),
+        dimnames = dimnames(alt_mat)
+    )
     comp_alts
 }
