@@ -1,3 +1,9 @@
+# raer 1.1.0
+
+# raer 1.0.0
+
+* raer added to the Bioconductor project
+
 # raer 0.99.12 
 
 * Changes made to prepare for bioc submission

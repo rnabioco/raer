@@ -8,6 +8,8 @@
 [![R-CMD-check-bioc](https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml/badge.svg)](https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml)
 [![Codecov test
 coverage](https://codecov.io/gh/rnabioco/raer/branch/devel/graph/badge.svg)](https://app.codecov.io/gh/rnabioco/raer?branch=devel)
+[![platforms](https://bioconductor.org/shields/availability/devel/raer.svg)](https://bioconductor.org/checkResults/release/bioc-LATEST/raer)
+[![bioc](https://bioconductor.org/shields/years-in-bioc/raer.svg)](https://bioconductor.org/packages/release/bioc/html/raer.html)
 <!-- badges: end -->
 
 raer facilitates analysis of RNA adenosine editing in the
@@ -15,21 +17,23 @@ raer facilitates analysis of RNA adenosine editing in the
 
 ## Installation
 
+`raer` is available on
+[Bioconductor](https://bioconductor.org/packages/release/bioc/html/raer.html):
+
+``` r
+if (!require("BiocManager", quietly = TRUE)) {
+    install.packages("BiocManager")
+}
+
+BiocManager::install("raer")
+```
+
 You can install the development version of raer from
 [GitHub](https://github.com/rnabioco/raer) with:
 
 ``` r
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-
-# The following initializes usage of Bioc devel
-BiocManager::install(version='devel')
-
 BiocManager::install("rnabioco/raer")
 ```
-
-**The package is being submitted to Bioconductor. Once it is accepted,
-please use `BiocManager::install("raer")` to install the package**
 
 ## Quick start
 
