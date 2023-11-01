@@ -43,7 +43,7 @@
     
     <a class="navbar-brand me-2" href="index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.15</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,22 +92,22 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version of raer from <a href="https://github.com/rnabioco/raer" class="external-link">GitHub</a> with:</p>
+<p><code>raer</code> is available on <a href="https://bioconductor.org/packages/release/bioc/html/raer.html" class="external-link">Bioconductor</a>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://bioconductor.github.io/BiocManager/" class="external-link">"BiocManager"</a></span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://bioconductor.github.io/BiocManager/" class="external-link">"BiocManager"</a></span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
 <span></span>
-<span><span class="co"># The following initializes usage of Bioc devel</span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span>version<span class="op">=</span><span class="st">'devel'</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"rnabioco/raer"</span><span class="op">)</span></span></code></pre></div>
-<p><strong>The package is being submitted to Bioconductor. Once it is accepted, please use <code>BiocManager::install("raer")</code> to install the package</strong></p>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"raer"</span><span class="op">)</span></span></code></pre></div>
+<p>You can install the development version of raer from <a href="https://github.com/rnabioco/raer" class="external-link">GitHub</a> with:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"rnabioco/raer"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
 <p>raer provides methods to compute per site read count summaries from BAM alignment files, either for known editing sites, or for all detected sites.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rnabioco.github.io/raer">raer</a></span><span class="op">)</span></span>
 <span><span class="va">bam1fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"SRR5564269_Aligned.sortedByCoord.out.md.bam"</span><span class="op">)</span></span>
 <span><span class="va">bam2fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"SRR5564277_Aligned.sortedByCoord.out.md.bam"</span><span class="op">)</span></span>
@@ -117,7 +117,7 @@
 <span></span>
 <span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pileup_sites.html">pileup_sites</a></span><span class="op">(</span><span class="va">bams</span>, <span class="va">fafn</span><span class="op">)</span></span></code></pre></div>
 <p>To facilitate comparisons across groups, base count data and genomic coordinates are stored in a <code>RangedSummarizedExperiment</code>.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/SummarizedExperiment" class="external-link">SummarizedExperiment</a></span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">rse</span></span>
 <span><span class="co">#&gt; class: RangedSummarizedExperiment </span></span>
@@ -138,7 +138,7 @@
 <span><span class="co">#&gt;    &lt;character&gt;</span></span>
 <span><span class="co">#&gt; ko          ko</span></span>
 <span><span class="co">#&gt; wt          wt</span></span></code></pre></div>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">nRef</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="op">]</span></span>
 <span><span class="co">#&gt;               ko wt</span></span>
 <span><span class="co">#&gt; site_SSR3_1_2 13 12</span></span>
@@ -152,7 +152,7 @@
 <span><span class="co">#&gt; site_SSR3_3_2  0  0</span></span>
 <span><span class="co">#&gt; site_SSR3_4_2  0  0</span></span></code></pre></div>
 <p>The <code><a href="reference/pileup_sites.html">FilterParam()</a></code> class holds multiple options for customizing the output of <code><a href="reference/pileup_sites.html">pileup_sites()</a></code>.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pileup_sites.html">FilterParam</a></span><span class="op">(</span></span>
 <span>    only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    library_type <span class="op">=</span> <span class="st">"fr-first-strand"</span>,</span>
@@ -171,7 +171,7 @@
 <span><span class="co">#&gt; colnames(2): ko wt</span></span>
 <span><span class="co">#&gt; colData names(1): sample</span></span></code></pre></div>
 <p><code><a href="reference/pileup_cells.html">pileup_cells()</a></code> provides support for quantifying editing sites in single cell libraries.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">scbam_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"5k_neuron_mouse_possort.bam"</span><span class="op">)</span></span>
 <span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
@@ -209,7 +209,7 @@
 <span><span class="co">#&gt; reducedDimNames(0):</span></span>
 <span><span class="co">#&gt; mainExpName: NULL</span></span>
 <span><span class="co">#&gt; altExpNames(0):</span></span></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">nRef</span></span>
 <span><span class="co">#&gt; 3 x 3 sparse Matrix of class "dgCMatrix"</span></span>
 <span><span class="co">#&gt;                 CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1</span></span>
@@ -249,6 +249,7 @@
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
+<li><a href="https://www.bioconductor.org/packages/raer" class="external-link">View on Bioconductor</a></li>
 <li><a href="https://github.com/rnabioco/raer/" class="external-link">Browse source code</a></li>
 <li><a href="https://github.com/rnabioco/raer/issues" class="external-link">Report a bug</a></li>
 </ul>
@@ -288,6 +289,8 @@
 <ul class="list-unstyled">
 <li><a href="https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml" class="external-link"><img src="https://github.com/rnabioco/raer/actions/workflows/check-bioc.yml/badge.svg" alt="R-CMD-check-bioc"></a></li>
 <li><a href="https://app.codecov.io/gh/rnabioco/raer?branch=devel" class="external-link"><img src="https://codecov.io/gh/rnabioco/raer/branch/devel/graph/badge.svg" alt="Codecov test coverage"></a></li>
+<li><a href="https://bioconductor.org/checkResults/release/bioc-LATEST/raer" class="external-link"><img src="https://bioconductor.org/shields/availability/devel/raer.svg" alt="platforms"></a></li>
+<li><a href="https://bioconductor.org/packages/release/bioc/html/raer.html" class="external-link"><img src="https://bioconductor.org/shields/years-in-bioc/raer.svg" alt="bioc"></a></li>
 </ul>
 </div>
 
