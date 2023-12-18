@@ -2,19 +2,27 @@
 #include <htslib/regidx.h>
 #include "regfile.h"
 
-
 static inline void free_regidx(void* payload) {
   payload_t* pld = *((payload_t**)payload);
-  if (pld->alt) free(pld->alt);
-  if (pld->ref) free(pld->ref);
-  free(pld);
+  if (pld->alt) R_Free(pld->alt); 
+  if (pld->ref) R_Free(pld->ref);
+  R_Free(pld);
 }
+
+// use R memory handling for strdup
+static inline char * rstrdup(const char *x) {
+    char *buf;
+    size_t l = strlen(x) + 1;
+    buf = R_Calloc(l, char);
+    strcpy(buf, x);
+    return buf;
+} 
 
 static void load_payload(payload_t* pld, int strand, char* ref,
                          char* alt, int rowidx) {
   pld->strand = strand;
-  pld->alt = strdup(alt);
-  pld->ref = strdup(ref);
+  pld->alt = rstrdup(alt);
+  pld->ref = rstrdup(ref);
   pld->idx = rowidx;
 }
 
@@ -31,6 +39,7 @@ static regidx_t* regidx_load_payload(char** chroms, int* pos, int* strand,
   payload_t* pld;
   for (i = 0; i < n_sites; ++i) {
     chr_beg = chroms[i];
+    // use R memory management to avoid memory leak if index build has an error
     pld = (payload_t*) R_Calloc(1, payload_t);
     load_payload(pld, strand[i], ref[i], alt[i], rowidx[i]);
     hts_pos_t p = (hts_pos_t) pos[i] - 1; // convert 1 to 0 based
