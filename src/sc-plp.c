@@ -86,7 +86,7 @@ static void clear_cb_umiset(cbumi_map_t cbhash) {
 /*! @function
  @abstract  initialize cb_t stuct and umimap_t hashmap
  */
-static cb_t* init_umihash() {
+static cb_t* init_umihash(void) {
   cb_t* cb = calloc(1, sizeof(cb_t));
   cb->umi = kh_init(umimap);
   return cb ;

@@ -318,7 +318,7 @@ SEXP pileup_result_init(int n) {
 
 
 /* inner list template */
-SEXP pileup_template() {
+SEXP pileup_template(void) {
 
   SEXP tmpl = PROTECT(NEW_LIST(N_TMPL_ELTS));
   SET_VECTOR_ELT(tmpl, SEQNAME_IDX, NEW_CHARACTER(0));
@@ -344,7 +344,7 @@ SEXP pileup_template() {
 }
 
 /* site data template, data stored across all bamfiles */
-SEXP sitedata_template() {
+SEXP sitedata_template(void) {
   int nout = 3;
   SEXP tmpl = PROTECT(NEW_LIST(nout));
   SET_VECTOR_ELT(tmpl, 0, NEW_NUMERIC(0));
