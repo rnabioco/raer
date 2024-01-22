@@ -464,27 +464,28 @@ write_sparray <- function(sce, mtx_fn, sites_fn, bc_fn) {
     if (!conforms) {
         cli::cli_abort("nRef and nAlt sparseMatrices triplet dimensions differ")
     }
-
+    mtx_fn <- gzfile(mtx_fn, 'w')
     writeLines(
         c(
             "%%% raer MatrixMarket-like matrix coordinate integer general",
             paste("%%% ", nref@Dim[1], nref@Dim[2], length(nref@x)),
             "%%% x y nRef nAlt"
         ),
-        gzfile(mtx_fn)
+        mtx_fn
     )
 
     mtx <- matrix(0L, nrow = dim(nref_trpl)[1], ncol = 4L)
     mtx <- cbind(nref_trpl, nalt = nalt_trpl$x)
 
-    data.table::fwrite(mtx, mtx_fn,
-        append = TRUE,
+    write.table(mtx, 
+                mtx_fn,
         sep = " ",
         row.names = FALSE,
         col.names = FALSE,
-        showProgress = FALSE
+        quote = FALSE
     )
-
+    close(mtx_fn)
+    
     sites <- data.frame(
         seq_along(sce),
         seqnames(sce),
@@ -494,11 +495,11 @@ write_sparray <- function(sce, mtx_fn, sites_fn, bc_fn) {
         rowData(sce)$ALT
     )
 
-    data.table::fwrite(sites, sites_fn,
+    write.table(sites,
+        gzfile(sites_fn),
         sep = "\t",
         row.names = FALSE,
-        col.names = FALSE,
-        showProgress = FALSE
+        col.names = FALSE
     )
 
     writeLines(colnames(sce), gzfile(bc_fn))
