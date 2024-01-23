@@ -136,7 +136,7 @@ static void clear_pall_counts(pall_counts* p) {
 /*! @function
  @abstract  allocate data
  */
-static pall_counts* init_pall_counts() {
+static pall_counts* init_pall_counts(void) {
     pall_counts* pall = R_Calloc(1, pall_counts);
     pall->p_ref_pos   = R_Calloc(NBASE_POS, int);
     pall->p_alt_pos   = R_Calloc(NBASE_POS, int);

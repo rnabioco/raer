@@ -336,7 +336,8 @@ get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
 #' intervals, whereas `index`` will only add row indices to the rownames.
 #' @returns a `SingleCellExperiment` object populated with `nRef` and `nAlt`
 #' assays.
-#'
+#' 
+#' @importFrom utils read.table
 #' @examples
 #' library(Rsamtools)
 #' library(GenomicRanges)
@@ -359,10 +360,8 @@ get_sc_pileup <- function(bamfn, index, id, sites, barcodes,
 #'
 #' unlink(bai)
 #'
-#' @importFrom data.table fread
 #' @importFrom Matrix sparseMatrix
 #' @importFrom SingleCellExperiment SingleCellExperiment
-#' @importFrom R.utils gzip
 #' @export
 read_sparray <- function(mtx_fn, sites_fn, bc_fn,
     site_format = c("coordinate", "index")) {
@@ -370,7 +369,7 @@ read_sparray <- function(mtx_fn, sites_fn, bc_fn,
         return(SingleCellExperiment::SingleCellExperiment())
     }
 
-    rnames <- data.table::fread(sites_fn,
+    rnames <- read.table(sites_fn,
         sep = "\t",
         col.names = c(
             "index", "seqnames", "start",
@@ -380,7 +379,7 @@ read_sparray <- function(mtx_fn, sites_fn, bc_fn,
             "integer", "character", "integer",
             "integer", "character", "character"
         ),
-        data.table = FALSE
+        row.names = NULL
     )
     site_format <- match.arg(site_format)
 
@@ -404,7 +403,7 @@ read_sparray <- function(mtx_fn, sites_fn, bc_fn,
     n_sp_cols <- 2 + length(sp_mtx_names)
 
     if (file.size(mtx_fn) > 0) {
-        dt <- data.table::fread(mtx_fn,
+        dt <- read.table(mtx_fn,
             sep = " ",
             colClasses = "integer",
             skip = n_skip,
@@ -443,6 +442,7 @@ read_sparray <- function(mtx_fn, sites_fn, bc_fn,
     res
 }
 
+#' @importFrom utils write.table
 write_sparray <- function(sce, mtx_fn, sites_fn, bc_fn) {
     if (!all(c("nRef", "nAlt") %in% assayNames(sce))) {
         cli::cli_abort("missing required asssays nRef or nAlt")
@@ -464,27 +464,27 @@ write_sparray <- function(sce, mtx_fn, sites_fn, bc_fn) {
     if (!conforms) {
         cli::cli_abort("nRef and nAlt sparseMatrices triplet dimensions differ")
     }
-
+    mtx_fn <- gzfile(mtx_fn, 'w')
     writeLines(
         c(
             "%%% raer MatrixMarket-like matrix coordinate integer general",
             paste("%%% ", nref@Dim[1], nref@Dim[2], length(nref@x)),
             "%%% x y nRef nAlt"
         ),
-        gzfile(mtx_fn)
+        mtx_fn
     )
 
-    mtx <- matrix(0L, nrow = dim(nref_trpl)[1], ncol = 4L)
     mtx <- cbind(nref_trpl, nalt = nalt_trpl$x)
 
-    data.table::fwrite(mtx, mtx_fn,
-        append = TRUE,
+    write.table(mtx, 
+                mtx_fn,
         sep = " ",
         row.names = FALSE,
         col.names = FALSE,
-        showProgress = FALSE
+        quote = FALSE
     )
-
+    close(mtx_fn)
+    
     sites <- data.frame(
         seq_along(sce),
         seqnames(sce),
@@ -494,11 +494,11 @@ write_sparray <- function(sce, mtx_fn, sites_fn, bc_fn) {
         rowData(sce)$ALT
     )
 
-    data.table::fwrite(sites, sites_fn,
+    write.table(sites,
+        gzfile(sites_fn),
         sep = "\t",
         row.names = FALSE,
-        col.names = FALSE,
-        showProgress = FALSE
+        col.names = FALSE
     )
 
     writeLines(colnames(sce), gzfile(bc_fn))

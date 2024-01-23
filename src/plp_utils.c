@@ -7,7 +7,7 @@
 void chkIntFn(void* dummy) {
   R_CheckUserInterrupt();
 }
-int checkInterrupt() {
+int checkInterrupt(void) {
   return (R_ToplevelExec(chkIntFn, NULL) == FALSE);
 }
 
@@ -23,7 +23,7 @@ SEXP get_region(SEXP region) {
   const char* chr_pos ;
   chr_pos = hts_parse_reg(cregion, &beg, &end) ;
   if (!chr_pos) {
-    Rf_error("could not parse region:%s", region);
+    Rf_error("could not parse region:%s", cregion);
   }
   char* chr_name = (char*) malloc(chr_pos - cregion + 1);
   memcpy(chr_name, cregion, chr_pos - cregion);

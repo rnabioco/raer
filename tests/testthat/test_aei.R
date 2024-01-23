@@ -1,4 +1,4 @@
-pkgs <- c("Rsamtools", "data.table", "Biostrings")
+pkgs <- c("Rsamtools", "Biostrings")
 msg <- lapply(pkgs, function(x) {
     suppressPackageStartupMessages(library(x, character.only = TRUE))
 })
@@ -29,13 +29,17 @@ test_that("calc_aei basic options work", {
     expect_true(ag_aei["wt"] > ag_aei["ko"])
 
     x <- aei$AEI_per_chrom
-    setDT(x)
-    pc_aei <- x[, 100 * (sum(alt) / sum(alt + ref)), by = .(allele, bam_file)]
-    pc_aei <- dcast(pc_aei, bam_file ~ allele, value.var = "V1")
-    pc_aei <- as.data.frame(pc_aei)
-    rownames(pc_aei) <- pc_aei$bam_file
-    pc_aei$bam_file <- NULL
-    expect_true(identical(pc_aei, as.data.frame(aei$AEI)))
+    xx <- lapply(split(x, ~ allele + bam_file), function(x) {
+        xx <- 100 * (sum(x$alt) / sum(x$alt + x$ref))
+        data.frame(allele = unique(x$allele),
+                   bam_file = unique(x$bam_file),
+                   total = xx)
+    }) |> do.call(rbind, args = _)
+    xx <- reshape(xx, idvar = c("bam_file"), v.names = "total", timevar = "allele", direction = "wide")
+    rownames(xx) <- xx$bam_file
+    xx$bam_file <- NULL
+    colnames(xx) <- sub("total.", "", colnames(xx))
+    expect_true(identical(data.frame(xx), as.data.frame(aei$AEI)))
 
     aei <- calc_AEI(unname(bams), fafn, mock_alu_ranges)
     expect_true(all(rownames(aei$AEI) == unname(bams)))
