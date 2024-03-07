@@ -41,15 +41,6 @@ test_that("basic functionality works", {
     expect_true(sum(assays(sce)$nRef) > 0)
     expect_true(sum(assays(sce)$nAlt) > 0)
 
-    expect_warning(pileup_cells(bam_fn, gr,
-        c("non", "existent", "barcodes"),
-        outdir,
-        param = FilterParam(
-            library_type = "fr-second-strand",
-            min_depth = 1
-        )
-    ))
-
     # returns empty matrices
     sce <- pileup_cells(bam_fn, gr,
         c("non", "existent", "barcodes"),
@@ -130,6 +121,21 @@ test_that("if multiple bams are supplied, treat each as a separate cell", {
     )
     expect_true(all(gr == rowRanges(sce)))
     expect_equal(ncol(sce), 10)
+    expect_equal(nrow(sce), length(gr))
+    expect_true(all(colnames(sce) == LETTERS[1:10]))
+})
+
+test_that("if multiple bams are supplied, make sure rows aren't duplicated", {
+    fp <- FilterParam(library_type = "fr-second-strand", min_depth = 1)
+    sce <- pileup_cells(rep(bam_fn, 10),
+                        sites = gr,
+                        cell_barcodes = LETTERS[1:10],
+                        cb_tag = NULL,
+                        umi_tag = NULL,
+                        outdir, param = fp
+    )
+    expect_equal(ncol(sce), 10)
+    expect_equal(nrow(sce), 4)
     expect_true(all(colnames(sce) == LETTERS[1:10]))
 })
 

@@ -143,7 +143,6 @@ typedef struct {
   char* cb_tag;          // cb tag value
   int remove_overlaps;   // 1 if enable overlap detection, 0 if not
   int min_counts;        // if 0 report all sites provide in output sparseMatrix
-  int site_idx;          // counter of sites written, used for row index if min_counts > 0
   int is_ss2;            // 1 if smart-seq2 mode, 0 otherwise
 } sc_mplp_conf_t;
 
@@ -428,18 +427,12 @@ static int write_counts(sc_mplp_conf_t* conf, payload_t* pld, const char* seqnam
     }
 
     if (cbdat->ref == 0 && cbdat->alt == 0) continue;
-    r_idx = conf->min_counts == 0 ? pld->idx : conf->site_idx;
+    r_idx = pld->idx;
     ret = fprintf(conf->fps[0], "%d %d %d %d\n", r_idx, c_idx, cbdat->ref, cbdat->alt);
     if (ret < 0) return (-1);
     n_rec += 1;
   }
 
-  // write site
-  if (conf->min_counts > 0) {
-    ret = fprintf(conf->fps[1], "%d\t%s\t%d\t%d\t%s\t%s\n", pld->idx, seqname, pos + 1, pld->strand, pld->ref, pld->alt);
-    if (ret < 0) return (-1);
-    conf->site_idx += 1;
-  }
   return (n_rec);
 }
 
@@ -535,7 +528,7 @@ static int screadaln(void* data, bam1_t* b) {
 static int process_one_site(const bam_pileup1_t** plp, sc_mplp_conf_t* conf,
                             payload_t* pld, bam_hdr_t* h, int tid,
                             int pos, int nbam, int* n_plp, char* bamid) {
-    int i, j,n_ref,n_alt;
+    int i, j, n_ref, n_alt;
     i = j = n_ref = n_alt = 0;
     base_counts_t all_cell_bc;
     memset(&all_cell_bc, 0, sizeof(base_counts_t));
@@ -632,7 +625,7 @@ static int run_scpileup(sc_mplp_conf_t* conf, char* bamfn, char* index, char* ba
   data = calloc(1, sizeof(mplp_sc_aux_t*));
   plp = calloc(1, sizeof(bam_pileup1_t*));
   n_plp = calloc(1, sizeof(int));
-
+  
   // read the header of bam file and initialize data
 
   data[0] = calloc(1, sizeof(mplp_sc_aux_t));
@@ -846,7 +839,6 @@ static int set_sc_mplp_conf(sc_mplp_conf_t* conf, int nbams,
   conf->remove_overlaps = remove_overlaps;
   conf->min_mq = (min_mapq < 0) ? 0 : min_mapq;
   conf->min_counts = min_counts < 0 ? 0 : min_counts;
-  conf->site_idx = 1;
 
   return (0);
 }
@@ -1009,8 +1001,8 @@ SEXP scpileup(SEXP bampaths, SEXP indexes, SEXP query_region, SEXP lst,
   if (ret >= 0) {
     // write barcodes file, all barcodes will be reported in matrix
     write_barcodes(ga.fps[2], bcs, nbcs);
-    // write sites, if all sites requested, otherwise write during pileup
-    if (ga.min_counts == 0) write_all_sites(&ga);
+    // write sites, all sites will be in initial sparse matrix, to be subsequently filtered on R side
+    write_all_sites(&ga);
     if (ga.is_ss2) {
       for (i = 0; i < nbams; ++i) {
         res = run_scpileup(&ga, cbampaths[i], cindexes[i], bcs[i]);
