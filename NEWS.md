@@ -1,4 +1,7 @@
-# raer 1.1.0
+
+# raer 1.1.3
+
+* Fixed bug in smart-seq2 pileup_cells reporting
 
 # raer 1.0.0
 

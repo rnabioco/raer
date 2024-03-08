@@ -33,10 +33,10 @@
 #'   `min_variant_reads` parameters if set > 0 specify the number of reads
 #'   from any cell required in order to report a site. E.g. if
 #'   `min_variant_reads` is set to 2, then at least 2 reads (from any cell) must
-#'    have a variant in order to report the site. Setting `min_depth` and
-#'    `min_variant_reads` to 0 reports all sites present in the `sites` object.
-#'    The following options are not enabled for pileup_cells():
-#'    `max_mismatch_type`, `homopolymer_len`, and `min_allelic_freq`.
+#'   have a variant in order to report the site. Setting `min_depth` and
+#'   `min_variant_reads` to 0 reports all sites present in the `sites` object.
+#'   The following options are not enabled for pileup_cells():
+#'   `max_mismatch_type`, `homopolymer_len`, and `min_allelic_freq`.
 #' @param umi_tag tag in BAM containing the UMI sequence
 #' @param cb_tag tag in BAM containing the cell-barcode sequence
 #' @param return_sce if `TRUE`, data is returned as a SingleCellExperiment, if
@@ -82,13 +82,18 @@
 #'
 #' many_small_bams <- rep(bam_fn, 10)
 #' bam_ids <- LETTERS[1:10]
+#'  
+#' # for unstranded libraries, sites and alleles should be provided on + strand 
+#' gr <- GRanges(c("2:579:+", "2:625:+", "2:645:+", "2:589:+", "2:601:+"))
+#' gr$REF <- c(rep("T", 4), "A")
+#' gr$ALT <- c(rep("C", 4), "G")
 #'
 #' fp <- FilterParam(
 #'     library_type = "unstranded",
 #'     remove_overlaps = TRUE
 #' )
 #'
-#' pileup_cells(many_small_bams,
+#' sce <- pileup_cells(many_small_bams,
 #'     sites = gr,
 #'     cell_barcodes = bam_ids,
 #'     cb_tag = NULL,
@@ -96,6 +101,7 @@
 #'     outdir,
 #'     param = fp
 #' )
+#' sce
 #'
 #' unlink(bai)
 #'
@@ -242,8 +248,26 @@ pileup_cells <- function(bamfiles,
         }
         return(res)
     }
-
-    sce <- do.call(rbind, sces)
+    if(process_nbam){
+        sce <- do.call(cbind, sces)
+    } else {
+        sce <- do.call(rbind, sces)
+    }
+    
+    to_keep <- rep(TRUE, nrow(sce))
+    if(param@min_depth > 0) {
+        pass_mc <- Matrix::rowSums(assays(sce)$nRef + 
+                                       assays(sce)$nAlt) >= param@min_depth 
+        to_keep <- to_keep & pass_mc
+        
+    }
+    
+    if(param@min_variant_reads > 0) {
+        pass_mv <- Matrix::rowSums(assays(sce)$nAlt) >= param@min_variant_reads 
+        to_keep <- to_keep & pass_mv
+    }
+    sce <- sce[to_keep, ]
+    
     rownames(sce) <- site_names(rowRanges(sce), allele = TRUE)
 
     write_sparray(sce, outfns["counts"], outfns["sites"], outfns["bc"])
