@@ -1,3 +1,7 @@
+# raer 1.0.1
+
+* Fix bug in smart-seq2 style pileup_cells() reporting. 
+
 # raer 0.99.12 
 
 * Changes made to prepare for bioc submission
