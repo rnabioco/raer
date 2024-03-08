@@ -2,8 +2,8 @@
 % Please edit documentation in R/raer.R
 \docType{package}
 \name{raer}
-\alias{raer}
 \alias{raer-package}
+\alias{raer}
 \title{raer: RNA editing tools in R}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}

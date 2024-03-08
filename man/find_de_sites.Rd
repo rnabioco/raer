@@ -66,9 +66,10 @@ rse$condition <- substr(rse$sample, 1, 2)
 
 rse <- calc_edit_frequency(rse)
 dse <- make_de_object(rse)
-res <- find_de_sites(dse, 
-                     condition_control = "WT", 
-                     condition_treatment = "KO")
+res <- find_de_sites(dse,
+    condition_control = "WT",
+    condition_treatment = "KO"
+)
 res$sig_results[1:3, ]
 
 }
