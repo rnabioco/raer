@@ -113,13 +113,18 @@ sce
 
 many_small_bams <- rep(bam_fn, 10)
 bam_ids <- LETTERS[1:10]
+ 
+# for unstranded libraries, sites and alleles should be provided on + strand 
+gr <- GRanges(c("2:579:+", "2:625:+", "2:645:+", "2:589:+", "2:601:+"))
+gr$REF <- c(rep("T", 4), "A")
+gr$ALT <- c(rep("C", 4), "G")
 
 fp <- FilterParam(
     library_type = "unstranded",
     remove_overlaps = TRUE
 )
 
-pileup_cells(many_small_bams,
+sce <- pileup_cells(many_small_bams,
     sites = gr,
     cell_barcodes = bam_ids,
     cb_tag = NULL,
@@ -127,6 +132,7 @@ pileup_cells(many_small_bams,
     outdir,
     param = fp
 )
+sce
 
 unlink(bai)
 
