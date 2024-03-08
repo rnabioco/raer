@@ -32,7 +32,7 @@ base will be counted once for each UMI sequence present in each cell."><meta pro
     
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.4</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -230,13 +230,18 @@ will be returned. These files can be imported using <code><a href="read_sparray.
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">many_small_bams</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">bam_fn</span>, <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bam_ids</span> <span class="op">&lt;-</span> <span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span></span></span>
+<span class="r-in"><span> </span></span>
+<span class="r-in"><span><span class="co"># for unstranded libraries, sites and alleles should be provided on + strand </span></span></span>
+<span class="r-in"><span><span class="va">gr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"2:579:+"</span>, <span class="st">"2:625:+"</span>, <span class="st">"2:645:+"</span>, <span class="st">"2:589:+"</span>, <span class="st">"2:601:+"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">gr</span><span class="op">$</span><span class="va">REF</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"T"</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"A"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">gr</span><span class="op">$</span><span class="va">ALT</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"C"</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"G"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="pileup_sites.html">FilterParam</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    library_type <span class="op">=</span> <span class="st">"unstranded"</span>,</span></span>
 <span class="r-in"><span>    remove_overlaps <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu">pileup_cells</span><span class="op">(</span><span class="va">many_small_bams</span>,</span></span>
+<span class="r-in"><span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu">pileup_cells</span><span class="op">(</span><span class="va">many_small_bams</span>,</span></span>
 <span class="r-in"><span>    sites <span class="op">=</span> <span class="va">gr</span>,</span></span>
 <span class="r-in"><span>    cell_barcodes <span class="op">=</span> <span class="va">bam_ids</span>,</span></span>
 <span class="r-in"><span>    cb_tag <span class="op">=</span> <span class="cn">NULL</span>,</span></span>
@@ -244,11 +249,13 @@ will be returned. These files can be imported using <code><a href="read_sparray.
 <span class="r-in"><span>    <span class="va">outdir</span>,</span></span>
 <span class="r-in"><span>    param <span class="op">=</span> <span class="va">fp</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">sce</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> class: SingleCellExperiment </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> dim: 0 10 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> dim: 4 10 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> metadata(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> assays(2): nRef nAlt</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rownames: NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> rownames(4): site_2_579_1_TC site_2_625_1_TC site_2_589_1_TC</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   site_2_601_1_AG</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(2): REF ALT</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(10): A B ... I J</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colData names(0):</span>
