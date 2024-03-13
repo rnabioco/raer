@@ -576,7 +576,7 @@ region of chr4.
 
 - `TxDb.Hsapiens.UCSC.hg38.knownGene`, a database of transcript models. 
 Alternatively these can be generated from a `.gtf` file using 
-`makeTxDbFromGRanges()` from the `GenomicFeatures` package.   
+`makeTxDbFromGRanges()` from the `txdbmaker` package.   
 
 - RepeatMasker annotations, which can be obtained from the `AnnotationHub()` 
 for hg38, as shown in the [bulk RNA-seq](#bulk) tutorial. 
