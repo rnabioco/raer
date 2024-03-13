@@ -18,7 +18,7 @@ transcriptome coordinate space."><meta property="og:image" content="https://rnab
     
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.5</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -111,28 +111,51 @@ object dependent on filtering applied.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/GenomicFeatures" class="external-link">GenomicFeatures</a></span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://bioconductor.org/packages/txdbmaker" class="external-link">"txdbmaker"</a></span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">rse_adar_ifn</span> <span class="op">&lt;-</span> <span class="fu"><a href="mock_rse.html">mock_rse</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">rse</span> <span class="op">&lt;-</span> <span class="va">rse_adar_ifn</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/GenomeInfoDb/man/seqinfo.html" class="external-link">seqnames</a></span><span class="op">(</span><span class="va">rse_adar_ifn</span><span class="op">)</span> <span class="op">==</span> <span class="st">"SPCS3"</span><span class="op">]</span></span></span>
+<span class="r-in"><span> </span></span>
+<span class="r-in"><span>  <span class="co"># mock up a txdb with genes</span></span></span>
+<span class="r-in"><span>  <span class="va">gr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>      <span class="st">"SPCS3:100-120:-"</span>,</span></span>
+<span class="r-in"><span>      <span class="st">"SPCS3:325-350:-"</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">gr</span><span class="op">$</span><span class="va">source</span> <span class="op">&lt;-</span> <span class="st">"raer"</span></span></span>
+<span class="r-in"><span>  <span class="va">gr</span><span class="op">$</span><span class="va">type</span> <span class="op">&lt;-</span> <span class="st">"exon"</span></span></span>
+<span class="r-in"><span>  <span class="va">gr</span><span class="op">$</span><span class="va">source</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span></span>
+<span class="r-in"><span>  <span class="va">gr</span><span class="op">$</span><span class="va">phase</span> <span class="op">&lt;-</span> <span class="cn">NA_integer_</span></span></span>
+<span class="r-in"><span>  <span class="va">gr</span><span class="op">$</span><span class="va">gene_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">gr</span><span class="op">$</span><span class="va">transcript_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1.1"</span>, <span class="st">"2.1"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">txdb</span> <span class="op">&lt;-</span> <span class="fu">txdbmaker</span><span class="fu">::</span><span class="fu">makeTxDbFromGRanges</span><span class="op">(</span><span class="va">gr</span><span class="op">)</span></span></span>
+<span class="r-in"><span> </span></span>
+<span class="r-in"><span>  <span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="filter_multiallelic.html">filter_multiallelic</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu">filter_clustered_variants</span><span class="op">(</span><span class="va">rse</span>, <span class="va">txdb</span>, variant_dist <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: txdbmaker</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: AnnotationDbi</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">rse_adar_ifn</span> <span class="op">&lt;-</span> <span class="fu"><a href="mock_rse.html">mock_rse</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="va">rse_adar_ifn</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/GenomeInfoDb/man/seqinfo.html" class="external-link">seqnames</a></span><span class="op">(</span><span class="va">rse_adar_ifn</span><span class="op">)</span> <span class="op">==</span> <span class="st">"SPCS3"</span><span class="op">]</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># mock up a txdb with genes</span></span></span>
-<span class="r-in"><span><span class="va">gr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="st">"SPCS3:100-120:-"</span>,</span></span>
-<span class="r-in"><span>    <span class="st">"SPCS3:325-350:-"</span></span></span>
-<span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">gr</span><span class="op">$</span><span class="va">source</span> <span class="op">&lt;-</span> <span class="st">"raer"</span></span></span>
-<span class="r-in"><span><span class="va">gr</span><span class="op">$</span><span class="va">type</span> <span class="op">&lt;-</span> <span class="st">"exon"</span></span></span>
-<span class="r-in"><span><span class="va">gr</span><span class="op">$</span><span class="va">source</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span></span>
-<span class="r-in"><span><span class="va">gr</span><span class="op">$</span><span class="va">phase</span> <span class="op">&lt;-</span> <span class="cn">NA_integer_</span></span></span>
-<span class="r-in"><span><span class="va">gr</span><span class="op">$</span><span class="va">gene_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">gr</span><span class="op">$</span><span class="va">transcript_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1.1"</span>, <span class="st">"2.1"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">txdb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicFeatures/man/makeTxDbFromGRanges.html" class="external-link">makeTxDbFromGRanges</a></span><span class="op">(</span><span class="va">gr</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">rse</span> <span class="op">&lt;-</span> <span class="fu"><a href="filter_multiallelic.html">filter_multiallelic</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: GenomicFeatures</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: ‘txdbmaker’</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The following objects are masked from ‘package:GenomicFeatures’:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     UCSCFeatureDbTableSchema, browseUCSCtrack,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     getChromInfoFromBiomart, makeFDbPackageFromUCSC,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     makeFeatureDbFromUCSC, makePackageName, makeTxDb,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     makeTxDbFromBiomart, makeTxDbFromEnsembl, makeTxDbFromGFF,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     makeTxDbFromGRanges, makeTxDbFromUCSC, makeTxDbPackage,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     makeTxDbPackageFromBiomart, makeTxDbPackageFromUCSC,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     supportedMiRBaseBuildValues, supportedUCSCFeatureDbTables,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     supportedUCSCFeatureDbTracks, supportedUCSCtables</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Direct call of 'as.data.frame.factor()' is deprecated.  Use 'as.data.frame.vector()' or 'as.data.frame()' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Direct call of 'as.data.frame.factor()' is deprecated.  Use 'as.data.frame.vector()' or 'as.data.frame()' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Direct call of 'as.data.frame.factor()' is deprecated.  Use 'as.data.frame.vector()' or 'as.data.frame()' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Direct call of 'as.data.frame.factor()' is deprecated.  Use 'as.data.frame.vector()' or 'as.data.frame()' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Direct call of 'as.data.frame.factor()' is deprecated.  Use 'as.data.frame.vector()' or 'as.data.frame()' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Direct call of 'as.data.frame.factor()' is deprecated.  Use 'as.data.frame.vector()' or 'as.data.frame()' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Direct call of 'as.data.frame.factor()' is deprecated.  Use 'as.data.frame.vector()' or 'as.data.frame()' instead</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Direct call of 'as.data.frame.factor()' is deprecated.  Use 'as.data.frame.vector()' or 'as.data.frame()' instead</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> `filter_multiallelic()`: removed <span style="color: #0000BB;">0</span> sites from <span style="color: #0000BB;">8</span> (<span style="color: #0000BB;">8</span> remain)</span>
-<span class="r-in"><span><span class="fu">filter_clustered_variants</span><span class="op">(</span><span class="va">rse</span>, <span class="va">txdb</span>, variant_dist <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> `filter_clustered_variants()`:  removed <span style="color: #0000BB;">3</span> sites from <span style="color: #0000BB;">8</span> (<span style="color: #0000BB;">5</span> remain)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> class: RangedSummarizedExperiment </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> dim: 5 2 </span>
