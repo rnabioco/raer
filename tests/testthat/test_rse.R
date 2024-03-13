@@ -1,6 +1,5 @@
 pkgs <- c(
-    "GenomicRanges", "GenomicFeatures",
-    "SummarizedExperiment", "rtracklayer"
+    "GenomicRanges", "SummarizedExperiment", "rtracklayer", "GenomicFeatures"
 )
 
 msg <- lapply(pkgs, function(x) {
@@ -16,7 +15,7 @@ sites <- import(bedfn)
 res <- pileup_sites(bamfn, fafn)
 
 test_that("annot_snps works", {
-    if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {
+    if (require("SNPlocs.Hsapiens.dbSNP144.GRCh38")) {
         gr <- GRanges(rep("22", 10),
             IRanges(
                 seq(10510077,
@@ -43,7 +42,7 @@ test_that("annot_snps works", {
         expect_true(is(res, "RangedSummarizedExperiment"))
         expect_true("RefSNP_id" %in% colnames(mcols(res)))
 
-        if (require(BSgenome.Hsapiens.NCBI.GRCh38)) {
+        if (require("BSgenome.Hsapiens.NCBI.GRCh38")) {
             res <- annot_snps(se,
                 dbsnp = SNPlocs.Hsapiens.dbSNP144.GRCh38,
                 genome = BSgenome.Hsapiens.NCBI.GRCh38
@@ -121,62 +120,66 @@ mock_txdb <- function() {
     gr$phase <- NA_integer_
     gr$gene_id <- c(1, 1, 2, 2)
     gr$transcript_id <- rep(c("1.1", "2.1"), each = 2)
-    makeTxDbFromGRanges(gr)
+    txdbmaker::makeTxDbFromGRanges(gr)
 }
 
 test_that("get_splice_sites and filtering works", {
-    txdb <- mock_txdb()
-    spl_sites <- get_splice_sites(txdb,
-        slop = 3
-    )
-    expect_true(all(width(spl_sites) == 6))
-    expect_error(get_splice_sites(spl_sites))
-
-    rse_adar_ifn <- mock_rse()
-    expect_message(rse <- filter_splice_variants(rse_adar_ifn, txdb))
-    n_removed <- nrow(subsetByOverlaps(rse_adar_ifn, rse, invert = TRUE))
-    expect_equal(n_removed, 5L)
-    expect_true("site_DHFR_328_2" %in% rownames(rse_adar_ifn))
-    expect_false("site_DHFR_328_2" %in% rownames(rse))
+    if("txdbmaker" %in% rownames(installed.packages())) {
+        txdb <- mock_txdb()
+        spl_sites <- get_splice_sites(txdb,
+                                      slop = 3
+        )
+        expect_true(all(width(spl_sites) == 6))
+        expect_error(get_splice_sites(spl_sites))
+        
+        rse_adar_ifn <- mock_rse()
+        expect_message(rse <- filter_splice_variants(rse_adar_ifn, txdb))
+        n_removed <- nrow(subsetByOverlaps(rse_adar_ifn, rse, invert = TRUE))
+        expect_equal(n_removed, 5L)
+        expect_true("site_DHFR_328_2" %in% rownames(rse_adar_ifn))
+        expect_false("site_DHFR_328_2" %in% rownames(rse))
+    }
 })
 
 test_that("removing clustered variants works", {
-    txdb <- mock_txdb()
-
-    rse_adar_ifn <- mock_rse()
-    expect_message(rse <- filter_multiallelic(rse_adar_ifn))
-
-    gr <- rowRanges(rse)
-    nd <- distanceToNearest(gr)
-    gr1 <- gr[mcols(nd)$distance > 100]
-    expect_warning(expect_warning(gr2 <- filter_clustered_variants(rse, txdb)))
-    expect_true(identical(rowRanges(gr2), gr1))
-
-    # check that transcript based removal works
-    # DHFR_328 -> DHFR_423 overlaps 310-330 -> 410-430 splice
-    ex <- exons(txdb)
-    rse_ex <- subsetByOverlaps(rse, ex)
-
-    expect_warning(
-        gr2 <- filter_clustered_variants(rse_ex,
-            txdb,
-            regions = "transcript",
-            variant_dist = 20
+    if("txdbmaker" %in% rownames(installed.packages())) {
+        txdb <- mock_txdb()
+        
+        rse_adar_ifn <- mock_rse()
+        expect_message(rse <- filter_multiallelic(rse_adar_ifn))
+        
+        gr <- rowRanges(rse)
+        nd <- distanceToNearest(gr)
+        gr1 <- gr[mcols(nd)$distance > 100]
+        expect_warning(expect_warning(gr2 <- filter_clustered_variants(rse, txdb)))
+        expect_true(identical(rowRanges(gr2), gr1))
+        
+        # check that transcript based removal works
+        # DHFR_328 -> DHFR_423 overlaps 310-330 -> 410-430 splice
+        ex <- exons(txdb)
+        rse_ex <- subsetByOverlaps(rse, ex)
+        
+        expect_warning(
+            gr2 <- filter_clustered_variants(rse_ex,
+                                             txdb,
+                                             regions = "transcript",
+                                             variant_dist = 20
+            )
         )
-    )
-
-    expt <- rowRanges(subsetByOverlaps(rse_ex, gr2, invert = T))
-    ds <- distanceToNearest(mapToTranscripts(expt, txdb,
-        extractor.fun = exonsBy
-    ))
-    expect_true(all(mcols(ds)$distance < 20))
-
-    expect_warning(
-        gr2 <- filter_clustered_variants(rse_ex, txdb,
-            variant_dist = 25
+        
+        expt <- rowRanges(subsetByOverlaps(rse_ex, gr2, invert = T))
+        ds <- distanceToNearest(mapToTranscripts(expt, txdb,
+                                                 extractor.fun = exonsBy
+        ))
+        expect_true(all(mcols(ds)$distance < 20))
+        
+        expect_warning(
+            gr2 <- filter_clustered_variants(rse_ex, txdb,
+                                             variant_dist = 25
+            )
         )
-    )
-    expect_equal(length(gr2), 3L)
+        expect_equal(length(gr2), 3L)
+    }
 })
 
 test_that("calc_confidence works", {
