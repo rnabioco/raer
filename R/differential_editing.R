@@ -480,7 +480,7 @@ run_deseq2 <- function(
     )
 
     deseq_res <- as.data.frame(treatment_vs_control)
-    deseq_res <- deseq_res[deseq_res$padj < 0.05, ]
+    deseq_res <- deseq_res[which(deseq_res$padj < 0.05), ]
     deseq_res <- deseq_res[order(deseq_res$log2FoldChange, decreasing = TRUE), ]
 
     return(list(
@@ -557,7 +557,7 @@ run_edger <- function(
     )
 
     edger_res <- as.data.frame(treatment_vs_control)
-    edger_res <- edger_res[edger_res$FDR < 0.05, ]
+    edger_res <- edger_res[which(edger_res$FDR < 0.05), ]
     edger_res <- edger_res[order(edger_res$PValue), ]
 
     return(list(

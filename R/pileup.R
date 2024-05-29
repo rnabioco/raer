@@ -118,6 +118,9 @@ pileup_sites <- function(bamfiles,
     if (is.null(names(bamfiles))) {
         sample_ids <- basename(path(bamfiles))
     } else {
+        if(any(is.na(names(bamfiles)))) {
+            cli::cli_abort("Missing values detected in names(bamfiles)")
+        }
         sample_ids <- names(bamfiles)
     }
 
@@ -728,6 +731,11 @@ merge_pileups <- function(plps,
                 "{length(sample_names} sample names."
             ))
         }
+        
+        if(any(is.na(sample_names))) {
+            cli::cli_abort("Missing values found in sample_names")
+        }
+        
         names(plps) <- sample_names
     }
 
