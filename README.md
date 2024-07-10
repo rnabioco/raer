@@ -37,6 +37,11 @@ BiocManager::install("rnabioco/raer")
 
 ## Quick start
 
+<figure>
+<img src="man/figures/raer_workflow.png" alt="raer workflow overview" />
+<figcaption aria-hidden="true">raer workflow overview</figcaption>
+</figure>
+
 raer provides methods to compute per site read count summaries from BAM
 alignment files, either for known editing sites, or for all detected
 sites.
@@ -67,9 +72,15 @@ rse
 #> rowData names(4): REF rpbz vdb sor
 #> colnames(2): ko wt
 #> colData names(1): sample
+```
+
+``` r
 assays(rse)
 #> List of length 7
 #> names(7): ALT nRef nAlt nA nT nC nG
+```
+
+``` r
 colData(rse)
 #> DataFrame with 2 rows and 1 column
 #>         sample
@@ -85,6 +96,9 @@ assays(rse)$nRef[1:4, ]
 #> site_SSR3_2_2 14 12
 #> site_SSR3_3_2 14 12
 #> site_SSR3_4_2 15 12
+```
+
+``` r
 assays(rse)$nAlt[1:4, ]
 #>               ko wt
 #> site_SSR3_1_2  0  0
@@ -150,7 +164,7 @@ sce
 #> dim: 3 3 
 #> metadata(0):
 #> assays(2): nRef nAlt
-#> rownames(3): site_2_579_2_AG site_2_589_2_AG site_2_625_2_AG
+#> rownames(3): site_2_579_2_AG site_2_625_2_AG site_2_589_2_AG
 #> rowData names(2): REF ALT
 #> colnames(3): CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
 #> colData names(0):
@@ -164,14 +178,17 @@ assays(sce)$nRef
 #> 3 x 3 sparse Matrix of class "dgCMatrix"
 #>                 CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
 #> site_2_579_2_AG                  0                  0                  1
-#> site_2_589_2_AG                  1                  1                  2
 #> site_2_625_2_AG                  0                  0                  0
+#> site_2_589_2_AG                  1                  1                  2
+```
+
+``` r
 assays(sce)$nAlt
 #> 3 x 3 sparse Matrix of class "dgCMatrix"
 #>                 CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
 #> site_2_579_2_AG                  1                  1                  1
-#> site_2_589_2_AG                  0                  0                  0
 #> site_2_625_2_AG                  1                  1                  1
+#> site_2_589_2_AG                  0                  0                  0
 ```
 
 ## Related work
