@@ -1,96 +1,34 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://rnabioco.github.io/raer/404.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/LICENSE-text.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/LICENSE.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/articles/raer.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/index.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/news/index.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/annot_from_gr.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/annot_snps.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/calc_AEI.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/calc_confidence.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/calc_edit_frequency.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/calc_scAEI.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/correct_strand.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/filter_clustered_variants.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/filter_multiallelic.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/filter_splice_variants.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/find_de_sites.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/find_mispriming_sites.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/find_scde_sites.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/get_overlapping_snps.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/get_splice_sites.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/make_de_object.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/mock_rse.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/pileup_cells.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/pileup_sites.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/raer.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/raer_example.html</loc>
-  </url>
-  <url>
-    <loc>https://rnabioco.github.io/raer/reference/read_sparray.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://rnabioco.github.io/raer/404.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/LICENSE-text.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/LICENSE.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/articles/index.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/articles/raer.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/authors.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/index.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/news/index.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/annot_from_gr.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/annot_snps.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/calc_AEI.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/calc_confidence.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/calc_edit_frequency.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/calc_scAEI.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/correct_strand.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/filter_clustered_variants.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/filter_multiallelic.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/filter_splice_variants.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/find_de_sites.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/find_mispriming_sites.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/find_scde_sites.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/get_overlapping_snps.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/get_splice_sites.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/index.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/make_de_object.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/mock_rse.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/pileup_cells.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/pileup_sites.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/raer.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/raer_example.html</loc></url>
+<url><loc>https://rnabioco.github.io/raer/reference/read_sparray.html</loc></url>
 </urlset>
+
