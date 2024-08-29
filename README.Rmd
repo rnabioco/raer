@@ -43,8 +43,9 @@ You can install the development version of raer from [GitHub](https://github.com
 BiocManager::install("rnabioco/raer")
 ```
 
-
 ## Quick start
+
+![raer workflow overview](man/figures/raer_workflow.png)
 
 raer provides methods to compute per site read count summaries from BAM
 alignment files, either for known editing sites, or for all detected sites.
