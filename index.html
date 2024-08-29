@@ -14,7 +14,9 @@
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="apple-touch-icon-60x60.png">
 <script src="lightswitch.js"></script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/Atkinson_Hyperlegible-0.4.9/font.css" rel="stylesheet">
+<link href="deps/Fira_Code-0.4.9/font.css" rel="stylesheet">
+<link href="deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="RNA editing tools in R">
 <meta name="description" content="Toolkit for identification and statistical testing of RNA editing signals from within R. Provides support for identifying sites from bulk-RNA and single cell RNA-seq datasets, and general methods for extraction of allelic read counts from alignment files. Facilitates annotation and exploratory analysis of editing signals using Bioconductor packages and resources.">
@@ -30,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -113,34 +115,31 @@ raer workflow overview
 <span><span class="co">#&gt;   site_DHFR_518_2</span></span>
 <span><span class="co">#&gt; rowData names(4): REF rpbz vdb sor</span></span>
 <span><span class="co">#&gt; colnames(2): ko wt</span></span>
-<span><span class="co">#&gt; colData names(1): sample</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span>
+<span><span class="co">#&gt; colData names(1): sample</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of length 7</span></span>
-<span><span class="co">#&gt; names(7): ALT nRef nAlt nA nT nC nG</span></span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span>
+<span><span class="co">#&gt; names(7): ALT nRef nAlt nA nT nC nG</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span></span>
 <span><span class="co">#&gt; DataFrame with 2 rows and 1 column</span></span>
 <span><span class="co">#&gt;         sample</span></span>
 <span><span class="co">#&gt;    &lt;character&gt;</span></span>
 <span><span class="co">#&gt; ko          ko</span></span>
 <span><span class="co">#&gt; wt          wt</span></span></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">nRef</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="op">]</span></span>
 <span><span class="co">#&gt;               ko wt</span></span>
 <span><span class="co">#&gt; site_SSR3_1_2 13 12</span></span>
 <span><span class="co">#&gt; site_SSR3_2_2 14 12</span></span>
 <span><span class="co">#&gt; site_SSR3_3_2 14 12</span></span>
-<span><span class="co">#&gt; site_SSR3_4_2 15 12</span></span></code></pre></div>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">nAlt</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="op">]</span></span>
+<span><span class="co">#&gt; site_SSR3_4_2 15 12</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">rse</span><span class="op">)</span><span class="op">$</span><span class="va">nAlt</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="op">]</span></span>
 <span><span class="co">#&gt;               ko wt</span></span>
 <span><span class="co">#&gt; site_SSR3_1_2  0  0</span></span>
 <span><span class="co">#&gt; site_SSR3_2_2  0  0</span></span>
 <span><span class="co">#&gt; site_SSR3_3_2  0  0</span></span>
 <span><span class="co">#&gt; site_SSR3_4_2  0  0</span></span></code></pre></div>
 <p>The <code><a href="reference/pileup_sites.html">FilterParam()</a></code> class holds multiple options for customizing the output of <code><a href="reference/pileup_sites.html">pileup_sites()</a></code>.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pileup_sites.html">FilterParam</a></span><span class="op">(</span></span>
 <span>    only_keep_variants <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    library_type <span class="op">=</span> <span class="st">"fr-first-strand"</span>,</span>
@@ -159,7 +158,7 @@ raer workflow overview
 <span><span class="co">#&gt; colnames(2): ko wt</span></span>
 <span><span class="co">#&gt; colData names(1): sample</span></span></code></pre></div>
 <p><code><a href="reference/pileup_cells.html">pileup_cells()</a></code> provides support for quantifying editing sites in single cell libraries.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">scbam_fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/raer_example.html">raer_example</a></span><span class="op">(</span><span class="st">"5k_neuron_mouse_possort.bam"</span><span class="op">)</span></span>
 <span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
@@ -197,15 +196,14 @@ raer workflow overview
 <span><span class="co">#&gt; reducedDimNames(0):</span></span>
 <span><span class="co">#&gt; mainExpName: NULL</span></span>
 <span><span class="co">#&gt; altExpNames(0):</span></span></code></pre></div>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">nRef</span></span>
 <span><span class="co">#&gt; 3 x 3 sparse Matrix of class "dgCMatrix"</span></span>
 <span><span class="co">#&gt;                 CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1</span></span>
 <span><span class="co">#&gt; site_2_579_2_AG                  0                  0                  1</span></span>
 <span><span class="co">#&gt; site_2_625_2_AG                  0                  0                  0</span></span>
-<span><span class="co">#&gt; site_2_589_2_AG                  1                  1                  2</span></span></code></pre></div>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">nAlt</span></span>
+<span><span class="co">#&gt; site_2_589_2_AG                  1                  1                  2</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assays</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span><span class="op">$</span><span class="va">nAlt</span></span>
 <span><span class="co">#&gt; 3 x 3 sparse Matrix of class "dgCMatrix"</span></span>
 <span><span class="co">#&gt;                 CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1</span></span>
 <span><span class="co">#&gt; site_2_579_2_AG                  1                  1                  1</span></span>
@@ -268,7 +266,7 @@ raer workflow overview
 <li>
 <a href="https://github.com/kwells4" class="external-link">Kristen Wells-Wrasman</a> <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-7466-8164" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
 <li>
-<a href="https://medschool.cuanschutz.edu/rbi" class="external-link"><img src="https://rnabioco.github.io/rbitemplate/rbi-pkgdown-logo.svg" alt="RBI" width="150"></a> <br><small class="roles"> Copyright holder, funder </small>  </li>
+<a href="https://medschool.cuanschutz.edu/rbi" class="external-link">RNA Bioscience Initiative</a> <br><small class="roles"> Copyright holder, funder </small>  </li>
 <li><a href="authors.html">More about authors...</a></li>
 </ul>
 </div>
