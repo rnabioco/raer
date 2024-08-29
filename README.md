@@ -72,15 +72,9 @@ rse
 #> rowData names(4): REF rpbz vdb sor
 #> colnames(2): ko wt
 #> colData names(1): sample
-```
-
-``` r
 assays(rse)
 #> List of length 7
 #> names(7): ALT nRef nAlt nA nT nC nG
-```
-
-``` r
 colData(rse)
 #> DataFrame with 2 rows and 1 column
 #>         sample
@@ -96,9 +90,6 @@ assays(rse)$nRef[1:4, ]
 #> site_SSR3_2_2 14 12
 #> site_SSR3_3_2 14 12
 #> site_SSR3_4_2 15 12
-```
-
-``` r
 assays(rse)$nAlt[1:4, ]
 #>               ko wt
 #> site_SSR3_1_2  0  0
@@ -180,9 +171,6 @@ assays(sce)$nRef
 #> site_2_579_2_AG                  0                  0                  1
 #> site_2_625_2_AG                  0                  0                  0
 #> site_2_589_2_AG                  1                  1                  2
-```
-
-``` r
 assays(sce)$nAlt
 #> 3 x 3 sparse Matrix of class "dgCMatrix"
 #>                 CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
