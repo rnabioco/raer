@@ -8,7 +8,7 @@
 #' @return Character vector will path to an internal package file.
 #' @export
 raer_example <- function(path) {
-    system.file("extdata", path, package = "raer", mustWork = TRUE)
+  system.file("extdata", path, package = "raer", mustWork = TRUE)
 }
 
 #' Generate a small RangedSummarizedExperiment object for tests and examples
@@ -25,36 +25,36 @@ raer_example <- function(path) {
 #' @references <https://pubmed.ncbi.nlm.nih.gov/29395325/>
 #' @export
 mock_rse <- function() {
-    ko_bam <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
-    wt_bam <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
-    fafn <- raer_example("human.fasta")
-    bedfn <- raer_example("regions.bed")
+  ko_bam <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+  wt_bam <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
+  fafn <- raer_example("human.fasta")
+  bedfn <- raer_example("regions.bed")
 
-    fp <- FilterParam(
-        only_keep_variants = TRUE,
-        library_type = "fr-first-strand",
-        min_depth = 2
-    )
+  fp <- FilterParam(
+    only_keep_variants = TRUE,
+    library_type = "fr-first-strand",
+    min_depth = 2
+  )
 
-    bams <- c(wt_bam, ko_bam)
-    names(bams) <- c("wt", "adar1_ko")
+  bams <- c(wt_bam, ko_bam)
+  names(bams) <- c("wt", "adar1_ko")
 
-    rse <- pileup_sites(
-        bams,
-        fafn,
-        param = fp
-    )
+  rse <- pileup_sites(
+    bams,
+    fafn,
+    param = fp
+  )
 
-    rse
+  rse
 }
 
 
 chunk_vec <- function(x, n) {
-    if (n == 1) {
-        res <- list(`1` = x)
-        return(res)
-    }
-    split(x, cut(seq_along(x), n, labels = FALSE))
+  if (n == 1) {
+    res <- list(`1` = x)
+    return(res)
+  }
+  split(x, cut(seq_along(x), n, labels = FALSE))
 }
 
 #' Find regions with oligodT mispriming
@@ -102,109 +102,120 @@ chunk_vec <- function(x, n) {
 #' find_mispriming_sites(bam_fn, fa_fn)
 #'
 #' @export
-find_mispriming_sites <- function(bamfile, fasta, pos_5p = 5, pos_3p = 20,
-    min_reads = 2, tag = "pa", tag_values = 3:300,
-    n_reads_per_chunk = 1e6, verbose = TRUE) {
-    if (pos_5p < 0 || pos_3p < 0) {
-        cli::cli_abort("pos_5p and pos_3p must be positive integers")
+find_mispriming_sites <- function(
+  bamfile,
+  fasta,
+  pos_5p = 5,
+  pos_3p = 20,
+  min_reads = 2,
+  tag = "pa",
+  tag_values = 3:300,
+  n_reads_per_chunk = 1e6,
+  verbose = TRUE
+) {
+  if (pos_5p < 0 || pos_3p < 0) {
+    cli::cli_abort("pos_5p and pos_3p must be positive integers")
+  }
+
+  tg_lst <- list(tag_values)
+  names(tg_lst) <- tag
+  sbp <- Rsamtools::ScanBamParam(tagFilter = tg_lst, tag = tag)
+  bf <- Rsamtools::BamFile(bamfile, yieldSize = n_reads_per_chunk)
+  open(bf)
+  pa_pks <- GRanges()
+  repeat {
+    # should only return reads with pa tag set
+    galn <- GenomicAlignments::readGAlignments(bf, param = sbp)
+
+    if (length(galn) == 0) break
+    gr <- as(galn, "GRanges")
+    if (verbose) {
+      s_ivl <- gr[1]
+      e_ivl <- gr[length(gr)]
+      message("working on ", s_ivl, " to ", e_ivl)
     }
 
-    tg_lst <- list(tag_values)
-    names(tg_lst) <- tag
-    sbp <- Rsamtools::ScanBamParam(tagFilter = tg_lst, tag = tag)
-    bf <- Rsamtools::BamFile(bamfile, yieldSize = n_reads_per_chunk)
-    open(bf)
-    pa_pks <- GRanges()
-    repeat {
-        # should only return reads with pa tag set
-        galn <- GenomicAlignments::readGAlignments(bf, param = sbp)
+    # count # of overlapping reads
+    ans <- merge_pa_peaks(gr)
+    pa_pks <- c(pa_pks, ans)
+  }
+  close(bf)
+  # merge again, handle edge cases between yieldsizes
+  mean_pal <- n_reads <- NULL
+  ans <- reduce(pa_pks, with.revmap = TRUE)
+  mcols(ans) <- aggregate(
+    pa_pks,
+    mcols(ans)$revmap,
+    mean_pal = mean(mean_pal),
+    n_reads = sum(n_reads),
+    drop = FALSE
+  )
 
-        if (length(galn) == 0) break
-        gr <- as(galn, "GRanges")
-        if (verbose) {
-            s_ivl <- gr[1]
-            e_ivl <- gr[length(gr)]
-            message("working on ", s_ivl, " to ", e_ivl)
-        }
+  # keep reads above threshold, slop, and merge adjacent misprimed regions
+  ans <- ans[ans$n_reads >= min_reads]
+  if (length(ans) == 0) {
+    return(empty_mispriming_record())
+  }
 
-        # count # of overlapping reads
-        ans <- merge_pa_peaks(gr)
-        pa_pks <- c(pa_pks, ans)
-    }
-    close(bf)
-    # merge again, handle edge cases between yieldsizes
-    mean_pal <- n_reads <- NULL
-    ans <- reduce(pa_pks, with.revmap = TRUE)
-    mcols(ans) <- aggregate(pa_pks,
-        mcols(ans)$revmap,
-        mean_pal = mean(mean_pal),
-        n_reads = sum(n_reads),
-        drop = FALSE
-    )
+  ans <- resize(ans, pos_3p + width(ans))
+  ans <- resize(ans, pos_5p + width(ans), fix = "end")
+  ans <- trim(ans)
 
-    # keep reads above threshold, slop, and merge adjacent misprimed regions
-    ans <- ans[ans$n_reads >= min_reads]
-    if (length(ans) == 0) {
-        return(empty_mispriming_record())
-    }
-
-    ans <- resize(ans, pos_3p + width(ans))
-    ans <- resize(ans, pos_5p + width(ans), fix = "end")
-    ans <- trim(ans)
-
-    res <- reduce(ans, with.revmap = TRUE)
-    mcols(res) <- aggregate(ans,
-        mcols(res)$revmap,
-        mean_pal = mean(mean_pal),
-        n_reads = sum(n_reads),
-        drop = FALSE
-    )
-    res$n_regions <- IRanges::grouplengths(res$grouping)
-    res$grouping <- NULL
-    res <- pa_seq_context(res, fasta)
-    res
+  res <- reduce(ans, with.revmap = TRUE)
+  mcols(res) <- aggregate(
+    ans,
+    mcols(res)$revmap,
+    mean_pal = mean(mean_pal),
+    n_reads = sum(n_reads),
+    drop = FALSE
+  )
+  res$n_regions <- IRanges::grouplengths(res$grouping)
+  res$grouping <- NULL
+  res <- pa_seq_context(res, fasta)
+  res
 }
 
 empty_mispriming_record <- function() {
-    col_types <- list(
-        n_reads = integer(),
-        n_regions = integer(),
-        A_freq = numeric()
-    )
-    df <- do.call(data.frame, col_types)
-    gr <- GRanges(c(seqnames = NULL, ranges = NULL, strand = NULL))
-    mcols(gr) <- df
-    gr
+  col_types <- list(
+    n_reads = integer(),
+    n_regions = integer(),
+    A_freq = numeric()
+  )
+  df <- do.call(data.frame, col_types)
+  gr <- GRanges(c(seqnames = NULL, ranges = NULL, strand = NULL))
+  mcols(gr) <- df
+  gr
 }
 
 #' @import GenomicRanges
 merge_pa_peaks <- function(gr) {
-    # get 3' end of read
-    start(gr[strand(gr) == "+"]) <- end(gr[strand(gr) == "+"])
-    end(gr[strand(gr) == "-"]) <- start(gr[strand(gr) == "-"])
+  # get 3' end of read
+  start(gr[strand(gr) == "+"]) <- end(gr[strand(gr) == "+"])
+  end(gr[strand(gr) == "-"]) <- start(gr[strand(gr) == "-"])
 
-    # merge and count reads within merged ivls
-    pa <- NULL
-    ans <- reduce(gr, with.revmap = TRUE)
-    mcols(ans) <- aggregate(gr,
-        mcols(ans)$revmap,
-        mean_pal = mean(pa),
-        drop = FALSE
-    )
-    mcols(ans)$n_reads <- grouplengths(ans$grouping)
-    ans
+  # merge and count reads within merged ivls
+  pa <- NULL
+  ans <- reduce(gr, with.revmap = TRUE)
+  mcols(ans) <- aggregate(
+    gr,
+    mcols(ans)$revmap,
+    mean_pal = mean(pa),
+    drop = FALSE
+  )
+  mcols(ans)$n_reads <- grouplengths(ans$grouping)
+  ans
 }
 
 #' @importFrom Rsamtools FaFile scanFa
 #' @importFrom Biostrings letterFrequency reverseComplement
 pa_seq_context <- function(gr, fasta) {
-    fa <- Rsamtools::FaFile(fasta)
-    seqs <- Rsamtools::scanFa(fa, gr)
-    rvcomp <- Biostrings::reverseComplement(seqs[strand(gr) == "-"])
-    seqs[strand(gr) == "-"] <- rvcomp
-    a_prop <- Biostrings::letterFrequency(seqs, "A") / width(gr)
-    mcols(gr)$A_freq <- a_prop[, 1]
-    gr
+  fa <- Rsamtools::FaFile(fasta)
+  seqs <- Rsamtools::scanFa(fa, gr)
+  rvcomp <- Biostrings::reverseComplement(seqs[strand(gr) == "-"])
+  seqs[strand(gr) == "-"] <- rvcomp
+  a_prop <- Biostrings::letterFrequency(seqs, "A") / width(gr)
+  mcols(gr)$A_freq <- a_prop[, 1]
+  gr
 }
 
 # workaround for seqinfo(bam) which will issue a false positive warning
@@ -216,54 +227,59 @@ pa_seq_context <- function(gr, fasta) {
 #' @importFrom Rsamtools scanBamHeader
 #' @importFrom GenomeInfoDb Seqinfo
 seqinfo_from_header <- function(bam) {
-    stopifnot(length(bam) == 1)
-    stopifnot(is(bam, "BamFile"))
-    ctigs <- Rsamtools::scanBamHeader(path(bam),
-        index = index(bam)
-    )[[1]]$targets
-    GenomeInfoDb::Seqinfo(names(ctigs), ctigs)
+  stopifnot(length(bam) == 1)
+  stopifnot(is(bam, "BamFile"))
+  ctigs <- Rsamtools::scanBamHeader(path(bam), index = index(bam))[[1]]$targets
+  GenomeInfoDb::Seqinfo(names(ctigs), ctigs)
 }
 
 
 comp_bases <- function(x) {
-    xx <- Biostrings::complement(Biostrings::DNAStringSet(x))
-    as.character(xx)
+  xx <- Biostrings::complement(Biostrings::DNAStringSet(x))
+  as.character(xx)
 }
 
 # Check is ALT allele matches snpDB allele
 check_snp_match <- function(x, snp_col = "snp_alt_alleles", stranded = TRUE) {
-    stopifnot(all(c(snp_col, "ALT") %in%
-        colnames(mcols(x))))
+  stopifnot(all(
+    c(snp_col, "ALT") %in%
+      colnames(mcols(x))
+  ))
 
-    alt <- mcols(x)$ALT
-    snp_seq_str <- mcols(x)[[snp_col]]
-    snp_seqs <- strsplit(snp_seq_str, ",")
+  alt <- mcols(x)$ALT
+  snp_seq_str <- mcols(x)[[snp_col]]
+  snp_seqs <- strsplit(snp_seq_str, ",")
 
-    # convert ALT to + strand representation to match SNP sequence
-    # representation
-    if (stranded) {
-        is_minus <- as.logical(strand(x) == "-")
-        alt[is_minus] <- comp_bases(alt[is_minus])
-    }
+  # convert ALT to + strand representation to match SNP sequence
+  # representation
+  if (stranded) {
+    is_minus <- as.logical(strand(x) == "-")
+    alt[is_minus] <- comp_bases(alt[is_minus])
+  }
 
-    res <- mapply(function(x, y) {
-        x %in% y
-    }, decode(alt), snp_seqs, USE.NAMES = FALSE)
-    # set sites without a SNP to NA
-    res[snp_seq_str == ""] <- NA
-    res
+  res <- mapply(
+    function(x, y) {
+      x %in% y
+    },
+    decode(alt),
+    snp_seqs,
+    USE.NAMES = FALSE
+  )
+  # set sites without a SNP to NA
+  res[snp_seq_str == ""] <- NA
+  res
 }
 
 check_tag <- function(tag) {
-    if (!is.null(tag)) {
-        if (length(tag) != 1 && nchar(tag) != 2) {
-            tag_variable <- as.list(match.call())$tag
-            cli::cli_abort(
-                "{tag_variable} must be a character(1) with nchar of 2"
-            )
-        }
-    } else {
-        tag <- character()
+  if (!is.null(tag)) {
+    if (length(tag) != 1 && nchar(tag) != 2) {
+      tag_variable <- as.list(match.call())$tag
+      cli::cli_abort(
+        "{tag_variable} must be a character(1) with nchar of 2"
+      )
     }
-    tag
+  } else {
+    tag <- character()
+  }
+  tag
 }

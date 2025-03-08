@@ -18,31 +18,32 @@
 #'
 #' @export
 filter_multiallelic <- function(se) {
-    n_in <- nrow(se)
-    is_not_multiallelic <- apply(assay(se, "ALT"), 1, function(x) {
-        x <- unique(x[x != "-"])
-        if (length(x) == 0 | length(x) >= 2) {
-            return(NA)
-        }
-        !grepl(",", x)
-    })
-    se <- se[which(is_not_multiallelic), ]
-    rowData(se)$ALT <- apply(
-        assay(se, "ALT"),
-        1,
-        function(x) unique(x[x != "-"])
-    )
+  n_in <- nrow(se)
+  is_not_multiallelic <- apply(assay(se, "ALT"), 1, function(x) {
+    x <- unique(x[x != "-"])
+    if (length(x) == 0 | length(x) >= 2) {
+      return(NA)
+    }
+    !grepl(",", x)
+  })
+  se <- se[which(is_not_multiallelic), ]
+  rowData(se)$ALT <- apply(
+    assay(se, "ALT"),
+    1,
+    function(x) unique(x[x != "-"])
+  )
 
-    n_filt <- sum(c(is.na(is_not_multiallelic), !is_not_multiallelic),
-        na.rm = TRUE
+  n_filt <- sum(
+    c(is.na(is_not_multiallelic), !is_not_multiallelic),
+    na.rm = TRUE
+  )
+  cli::cli_alert_info(
+    c(
+      "{.fun filter_multiallelic}: removed {.val {n_filt}} sites",
+      " from {.val {n_in}} ({.val {nrow(se)}} remain)"
     )
-    cli::cli_alert_info(
-        c(
-            "{.fun filter_multiallelic}: removed {.val {n_filt}} sites",
-            " from {.val {n_in}} ({.val {nrow(se)}} remain)"
-        )
-    )
-    se
+  )
+  se
 }
 
 #' Extract regions surrounding splice sites
@@ -67,29 +68,31 @@ filter_multiallelic <- function(se) {
 #'
 #' @export
 get_splice_sites <- function(txdb, slop = 4) {
-    if (!is(txdb, "TxDb")) {
-        cli::cli_abort("txdb must be a TxDb object")
-    }
+  if (!is(txdb, "TxDb")) {
+    cli::cli_abort("txdb must be a TxDb object")
+  }
 
-    int_gr <- GenomicFeatures::intronsByTranscript(txdb)
-    int_gr <- unlist(int_gr)
+  int_gr <- GenomicFeatures::intronsByTranscript(txdb)
+  int_gr <- unlist(int_gr)
 
-    int_start <- GRanges(seqnames(int_gr),
-        IRanges(
-            start(int_gr) - slop,
-            start(int_gr) + slop - 1
-        ),
-        strand = strand(int_gr)
-    )
-    int_end <- GRanges(seqnames(int_gr),
-        IRanges(
-            end(int_gr) - slop + 1,
-            end(int_gr) + slop
-        ),
-        strand = strand(int_gr)
-    )
-    int_pos <- c(int_start, int_end)
-    sort(int_pos)
+  int_start <- GRanges(
+    seqnames(int_gr),
+    IRanges(
+      start(int_gr) - slop,
+      start(int_gr) + slop - 1
+    ),
+    strand = strand(int_gr)
+  )
+  int_end <- GRanges(
+    seqnames(int_gr),
+    IRanges(
+      end(int_gr) - slop + 1,
+      end(int_gr) + slop
+    ),
+    strand = strand(int_gr)
+  )
+  int_pos <- c(int_start, int_end)
+  sort(int_pos)
 }
 
 #' Filter out sites near splice sites
@@ -108,7 +111,7 @@ get_splice_sites <- function(txdb, slop = 4) {
 #' @examples
 #' if(require("txdbmaker")) {
 #'   rse_adar_ifn <- mock_rse()
-#'  
+#'
 #'   # mock up a txdb with genes
 #'   gr <- GRanges(c(
 #'       "DHFR:310-330:-",
@@ -123,10 +126,10 @@ get_splice_sites <- function(txdb, slop = 4) {
 #'   gr$gene_id <- c(1, 1, 2, 2)
 #'   gr$transcript_id <- rep(c("1.1", "2.1"), each = 2)
 #'   txdb <- txdbmaker::makeTxDbFromGRanges(gr)
-#'  
+#'
 #'   filter_splice_variants(rse_adar_ifn, txdb)
 #' }
-#' 
+#'
 #'
 #' @returns `SummarizedExperiment::SummarizedExperiment` with sites
 #' adjacent to splice sites removed.
@@ -134,38 +137,38 @@ get_splice_sites <- function(txdb, slop = 4) {
 #' @importFrom GenomicFeatures intronsByTranscript
 #' @importFrom GenomeInfoDb keepSeqlevels
 #' @export
-filter_splice_variants <- function(rse, txdb,
-    splice_site_dist = 4,
-    ignore.strand = FALSE) {
-    n_in <- nrow(rse)
+filter_splice_variants <- function(
+  rse,
+  txdb,
+  splice_site_dist = 4,
+  ignore.strand = FALSE
+) {
+  n_in <- nrow(rse)
 
-    spl_sites <- get_splice_sites(txdb, splice_site_dist)
-    shared_seqs <- intersect(
-        seqnames(seqinfo(rse)),
-        seqnames(seqinfo(spl_sites))
-    )
-    if (length(shared_seqs) == 0) {
-        cli::cli_abort("No shared seqnames found between txdb and rse")
-    }
-    spl_sites <- spl_sites[seqnames(spl_sites) %in% shared_seqs, ]
-    spl_sites <- GenomeInfoDb::keepSeqlevels(spl_sites, shared_seqs)
-    x <- rowRanges(rse)
-    fo <- findOverlaps(x, spl_sites,
-        type = "any",
-        ignore.strand = ignore.strand
-    )
-    to_keep <- setdiff(seq_along(x), unique(queryHits(fo)))
+  spl_sites <- get_splice_sites(txdb, splice_site_dist)
+  shared_seqs <- intersect(
+    seqnames(seqinfo(rse)),
+    seqnames(seqinfo(spl_sites))
+  )
+  if (length(shared_seqs) == 0) {
+    cli::cli_abort("No shared seqnames found between txdb and rse")
+  }
+  spl_sites <- spl_sites[seqnames(spl_sites) %in% shared_seqs, ]
+  spl_sites <- GenomeInfoDb::keepSeqlevels(spl_sites, shared_seqs)
+  x <- rowRanges(rse)
+  fo <- findOverlaps(x, spl_sites, type = "any", ignore.strand = ignore.strand)
+  to_keep <- setdiff(seq_along(x), unique(queryHits(fo)))
 
-    n_filt <- length(to_keep)
-    cli::cli_alert_info(
-        c(
-            "{.fun filter_splice_variants}: ",
-            " removed {.val {n_in - n_filt}} sites",
-            " from {.val {n_in}} ({.val {n_filt}} remain)"
-        )
+  n_filt <- length(to_keep)
+  cli::cli_alert_info(
+    c(
+      "{.fun filter_splice_variants}: ",
+      " removed {.val {n_in - n_filt}} sites",
+      " from {.val {n_in}} ({.val {n_filt}} remain)"
     )
+  )
 
-    rse[to_keep, ]
+  rse[to_keep, ]
 }
 
 #' Filter out clustered sequence variants
@@ -188,7 +191,7 @@ filter_splice_variants <- function(rse, txdb,
 #' if(require("txdbmaker")){
 #'   rse_adar_ifn <- mock_rse()
 #'   rse <- rse_adar_ifn[seqnames(rse_adar_ifn) == "SPCS3"]
-#'  
+#'
 #'   # mock up a txdb with genes
 #'   gr <- GRanges(c(
 #'       "SPCS3:100-120:-",
@@ -201,12 +204,12 @@ filter_splice_variants <- function(rse, txdb,
 #'   gr$gene_id <- c(1, 2)
 #'   gr$transcript_id <- c("1.1", "2.1")
 #'   txdb <- txdbmaker::makeTxDbFromGRanges(gr)
-#'  
+#'
 #'   rse <- filter_multiallelic(rse)
 #'   filter_clustered_variants(rse, txdb, variant_dist = 10)
 #'
 #' }
-#' 
+#'
 #' @family se-filters
 #'
 #' @return `SummarizedExperiment::SummarizedExperiment` with sites removed from
@@ -214,90 +217,94 @@ filter_splice_variants <- function(rse, txdb,
 #'
 #' @importFrom GenomicFeatures mapToTranscripts
 #' @export
-filter_clustered_variants <- function(rse, txdb,
-    regions = c("transcript", "genome"),
-    variant_dist = 100) {
-    if (!is(txdb, "TxDb")) {
-        cli::cli_abort("txdb must be a TxDb object")
-    }
+filter_clustered_variants <- function(
+  rse,
+  txdb,
+  regions = c("transcript", "genome"),
+  variant_dist = 100
+) {
+  if (!is(txdb, "TxDb")) {
+    cli::cli_abort("txdb must be a TxDb object")
+  }
 
-    if (length(setdiff(regions, c("transcript", "genome"))) > 0) {
-        cli::cli_abort(
-            "only transcript and/or genome are valid arguments for region"
-        )
-    }
-
-    n_in <- nrow(rse)
-
-    x <- rowRanges(rse)
-
-    if ("genome" %in% regions) {
-        x_extend <- trim(x + variant_dist)
-        fo <- findOverlaps(x, x_extend)
-        fo_vars <- paste0(x[subjectHits(fo)]$REF, x[subjectHits(fo)]$ALT)
-        vars <- split(fo_vars, queryHits(fo))
-        to_keep <- names(vars)[unlist(lapply(
-            vars,
-            function(x) {
-                length(unique(x)) == 1
-            }
-        ))]
-
-        gn_keep <- as.integer(to_keep)
-    } else {
-        gn_keep <- seq_along(x)
-    }
-
-    if ("transcript" %in% regions) {
-        x_tx <- x
-        shared_seqs <- intersect(seqnames(x), seqnames(seqinfo(txdb)))
-        if (length(shared_seqs) == 0) {
-            cli::cli_abort("No shared seqnames found between txdb and rse")
-        }
-        x_tx <- x
-        x_tx$id <- seq_along(x)
-        x_tx <- x_tx[seqnames(x_tx) %in% shared_seqs]
-        x_tx <- keepSeqlevels(x_tx, shared_seqs)
-        tx_sites <- mapToTranscripts(x_tx,
-            txdb,
-            extractor.fun = GenomicFeatures::exonsBy
-        )
-        tx_sites$Var <- paste0(
-            x_tx[tx_sites$xHits]$REF,
-            x_tx[tx_sites$xHits]$ALT
-        )
-        tx_sites$id <- x_tx[tx_sites$xHits]$id
-        tx_sites <- sort(tx_sites)
-        tx_extend <- trim(tx_sites + variant_dist)
-
-        fo <- findOverlaps(tx_sites, tx_extend)
-        fo_vars <- tx_sites[subjectHits(fo)]$Var
-        vars <- split(fo_vars, queryHits(fo))
-        to_drop <- names(vars)[unlist(lapply(
-            vars,
-            function(x) {
-                length(unique(x)) > 1
-            }
-        ))]
-        tx_sites <- tx_sites[as.integer(to_drop)]
-        tx_keep <- setdiff(seq_along(x), unique(tx_sites$id))
-    } else {
-        tx_keep <- seq_along(x)
-    }
-
-    x <- x[intersect(gn_keep, tx_keep), ]
-
-    n_out <- length(x)
-
-    cli::cli_alert_info(
-        c(
-            "{.fun filter_clustered_variants}: ",
-            " removed {.val {n_in - n_out}} sites",
-            " from {.val {n_in}} ({.val {n_out}} remain)"
-        )
+  if (length(setdiff(regions, c("transcript", "genome"))) > 0) {
+    cli::cli_abort(
+      "only transcript and/or genome are valid arguments for region"
     )
+  }
 
-    rse[names(x), ]
+  n_in <- nrow(rse)
+
+  x <- rowRanges(rse)
+
+  if ("genome" %in% regions) {
+    x_extend <- trim(x + variant_dist)
+    fo <- findOverlaps(x, x_extend)
+    fo_vars <- paste0(x[subjectHits(fo)]$REF, x[subjectHits(fo)]$ALT)
+    vars <- split(fo_vars, queryHits(fo))
+    to_keep <- names(vars)[unlist(lapply(
+      vars,
+      function(x) {
+        length(unique(x)) == 1
+      }
+    ))]
+
+    gn_keep <- as.integer(to_keep)
+  } else {
+    gn_keep <- seq_along(x)
+  }
+
+  if ("transcript" %in% regions) {
+    x_tx <- x
+    shared_seqs <- intersect(seqnames(x), seqnames(seqinfo(txdb)))
+    if (length(shared_seqs) == 0) {
+      cli::cli_abort("No shared seqnames found between txdb and rse")
+    }
+    x_tx <- x
+    x_tx$id <- seq_along(x)
+    x_tx <- x_tx[seqnames(x_tx) %in% shared_seqs]
+    x_tx <- keepSeqlevels(x_tx, shared_seqs)
+    tx_sites <- mapToTranscripts(
+      x_tx,
+      txdb,
+      extractor.fun = GenomicFeatures::exonsBy
+    )
+    tx_sites$Var <- paste0(
+      x_tx[tx_sites$xHits]$REF,
+      x_tx[tx_sites$xHits]$ALT
+    )
+    tx_sites$id <- x_tx[tx_sites$xHits]$id
+    tx_sites <- sort(tx_sites)
+    tx_extend <- trim(tx_sites + variant_dist)
+
+    fo <- findOverlaps(tx_sites, tx_extend)
+    fo_vars <- tx_sites[subjectHits(fo)]$Var
+    vars <- split(fo_vars, queryHits(fo))
+    to_drop <- names(vars)[unlist(lapply(
+      vars,
+      function(x) {
+        length(unique(x)) > 1
+      }
+    ))]
+    tx_sites <- tx_sites[as.integer(to_drop)]
+    tx_keep <- setdiff(seq_along(x), unique(tx_sites$id))
+  } else {
+    tx_keep <- seq_along(x)
+  }
+
+  x <- x[intersect(gn_keep, tx_keep), ]
+
+  n_out <- length(x)
+
+  cli::cli_alert_info(
+    c(
+      "{.fun filter_clustered_variants}: ",
+      " removed {.val {n_in - n_out}} sites",
+      " from {.val {n_in}} ({.val {n_out}} remain)"
+    )
+  )
+
+  rse[names(x), ]
 }
 
 
@@ -338,37 +345,42 @@ filter_clustered_variants <- function(rse, txdb,
 #' @importFrom stats pbeta
 #' @export
 calc_confidence <- function(
-        se,
-        edit_to = "G",
-        edit_from = "A",
-        per_sample = FALSE,
-        exp_fraction = 0.01,
-        alpha = 0L,
-        beta = 0L) {
-    if (length(exp_fraction) != 1 || (exp_fraction < 0 || exp_fraction > 1)) {
-        cli::cli_abort("exp_fraction must be numeric(1) and between 0 and 1")
-    }
+  se,
+  edit_to = "G",
+  edit_from = "A",
+  per_sample = FALSE,
+  exp_fraction = 0.01,
+  alpha = 0L,
+  beta = 0L
+) {
+  if (length(exp_fraction) != 1 || (exp_fraction < 0 || exp_fraction > 1)) {
+    cli::cli_abort("exp_fraction must be numeric(1) and between 0 and 1")
+  }
 
-    if (length(alpha) != 1 || length(beta) != 1) {
-        cli::cli_abort("alpha and beta must be length 1")
-    }
+  if (length(alpha) != 1 || length(beta) != 1) {
+    cli::cli_abort("alpha and beta must be length 1")
+  }
 
-    edit_to <- paste0("n", edit_to)
-    edit_from <- paste0("n", edit_from)
-    alt <- assay(se, edit_to) + as.integer(beta)
-    ref <- assay(se, edit_from) + as.integer(alpha)
-    if (per_sample) {
-        nc <- ncol(se)
-        res <- vapply(seq_len(nc), function(i) {
-            1 - pbeta(exp_fraction, alt[, i], ref[, i])
-        }, FUN.VALUE = numeric(nrow(se)))
-        colnames(res) <- colnames(se)
-        assays(se)$confidence <- res
-    } else {
-        alt <- rowSums(alt)
-        ref <- rowSums(ref)
-        res <- 1 - pbeta(exp_fraction, alt, ref)
-        rowData(se)$confidence <- res
-    }
-    se
+  edit_to <- paste0("n", edit_to)
+  edit_from <- paste0("n", edit_from)
+  alt <- assay(se, edit_to) + as.integer(beta)
+  ref <- assay(se, edit_from) + as.integer(alpha)
+  if (per_sample) {
+    nc <- ncol(se)
+    res <- vapply(
+      seq_len(nc),
+      function(i) {
+        1 - pbeta(exp_fraction, alt[, i], ref[, i])
+      },
+      FUN.VALUE = numeric(nrow(se))
+    )
+    colnames(res) <- colnames(se)
+    assays(se)$confidence <- res
+  } else {
+    alt <- rowSums(alt)
+    ref <- rowSums(ref)
+    res <- 1 - pbeta(exp_fraction, alt, ref)
+    rowData(se)$confidence <- res
+  }
+  se
 }

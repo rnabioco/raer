@@ -79,62 +79,69 @@
 #'
 #' @rdname calc_scAEI
 #' @export
-calc_scAEI <- function(bamfiles, sites, cell_barcodes, param = FilterParam(),
-    edit_from = "A", edit_to = "G",
-    output_dir = NULL, return_sce = FALSE,
-    ...) {
-    if (is.null(output_dir)) {
-        output_dir <- tempdir()
-        outfns <- c("counts.mtx.gz", "sites.txt.gz", "barcodes.txt.gz")
-        outfns <- file.path(output_dir, outfns)
-        on.exit(unlink(outfns))
-    }
+calc_scAEI <- function(
+  bamfiles,
+  sites,
+  cell_barcodes,
+  param = FilterParam(),
+  edit_from = "A",
+  edit_to = "G",
+  output_dir = NULL,
+  return_sce = FALSE,
+  ...
+) {
+  if (is.null(output_dir)) {
+    output_dir <- tempdir()
+    outfns <- c("counts.mtx.gz", "sites.txt.gz", "barcodes.txt.gz")
+    outfns <- file.path(output_dir, outfns)
+    on.exit(unlink(outfns))
+  }
 
-    # if unstranded, only query w.r.t + strand
-    is_unstranded <- !param@library_type %in% c(1, 2)
-    is_minus <- strand(sites) == "-"
-    if (is_unstranded && sum(is_minus) > 0) {
-        sites[is_minus]$REF <- comp_bases(edit_from)
-        sites[is_minus]$ALT <- comp_bases(edit_to)
-        strand(sites[is_minus]) <- "+"
-    }
+  # if unstranded, only query w.r.t + strand
+  is_unstranded <- !param@library_type %in% c(1, 2)
+  is_minus <- strand(sites) == "-"
+  if (is_unstranded && sum(is_minus) > 0) {
+    sites[is_minus]$REF <- comp_bases(edit_from)
+    sites[is_minus]$ALT <- comp_bases(edit_to)
+    strand(sites[is_minus]) <- "+"
+  }
 
-    aei_sce <- pileup_cells(
-        bamfiles,
-        sites,
-        cell_barcodes,
-        output_directory = output_dir,
-        return_sce = TRUE,
-        param = param,
-        ...
-    )
+  aei_sce <- pileup_cells(
+    bamfiles,
+    sites,
+    cell_barcodes,
+    output_directory = output_dir,
+    return_sce = TRUE,
+    param = param,
+    ...
+  )
 
-    if (nrow(aei_sce) == 0) {
-        cli::cli_abort(c(
-            "no sites returned from pileup_cells",
-            "check input sites and filterParams"
-        ))
-    }
+  if (nrow(aei_sce) == 0) {
+    cli::cli_abort(c(
+      "no sites returned from pileup_cells",
+      "check input sites and filterParams"
+    ))
+  }
 
-    if (is_unstranded) {
-        aei_sce <- resolve_aei_regions(aei_sce)
-    }
+  if (is_unstranded) {
+    aei_sce <- resolve_aei_regions(aei_sce)
+  }
 
-    n_alt <- Matrix::colSums(assay(aei_sce, "nAlt"))
-    n_ref <- Matrix::colSums(assay(aei_sce, "nRef"))
-    aei <- 100 * (n_alt / (n_alt + n_ref))
-    res <- DataFrame(
-        row.names = colnames(aei_sce),
-        AEI = aei,
-        n_alt = n_alt,
-        n_ref = n_ref
-    )
+  n_alt <- Matrix::colSums(assay(aei_sce, "nAlt"))
+  n_ref <- Matrix::colSums(assay(aei_sce, "nRef"))
+  aei <- 100 * (n_alt / (n_alt + n_ref))
+  res <- DataFrame(
+    row.names = colnames(aei_sce),
+    AEI = aei,
+    n_alt = n_alt,
+    n_ref = n_ref
+  )
 
-    if (return_sce) {
-        colData(aei_sce) <- res
-        return(aei_sce)
-    }
-    res
+  if (return_sce) {
+    colData(aei_sce) <- res
+    return(aei_sce)
+  }
+  res
 }
 
 #' @param fasta Path to a genome fasta file
@@ -153,94 +160,95 @@ calc_scAEI <- function(bamfiles, sites, cell_barcodes, param = FilterParam(),
 #' @rdname calc_scAEI
 #' @export
 get_scAEI_sites <- function(
-        fasta,
-        genes,
-        alus,
-        edit_from = "A",
-        edit_to = "G") {
-    if (is(genes, "TxDb")) {
-        genes <- GenomicFeatures::genes(genes)
-    }
-    if (!is(genes, "GRanges")) {
-        cli::cli_abort("genes must be a GRanges or TxDb object")
-    }
-    if (!is(alus, "GRanges")) {
-        cli::cli_abort("alus must be a GRanges or TxDb object")
-    }
+  fasta,
+  genes,
+  alus,
+  edit_from = "A",
+  edit_to = "G"
+) {
+  if (is(genes, "TxDb")) {
+    genes <- GenomicFeatures::genes(genes)
+  }
+  if (!is(genes, "GRanges")) {
+    cli::cli_abort("genes must be a GRanges or TxDb object")
+  }
+  if (!is(alus, "GRanges")) {
+    cli::cli_abort("alus must be a GRanges or TxDb object")
+  }
 
-    mcols(alus) <- NULL
+  mcols(alus) <- NULL
 
-    # store an integer id to allow user to track sites corresponding to
-    # supplied alu
-    alus$id <- seq_along(alus)
-    gn_alus <- prep_genic_alu_regions(genes, alus)
-    aei_sites <- get_aei_site_positions(
-        gn_alus,
-        fasta,
-        edit_from
-    )
+  # store an integer id to allow user to track sites corresponding to
+  # supplied alu
+  alus$id <- seq_along(alus)
+  gn_alus <- prep_genic_alu_regions(genes, alus)
+  aei_sites <- get_aei_site_positions(
+    gn_alus,
+    fasta,
+    edit_from
+  )
 
-    aei_sites$ALT <- edit_to
+  aei_sites$ALT <- edit_to
 
-    # Rle encode to save memory
-    aei_sites$ALT <- S4Vectors::Rle(aei_sites$ALT)
-    aei_sites$id <- S4Vectors::Rle(aei_sites$id)
-    aei_sites
+  # Rle encode to save memory
+  aei_sites$ALT <- S4Vectors::Rle(aei_sites$ALT)
+  aei_sites$id <- S4Vectors::Rle(aei_sites$id)
+  aei_sites
 }
 
 prep_genic_alu_regions <- function(genes_gr, alu_gr) {
-    # annotate gene region strandedness
-    gns_ovl <- disjoin(genes_gr, with.revmap = TRUE, ignore.strand = TRUE)
-    gn_strands <- unique(extractList(strand(genes_gr), gns_ovl$revmap))
-    gn_strands[lengths(gn_strands) > 1] <- "*"
-    strand(gns_ovl) <- unlist(gn_strands)
+  # annotate gene region strandedness
+  gns_ovl <- disjoin(genes_gr, with.revmap = TRUE, ignore.strand = TRUE)
+  gn_strands <- unique(extractList(strand(genes_gr), gns_ovl$revmap))
+  gn_strands[lengths(gn_strands) > 1] <- "*"
+  strand(gns_ovl) <- unlist(gn_strands)
 
-    # annotate genic alus strandedness based on gene
-    hits <- findOverlaps(alu_gr, gns_ovl, ignore.strand = TRUE)
-    genic_alus <- alu_gr[queryHits(hits), ]
-    alu_gn_strands <- unique(strand(extractList(gns_ovl, hits)))
-    alu_gn_strands[lengths(alu_gn_strands) > 1] <- "*"
-    strand(genic_alus) <- unlist(alu_gn_strands[queryHits(hits), ])
+  # annotate genic alus strandedness based on gene
+  hits <- findOverlaps(alu_gr, gns_ovl, ignore.strand = TRUE)
+  genic_alus <- alu_gr[queryHits(hits), ]
+  alu_gn_strands <- unique(strand(extractList(gns_ovl, hits)))
+  alu_gn_strands[lengths(alu_gn_strands) > 1] <- "*"
+  strand(genic_alus) <- unlist(alu_gn_strands[queryHits(hits), ])
 
-    ss_alus <- genic_alus[strand(genic_alus) != "*"]
-    ds_alus <- genic_alus[strand(genic_alus) == "*"]
-    ss_alus$gene_strand <- "defined"
+  ss_alus <- genic_alus[strand(genic_alus) != "*"]
+  ds_alus <- genic_alus[strand(genic_alus) == "*"]
+  ss_alus$gene_strand <- "defined"
 
-    ds_alus <- rep(ds_alus, each = 2)
-    strand(ds_alus) <- c("+", "-")
-    ds_alus$gene_strand <- "ambiguous"
+  ds_alus <- rep(ds_alus, each = 2)
+  strand(ds_alus) <- c("+", "-")
+  ds_alus$gene_strand <- "ambiguous"
 
-    genic_alus <- unique(c(ss_alus, ds_alus))
-    genic_alus$gene_strand <- S4Vectors::Rle(genic_alus$gene_strand)
-    genic_alus
+  genic_alus <- unique(c(ss_alus, ds_alus))
+  genic_alus$gene_strand <- S4Vectors::Rle(genic_alus$gene_strand)
+  genic_alus
 }
 
 aei_site_positions <- function(base, seqs, gr) {
-    base_pos <- Biostrings::vmatchPattern(base, seqs)
-    tmp_gr <- gr
-    alu_base_gr <- rep(tmp_gr, elementNROWS(base_pos))
+  base_pos <- Biostrings::vmatchPattern(base, seqs)
+  tmp_gr <- gr
+  alu_base_gr <- rep(tmp_gr, elementNROWS(base_pos))
 
-    og_starts <- start(alu_base_gr)
-    og_ends <- end(alu_base_gr)
-    minus_as <- as.logical(strand(alu_base_gr) == "-")
-    si <- unlist(Biostrings::startIndex(base_pos))
-    start(alu_base_gr) <- og_starts + si - 1
-    start(alu_base_gr)[minus_as] <- og_ends[minus_as] - si[minus_as] + 1
-    end(alu_base_gr) <- start(alu_base_gr)
-    alu_base_gr
+  og_starts <- start(alu_base_gr)
+  og_ends <- end(alu_base_gr)
+  minus_as <- as.logical(strand(alu_base_gr) == "-")
+  si <- unlist(Biostrings::startIndex(base_pos))
+  start(alu_base_gr) <- og_starts + si - 1
+  start(alu_base_gr)[minus_as] <- og_ends[minus_as] - si[minus_as] + 1
+  end(alu_base_gr) <- start(alu_base_gr)
+  alu_base_gr
 }
 
 get_aei_site_positions <- function(gr, fasta, base) {
-    if (any(strand(gr) == "*")) {
-        cli::cli_abort("strand must be set to + or -")
-    }
-    alu_seqs <- Rsamtools::scanFa(fasta, gr)
-    minus_alus <- strand(gr) == "-"
-    alu_seqs[minus_alus] <- Biostrings::reverseComplement(alu_seqs[minus_alus])
-    res <- aei_site_positions(base, alu_seqs, gr)
-    res$REF <- base
-    res$REF <- S4Vectors::Rle(res$REF)
-    res
+  if (any(strand(gr) == "*")) {
+    cli::cli_abort("strand must be set to + or -")
+  }
+  alu_seqs <- Rsamtools::scanFa(fasta, gr)
+  minus_alus <- strand(gr) == "-"
+  alu_seqs[minus_alus] <- Biostrings::reverseComplement(alu_seqs[minus_alus])
+  res <- aei_site_positions(base, alu_seqs, gr)
+  res$REF <- base
+  res$REF <- S4Vectors::Rle(res$REF)
+  res
 }
 
 
@@ -248,84 +256,87 @@ get_aei_site_positions <- function(gr, fasta, base) {
 # follows approach described by Roth et al
 # https://doi.org/10.1038/s41592-019-0610-9
 resolve_aei_regions <- function(sce) {
-    # general approach for regions with overlapping annotations
-    # if there are mismatches, select strand with most mismatches
-    # if not, average the counts from the two strands
+  # general approach for regions with overlapping annotations
+  # if there are mismatches, select strand with most mismatches
+  # if not, average the counts from the two strands
 
-    d_sce <- sce[rowData(sce)$gene_strand == "defined"]
-    ud_sce <- sce[rowData(sce)$gene_strand != "defined"]
+  d_sce <- sce[rowData(sce)$gene_strand == "defined"]
+  ud_sce <- sce[rowData(sce)$gene_strand != "defined"]
 
-    nr <- Matrix::rowSums(assay(ud_sce, "nRef"))
-    na <- Matrix::rowSums(assay(ud_sce, "nAlt"))
+  nr <- Matrix::rowSums(assay(ud_sce, "nRef"))
+  na <- Matrix::rowSums(assay(ud_sce, "nAlt"))
 
-    v <- paste0(rowData(ud_sce)$REF, rowData(ud_sce)$ALT)
-    id <- rowData(ud_sce)$id
-    dat <- data.frame(rid = rownames(ud_sce), nr, na, v, id)
+  v <- paste0(rowData(ud_sce)$REF, rowData(ud_sce)$ALT)
+  id <- rowData(ud_sce)$id
+  dat <- data.frame(rid = rownames(ud_sce), nr, na, v, id)
 
-    sums <- rowsum(data.frame(nr, na),
-        decode(id),
-        reorder = FALSE
+  sums <- rowsum(data.frame(nr, na), decode(id), reorder = FALSE)
+  sites_to_average <- rownames(sums[sums$na == 0, ])
+
+  subset_dat <- dat[!dat$id %in% sites_to_average, ]
+  sdat <- split(subset_dat, subset_dat$id)
+
+  # select strand based on most mismatches
+  vdat <- vapply(
+    sdat,
+    function(x) {
+      rs <- rowsum(x$na, x$v)
+      rownames(rs)[which.max(rs)]
+    },
+    FUN.VALUE = character(1)
+  )
+  vdat <- unlist(vdat)
+
+  vvals <- vdat[as.character(subset_dat$id)]
+  sites_to_keep <- subset_dat[subset_dat$v == vvals, ]
+
+  res <- d_sce
+  if (length(sites_to_keep > 0)) {
+    res_sce <- ud_sce[sites_to_keep$rid, ]
+    res <- rbind(res, res_sce)
+  }
+
+  if (length(sites_to_average) > 0) {
+    sce_to_avg <- ud_sce[rowData(ud_sce)$id %in% sites_to_average, ]
+    anr <- rowsum(
+      assay(sce_to_avg, "nRef"),
+      paste0(rowData(sce_to_avg)$var, "_", rowData(sce_to_avg)$id),
+      reorder = FALSE
     )
-    sites_to_average <- rownames(sums[sums$na == 0, ])
 
-    subset_dat <- dat[!dat$id %in% sites_to_average, ]
-    sdat <- split(subset_dat, subset_dat$id)
+    ids <- unlist(lapply(strsplit(rownames(anr), "_"), "[", 2))
+    ns <- lengths(split(ids, ids))
+    anr <- rowsum(anr, ids)
 
-    # select strand based on most mismatches
-    vdat <- vapply(sdat, function(x) {
-        rs <- rowsum(x$na, x$v)
-        rownames(rs)[which.max(rs)]
-    }, FUN.VALUE = character(1))
-    vdat <- unlist(vdat)
+    stopifnot(length(ns) == nrow(anr))
+    stopifnot(all(names(ns) == rownames(anr)))
 
-    vvals <- vdat[as.character(subset_dat$id)]
-    sites_to_keep <- subset_dat[subset_dat$v == vvals, ]
+    avg_nref <- anr / ns
+    avg_nalt <- avg_nref
+    avg_nalt[] <- 0
 
-    res <- d_sce
-    if (length(sites_to_keep > 0)) {
-        res_sce <- ud_sce[sites_to_keep$rid, ]
-        res <- rbind(res, res_sce)
-    }
+    # figure out ranges and names for average coords
+    rr <- rowRanges(sce_to_avg)
+    stopifnot(all(as.character(rr$id) %in% rownames(avg_nref)))
+    avg_nref <- avg_nref[unique(as.character(rr$id)), , drop = FALSE]
+    avg_nalt <- avg_nalt[unique(as.character(rr$id)), , drop = FALSE]
+    srr <- split(rr, rr$id)
+    new_ranges <- GRanges(
+      unlist(unique(seqnames(srr))),
+      IRanges(
+        min(start(srr)),
+        max(end(srr))
+      ),
+      id = names(srr)
+    )
+    names(new_ranges) <- paste0("range_mean_", seq_along(new_ranges))
 
-    if (length(sites_to_average) > 0) {
-        sce_to_avg <- ud_sce[rowData(ud_sce)$id %in% sites_to_average, ]
-        anr <- rowsum(assay(sce_to_avg, "nRef"),
-            paste0(rowData(sce_to_avg)$var, "_", rowData(sce_to_avg)$id),
-            reorder = FALSE
-        )
-
-        ids <- unlist(lapply(strsplit(rownames(anr), "_"), "[", 2))
-        ns <- lengths(split(ids, ids))
-        anr <- rowsum(anr, ids)
-
-        stopifnot(length(ns) == nrow(anr))
-        stopifnot(all(names(ns) == rownames(anr)))
-
-        avg_nref <- anr / ns
-        avg_nalt <- avg_nref
-        avg_nalt[] <- 0
-
-        # figure out ranges and names for average coords
-        rr <- rowRanges(sce_to_avg)
-        stopifnot(all(as.character(rr$id) %in% rownames(avg_nref)))
-        avg_nref <- avg_nref[unique(as.character(rr$id)), , drop = FALSE]
-        avg_nalt <- avg_nalt[unique(as.character(rr$id)), , drop = FALSE]
-        srr <- split(rr, rr$id)
-        new_ranges <- GRanges(unlist(unique(seqnames(srr))),
-            IRanges(
-                min(start(srr)),
-                max(end(srr))
-            ),
-            id = names(srr)
-        )
-        names(new_ranges) <- paste0("range_mean_", seq_along(new_ranges))
-
-        avg_sce_res <- SingleCellExperiment(list(
-            nRef = avg_nref,
-            nAlt = avg_nalt
-        ))
-        rowRanges(avg_sce_res) <- new_ranges
-        res <- rbind(res, avg_sce_res)
-    }
-    res
+    avg_sce_res <- SingleCellExperiment(list(
+      nRef = avg_nref,
+      nAlt = avg_nalt
+    ))
+    rowRanges(avg_sce_res) <- new_ranges
+    res <- rbind(res, avg_sce_res)
+  }
+  res
 }
