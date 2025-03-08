@@ -65,261 +65,285 @@
 #' @import GenomicRanges
 #'
 #' @export
-calc_AEI <- function(bamfiles,
-    fasta,
-    alu_ranges = NULL,
-    txdb = NULL,
-    snp_db = NULL,
-    param = FilterParam(),
-    BPPARAM = SerialParam(),
-    verbose = FALSE) {
-    if (!is(bamfiles, "BamFileList")) {
-        if (is.null(names(bamfiles))) {
-            names(bamfiles) <- bamfiles
-        }
-        bamfiles <- BamFileList(bamfiles)
+calc_AEI <- function(
+  bamfiles,
+  fasta,
+  alu_ranges = NULL,
+  txdb = NULL,
+  snp_db = NULL,
+  param = FilterParam(),
+  BPPARAM = SerialParam(),
+  verbose = FALSE
+) {
+  if (!is(bamfiles, "BamFileList")) {
+    if (is.null(names(bamfiles))) {
+      names(bamfiles) <- bamfiles
+    }
+    bamfiles <- BamFileList(bamfiles)
+  }
+
+  chroms <- seqnames(seqinfo_from_header(bamfiles[[1]]))
+
+  if (is.null(alu_ranges)) {
+    cli::cli_alert_warning(c(
+      "Querying the whole genome will be very ",
+      "memory intensive and inaccurate.\n",
+      "Consider supplying a GRanges object with ALU",
+      "or related repeats for your species "
+    ))
+  }
+
+  genes_gr <- NULL
+  alu_bed_fn <- NULL
+  if (param@library_type == 0) {
+    if (is.null(txdb)) {
+      cli::cli_abort("txdb required for processing unstranded data")
     }
 
-    chroms <- seqnames(seqinfo_from_header(bamfiles[[1]]))
-
-    if (is.null(alu_ranges)) {
-        cli::cli_alert_warning(c(
-            "Querying the whole genome will be very ",
-            "memory intensive and inaccurate.\n",
-            "Consider supplying a GRanges object with ALU",
-            "or related repeats for your species "
-        ))
+    if (is(txdb, "TxDb")) {
+      genes_gr <- GenomicFeatures::genes(txdb)
+    } else {
+      genes_gr <- txdb
     }
+  }
 
-    genes_gr <- NULL
-    alu_bed_fn <- NULL
-    if (param@library_type == 0) {
-        if (is.null(txdb)) {
-            cli::cli_abort("txdb required for processing unstranded data")
-        }
-
+  if (!is.null(alu_ranges)) {
+    if (is(alu_ranges, "GRanges")) {
+      if (!is.null(txdb)) {
         if (is(txdb, "TxDb")) {
-            genes_gr <- GenomicFeatures::genes(txdb)
+          genes_gr <- GenomicFeatures::genes(txdb)
         } else {
-            genes_gr <- txdb
+          genes_gr <- txdb
         }
-    }
-
-    if (!is.null(alu_ranges)) {
-        if (is(alu_ranges, "GRanges")) {
-            if (!is.null(txdb)) {
-                if (is(txdb, "TxDb")) {
-                    genes_gr <- GenomicFeatures::genes(txdb)
-                } else {
-                    genes_gr <- txdb
-                }
-                alu_ranges <- subsetByOverlaps(alu_ranges,
-                    genes_gr,
-                    ignore.strand = TRUE
-                )
-                alu_ranges <- reduce(alu_ranges)
-            }
-            chroms <- intersect(
-                chroms,
-                as.character(unique(seqnames(alu_ranges)))
-            )
-
-            alu_ranges <- alu_ranges[seqnames(alu_ranges) %in% chroms]
-        } else {
-            cli::cli_abort("unrecognized format for alu_ranges")
-        }
-    }
-
-    snps <- NULL
-    if (!is.null(snp_db)) {
-        if (is(snp_db, "GRanges") || is(snp_db, "GPos")) {
-            if (is(alu_ranges, "GRanges")) {
-                snps <- subsetByOverlaps(snp_db, alu_ranges)
-            } else {
-                snps <- snp_db
-            }
-        } else if (is(snp_db, "ODLT_SNPlocs")) {
-            if (is(alu_ranges, "GRanges")) {
-                alu_style <- seqlevelsStyle(alu_ranges)
-                snp_style <- seqlevelsStyle(snp_db)
-                if (!any(alu_style %in% snp_style)) {
-                    cli::cli_alert_warning(c(
-                        "seqlevels style in supplied snps ({snp_style}) ",
-                        "differs from alu_ranges ({alu_style}) ",
-                        "attempting to coerce"
-                    ))
-                    seqlevelsStyle(alu_ranges) <- snp_style
-                    snps <- snpsByOverlaps(snp_db, alu_ranges)
-                    seqlevelsStyle(snps) <- alu_style
-                } else {
-                    snps <- snpsByOverlaps(snp_db, alu_ranges)
-                }
-            } else {
-                cli::cli_abort(
-                    "removing snps using a SNPloc package requires alu_ranges"
-                )
-            }
-        } else {
-            cli::cli_abort("unknown snpdb object type")
-        }
-        snp_lst <- split(snps, seqnames(snps))
-        missing_chroms <- setdiff(chroms, names(snp_lst))
-        if (length(missing_chroms) > 0) {
-            missing_snp_lst <- lapply(missing_chroms, function(x) GRanges())
-            names(missing_snp_lst) <- missing_chroms
-            snp_lst <- c(snp_lst, missing_snp_lst)
-        }
-
-        snps <- snp_lst[chroms]
-    }
-    res <- list()
-    for (i in seq_along(bamfiles)) {
-        bam_fn <- bamfiles[i]
-        aei <- .AEI_per_bam(
-            bam_fn = bam_fn, fasta = fasta, chroms = chroms,
-            alu_ranges = alu_ranges, snps = snps, param = param,
-            genes_gr = genes_gr, verbose = verbose, BPPARAM = BPPARAM
+        alu_ranges <- subsetByOverlaps(
+          alu_ranges,
+          genes_gr,
+          ignore.strand = TRUE
         )
-        res[[path(bam_fn)]] <- aei
+        alu_ranges <- reduce(alu_ranges)
+      }
+      chroms <- intersect(
+        chroms,
+        as.character(unique(seqnames(alu_ranges)))
+      )
+
+      alu_ranges <- alu_ranges[seqnames(alu_ranges) %in% chroms]
+    } else {
+      cli::cli_abort("unrecognized format for alu_ranges")
+    }
+  }
+
+  snps <- NULL
+  if (!is.null(snp_db)) {
+    if (is(snp_db, "GRanges") || is(snp_db, "GPos")) {
+      if (is(alu_ranges, "GRanges")) {
+        snps <- subsetByOverlaps(snp_db, alu_ranges)
+      } else {
+        snps <- snp_db
+      }
+    } else if (is(snp_db, "ODLT_SNPlocs")) {
+      if (is(alu_ranges, "GRanges")) {
+        alu_style <- seqlevelsStyle(alu_ranges)
+        snp_style <- seqlevelsStyle(snp_db)
+        if (!any(alu_style %in% snp_style)) {
+          cli::cli_alert_warning(c(
+            "seqlevels style in supplied snps ({snp_style}) ",
+            "differs from alu_ranges ({alu_style}) ",
+            "attempting to coerce"
+          ))
+          seqlevelsStyle(alu_ranges) <- snp_style
+          snps <- snpsByOverlaps(snp_db, alu_ranges)
+          seqlevelsStyle(snps) <- alu_style
+        } else {
+          snps <- snpsByOverlaps(snp_db, alu_ranges)
+        }
+      } else {
+        cli::cli_abort(
+          "removing snps using a SNPloc package requires alu_ranges"
+        )
+      }
+    } else {
+      cli::cli_abort("unknown snpdb object type")
+    }
+    snp_lst <- split(snps, seqnames(snps))
+    missing_chroms <- setdiff(chroms, names(snp_lst))
+    if (length(missing_chroms) > 0) {
+      missing_snp_lst <- lapply(missing_chroms, function(x) GRanges())
+      names(missing_snp_lst) <- missing_chroms
+      snp_lst <- c(snp_lst, missing_snp_lst)
     }
 
-    aei <- do.call(rbind, lapply(res, "[[", 1))
-    rownames(aei) <- names(bamfiles)
+    snps <- snp_lst[chroms]
+  }
+  res <- list()
+  for (i in seq_along(bamfiles)) {
+    bam_fn <- bamfiles[i]
+    aei <- .AEI_per_bam(
+      bam_fn = bam_fn,
+      fasta = fasta,
+      chroms = chroms,
+      alu_ranges = alu_ranges,
+      snps = snps,
+      param = param,
+      genes_gr = genes_gr,
+      verbose = verbose,
+      BPPARAM = BPPARAM
+    )
+    res[[path(bam_fn)]] <- aei
+  }
 
-    aei_per_chrom <- lapply(seq_along(res), function(i) {
-        x <- res[[i]][[2]]
-        data.frame(x, row.names = NULL)
-    })
-    aei_per_chrom <- do.call(rbind, aei_per_chrom)
+  aei <- do.call(rbind, lapply(res, "[[", 1))
+  rownames(aei) <- names(bamfiles)
 
-    list(AEI = aei, AEI_per_chrom = aei_per_chrom)
+  aei_per_chrom <- lapply(seq_along(res), function(i) {
+    x <- res[[i]][[2]]
+    data.frame(x, row.names = NULL)
+  })
+  aei_per_chrom <- do.call(rbind, aei_per_chrom)
+
+  list(AEI = aei, AEI_per_chrom = aei_per_chrom)
 }
 
 
 .AEI_per_bam <- function(
-        bam_fn, fasta, chroms, alu_ranges, snps, param,
-        genes_gr, verbose,
-        BPPARAM = BiocParallel::SerialParam()) {
-    if (is.null(snps)) {
-        aei <- bpmapply(.calc_AEI_per_chrom,
-            chroms,
-            MoreArgs = list(
-                bam_fn = bam_fn,
-                fasta = fasta,
-                alu_sites = alu_ranges,
-                param = param,
-                snp_gr = NULL,
-                genes_gr = genes_gr,
-                verbose = verbose
-            ),
-            BPPARAM = BPPARAM,
-            SIMPLIFY = FALSE
-        )
-    } else {
-        if (length(chroms) != length(snps)) {
-            cli::cli_abort("issue subsetting snpDb and chromosomes")
-        }
-        aei <- bpmapply(.calc_AEI_per_chrom,
-            chroms,
-            snps,
-            MoreArgs = list(
-                bam_fn = bam_fn,
-                fasta = fasta,
-                alu_sites = alu_ranges,
-                param = param,
-                genes_gr = genes_gr,
-                verbose = verbose
-            ),
-            BPPARAM = BPPARAM,
-            SIMPLIFY = FALSE
-        )
+  bam_fn,
+  fasta,
+  chroms,
+  alu_ranges,
+  snps,
+  param,
+  genes_gr,
+  verbose,
+  BPPARAM = BiocParallel::SerialParam()
+) {
+  if (is.null(snps)) {
+    aei <- bpmapply(
+      .calc_AEI_per_chrom,
+      chroms,
+      MoreArgs = list(
+        bam_fn = bam_fn,
+        fasta = fasta,
+        alu_sites = alu_ranges,
+        param = param,
+        snp_gr = NULL,
+        genes_gr = genes_gr,
+        verbose = verbose
+      ),
+      BPPARAM = BPPARAM,
+      SIMPLIFY = FALSE
+    )
+  } else {
+    if (length(chroms) != length(snps)) {
+      cli::cli_abort("issue subsetting snpDb and chromosomes")
     }
-    bpstop(BPPARAM)
+    aei <- bpmapply(
+      .calc_AEI_per_chrom,
+      chroms,
+      snps,
+      MoreArgs = list(
+        bam_fn = bam_fn,
+        fasta = fasta,
+        alu_sites = alu_ranges,
+        param = param,
+        genes_gr = genes_gr,
+        verbose = verbose
+      ),
+      BPPARAM = BPPARAM,
+      SIMPLIFY = FALSE
+    )
+  }
+  bpstop(BPPARAM)
 
-    names(aei) <- chroms
-    aei <- lapply(seq_along(aei), function(x) {
-        vals <- aei[[x]]
-        id <- names(aei)[x]
-        xx <- as.data.frame(t(do.call(data.frame, vals)))
-        xx <- cbind(
-            chrom = id,
-            allele = rownames(xx),
-            xx
-        )
-        rownames(xx) <- NULL
-        xx
-    })
+  names(aei) <- chroms
+  aei <- lapply(seq_along(aei), function(x) {
+    vals <- aei[[x]]
+    id <- names(aei)[x]
+    xx <- as.data.frame(t(do.call(data.frame, vals)))
+    xx <- cbind(
+      chrom = id,
+      allele = rownames(xx),
+      xx
+    )
+    rownames(xx) <- NULL
+    xx
+  })
 
-    aei <- do.call(rbind, aei)
-    aei <- split(aei, aei$allele)
+  aei <- do.call(rbind, aei)
+  aei <- split(aei, aei$allele)
 
-    aei_summary <- lapply(aei, function(x) {
-        100 * (sum(x$alt) / (sum(x$ref) + sum(x$alt)))
-    })
-    aei_summary <- t(do.call(rbind, aei_summary))
+  aei_summary <- lapply(aei, function(x) {
+    100 * (sum(x$alt) / (sum(x$ref) + sum(x$alt)))
+  })
+  aei_summary <- t(do.call(rbind, aei_summary))
 
-    aei_per_chrom <- do.call(rbind, aei)
+  aei_per_chrom <- do.call(rbind, aei)
 
-    if (is.null(names(bam_fn))) {
-        rownames(aei_summary) <- bam_fn
-        aei_per_chrom$bam_file <- bam_fn
-    } else {
-        rownames(aei_summary) <- names(bam_fn)
-        aei_per_chrom$bam_file <- names(bam_fn)
-    }
+  if (is.null(names(bam_fn))) {
+    rownames(aei_summary) <- bam_fn
+    aei_per_chrom$bam_file <- bam_fn
+  } else {
+    rownames(aei_summary) <- names(bam_fn)
+    aei_per_chrom$bam_file <- names(bam_fn)
+  }
 
-    list(AEI = aei_summary, AEI_per_chrom = aei_per_chrom)
+  list(AEI = aei_summary, AEI_per_chrom = aei_per_chrom)
 }
 
-.calc_AEI_per_chrom <- function(bam_fn, fasta, alu_sites, chrom, param,
-    snp_gr, genes_gr, verbose) {
-    if (verbose) {
-        start <- Sys.time()
-        cli::cli_progress_step("working on: {chrom}")
+.calc_AEI_per_chrom <- function(
+  bam_fn,
+  fasta,
+  alu_sites,
+  chrom,
+  param,
+  snp_gr,
+  genes_gr,
+  verbose
+) {
+  if (verbose) {
+    start <- Sys.time()
+    cli::cli_progress_step("working on: {chrom}")
+  }
+  param@min_depth <- 1L
+  param@only_keep_variants <- FALSE
+
+  plp <- pileup_sites(
+    bam_fn,
+    fasta = fasta,
+    sites = alu_sites,
+    chroms = chrom,
+    param = param
+  )
+
+  if (length(snp_gr) > 0 && length(plp) > 0) {
+    plp <- keepSeqlevels(plp, chrom)
+    snp_gr <- keepSeqlevels(snp_gr, chrom)
+
+    plp <- subsetByOverlaps(plp, snp_gr, invert = TRUE, ignore.strand = TRUE)
+  }
+
+  if (param@library_type == 0L) {
+    plp <- correct_strand(plp, genes_gr)
+  }
+
+  bases <- c("A", "T", "C", "G")
+  var_list <- list()
+  for (i in seq_along(bases)) {
+    rb <- bases[i]
+    other_b <- setdiff(bases, rb)
+    j <- plp[rowData(plp)$REF == rb]
+    for (k in seq_along(other_b)) {
+      ab <- other_b[k]
+      id <- paste0(rb, "_", ab)
+      n_alt <- sum(assays(j)[[paste0("n", ab)]][, 1])
+      n_ref <- sum(assays(j)[[paste0("n", rb)]][, 1])
+      var_list[[id]] <- c(
+        alt = n_alt,
+        ref = n_ref,
+        prop = n_alt / (n_alt + n_ref)
+      )
     }
-    param@min_depth <- 1L
-    param@only_keep_variants <- FALSE
-
-    plp <- pileup_sites(bam_fn,
-        fasta = fasta,
-        sites = alu_sites,
-        chroms = chrom,
-        param = param
-    )
-
-    if (length(snp_gr) > 0 && length(plp) > 0) {
-        plp <- keepSeqlevels(plp, chrom)
-        snp_gr <- keepSeqlevels(snp_gr, chrom)
-
-        plp <- subsetByOverlaps(plp, snp_gr,
-            invert = TRUE,
-            ignore.strand = TRUE
-        )
-    }
-
-    if (param@library_type == 0L) {
-        plp <- correct_strand(plp, genes_gr)
-    }
-
-    bases <- c("A", "T", "C", "G")
-    var_list <- list()
-    for (i in seq_along(bases)) {
-        rb <- bases[i]
-        other_b <- setdiff(bases, rb)
-        j <- plp[rowData(plp)$REF == rb]
-        for (k in seq_along(other_b)) {
-            ab <- other_b[k]
-            id <- paste0(rb, "_", ab)
-            n_alt <- sum(assays(j)[[paste0("n", ab)]][, 1])
-            n_ref <- sum(assays(j)[[paste0("n", rb)]][, 1])
-            var_list[[id]] <- c(
-                alt = n_alt,
-                ref = n_ref,
-                prop = n_alt / (n_alt + n_ref)
-            )
-        }
-    }
-    var_list
+  }
+  var_list
 }
 
 
@@ -348,34 +372,28 @@ calc_AEI <- function(bamfiles,
 #' @importFrom BSgenome snpsByOverlaps
 #'
 #' @export
-get_overlapping_snps <- function(gr,
-    snpDb,
-    output_file = NULL) {
-    gr <- gr[seqnames(gr) %in% seqnames(snpDb)]
+get_overlapping_snps <- function(gr, snpDb, output_file = NULL) {
+  gr <- gr[seqnames(gr) %in% seqnames(snpDb)]
 
-    # iterate through each contig, drop mcols (snpID) to reduce memory
-    alu_snps <- vector("list", length = length(seqnames(snpDb)))
-    for (i in seq_along(seqnames(snpDb))) {
-        x <- seqnames(snpDb)[i]
-        tmp_gr <- gr[seqnames(gr) == x]
+  # iterate through each contig, drop mcols (snpID) to reduce memory
+  alu_snps <- vector("list", length = length(seqnames(snpDb)))
+  for (i in seq_along(seqnames(snpDb))) {
+    x <- seqnames(snpDb)[i]
+    tmp_gr <- gr[seqnames(gr) == x]
 
-        xx <- BSgenome::snpsByOverlaps(snpDb, tmp_gr)
-        mcols(xx) <- NULL
+    xx <- BSgenome::snpsByOverlaps(snpDb, tmp_gr)
+    mcols(xx) <- NULL
 
-        if (!is.null(output_file)) {
-            rtracklayer::export(xx,
-                output_file,
-                append = TRUE,
-                ignore.strand = TRUE
-            )
-        } else {
-            alu_snps[[i]] <- xx
-        }
-    }
     if (!is.null(output_file)) {
-        return(output_file)
+      rtracklayer::export(xx, output_file, append = TRUE, ignore.strand = TRUE)
+    } else {
+      alu_snps[[i]] <- xx
     }
-    unlist(as(alu_snps, "GRangesList"))
+  }
+  if (!is.null(output_file)) {
+    return(output_file)
+  }
+  unlist(as(alu_snps, "GRangesList"))
 }
 
 #' Apply strand correction using gene annotations
@@ -415,86 +433,88 @@ get_overlapping_snps <- function(gr,
 #'
 #' @export
 correct_strand <- function(rse, genes_gr) {
-    if (length(rse) == 0) {
-        return(rse)
-    }
+  if (length(rse) == 0) {
+    return(rse)
+  }
 
-    stopifnot(all(strand(rse) == "+"))
-    stopifnot("REF" %in% colnames(rowData(rse)))
-    stopifnot("ALT" %in% names(assays(rse)))
+  stopifnot(all(strand(rse) == "+"))
+  stopifnot("REF" %in% colnames(rowData(rse)))
+  stopifnot("ALT" %in% names(assays(rse)))
 
-    genes_gr$gene_strand <- strand(genes_gr)
-    rse <- annot_from_gr(rse, genes_gr, "gene_strand", ignore.strand = TRUE)
+  genes_gr$gene_strand <- strand(genes_gr)
+  rse <- annot_from_gr(rse, genes_gr, "gene_strand", ignore.strand = TRUE)
 
-    # drop non-genic and multi-strand (overlapping annotations)
-    rse <- rse[!is.na(rowData(rse)$gene_strand), ]
+  # drop non-genic and multi-strand (overlapping annotations)
+  rse <- rse[!is.na(rowData(rse)$gene_strand), ]
 
-    gs <- decode(rowData(rse)$gene_strand)
-    n_strands <- lengths(regmatches(gs, gregexpr(",", gs)))
-    rse <- rse[n_strands == 0, ]
+  gs <- decode(rowData(rse)$gene_strand)
+  n_strands <- lengths(regmatches(gs, gregexpr(",", gs)))
+  rse <- rse[n_strands == 0, ]
 
-    flip_rows <- as.vector(strand(rse) != rowData(rse)$gene_strand)
+  flip_rows <- as.vector(strand(rse) != rowData(rse)$gene_strand)
 
-    rowData(rse)$REF[flip_rows] <- comp_bases(rowData(rse)$REF[flip_rows])
+  rowData(rse)$REF[flip_rows] <- comp_bases(rowData(rse)$REF[flip_rows])
 
-    if ("ALT" %in% colnames(rowData(rse))) {
-        rowData(rse)$ALT[flip_rows] <- comp_bases(rowData(rse)$ALT[flip_rows])
-    }
+  if ("ALT" %in% colnames(rowData(rse))) {
+    rowData(rse)$ALT[flip_rows] <- comp_bases(rowData(rse)$ALT[flip_rows])
+  }
 
-    # complement the ALT variants
-    alts <- assay(rse, "ALT")[flip_rows, , drop = FALSE]
-    comp_alts <- complement_variant_matrix(alts)
-    assay(rse, "ALT")[flip_rows, ] <- comp_alts
+  # complement the ALT variants
+  alts <- assay(rse, "ALT")[flip_rows, , drop = FALSE]
+  comp_alts <- complement_variant_matrix(alts)
+  assay(rse, "ALT")[flip_rows, ] <- comp_alts
 
-    # complement the nucleotide counts by reordering the assays
-    assays_to_swap <- c("nA", "nT", "nC", "nG")
-    og_order <- rownames(rse)
-    sites_to_swap <- rse[flip_rows, , drop = FALSE]
+  # complement the nucleotide counts by reordering the assays
+  assays_to_swap <- c("nA", "nT", "nC", "nG")
+  og_order <- rownames(rse)
+  sites_to_swap <- rse[flip_rows, , drop = FALSE]
 
-    to_swap <- assays(sites_to_swap)[assays_to_swap]
-    to_swap <- to_swap[c(2, 1, 4, 3)]
-    names(to_swap) <- assays_to_swap
-    assays(sites_to_swap)[assays_to_swap] <- to_swap
+  to_swap <- assays(sites_to_swap)[assays_to_swap]
+  to_swap <- to_swap[c(2, 1, 4, 3)]
+  names(to_swap) <- assays_to_swap
+  assays(sites_to_swap)[assays_to_swap] <- to_swap
 
-    rse <- rbind(rse[!flip_rows, ], sites_to_swap)
-    rse <- rse[og_order, ]
+  rse <- rbind(rse[!flip_rows, ], sites_to_swap)
+  rse <- rse[og_order, ]
 
-    strand(rse) <- rowData(rse)$gene_strand
-    rowData(rse)$gene_strand <- NULL
-    rse
+  strand(rse) <- rowData(rse)$gene_strand
+  rowData(rse)$gene_strand <- NULL
+  rse
 }
 
 
 # complement the ALT assay matrix,
 # including multiallelics (e.g. c("A", "A,T", "C"))
 complement_variant_matrix <- function(alt_mat) {
-    stopifnot(all(!is.na(alt_mat)))
+  stopifnot(all(!is.na(alt_mat)))
 
-    # find multiallelics
-    n_alleles <- lengths(regmatches(alt_mat, gregexpr(",", alt_mat)))
+  # find multiallelics
+  n_alleles <- lengths(regmatches(alt_mat, gregexpr(",", alt_mat)))
 
-    # convert to a vector for processing
-    alts <- as.vector(alt_mat)
-    comp_alts <- alts
+  # convert to a vector for processing
+  alts <- as.vector(alt_mat)
+  comp_alts <- alts
 
-    # single allele sites
-    comp_alts[n_alleles == 0] <- comp_bases(alts[n_alleles == 0])
+  # single allele sites
+  comp_alts[n_alleles == 0] <- comp_bases(alts[n_alleles == 0])
 
-    # split and complement multiallelics
-    multialts <- alts[n_alleles > 0]
-    multialts <- vapply(
-        strsplit(multialts, ","), function(y) {
-            paste0(comp_bases(y), collapse = ",")
-        },
-        character(1)
-    )
-    comp_alts[n_alleles > 0] <- multialts
+  # split and complement multiallelics
+  multialts <- alts[n_alleles > 0]
+  multialts <- vapply(
+    strsplit(multialts, ","),
+    function(y) {
+      paste0(comp_bases(y), collapse = ",")
+    },
+    character(1)
+  )
+  comp_alts[n_alleles > 0] <- multialts
 
-    # get back to a matrix
-    comp_alts <- matrix(comp_alts,
-        nrow = nrow(alt_mat),
-        ncol = ncol(alt_mat),
-        dimnames = dimnames(alt_mat)
-    )
-    comp_alts
+  # get back to a matrix
+  comp_alts <- matrix(
+    comp_alts,
+    nrow = nrow(alt_mat),
+    ncol = ncol(alt_mat),
+    dimnames = dimnames(alt_mat)
+  )
+  comp_alts
 }
