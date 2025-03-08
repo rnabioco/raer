@@ -47,141 +47,146 @@
 #' @seealso [SNPlocs.Hsapiens.dbSNP144.GRCh38](https://bioconductor.org/packages/release/data/annotation/html/SNPlocs.Hsapiens.dbSNP144.GRCh38.html)
 #' @export
 annot_snps <- function(obj, ...) {
-    UseMethod("annot_snps", obj)
+  UseMethod("annot_snps", obj)
 }
 
 
 #' @rdname annot_snps
 #' @importFrom BSgenome snpsByOverlaps
 #' @export
-annot_snps.GRanges <- function(obj,
-    dbsnp,
-    chrom = NULL,
-    col_to_aggr = "RefSNP_id",
-    drop = FALSE,
-    genome = NULL,
-    RLE = TRUE,
-    ...) {
-    if (!is(dbsnp, "ODLT_SNPlocs")) {
-        cli::cli_abort(
-            "supplied dbSNP not valid SNP package, please install SNP db"
-        )
-    }
+annot_snps.GRanges <- function(
+  obj,
+  dbsnp,
+  chrom = NULL,
+  col_to_aggr = "RefSNP_id",
+  drop = FALSE,
+  genome = NULL,
+  RLE = TRUE,
+  ...
+) {
+  if (!is(dbsnp, "ODLT_SNPlocs")) {
+    cli::cli_abort(
+      "supplied dbSNP not valid SNP package, please install SNP db"
+    )
+  }
 
-    if (any(col_to_aggr %in% colnames(mcols(obj)))) {
-        cli::cli_abort(
-            "supplied column name in col_to_aggr already exists in input"
-        )
-    }
+  if (any(col_to_aggr %in% colnames(mcols(obj)))) {
+    cli::cli_abort(
+      "supplied column name in col_to_aggr already exists in input"
+    )
+  }
 
-    if (!is.null(chrom)) {
-        sites <- obj[seqnames(obj) == chrom]
-    } else {
-        sites <- obj
-    }
+  if (!is.null(chrom)) {
+    sites <- obj[seqnames(obj) == chrom]
+  } else {
+    sites <- obj
+  }
 
-    in_style <- seqlevelsStyle(sites)
-    snp_style <- seqlevelsStyle(dbsnp)
-    if (!any(in_style %in% snp_style)) {
-        cli::cli_alert_warning(c(
-            "seqlevels style in supplied snps ({snp_style}) ",
-            "differs from sites ({in_style}) ",
-            "attempting to coerce"
-        ))
-    }
+  in_style <- seqlevelsStyle(sites)
+  snp_style <- seqlevelsStyle(dbsnp)
+  if (!any(in_style %in% snp_style)) {
+    cli::cli_alert_warning(c(
+      "seqlevels style in supplied snps ({snp_style}) ",
+      "differs from sites ({in_style}) ",
+      "attempting to coerce"
+    ))
+  }
 
-    seqlevelsStyle(sites) <- snp_style
+  seqlevelsStyle(sites) <- snp_style
 
-    # returns GPos for each snp
-    snps <- snpsByOverlaps(dbsnp, sites, genome = genome)
+  # returns GPos for each snp
+  snps <- snpsByOverlaps(dbsnp, sites, genome = genome)
 
-    # now annot if site is a SNP
-    snp_overlaps <- findOverlaps(sites, snps, ignore.strand = TRUE)
+  # now annot if site is a SNP
+  snp_overlaps <- findOverlaps(sites, snps, ignore.strand = TRUE)
 
-    if (length(snp_overlaps) == 0) {
-        mcols(sites)[col_to_aggr] <- NA
-        seqlevelsStyle(sites) <- in_style
-        return(sites)
-    }
-
-    if (is.null(genome)) {
-        mcols(sites)[col_to_aggr] <- aggregate(
-            snps,
-            snp_overlaps,
-            snp = unstrsplit(eval(parse(text = col_to_aggr)), ","),
-            drop = FALSE
-        )$snp
-
-        if (RLE) {
-            col_rle <- S4Vectors::Rle(mcols(sites)[[col_to_aggr]])
-            mcols(sites)[col_to_aggr] <- col_rle
-        }
-    } else {
-        cols_exist <- any(c("snp_ref_allele", "snp_alt_alleles") %in%
-            colnames(mcols(obj)))
-        if (cols_exist) {
-            cli::cli_abort(
-                "snp_ref/alt_allele columns(s) already exist in input"
-            )
-        }
-
-        # prevent no visible binding for global variable note
-        alt_alleles <- ref_allele <- NULL
-
-        snps$alt_alleles <- vapply(snps$alt_alleles,
-            function(x) paste0(unique(x), collapse = ","),
-            FUN.VALUE = character(1)
-        )
-
-        snp_info <- aggregate(
-            snps,
-            snp_overlaps,
-            snp = unstrsplit(eval(parse(text = col_to_aggr)), ","),
-            ref_allele = unstrsplit(ref_allele),
-            alt_alleles = unstrsplit(alt_alleles),
-            drop = FALSE
-        )
-
-        snp_info$grouping <- NULL
-        snp_cols <- c(
-            col_to_aggr,
-            "snp_ref_allele",
-            "snp_alt_alleles"
-        )
-        colnames(snp_info) <- snp_cols
-
-        mcols(sites) <- cbind(mcols(sites), snp_info)
-
-        if ("ALT" %in% colnames(mcols(sites))) {
-            snp_cols <- c(snp_cols, "snp_matches_site")
-            mcols(sites)$snp_matches_site <- check_snp_match(sites)
-        }
-
-        if (RLE) {
-            mcols(sites)[snp_cols] <- lapply(
-                mcols(sites)[snp_cols],
-                S4Vectors::Rle
-            )
-        }
-    }
-
+  if (length(snp_overlaps) == 0) {
+    mcols(sites)[col_to_aggr] <- NA
     seqlevelsStyle(sites) <- in_style
+    return(sites)
+  }
 
-    if (drop) {
-        sites <- sites[!is.na(sites$snp)]
+  if (is.null(genome)) {
+    mcols(sites)[col_to_aggr] <- aggregate(
+      snps,
+      snp_overlaps,
+      snp = unstrsplit(eval(parse(text = col_to_aggr)), ","),
+      drop = FALSE
+    )$snp
+
+    if (RLE) {
+      col_rle <- S4Vectors::Rle(mcols(sites)[[col_to_aggr]])
+      mcols(sites)[col_to_aggr] <- col_rle
+    }
+  } else {
+    cols_exist <- any(
+      c("snp_ref_allele", "snp_alt_alleles") %in%
+        colnames(mcols(obj))
+    )
+    if (cols_exist) {
+      cli::cli_abort(
+        "snp_ref/alt_allele columns(s) already exist in input"
+      )
     }
 
-    sites
+    # prevent no visible binding for global variable note
+    alt_alleles <- ref_allele <- NULL
+
+    snps$alt_alleles <- vapply(
+      snps$alt_alleles,
+      function(x) paste0(unique(x), collapse = ","),
+      FUN.VALUE = character(1)
+    )
+
+    snp_info <- aggregate(
+      snps,
+      snp_overlaps,
+      snp = unstrsplit(eval(parse(text = col_to_aggr)), ","),
+      ref_allele = unstrsplit(ref_allele),
+      alt_alleles = unstrsplit(alt_alleles),
+      drop = FALSE
+    )
+
+    snp_info$grouping <- NULL
+    snp_cols <- c(
+      col_to_aggr,
+      "snp_ref_allele",
+      "snp_alt_alleles"
+    )
+    colnames(snp_info) <- snp_cols
+
+    mcols(sites) <- cbind(mcols(sites), snp_info)
+
+    if ("ALT" %in% colnames(mcols(sites))) {
+      snp_cols <- c(snp_cols, "snp_matches_site")
+      mcols(sites)$snp_matches_site <- check_snp_match(sites)
+    }
+
+    if (RLE) {
+      mcols(sites)[snp_cols] <- lapply(
+        mcols(sites)[snp_cols],
+        S4Vectors::Rle
+      )
+    }
+  }
+
+  seqlevelsStyle(sites) <- in_style
+
+  if (drop) {
+    sites <- sites[!is.na(sites$snp)]
+  }
+
+  sites
 }
 
 
 #' @rdname annot_snps
 #' @export
 annot_snps.SummarizedExperiment <- function(obj, ...) {
-    gr <- rowRanges(obj)
-    res <- annot_snps.GRanges(gr, ...)
-    mcols(rowRanges(obj)) <- mcols(res)
-    obj
+  gr <- rowRanges(obj)
+  res <- annot_snps.GRanges(gr, ...)
+  mcols(rowRanges(obj)) <- mcols(res)
+  obj
 }
 
 #' Annotate sites using GRanges object
@@ -222,57 +227,59 @@ annot_snps.SummarizedExperiment <- function(obj, ...) {
 #'
 #' @export
 annot_from_gr <- function(obj, gr, cols_to_map, RLE = TRUE, sep = ",", ...) {
-    if (is(obj, "RangedSummarizedExperiment")) {
-        gr_sites <- rowRanges(obj)
-        return_se <- TRUE
-    } else {
-        gr_sites <- obj
-        return_se <- FALSE
+  if (is(obj, "RangedSummarizedExperiment")) {
+    gr_sites <- rowRanges(obj)
+    return_se <- TRUE
+  } else {
+    gr_sites <- obj
+    return_se <- FALSE
+  }
+
+  overlaps <- findOverlaps(gr_sites, gr, ...)
+
+  if (!is.null(names(cols_to_map))) {
+    names(cols_to_map) <- ifelse(
+      names(cols_to_map) == "",
+      cols_to_map,
+      names(cols_to_map)
+    )
+  } else {
+    names(cols_to_map) <- cols_to_map
+  }
+
+  for (i in seq_along(cols_to_map)) {
+    col <- cols_to_map[[i]]
+    col_id <- names(cols_to_map)[i]
+    if (!col %in% names(mcols(gr))) {
+      cli::cli_abort("{col} not present in mcols() of input")
     }
+    mcols(gr)[[col]] <- as.character(mcols(gr)[[col]])
+    x <- aggregate(
+      gr,
+      overlaps,
+      tmp = unstrsplit(
+        unique(eval(parse(text = col))),
+        sep = sep
+      ),
+      drop = FALSE
+    )
+    x$tmp <- ifelse(x$tmp == "", NA, x$tmp)
+    mcols(gr_sites)[[col_id]] <- x$tmp
+  }
 
-    overlaps <- findOverlaps(gr_sites, gr, ...)
+  if (RLE) {
+    col_nms <- names(cols_to_map)
+    rls_clms <- lapply(col_nms, function(x) {
+      S4Vectors::Rle(mcols(gr_sites)[[x]])
+    })
+    mcols(gr_sites)[col_nms] <- rls_clms
+  }
 
-    if (!is.null(names(cols_to_map))) {
-        names(cols_to_map) <- ifelse(names(cols_to_map) == "",
-            cols_to_map,
-            names(cols_to_map)
-        )
-    } else {
-        names(cols_to_map) <- cols_to_map
-    }
+  if (return_se) {
+    mcols(rowRanges(obj)) <- mcols(gr_sites)
+  } else {
+    mcols(obj) <- mcols(gr_sites)
+  }
 
-    for (i in seq_along(cols_to_map)) {
-        col <- cols_to_map[[i]]
-        col_id <- names(cols_to_map)[i]
-        if (!col %in% names(mcols(gr))) {
-            cli::cli_abort("{col} not present in mcols() of input")
-        }
-        mcols(gr)[[col]] <- as.character(mcols(gr)[[col]])
-        x <- aggregate(gr,
-            overlaps,
-            tmp = unstrsplit(
-                unique(eval(parse(text = col))),
-                sep = sep
-            ),
-            drop = FALSE
-        )
-        x$tmp <- ifelse(x$tmp == "", NA, x$tmp)
-        mcols(gr_sites)[[col_id]] <- x$tmp
-    }
-
-    if (RLE) {
-        col_nms <- names(cols_to_map)
-        rls_clms <- lapply(col_nms, function(x) {
-            S4Vectors::Rle(mcols(gr_sites)[[x]])
-        })
-        mcols(gr_sites)[col_nms] <- rls_clms
-    }
-
-    if (return_se) {
-        mcols(rowRanges(obj)) <- mcols(gr_sites)
-    } else {
-        mcols(obj) <- mcols(gr_sites)
-    }
-
-    obj
+  obj
 }
