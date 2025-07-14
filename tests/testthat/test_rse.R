@@ -2,7 +2,8 @@ pkgs <- c(
   "GenomicRanges",
   "SummarizedExperiment",
   "rtracklayer",
-  "GenomicFeatures"
+  "GenomicFeatures",
+  "GenomeInfoDb"
 )
 
 msg <- lapply(pkgs, function(x) {
