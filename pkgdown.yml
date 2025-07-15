@@ -3,7 +3,7 @@ pkgdown: 2.1.3
 pkgdown_sha: ~
 articles:
   raer: raer.html
-last_built: 2025-07-14T18:24Z
+last_built: 2025-07-15T13:01Z
 urls:
   reference: https://rnabioco.github.io/raer/reference
   article: https://rnabioco.github.io/raer/articles
