@@ -97,7 +97,7 @@
 #' @importFrom Rsamtools index scanFaIndex seqinfo BamFile BamFileList
 #' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges
-#' @importFrom GenomeInfoDb seqlevels seqinfo seqlengths
+#' @importFrom Seqinfo seqlevels seqinfo seqlengths
 #' @importFrom BiocParallel SerialParam bpstop bplapply
 #'
 #' @family pileup
@@ -257,7 +257,7 @@ pileup_sites <- function(
 # supplied valid single region to process
 setup_valid_regions <- function(bam, chroms, region = NULL, fasta = NULL) {
   contigs <- seqinfo_from_header(bam)
-  contig_info <- GenomeInfoDb::seqlengths(contigs)
+  contig_info <- Seqinfo::seqlengths(contigs)
 
   if (is.null(chroms)) {
     chroms_to_process <- names(contig_info)

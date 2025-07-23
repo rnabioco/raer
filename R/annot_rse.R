@@ -223,7 +223,8 @@ annot_snps.SummarizedExperiment <- function(obj, ...) {
 #' rowData(rse)
 #'
 #' @importFrom S4Vectors aggregate unstrsplit
-#' @importFrom GenomeInfoDb seqlevelsStyle seqlevelsStyle<- seqlevels
+#' @importFrom Seqinfo seqlevels
+#' @importFrom GenomeInfoDb seqlevelsStyle seqlevelsStyle<-
 #'
 #' @export
 annot_from_gr <- function(obj, gr, cols_to_map, RLE = TRUE, sep = ",", ...) {

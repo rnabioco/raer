@@ -105,7 +105,7 @@
 #'
 #' unlink(bai)
 #'
-#' @importFrom GenomeInfoDb  seqinfo seqlengths
+#' @importFrom Seqinfo seqinfo seqlengths
 #' @importFrom Rsamtools ScanBamParam scanBamFlag
 #' @importFrom BiocParallel bpworkers
 #' @family pileup

@@ -225,12 +225,12 @@ pa_seq_context <- function(gr, fasta) {
 # via htslib (bam_index_load), prior to querying using the supplied index.
 #
 #' @importFrom Rsamtools scanBamHeader
-#' @importFrom GenomeInfoDb Seqinfo
+#' @importFrom Seqinfo Seqinfo
 seqinfo_from_header <- function(bam) {
   stopifnot(length(bam) == 1)
   stopifnot(is(bam, "BamFile"))
   ctigs <- Rsamtools::scanBamHeader(path(bam), index = index(bam))[[1]]$targets
-  GenomeInfoDb::Seqinfo(names(ctigs), ctigs)
+  Seqinfo::Seqinfo(names(ctigs), ctigs)
 }
 
 
