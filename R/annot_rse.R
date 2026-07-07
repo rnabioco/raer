@@ -107,12 +107,13 @@ annot_snps.GRanges <- function(
   }
 
   if (is.null(genome)) {
-    mcols(sites)[col_to_aggr] <- aggregate(
-      snps,
+    mcols(sites)[col_to_aggr] <- collapse_hits_annotations(
+      mcols(snps)[[col_to_aggr]],
       snp_overlaps,
-      snp = unstrsplit(eval(parse(text = col_to_aggr)), ","),
-      drop = FALSE
-    )$snp
+      length(sites),
+      sep = ",",
+      unique_values = FALSE
+    )
 
     if (RLE) {
       col_rle <- S4Vectors::Rle(mcols(sites)[[col_to_aggr]])
@@ -129,25 +130,27 @@ annot_snps.GRanges <- function(
       )
     }
 
-    # prevent no visible binding for global variable note
-    alt_alleles <- ref_allele <- NULL
-
     snps$alt_alleles <- vapply(
       snps$alt_alleles,
       function(x) paste0(unique(x), collapse = ","),
       FUN.VALUE = character(1)
     )
 
-    snp_info <- aggregate(
-      snps,
-      snp_overlaps,
-      snp = unstrsplit(eval(parse(text = col_to_aggr)), ","),
-      ref_allele = unstrsplit(ref_allele),
-      alt_alleles = unstrsplit(alt_alleles),
-      drop = FALSE
+    snp_info <- DataFrame(
+      collapse_hits_annotations(
+        mcols(snps)[[col_to_aggr]], snp_overlaps, length(sites),
+        sep = ",", unique_values = FALSE
+      ),
+      collapse_hits_annotations(
+        snps$ref_allele, snp_overlaps, length(sites),
+        sep = "", unique_values = FALSE
+      ),
+      collapse_hits_annotations(
+        snps$alt_alleles, snp_overlaps, length(sites),
+        sep = "", unique_values = FALSE
+      )
     )
 
-    snp_info$grouping <- NULL
     snp_cols <- c(
       col_to_aggr,
       "snp_ref_allele",
@@ -254,18 +257,13 @@ annot_from_gr <- function(obj, gr, cols_to_map, RLE = TRUE, sep = ",", ...) {
     if (!col %in% names(mcols(gr))) {
       cli::cli_abort("{col} not present in mcols() of input")
     }
-    mcols(gr)[[col]] <- as.character(mcols(gr)[[col]])
-    x <- aggregate(
-      gr,
+    tmp <- collapse_hits_annotations(
+      mcols(gr)[[col]],
       overlaps,
-      tmp = unstrsplit(
-        unique(eval(parse(text = col))),
-        sep = sep
-      ),
-      drop = FALSE
+      length(gr_sites),
+      sep = sep
     )
-    x$tmp <- ifelse(x$tmp == "", NA, x$tmp)
-    mcols(gr_sites)[[col_id]] <- x$tmp
+    mcols(gr_sites)[[col_id]] <- ifelse(tmp == "", NA, tmp)
   }
 
   if (RLE) {
@@ -283,4 +281,27 @@ annot_from_gr <- function(obj, gr, cols_to_map, RLE = TRUE, sep = ",", ...) {
   }
 
   obj
+}
+
+# Collapse subject-side annotation values onto each query interval, replicating
+# aggregate(x, hits, name = unstrsplit(<unique> col, sep), drop = FALSE)$name.
+# Implemented without S4Vectors::aggregate() because that function evaluates its
+# expressions in an environment built from the object's mcols columns, and in
+# recent S4Vectors versions this fails for any column lacking a same-named
+# accessor function (e.g. "swScore"), aborting with "object '<col>' of mode
+# 'function' was not found".
+collapse_hits_annotations <- function(values, hits, n_queries, sep = ",",
+                                      unique_values = TRUE) {
+  values <- as.character(values)
+  groups <- factor(queryHits(hits), levels = seq_len(n_queries))
+  parts <- split(values[subjectHits(hits)], groups)
+  # An empty group collapses to "" (as unstrsplit() does), which downstream
+  # code (e.g. check_snp_match()) uses to flag sites without an overlap.
+  out <- vapply(parts, function(v) {
+    if (unique_values) {
+      v <- unique(v)
+    }
+    paste0(v, collapse = sep)
+  }, character(1))
+  unname(out)
 }
