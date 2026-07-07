@@ -1,0 +1,273 @@
+# raer
+
+raer facilitates analysis of RNA adenosine editing in the
+[Bioconductor](https://bioconductor.org/) ecosystem.
+
+## Installation
+
+`raer` is available on
+[Bioconductor](https://bioconductor.org/packages/release/bioc/html/raer.html):
+
+``` r
+
+if (!require("BiocManager", quietly = TRUE)) {
+    install.packages("BiocManager")
+}
+
+BiocManager::install("raer")
+```
+
+You can install the development version of raer from
+[GitHub](https://github.com/rnabioco/raer) with:
+
+``` r
+
+BiocManager::install("rnabioco/raer")
+```
+
+## Quick start
+
+![raer workflow overview](reference/figures/raer_workflow.png)
+
+raer workflow overview
+
+raer provides methods to compute per site read count summaries from BAM
+alignment files, either for known editing sites, or for all detected
+sites.
+
+``` r
+
+library(raer)
+bam1fn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
+bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
+fafn <- raer_example("human.fasta")
+
+bams <- c("ko" = bam1fn, "wt" = bam2fn)
+
+rse <- pileup_sites(bams, fafn)
+```
+
+To facilitate comparisons across groups, base count data and genomic
+coordinates are stored in a `RangedSummarizedExperiment`.
+
+``` r
+
+suppressMessages(library(SummarizedExperiment))
+rse
+#> class: RangedSummarizedExperiment 
+#> dim: 1695 2 
+#> metadata(0):
+#> assays(7): ALT nRef ... nC nG
+#> rownames(1695): site_SSR3_1_2 site_SSR3_2_2 ... site_DHFR_517_2
+#>   site_DHFR_518_2
+#> rowData names(4): REF rpbz vdb sor
+#> colnames(2): ko wt
+#> colData names(1): sample
+assays(rse)
+#> List of length 7
+#> names(7): ALT nRef nAlt nA nT nC nG
+colData(rse)
+#> DataFrame with 2 rows and 1 column
+#>         sample
+#>    <character>
+#> ko          ko
+#> wt          wt
+```
+
+``` r
+
+assays(rse)$nRef[1:4, ]
+#>               ko wt
+#> site_SSR3_1_2 13 12
+#> site_SSR3_2_2 14 12
+#> site_SSR3_3_2 14 12
+#> site_SSR3_4_2 15 12
+assays(rse)$nAlt[1:4, ]
+#>               ko wt
+#> site_SSR3_1_2  0  0
+#> site_SSR3_2_2  0  0
+#> site_SSR3_3_2  0  0
+#> site_SSR3_4_2  0  0
+```
+
+The
+[`FilterParam()`](https://rnabioco.github.io/raer/reference/pileup_sites.md)
+class holds multiple options for customizing the output of
+[`pileup_sites()`](https://rnabioco.github.io/raer/reference/pileup_sites.md).
+
+``` r
+
+fp <- FilterParam(
+    only_keep_variants = TRUE,
+    library_type = "fr-first-strand",
+    min_depth = 2
+)
+
+rse <- pileup_sites(bams, fafn, param = fp)
+rse
+#> class: RangedSummarizedExperiment 
+#> dim: 74 2 
+#> metadata(0):
+#> assays(7): ALT nRef ... nC nG
+#> rownames(74): site_SSR3_102_2 site_SSR3_125_2 ... site_DHFR_430_2
+#>   site_DHFR_513_2
+#> rowData names(4): REF rpbz vdb sor
+#> colnames(2): ko wt
+#> colData names(1): sample
+```
+
+[`pileup_cells()`](https://rnabioco.github.io/raer/reference/pileup_cells.md)
+provides support for quantifying editing sites in single cell libraries.
+
+``` r
+
+scbam_fn <- raer_example("5k_neuron_mouse_possort.bam")
+outdir <- tempdir()
+
+editing_sites <- GRanges(
+    c(
+        "2:579:-",
+        "2:625:-",
+        "2:589:-"
+    ),
+    REF = "A",
+    ALT = "G"
+)
+
+cbs <- c(
+    "CACCAAACAACAACAA-1",
+    "TATTCCACACCCTCTA-1",
+    "GACCTTCAGTTGTAAG-1"
+)
+
+sce <- pileup_cells(scbam_fn,
+    sites = editing_sites,
+    cell_barcodes = cbs,
+    param = fp,
+    output_directory = outdir
+)
+sce
+#> class: SingleCellExperiment 
+#> dim: 3 3 
+#> metadata(0):
+#> assays(2): nRef nAlt
+#> rownames(3): site_2_579_2_AG site_2_625_2_AG site_2_589_2_AG
+#> rowData names(2): REF ALT
+#> colnames(3): CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
+#> colData names(0):
+#> reducedDimNames(0):
+#> mainExpName: NULL
+#> altExpNames(0):
+```
+
+``` r
+
+assays(sce)$nRef
+#> 3 x 3 sparse Matrix of class "dgCMatrix"
+#>                 CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
+#> site_2_579_2_AG                  0                  0                  1
+#> site_2_625_2_AG                  0                  0                  0
+#> site_2_589_2_AG                  1                  1                  2
+assays(sce)$nAlt
+#> 3 x 3 sparse Matrix of class "dgCMatrix"
+#>                 CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
+#> site_2_579_2_AG                  1                  1                  1
+#> site_2_625_2_AG                  1                  1                  1
+#> site_2_589_2_AG                  0                  0                  0
+```
+
+## Related work
+
+Core routines in `raer` are implemented using the `htslib` library and
+methods from `samtools` and `bcftools`. `raer` builds off of approaches
+from other RNA editing detection tools:
+
+- [REDItools](https://github.com/BioinfoUNIBA/REDItools) from [Picardi
+  E, Pesole G](https://doi.org/10.1093/bioinformatics/btt287)\
+- [JACUSA2](https://github.com/dieterich-lab/JACUSA2) from [Piechotta M
+  et al](https://doi.org/10.1186/s12859-016-1432-8)\
+- [deNovo-Detect](https://github.com/a2iEditing/deNovo-Detect) from
+  [Gabay O et al](https://doi.org/10.1038/s41467-022-28841-4)\
+- [RNAEditingIndexer](https://github.com/a2iEditing/RNAEditingIndexer)
+  from [Roth SH et al](https://doi.org/10.1038/s41592-019-0610-9)\
+- [SAILOR](https://github.com/YeoLab/sailor) from [Washburn MC et
+  al](https://10.1016/j.celrep.2014.01.011)
+
+# Package index
+
+## Pileup
+
+- [`pileup_cells()`](https://rnabioco.github.io/raer/reference/pileup_cells.md)
+  : Generate base counts per cell
+- [`pileup_sites()`](https://rnabioco.github.io/raer/reference/pileup_sites.md)
+  [`FilterParam()`](https://rnabioco.github.io/raer/reference/pileup_sites.md)
+  : Generate base counts using pileup
+
+## Calculations
+
+- [`calc_AEI()`](https://rnabioco.github.io/raer/reference/calc_AEI.md)
+  : Calculate the Adenosine Editing Index (AEI)
+- [`calc_confidence()`](https://rnabioco.github.io/raer/reference/calc_confidence.md)
+  : Calculate confidence score for observing editing
+- [`calc_edit_frequency()`](https://rnabioco.github.io/raer/reference/calc_edit_frequency.md)
+  : Adds editing frequencies
+- [`calc_scAEI()`](https://rnabioco.github.io/raer/reference/calc_scAEI.md)
+  [`get_scAEI_sites()`](https://rnabioco.github.io/raer/reference/calc_scAEI.md)
+  : Calculate the Adenosine Editing Index (AEI) in single cells
+
+## Filtering
+
+- [`filter_clustered_variants()`](https://rnabioco.github.io/raer/reference/filter_clustered_variants.md)
+  : Filter out clustered sequence variants
+- [`filter_multiallelic()`](https://rnabioco.github.io/raer/reference/filter_multiallelic.md)
+  : Filter out multi-allelic sites
+- [`filter_splice_variants()`](https://rnabioco.github.io/raer/reference/filter_splice_variants.md)
+  : Filter out sites near splice sites
+
+## Annotation
+
+- [`annot_from_gr()`](https://rnabioco.github.io/raer/reference/annot_from_gr.md)
+  : Annotate sites using GRanges object
+- [`annot_snps()`](https://rnabioco.github.io/raer/reference/annot_snps.md)
+  : Annotate known SNP positions
+- [`get_overlapping_snps()`](https://rnabioco.github.io/raer/reference/get_overlapping_snps.md)
+  : Retrieve SNPs overlapping intervals
+- [`get_splice_sites()`](https://rnabioco.github.io/raer/reference/get_splice_sites.md)
+  : Extract regions surrounding splice sites
+
+## Bulk editing analysis
+
+- [`find_de_sites()`](https://rnabioco.github.io/raer/reference/find_de_sites.md)
+  : Perform differential editing
+- [`make_de_object()`](https://rnabioco.github.io/raer/reference/make_de_object.md)
+  : Make summarized experiment object for differential editing analysis
+
+## Single cell editing analysis
+
+- [`find_scde_sites()`](https://rnabioco.github.io/raer/reference/find_scde_sites.md)
+  : Identify sites with differential editing between cells in single
+  cell datasets
+- [`find_mispriming_sites()`](https://rnabioco.github.io/raer/reference/find_mispriming_sites.md)
+  : Find regions with oligodT mispriming
+
+## Utilities
+
+- [`correct_strand()`](https://rnabioco.github.io/raer/reference/correct_strand.md)
+  : Apply strand correction using gene annotations
+- [`calc_scAEI()`](https://rnabioco.github.io/raer/reference/calc_scAEI.md)
+  [`get_scAEI_sites()`](https://rnabioco.github.io/raer/reference/calc_scAEI.md)
+  : Calculate the Adenosine Editing Index (AEI) in single cells
+- [`mock_rse()`](https://rnabioco.github.io/raer/reference/mock_rse.md)
+  : Generate a small RangedSummarizedExperiment object for tests and
+  examples
+- [`raer_example()`](https://rnabioco.github.io/raer/reference/raer_example.md)
+  : Provide working directory for raer example files.
+- [`read_sparray()`](https://rnabioco.github.io/raer/reference/read_sparray.md)
+  : Read sparseMatrix produced by pileup_cells()
+
+# Articles
+
+### All vignettes
+
+- [Introducing the raer
+  package](https://rnabioco.github.io/raer/articles/raer.md):
