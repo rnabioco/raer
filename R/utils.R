@@ -141,14 +141,11 @@ find_mispriming_sites <- function(
   }
   close(bf)
   # merge again, handle edge cases between yieldsizes
-  mean_pal <- n_reads <- NULL
   ans <- reduce(pa_pks, with.revmap = TRUE)
-  mcols(ans) <- aggregate(
-    pa_pks,
-    mcols(ans)$revmap,
-    mean_pal = mean(mean_pal),
-    n_reads = sum(n_reads),
-    drop = FALSE
+  revmap <- mcols(ans)$revmap
+  mcols(ans) <- DataFrame(
+    mean_pal = mean(extractList(pa_pks$mean_pal, revmap)),
+    n_reads = sum(extractList(pa_pks$n_reads, revmap))
   )
 
   # keep reads above threshold, slop, and merge adjacent misprimed regions
@@ -162,15 +159,12 @@ find_mispriming_sites <- function(
   ans <- trim(ans)
 
   res <- reduce(ans, with.revmap = TRUE)
-  mcols(res) <- aggregate(
-    ans,
-    mcols(res)$revmap,
-    mean_pal = mean(mean_pal),
-    n_reads = sum(n_reads),
-    drop = FALSE
+  revmap <- mcols(res)$revmap
+  mcols(res) <- DataFrame(
+    mean_pal = mean(extractList(ans$mean_pal, revmap)),
+    n_reads = sum(extractList(ans$n_reads, revmap))
   )
-  res$n_regions <- IRanges::grouplengths(res$grouping)
-  res$grouping <- NULL
+  res$n_regions <- lengths(revmap)
   res <- pa_seq_context(res, fasta)
   res
 }
@@ -194,15 +188,12 @@ merge_pa_peaks <- function(gr) {
   end(gr[strand(gr) == "-"]) <- start(gr[strand(gr) == "-"])
 
   # merge and count reads within merged ivls
-  pa <- NULL
   ans <- reduce(gr, with.revmap = TRUE)
-  mcols(ans) <- aggregate(
-    gr,
-    mcols(ans)$revmap,
-    mean_pal = mean(pa),
-    drop = FALSE
+  revmap <- mcols(ans)$revmap
+  mcols(ans) <- DataFrame(
+    mean_pal = mean(extractList(gr$pa, revmap))
   )
-  mcols(ans)$n_reads <- grouplengths(ans$grouping)
+  mcols(ans)$n_reads <- lengths(revmap)
   ans
 }
 
