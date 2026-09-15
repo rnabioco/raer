@@ -1,5 +1,8 @@
 pkgs <- c(
-  "SummarizedExperiment"
+  "SummarizedExperiment",
+  "SingleCellExperiment",
+  "GenomicRanges",
+  "Rsamtools"
 )
 
 msg <- lapply(pkgs, function(x) {
@@ -59,4 +62,35 @@ test_that("find_de_sites works", {
   ed <- assay(rse, "edit_freq")[sig_sites, 1] -
     assay(rse, "edit_freq")[sig_sites, 4]
   expect_true(all(sign(ed) == sign(res$sig_results$logFC)))
+})
+
+test_that("find_scde_sites works", {
+  sc_bamfn <- raer_example("5k_neuron_mouse_possort.bam")
+
+  gr <- GRanges(c("2:579:-", "2:625:-", "2:645:-", "2:589:-", "2:601:-"))
+  gr$REF <- c(rep("A", 4), "T")
+  gr$ALT <- c(rep("G", 4), "C")
+
+  cbs <- unique(scanBam(sc_bamfn, param = ScanBamParam(tag = "CB"))[[1]]$tag$CB)
+  cbs <- na.omit(cbs)
+
+  outdir <- tempdir()
+  bai <- indexBam(sc_bamfn)
+
+  fp <- FilterParam(library_type = "fr-second-strand")
+  sce <- pileup_cells(sc_bamfn, gr, cbs, outdir, param = fp)
+
+  set.seed(42)
+  sce$clusters <- paste0("cluster_", sample(1:3, ncol(sce), replace = TRUE))
+  res <- find_scde_sites(sce, "clusters")
+
+  expect_true(is.list(res))
+  expect_setequal(
+    names(res),
+    unique(sce$clusters)
+  )
+  for (de_stats in res) {
+    expect_true(all(c("p.value", "dEF") %in% colnames(de_stats)))
+    expect_true(all(de_stats$p.value >= 0 & de_stats$p.value <= 1, na.rm = TRUE))
+  }
 })

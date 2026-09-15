@@ -21,28 +21,28 @@ character vector is supplied the names will be used in the output.}
 
 \item{fasta}{fasta filename}
 
-\item{alu_ranges}{\link{GRanges} with regions to query for
+\item{alu_ranges}{\link[GenomicRanges:GRanges-class]{GRanges} with regions to query for
 calculating the AEI, typically ALU repeats.}
 
-\item{txdb}{A \link{TxDb} object, if supplied, will be used to subset the
-alu_ranges to those found overlapping genes. Alternatively a \link{GRanges}
+\item{txdb}{A \link[GenomicFeatures:TxDb-class]{TxDb} object, if supplied, will be used to subset the
+alu_ranges to those found overlapping genes. Alternatively a \link[GenomicRanges:GRanges-class]{GRanges}
 object with gene coordinates.  If the \code{library_type}, specified by
-\code{FilterParam}, is \code{unstranded} then the \link{TxDb} will
+\code{FilterParam}, is \code{unstranded} then the \link[GenomicFeatures:TxDb-class]{TxDb} will
 be used to correct the strandness relative to the reference and is a
 required
 parameter.}
 
-\item{snp_db}{either a \link{SNPlocs}, \link{GPos}, or \link{GRanges} object. If supplied,
+\item{snp_db}{either a \link[BSgenome:SNPlocs-class]{SNPlocs}, \link[GenomicRanges:GPos-class]{GPos}, or \link[GenomicRanges:GRanges-class]{GRanges} object. If supplied,
 will be used to exclude polymorphic positions prior to calculating the AEI.
 If \code{calc_AEI()} will be used many times, one will save time by first
 identifying SNPs that overlap the supplied \code{alu_ranges}, and passing these
-as a \link{GRanges} to \code{snp_db} rather than supplying all known SNPs (see
+as a \link[GenomicRanges:GRanges-class]{GRanges} to \code{snp_db} rather than supplying all known SNPs (see
 \code{\link[=get_overlapping_snps]{get_overlapping_snps()}}).}
 
 \item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
 filters to apply to reads and sites during pileup.}
 
-\item{BPPARAM}{A \link{BiocParallelParam} object for specifying parallel options
+\item{BPPARAM}{A \link[BiocParallel:BiocParallelParam-class]{BiocParallelParam} object for specifying parallel options
 for operating over chromosomes.}
 
 \item{verbose}{report progress on each chromosome?}
