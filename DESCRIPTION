@@ -53,7 +53,7 @@ Suggests:
     BSgenome.Hsapiens.NCBI.GRCh38,
     scater,
     scran,
-    scuttle,
+    scrapper,
     AnnotationHub,
     covr,
     raerdata,

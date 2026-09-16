@@ -1,7 +1,7 @@
 #' Annotate known SNP positions
 #'
-#' @description This function will annotate a [GRanges] or the rowRanges of
-#' a [SummarizedExperiment] with SNPs from a SNP package.
+#' @description This function will annotate a [GRanges][GenomicRanges::GRanges] or the rowRanges of
+#' a [SummarizedExperiment][SummarizedExperiment::SummarizedExperiment] with SNPs from a SNP package.
 #'
 #' @param obj GRanges or SummarizedExperiment  object
 #' @param dbsnp SNPlocs package, see available packages from

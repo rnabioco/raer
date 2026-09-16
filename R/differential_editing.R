@@ -1,21 +1,21 @@
 #' Adds editing frequencies
 #'
 #' @description Adds editing frequencies to an existing
-#' [RangedSummarizedExperiment] object (created by [pileup_sites()]). The
-#' [RangedSummarizedExperiment] with a new assay for editing frequencies
+#' [RangedSummarizedExperiment][SummarizedExperiment::RangedSummarizedExperiment] object (created by [pileup_sites()]). The
+#' [RangedSummarizedExperiment][SummarizedExperiment::RangedSummarizedExperiment] with a new assay for editing frequencies
 #' for each site (`edit_freq`), depth of coverage computed
 #' using the indicated edited nucleotides (`depth`) and new `colData`
 #' columns with the number of edited sites (`n_sites`) and the
 #' fraction of edits (`edit_idx`) is returned.
 #'
-#' @param rse A [RangedSummarizedExperiment] object created by [pileup_sites()]
+#' @param rse A [RangedSummarizedExperiment][SummarizedExperiment::RangedSummarizedExperiment] object created by [pileup_sites()]
 #' @param edit_from This should correspond to a nucleotide or assay
 #'  (`A`, `C`, `G`, `T`, `Ref`, or `Alt`) you expect in the reference. Ex. for
 #'  A to I editing events, this would be `A`.
 #' @param edit_to This should correspond to a nucleotide or assay
 #'  (`A`, `C`, `G`, `T`, `Ref`, or `Alt`)  you expect in the editing site. Ex.
 #'  for A to I editing events, this would be `G`.
-#' @param drop If `TRUE`, the [RangedSummarizedExperiment] returned will only
+#' @param drop If `TRUE`, the [RangedSummarizedExperiment][SummarizedExperiment::RangedSummarizedExperiment] returned will only
 #' retain sites matching the specified `edit_from` and `edit_to` bases.
 #' @param replace_na If `TRUE`, `NA` and `NaN` editing frequencies will be
 #' coerced to `0`.
@@ -26,7 +26,7 @@
 #'   of editing sites detected.
 #'
 #' @return
-#' [RangedSummarizedExperiment] supplemented with `edit_freq` and `depth` assay.
+#' [RangedSummarizedExperiment][SummarizedExperiment::RangedSummarizedExperiment] supplemented with `edit_freq` and `depth` assay.
 #'
 #' @examples
 #' library(SummarizedExperiment)
@@ -163,12 +163,12 @@ count_edits <- function(
 
 #' Make summarized experiment object for differential editing analysis
 #'
-#' @description Generates a [RangedSummarizedExperiment] object for use with
+#' @description Generates a [RangedSummarizedExperiment][SummarizedExperiment::RangedSummarizedExperiment] object for use with
 #' `edgeR` or `DESeq2` . Will generate a `counts` assay with
 #' a matrix formatted with 2 columns per sample,
 #' representing the reference and editing allele counts.
 #'
-#' @param rse A [RangedSummarizedExperiment] object
+#' @param rse A [RangedSummarizedExperiment][SummarizedExperiment::RangedSummarizedExperiment] object
 #' @param edit_from This should correspond to a nucleotide or assay
 #'  (`A`, `C`, `G`, `T`, `Ref`, or `Alt`) you expect in the reference.
 #'  Ex. for A to I editing events, this would be `A`.
@@ -184,7 +184,7 @@ count_edits <- function(
 #'
 #' @import SummarizedExperiment
 #'
-#' @returns  [RangedSummarizedExperiment] for use with `edgeR` or
+#' @returns  [RangedSummarizedExperiment][SummarizedExperiment::RangedSummarizedExperiment] for use with `edgeR` or
 #'  `DESeq2`. Contains a `counts` assay with a matrix formatted
 #'  with 2 columns per sample (ref and alt counts).
 #'
@@ -258,7 +258,7 @@ make_de_object <- function(
 #'   control group. For more complex designs, we suggest you perform your own
 #'   modeling.
 #'
-#' @param deobj A [RangedSummarizedExperiment] object prepared for differential
+#' @param deobj A [RangedSummarizedExperiment][SummarizedExperiment::RangedSummarizedExperiment] object prepared for differential
 #' editing analysis by [make_de_object()]
 #' @param test Indicate if `edgeR` or `DESeq2` should be run.
 #' @param sample_col The name of the column from `colData(deobj)` that
@@ -616,16 +616,16 @@ run_edger <- function(
 #' across each pairwise
 #' comparison using [scran::combineMarkers].
 #'
-#' @param sce [SingleCellExperiment] object with `nRef` and `nAlt` assays.
+#' @param sce [SingleCellExperiment][SingleCellExperiment::SingleCellExperiment] object with `nRef` and `nAlt` assays.
 #' @param group column name from colData used to define groups to compare.
-#' @param rowData if TRUE,  [rowData] from the input [SingleCellExperiment] will
+#' @param rowData if TRUE,  [rowData][SummarizedExperiment::rowData] from the input [SingleCellExperiment][SingleCellExperiment::SingleCellExperiment] will
 #' be included in the output DataFrames
 #' @param BPPARAM BiocParallel backend for control how parallel computations
 #' are performed.
 #' @param ... Additional arguments passed to [scran::combineMarkers]
 #'
 #' @returns
-#' A named list of [DataFrame]s containing results for each cluster specified by
+#' A named list of [DataFrame][S4Vectors::DataFrame]s containing results for each cluster specified by
 #' `group`. The difference in editing frequencies between cluster pairs are
 #' denoted as `dEF`. See [scran::combineMarkers] for a description of additional
 #'  output fields.
@@ -670,8 +670,8 @@ find_scde_sites <- function(
     cli::cli_abort("Package \"scran\" needed for differential editing.")
   }
 
-  if (!requireNamespace("scuttle", quietly = TRUE)) {
-    cli::cli_abort("Package \"scran\" needed for differential editing.")
+  if (!requireNamespace("scrapper", quietly = TRUE)) {
+    cli::cli_abort("Package \"scrapper\" needed for differential editing.")
   }
 
   if (!is(sce, "SingleCellExperiment")) {
@@ -707,27 +707,33 @@ find_scde_sites <- function(
     sce <- sce[, !no_depth_cells]
   }
 
-  assay(sce, "depth") <- scuttle::normalizeCounts(
+  num_threads <- BiocParallel::bpnworkers(BPPARAM)
+
+  sce <- scrapper::normalizeRnaCounts.se(
     sce,
     assay.type = "depth",
-    BPPARAM = BPPARAM
+    output.name = "depth",
+    factor.name = NULL,
+    num.threads = num_threads
   )
 
-  nref <- scuttle::summarizeAssayByGroup(
+  nref <- scrapper::aggregateAcrossCells.se(
     sce,
     sce[[group]],
-    statistics = c("sum", "prop.detected"),
     assay.type = "nRef",
-    BPPARAM = BPPARAM
+    num.threads = num_threads,
+    include.coldata = FALSE
   )
+  colnames(nref) <- as.character(colData(nref)$factor.1)
 
-  nalt <- scuttle::summarizeAssayByGroup(
+  nalt <- scrapper::aggregateAcrossCells.se(
     sce,
     sce[[group]],
-    statistics = c("sum", "prop.detected"),
     assay.type = "nAlt",
-    BPPARAM = BPPARAM
+    num.threads = num_threads,
+    include.coldata = FALSE
   )
+  colnames(nalt) <- as.character(colData(nalt)$factor.1)
 
   grp_pairs <- group_combinations(sce[[group]])
 
@@ -735,8 +741,8 @@ find_scde_sites <- function(
     seq_len(nrow(grp_pairs)),
     function(i) {
       gp <- grp_pairs[i, , drop = TRUE]
-      ref <- assay(nref, "sum")[, c(gp$first, gp$second)]
-      alt <- assay(nalt, "sum")[, c(gp$first, gp$second)]
+      ref <- assay(nref, "sums")[, c(gp$first, gp$second)]
+      alt <- assay(nalt, "sums")[, c(gp$first, gp$second)]
       pvals <- calc_fisher_exact(ref, alt)
       ef <- alt / (ref + alt)
       d_editing_frequency <- ef[, 1] - ef[, 2]

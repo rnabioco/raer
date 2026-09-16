@@ -15,7 +15,7 @@ calc_edit_frequency(
 )
 }
 \arguments{
-\item{rse}{A \link{RangedSummarizedExperiment} object created by \code{\link[=pileup_sites]{pileup_sites()}}}
+\item{rse}{A \link[SummarizedExperiment:RangedSummarizedExperiment-class]{RangedSummarizedExperiment} object created by \code{\link[=pileup_sites]{pileup_sites()}}}
 
 \item{edit_from}{This should correspond to a nucleotide or assay
 (\code{A}, \code{C}, \code{G}, \code{T}, \code{Ref}, or \code{Alt}) you expect in the reference. Ex. for
@@ -25,7 +25,7 @@ A to I editing events, this would be \code{A}.}
 (\code{A}, \code{C}, \code{G}, \code{T}, \code{Ref}, or \code{Alt})  you expect in the editing site. Ex.
 for A to I editing events, this would be \code{G}.}
 
-\item{drop}{If \code{TRUE}, the \link{RangedSummarizedExperiment} returned will only
+\item{drop}{If \code{TRUE}, the \link[SummarizedExperiment:RangedSummarizedExperiment-class]{RangedSummarizedExperiment} returned will only
 retain sites matching the specified \code{edit_from} and \code{edit_to} bases.}
 
 \item{replace_na}{If \code{TRUE}, \code{NA} and \code{NaN} editing frequencies will be
@@ -39,12 +39,12 @@ number of sites is stored as \code{n_sites} in the \code{colData}.}
 of editing sites detected.}
 }
 \value{
-\link{RangedSummarizedExperiment} supplemented with \code{edit_freq} and \code{depth} assay.
+\link[SummarizedExperiment:RangedSummarizedExperiment-class]{RangedSummarizedExperiment} supplemented with \code{edit_freq} and \code{depth} assay.
 }
 \description{
 Adds editing frequencies to an existing
-\link{RangedSummarizedExperiment} object (created by \code{\link[=pileup_sites]{pileup_sites()}}). The
-\link{RangedSummarizedExperiment} with a new assay for editing frequencies
+\link[SummarizedExperiment:RangedSummarizedExperiment-class]{RangedSummarizedExperiment} object (created by \code{\link[=pileup_sites]{pileup_sites()}}). The
+\link[SummarizedExperiment:RangedSummarizedExperiment-class]{RangedSummarizedExperiment} with a new assay for editing frequencies
 for each site (\code{edit_freq}), depth of coverage computed
 using the indicated edited nucleotides (\code{depth}) and new \code{colData}
 columns with the number of edited sites (\code{n_sites}) and the
