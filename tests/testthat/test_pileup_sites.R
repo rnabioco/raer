@@ -401,10 +401,10 @@ test_that("filtering for splicing events works", {
 test_that("filtering for indel events works", {
   # get sites near splicing events
   reads <- GenomicAlignments::readGAlignments(bamfn, use.names = T)
-  cig_ops <- cigarRangesAlongReferenceSpace(
+  cig_ops <- cigarillo::cigars_as_ranges_along_ref(
     cigar(reads),
     ops = "D",
-    pos = start(reads)
+    lmmpos = start(reads)
   )
   refs <- seqnames(reads)[elementNROWS(cig_ops) > 0]
   cig_ops <- cig_ops[elementNROWS(cig_ops) > 0]

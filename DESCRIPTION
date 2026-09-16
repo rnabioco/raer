@@ -57,7 +57,8 @@ Suggests:
     AnnotationHub,
     covr,
     raerdata,
-    txdbmaker 
+    txdbmaker,
+    cigarillo
 LinkingTo: 
     Rhtslib
 SystemRequirements:
