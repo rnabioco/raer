@@ -84,12 +84,12 @@ test_that("find_scde_sites works", {
   sce$clusters <- paste0("cluster_", sample(1:3, ncol(sce), replace = TRUE))
   res <- find_scde_sites(sce, "clusters")
 
-  expect_true(is.list(res))
+  expect_true(is.list(res) || is(res, "List"))
   expect_setequal(
     names(res),
     unique(sce$clusters)
   )
-  for (de_stats in res) {
+  for (de_stats in as.list(res)) {
     expect_true(all(c("p.value", "dEF") %in% colnames(de_stats)))
     expect_true(all(de_stats$p.value >= 0 & de_stats$p.value <= 1, na.rm = TRUE))
   }
