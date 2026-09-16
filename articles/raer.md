@@ -21,14 +21,12 @@ novel editing sites from bulk RNA-seq.
 The `raer` package can be installed from Bioconductor using
 `BiocManager`.
 
-``` r
-
-if (!require("BiocManager", quietly = TRUE)) {
-    install.packages("BiocManager")
-}
-
-BiocManager::install("raer")
-```
+\
+`if`` ``(``!`[`require`](https://rdrr.io/r/base/library.html)`(`[`"BiocManager"`](https://bioconductor.github.io/BiocManager/)`, quietly ``=`` ``TRUE``)``)`` ``{`\
+`    `[`install.packages`](https://rdrr.io/r/utils/install.packages.html)`(``"BiocManager"``)`\
+`}`\
+\
+`BiocManager``::`[`install`](https://bioconductor.github.io/BiocManager/reference/install.html)`(``"raer"``)`
 
 Alternatively `raer` can be installed from github using
 `BiocManager::install("rnabioco/raer")`.
@@ -60,27 +58,23 @@ editing sites from the `REDIportal` database Mansi et al. (2021), and a
 `SingleCellExperiment` populated with the gene expression data and cell
 type annotations.
 
-``` r
-
-library(raer)
-library(raerdata)
-
-pbmc <- pbmc_10x()
-
-pbmc_bam <- pbmc$bam
-editing_sites <- pbmc$sites
-sce <- pbmc$sce
-```
+\
+[`library`](https://rdrr.io/r/base/library.html)`(`[`raer`](https://rnabioco.github.io/raer)`)`\
+[`library`](https://rdrr.io/r/base/library.html)`(`[`raerdata`](https://github.com/rnabioco/raerdata)`)`\
+\
+`pbmc`` ``<-`` `[`pbmc_10x`](https://rdrr.io/pkg/raerdata/man/pbmc_10x.html)`(``)`\
+\
+`pbmc_bam`` ``<-`` ``pbmc``$``bam`\
+`editing_sites`` ``<-`` ``pbmc``$``sites`\
+`sce`` ``<-`` ``pbmc``$``sce`
 
 This dataset contains T-cell, B-cells, and monocyte cell populations.
 
-``` r
-
-library(scater)
-library(SingleCellExperiment)
-library(GenomeInfoDb)
-plotUMAP(sce, colour_by = "celltype")
-```
+\
+[`library`](https://rdrr.io/r/base/library.html)`(`[`scater`](http://bioconductor.org/packages/scater/)`)`\
+[`library`](https://rdrr.io/r/base/library.html)`(`[`SingleCellExperiment`](https://github.com/drisso/SingleCellExperiment)`)`\
+[`library`](https://rdrr.io/r/base/library.html)`(`[`GenomeInfoDb`](https://bioconductor.org/packages/GenomeInfoDb)`)`\
+[`plotUMAP`](https://rdrr.io/pkg/scater/man/plot_reddim.html)`(``sce``, colour_by ``=`` ``"celltype"``)`
 
 ![](raer_files/figure-html/unnamed-chunk-4-1.png)
 
@@ -90,10 +84,8 @@ Next we’ll select editing sites to quantify. For this analysis we will
 use RNA editing sites cataloged in the REDIportal database Mansi et al.
 (2021).
 
-``` r
-
-editing_sites
-```
+\
+`editing_sites`
 
     ## GRanges object with 15638648 ranges and 0 metadata columns:
     ##              seqnames    ranges strand
@@ -123,12 +115,10 @@ that these bases can be stored as traditional character vectors or as
 [`Rle()`](https://rdrr.io/pkg/S4Vectors/man/Rle-class.html) objects to
 save memory.
 
-``` r
-
-editing_sites$REF <- Rle("A")
-editing_sites$ALT <- Rle("G")
-editing_sites
-```
+\
+`editing_sites``$``REF`` ``<-`` `[`Rle`](https://rdrr.io/pkg/S4Vectors/man/Rle-class.html)`(``"A"``)`\
+`editing_sites``$``ALT`` ``<-`` `[`Rle`](https://rdrr.io/pkg/S4Vectors/man/Rle-class.html)`(``"G"``)`\
+`editing_sites`
 
     ## GRanges object with 15638648 ranges and 2 metadata columns:
     ##              seqnames    ranges strand |   REF   ALT
@@ -189,28 +179,26 @@ in parallel across multiple chromosomes. To enable parallel processing,
 a `BiocParallel` backend can be supplied via the `BPPARAM` argument
 (e.g.  `MultiCoreParam()`).
 
-``` r
-
-outdir <- file.path(tempdir(), "sc_edits")
-cbs <- colnames(sce)
-
-params <- FilterParam(
-    min_mapq = 255, # required alignment MAPQ score
-    library_type = "fr-second-strand", # library type
-    min_variant_reads = 1
-)
-
-e_sce <- pileup_cells(
-    bamfile = pbmc_bam,
-    sites = editing_sites,
-    cell_barcodes = cbs,
-    output_directory = outdir,
-    cb_tag = "CB",
-    umi_tag = "UB",
-    param = params
-)
-e_sce
-```
+\
+`outdir`` ``<-`` `[`file.path`](https://rdrr.io/r/base/file.path.html)`(`[`tempdir`](https://rdrr.io/r/base/tempfile.html)`(``)``, ``"sc_edits"``)`\
+`cbs`` ``<-`` `[`colnames`](https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html)`(``sce``)`\
+\
+`params`` ``<-`` `[`FilterParam`](https://rnabioco.github.io/raer/reference/pileup_sites.md)`(`\
+`    min_mapq ``=`` ``255``, ``# required alignment MAPQ score`\
+`    library_type ``=`` ``"fr-second-strand"``, ``# library type`\
+`    min_variant_reads ``=`` ``1`\
+`)`\
+\
+`e_sce`` ``<-`` `[`pileup_cells`](https://rnabioco.github.io/raer/reference/pileup_cells.md)`(`\
+`    bamfile ``=`` ``pbmc_bam``,`\
+`    sites ``=`` ``editing_sites``,`\
+`    cell_barcodes ``=`` ``cbs``,`\
+`    output_directory ``=`` ``outdir``,`\
+`    cb_tag ``=`` ``"CB"``,`\
+`    umi_tag ``=`` ``"UB"``,`\
+`    param ``=`` ``params`\
+`)`\
+`e_sce`
 
     ## class: SingleCellExperiment 
     ## dim: 3849 500 
@@ -237,21 +225,17 @@ by `output_directory`, which can be loaded into R using the
 [`read_sparray()`](https://rnabioco.github.io/raer/reference/read_sparray.md)
 function.
 
-``` r
-
-dir(outdir)
-```
+\
+[`dir`](https://rdrr.io/r/base/list.files.html)`(``outdir``)`
 
     ## [1] "barcodes.txt.gz" "counts.mtx.gz"   "sites.txt.gz"
 
-``` r
-
-read_sparray(
-    file.path(outdir, "counts.mtx.gz"),
-    file.path(outdir, "sites.txt.gz"),
-    file.path(outdir, "barcodes.txt.gz")
-)
-```
+\
+[`read_sparray`](https://rnabioco.github.io/raer/reference/read_sparray.md)`(`\
+`    `[`file.path`](https://rdrr.io/r/base/file.path.html)`(``outdir``, ``"counts.mtx.gz"``)``,`\
+`    `[`file.path`](https://rdrr.io/r/base/file.path.html)`(``outdir``, ``"sites.txt.gz"``)``,`\
+`    `[`file.path`](https://rdrr.io/r/base/file.path.html)`(``outdir``, ``"barcodes.txt.gz"``)`\
+`)`
 
     ## class: SingleCellExperiment 
     ## dim: 3849 500 
@@ -272,32 +256,28 @@ editing event in at least 5 cells and add the editing counts to the gene
 expression SingleCellExperiment as an
 [`altExp()`](https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html).
 
-``` r
-
-e_sce <- e_sce[rowSums(assays(e_sce)$nAlt > 0) >= 5, ]
-e_sce <- calc_edit_frequency(e_sce,
-    edit_from = "Ref",
-    edit_to = "Alt",
-    replace_na = FALSE
-)
-altExp(sce) <- e_sce[, colnames(sce)]
-```
+\
+`e_sce`` ``<-`` ``e_sce``[`[`rowSums`](https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html)`(`[`assays`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``e_sce``)``$``nAlt`` ``>`` ``0``)`` ``>=`` ``5``, ``]`\
+`e_sce`` ``<-`` `[`calc_edit_frequency`](https://rnabioco.github.io/raer/reference/calc_edit_frequency.md)`(``e_sce``,`\
+`    edit_from ``=`` ``"Ref"``,`\
+`    edit_to ``=`` ``"Alt"``,`\
+`    replace_na ``=`` ``FALSE`\
+`)`\
+[`altExp`](https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html)`(``sce``)`` ``<-`` ``e_sce``[``, `[`colnames`](https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html)`(``sce``)``]`
 
 With the editing sites added to the gene expression SingleCellExperiment
 we can use plotting and other methods previously developed for single
 cell analysis. Here we’ll visualize editing sites with the highest
 edited read counts.
 
-``` r
-
-to_plot <- rownames(altExp(sce))[order(rowSums(assay(altExp(sce), "nAlt")),
-    decreasing = TRUE
-)]
-
-lapply(to_plot[1:5], function(x) {
-    plotUMAP(sce, colour_by = x, by_exprs_values = "nAlt")
-})
-```
+\
+`to_plot`` ``<-`` `[`rownames`](https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html)`(`[`altExp`](https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html)`(``sce``)``)``[`[`order`](https://rdrr.io/pkg/BiocGenerics/man/order.html)`(`[`rowSums`](https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html)`(`[`assay`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(`[`altExp`](https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html)`(``sce``)``, ``"nAlt"``)``)``,`\
+`    decreasing ``=`` ``TRUE`\
+`)``]`\
+\
+[`lapply`](https://rdrr.io/pkg/BiocGenerics/man/lapply.html)`(``to_plot``[``1``:``5``]``, ``function``(``x``)`` ``{`\
+`    `[`plotUMAP`](https://rdrr.io/pkg/scater/man/plot_reddim.html)`(``sce``, colour_by ``=`` ``x``, by_exprs_values ``=`` ``"nAlt"``)`\
+`}``)`
 
     ## [[1]]
 
@@ -326,16 +306,14 @@ lapply(to_plot[1:5], function(x) {
 Alternatively we can view these top edited sites as a Heatmap, showing
 the average number of edited reads per site in each cell type.
 
-``` r
-
-altExp(sce)$celltype <- sce$celltype
-
-plotGroupedHeatmap(altExp(sce),
-    features = to_plot[1:25],
-    group = "celltype",
-    exprs_values = "nAlt"
-)
-```
+\
+[`altExp`](https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html)`(``sce``)``$``celltype`` ``<-`` ``sce``$``celltype`\
+\
+[`plotGroupedHeatmap`](https://rdrr.io/pkg/scater/man/plotGroupedHeatmap.html)`(`[`altExp`](https://rdrr.io/pkg/SingleCellExperiment/man/altExps.html)`(``sce``)``,`\
+`    features ``=`` ``to_plot``[``1``:``25``]``,`\
+`    group ``=`` ``"celltype"``,`\
+`    exprs_values ``=`` ``"nAlt"`\
+`)`
 
 ![](raer_files/figure-html/unnamed-chunk-10-1.png)
 
@@ -372,32 +350,30 @@ and cell barcode detection.
 To illustrate this functionality, we will reprocess the 10x Genomics
 pbmc dataset, treating the data as mock Smart-seq2 data from 3 cells.
 
-``` r
-
-is_minus <- strand(editing_sites) == "-"
-editing_sites[is_minus]$REF <- "T"
-editing_sites[is_minus]$ALT <- "C"
-strand(editing_sites[is_minus]) <- "+"
-
-fp <- FilterParam(
-    library_type = "unstranded",
-    min_mapq = 255,
-    min_variant_reads = 1
-)
-
-ss2_bams <- c(pbmc_bam, pbmc_bam, pbmc_bam)
-cell_ids <- c("cell1", "cell2", "cell3")
-
-pileup_cells(
-    bamfiles = ss2_bams,
-    cell_barcodes = cell_ids,
-    sites = editing_sites,
-    umi_tag = NULL, # no UMI tag in most Smart-seq2 libraries
-    cb_tag = NULL, # no cell barcode tag
-    param = fp,
-    output_directory = outdir
-)
-```
+\
+`is_minus`` ``<-`` `[`strand`](https://rdrr.io/pkg/BiocGenerics/man/strand.html)`(``editing_sites``)`` ``==`` ``"-"`\
+`editing_sites``[``is_minus``]``$``REF`` ``<-`` ``"T"`\
+`editing_sites``[``is_minus``]``$``ALT`` ``<-`` ``"C"`\
+[`strand`](https://rdrr.io/pkg/BiocGenerics/man/strand.html)`(``editing_sites``[``is_minus``]``)`` ``<-`` ``"+"`\
+\
+`fp`` ``<-`` `[`FilterParam`](https://rnabioco.github.io/raer/reference/pileup_sites.md)`(`\
+`    library_type ``=`` ``"unstranded"``,`\
+`    min_mapq ``=`` ``255``,`\
+`    min_variant_reads ``=`` ``1`\
+`)`\
+\
+`ss2_bams`` ``<-`` `[`c`](https://rdrr.io/r/base/c.html)`(``pbmc_bam``, ``pbmc_bam``, ``pbmc_bam``)`\
+`cell_ids`` ``<-`` `[`c`](https://rdrr.io/r/base/c.html)`(``"cell1"``, ``"cell2"``, ``"cell3"``)`\
+\
+[`pileup_cells`](https://rnabioco.github.io/raer/reference/pileup_cells.md)`(`\
+`    bamfiles ``=`` ``ss2_bams``,`\
+`    cell_barcodes ``=`` ``cell_ids``,`\
+`    sites ``=`` ``editing_sites``,`\
+`    umi_tag ``=`` ``NULL``, ``# no UMI tag in most Smart-seq2 libraries`\
+`    cb_tag ``=`` ``NULL``, ``# no cell barcode tag`\
+`    param ``=`` ``fp``,`\
+`    output_directory ``=`` ``outdir`\
+`)`
 
     ## class: SingleCellExperiment 
     ## dim: 53971 3 
@@ -437,11 +413,9 @@ this vignette and are available using
 downloaded and cache the necessary files and return a list containing
 the data.
 
-``` r
-
-ifnb <- GSE99249()
-names(ifnb)
-```
+\
+`ifnb`` ``<-`` `[`GSE99249`](https://rdrr.io/pkg/raerdata/man/GSE99249.html)`(``)`\
+[`names`](https://rdrr.io/r/base/names.html)`(``ifnb``)`
 
     ## [1] "bams"  "fasta" "sites"
 
@@ -449,11 +423,9 @@ names(ifnb)
 file. These BAM files are a subset of the full BAM files, containing
 alignments from chromosome 18.
 
-``` r
-
-bam_files <- ifnb$bams
-names(bam_files)
-```
+\
+`bam_files`` ``<-`` ``ifnb``$``bams`\
+[`names`](https://rdrr.io/r/base/names.html)`(``bam_files``)`
 
     ## [1] "SRR5564260" "SRR5564261" "SRR5564269" "SRR5564270" "SRR5564271"
     ## [6] "SRR5564277"
@@ -462,21 +434,17 @@ To quantify editing sites we will need a FASTA file to compare read
 alignments to the reference sequence. For space reasons we’ll use a
 FASTA file containing only chromosome 18 for this demo.
 
-``` r
-
-fafn <- ifnb$fasta
-```
+\
+`fafn`` ``<-`` ``ifnb``$``fasta`
 
 We will again use the database of known human editing sites from
 REDIPortal, only processing those from `chr18`.
 
-``` r
-
-editing_sites <- ifnb$sites
-chr_18_editing_sites <- keepSeqlevels(editing_sites, "chr18",
-    pruning.mode = "coarse"
-)
-```
+\
+`editing_sites`` ``<-`` ``ifnb``$``sites`\
+`chr_18_editing_sites`` ``<-`` `[`keepSeqlevels`](https://rdrr.io/pkg/GenomeInfoDb/man/seqlevels-wrappers.html)`(``editing_sites``, ``"chr18"``,`\
+`    pruning.mode ``=`` ``"coarse"`\
+`)`
 
 ### Generate editing site read counts using *pileup_sites*
 
@@ -491,27 +459,25 @@ Specific regions can also be queried using the `region` argument which
 accepts a samtools style region specification string (e.g. `chr` or
 `chr:start-end`).
 
-``` r
-
-fp <- FilterParam(
-    only_keep_variants = TRUE, # only report sites with variants
-    trim_5p = 5, # bases to remove from 5' or 3' end
-    trim_3p = 5,
-    min_base_quality = 30, # minimum base quality score
-    min_mapq = 255, # minimum MAPQ read score
-    library_type = "fr-first-strand", # library type
-    min_splice_overhang = 10 # minimum required splice site overhang
-)
-
-rse <- pileup_sites(bam_files,
-    fasta = fafn,
-    sites = chr_18_editing_sites,
-    chroms = "chr18",
-    param = fp
-)
-
-rse
-```
+\
+`fp`` ``<-`` `[`FilterParam`](https://rnabioco.github.io/raer/reference/pileup_sites.md)`(`\
+`    only_keep_variants ``=`` ``TRUE``, ``# only report sites with variants`\
+`    trim_5p ``=`` ``5``, ``# bases to remove from 5' or 3' end`\
+`    trim_3p ``=`` ``5``,`\
+`    min_base_quality ``=`` ``30``, ``# minimum base quality score`\
+`    min_mapq ``=`` ``255``, ``# minimum MAPQ read score`\
+`    library_type ``=`` ``"fr-first-strand"``, ``# library type`\
+`    min_splice_overhang ``=`` ``10`` ``# minimum required splice site overhang`\
+`)`\
+\
+`rse`` ``<-`` `[`pileup_sites`](https://rnabioco.github.io/raer/reference/pileup_sites.md)`(``bam_files``,`\
+`    fasta ``=`` ``fafn``,`\
+`    sites ``=`` ``chr_18_editing_sites``,`\
+`    chroms ``=`` ``"chr18"``,`\
+`    param ``=`` ``fp`\
+`)`\
+\
+`rse`
 
     ## class: RangedSummarizedExperiment 
     ## dim: 6192 6 
@@ -538,18 +504,14 @@ provided in a stand specific fashion depending on the supplied
 `library-type` parameter. The `REF` and `ALT` bases are in reference to
 the strand.
 
-``` r
-
-assays(rse)
-```
+\
+[`assays`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``)`
 
     ## List of length 7
     ## names(7): ALT nRef nAlt nA nT nC nG
 
-``` r
-
-assay(rse, "nA")[1:5, ]
-```
+\
+[`assay`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``, ``"nA"``)``[``1``:``5``, ``]`
 
     ##                     SRR5564260 SRR5564261 SRR5564269 SRR5564270 SRR5564271
     ## site_chr18_178100_1          2          0          0          1          1
@@ -564,10 +526,8 @@ assay(rse, "nA")[1:5, ]
     ## site_chr18_184747_1          2
     ## site_chr18_185203_1          0
 
-``` r
-
-assay(rse, "nG")[1:5, ]
-```
+\
+[`assay`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``, ``"nG"``)``[``1``:``5``, ``]`
 
     ##                     SRR5564260 SRR5564261 SRR5564269 SRR5564270 SRR5564271
     ## site_chr18_178100_1          0          0          0          0          1
@@ -585,12 +545,10 @@ assay(rse, "nG")[1:5, ]
 Next we’ll add sample information which will be needed for identify
 sites with differential editing frequencies across genotypes.
 
-``` r
-
-colData(rse)$treatment <- "Interferon beta"
-colData(rse)$genotype <- factor(rep(c("ADAR1KO", "Wildtype"), each = 3))
-colData(rse)
-```
+\
+[`colData`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``)``$``treatment`` ``<-`` ``"Interferon beta"`\
+[`colData`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``)``$``genotype`` ``<-`` `[`factor`](https://rdrr.io/r/base/factor.html)`(`[`rep`](https://rdrr.io/r/base/rep.html)`(`[`c`](https://rdrr.io/r/base/c.html)`(``"ADAR1KO"``, ``"Wildtype"``)``, each ``=`` ``3``)``)`\
+[`colData`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``)`
 
     ## DataFrame with 6 rows and 3 columns
     ##                 sample       treatment genotype
@@ -614,27 +572,23 @@ additional assays to the object, the editing frequency (`edit_freq`) and
 read `depth`, both computed based on the `edit_to` and `edit_from`
 counts.
 
-``` r
-
-rse <- calc_edit_frequency(rse,
-    edit_from = "A",
-    edit_to = "G",
-    drop = TRUE
-)
-```
+\
+`rse`` ``<-`` `[`calc_edit_frequency`](https://rnabioco.github.io/raer/reference/calc_edit_frequency.md)`(``rse``,`\
+`    edit_from ``=`` ``"A"``,`\
+`    edit_to ``=`` ``"G"``,`\
+`    drop ``=`` ``TRUE`\
+`)`
 
 We’ll next filter to exclude low frequency editing events. For this
 analysis we require that an editing site shows editing in at least 1
 sample and has at least 5 counts in each sample.
 
-``` r
-
-has_editing <- rowSums(assay(rse, "edit_freq") > 0) >= 1
-has_depth <- rowSums(assay(rse, "depth") >= 5) == ncol(rse)
-
-rse <- rse[has_editing & has_depth, ]
-rse
-```
+\
+`has_editing`` ``<-`` `[`rowSums`](https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html)`(`[`assay`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``, ``"edit_freq"``)`` ``>`` ``0``)`` ``>=`` ``1`\
+`has_depth`` ``<-`` `[`rowSums`](https://rdrr.io/pkg/MatrixGenerics/man/rowSums.html)`(`[`assay`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``, ``"depth"``)`` ``>=`` ``5``)`` ``==`` `[`ncol`](https://rdrr.io/pkg/BiocGenerics/man/nrow.html)`(``rse``)`\
+\
+`rse`` ``<-`` ``rse``[``has_editing`` ``&`` ``has_depth``, ``]`\
+`rse`
 
     ## class: RangedSummarizedExperiment 
     ## dim: 612 6 
@@ -651,12 +605,10 @@ alternative data structure for differential editing analysis that
 contains an assay with read counts of both the `ALT` and `REF` alleles
 in a single matrix.
 
-``` r
-
-deobj <- make_de_object(rse, min_prop = 0.05, min_samples = 3)
-
-assay(deobj, "counts")[1:3, c(1, 7, 2, 8)]
-```
+\
+`deobj`` ``<-`` `[`make_de_object`](https://rnabioco.github.io/raer/reference/make_de_object.md)`(``rse``, min_prop ``=`` ``0.05``, min_samples ``=`` ``3``)`\
+\
+[`assay`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``deobj``, ``"counts"``)``[``1``:``3``, `[`c`](https://rdrr.io/r/base/c.html)`(``1``, ``7``, ``2``, ``8``)``]`
 
     ##                     SRR5564260_ref SRR5564260_alt SRR5564261_ref SRR5564261_alt
     ## site_chr18_691546_2              8              0              6              0
@@ -673,25 +625,21 @@ events. For differential editing, we use the design
 `design <- ~0 + condition:sample + condition:count` and perform testing
 to compare the edited read counts against unedited read counts.
 
-``` r
-
-deobj$sample <- factor(deobj$sample)
-de_results <- find_de_sites(deobj,
-    test = "DESeq2",
-    sample_col = "sample",
-    condition_col = "genotype",
-    condition_control = "Wildtype",
-    condition_treatment = "ADAR1KO"
-)
-```
+\
+`deobj``$``sample`` ``<-`` `[`factor`](https://rdrr.io/r/base/factor.html)`(``deobj``$``sample``)`\
+`de_results`` ``<-`` `[`find_de_sites`](https://rnabioco.github.io/raer/reference/find_de_sites.md)`(``deobj``,`\
+`    test ``=`` ``"DESeq2"``,`\
+`    sample_col ``=`` ``"sample"``,`\
+`    condition_col ``=`` ``"genotype"``,`\
+`    condition_control ``=`` ``"Wildtype"``,`\
+`    condition_treatment ``=`` ``"ADAR1KO"`\
+`)`
 
 This returns a list containing the dds object, the full results, the
 significant results, and the model matrix.
 
-``` r
-
-de_results$sig_results[1:5, ]
-```
+\
+`de_results``$``sig_results``[``1``:``5``, ``]`
 
     ##                        baseMean log2FoldChange     lfcSE      stat      pvalue
     ## site_chr18_23296417_2 15.500000      -2.450652 0.8459822 -2.896813 0.003769742
@@ -706,16 +654,14 @@ de_results$sig_results[1:5, ]
     ## site_chr18_21631237_1 0.044059148
     ## site_chr18_35263230_2 0.035633191
 
-``` r
-
-library(ComplexHeatmap)
-top_sites <- rownames(de_results$sig_results)[1:20]
-
-Heatmap(assay(rse, "edit_freq")[top_sites, ],
-    name = "editing frequency",
-    column_labels = paste0(rse$genotype, "-", rse$treatment)
-)
-```
+\
+[`library`](https://rdrr.io/r/base/library.html)`(`[`ComplexHeatmap`](https://github.com/jokergoo/ComplexHeatmap)`)`\
+`top_sites`` ``<-`` `[`rownames`](https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html)`(``de_results``$``sig_results``)``[``1``:``20``]`\
+\
+[`Heatmap`](https://rdrr.io/pkg/ComplexHeatmap/man/Heatmap.html)`(`[`assay`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``, ``"edit_freq"``)``[``top_sites``, ``]``,`\
+`    name ``=`` ``"editing frequency"``,`\
+`    column_labels ``=`` `[`paste0`](https://rdrr.io/r/base/paste.html)`(``rse``$``genotype``, ``"-"``, ``rse``$``treatment``)`\
+`)`
 
 ![](raer_files/figure-html/unnamed-chunk-24-1.png)
 
@@ -747,27 +693,25 @@ the `ALU` elements are based on `hg38`, we will therefore convert
 between the two as needed to obtain SNP and ALU element coordinates
 based on `hg38`.
 
-``` r
-
-library(AnnotationHub)
-library(SNPlocs.Hsapiens.dbSNP144.GRCh38)
-
-ah <- AnnotationHub()
-rmsk_hg38 <- ah[["AH99003"]]
-
-alus <- rmsk_hg38[rmsk_hg38$repFamily == "Alu", ]
-alus <- alus[seqnames(alus) == "chr18", ]
-alus <- keepStandardChromosomes(alus)
-alus <- alus[1:1000, ]
-
-seqlevelsStyle(alus) <- "NCBI"
-genome(alus) <- "GRCh38.p2"
-
-alu_snps <- get_overlapping_snps(alus, SNPlocs.Hsapiens.dbSNP144.GRCh38)
-
-seqlevelsStyle(alu_snps) <- "UCSC"
-alu_snps[1:3, ]
-```
+\
+[`library`](https://rdrr.io/r/base/library.html)`(``AnnotationHub``)`\
+[`library`](https://rdrr.io/r/base/library.html)`(``SNPlocs.Hsapiens.dbSNP144.GRCh38``)`\
+\
+`ah`` ``<-`` `[`AnnotationHub`](https://rdrr.io/pkg/AnnotationHub/man/AnnotationHub-class.html)`(``)`\
+`rmsk_hg38`` ``<-`` ``ah``[[``"AH99003"``]``]`\
+\
+`alus`` ``<-`` ``rmsk_hg38``[``rmsk_hg38``$``repFamily`` ``==`` ``"Alu"``, ``]`\
+`alus`` ``<-`` ``alus``[`[`seqnames`](https://rdrr.io/pkg/Seqinfo/man/seqinfo.html)`(``alus``)`` ``==`` ``"chr18"``, ``]`\
+`alus`` ``<-`` `[`keepStandardChromosomes`](https://rdrr.io/pkg/GenomeInfoDb/man/seqlevels-wrappers.html)`(``alus``)`\
+`alus`` ``<-`` ``alus``[``1``:``1000``, ``]`\
+\
+[`seqlevelsStyle`](https://rdrr.io/pkg/GenomeInfoDb/man/seqlevelsStyle.html)`(``alus``)`` ``<-`` ``"NCBI"`\
+[`genome`](https://rdrr.io/pkg/Seqinfo/man/seqinfo.html)`(``alus``)`` ``<-`` ``"GRCh38.p2"`\
+\
+`alu_snps`` ``<-`` `[`get_overlapping_snps`](https://rnabioco.github.io/raer/reference/get_overlapping_snps.md)`(``alus``, ``SNPlocs.Hsapiens.dbSNP144.GRCh38``)`\
+\
+[`seqlevelsStyle`](https://rdrr.io/pkg/GenomeInfoDb/man/seqlevelsStyle.html)`(``alu_snps``)`` ``<-`` ``"UCSC"`\
+`alu_snps``[``1``:``3``, ``]`
 
     ## UnstitchedGPos object with 3 positions and 0 metadata columns:
     ##       seqnames       pos strand
@@ -778,11 +722,9 @@ alu_snps[1:3, ]
     ##   -------
     ##   seqinfo: 25 sequences (1 circular) from hg38 genome
 
-``` r
-
-seqlevelsStyle(alus) <- "UCSC"
-alus[1:3, ]
-```
+\
+[`seqlevelsStyle`](https://rdrr.io/pkg/GenomeInfoDb/man/seqlevelsStyle.html)`(``alus``)`` ``<-`` ``"UCSC"`\
+`alus``[``1``:``3``, ``]`
 
     ## GRanges object with 3 ranges and 11 metadata columns:
     ##       seqnames      ranges strand |   swScore  milliDiv  milliDel  milliIns
@@ -808,26 +750,22 @@ returns a matrix containing the AEI calculated for all allelic
 combinations and a more detailed table containing values for each
 chromosome.
 
-``` r
-
-alu_index <- calc_AEI(bam_files,
-    fasta = fafn,
-    snp_db = alu_snps,
-    alu_ranges = alus,
-    param = fp
-)
-names(alu_index)
-```
+\
+`alu_index`` ``<-`` `[`calc_AEI`](https://rnabioco.github.io/raer/reference/calc_AEI.md)`(``bam_files``,`\
+`    fasta ``=`` ``fafn``,`\
+`    snp_db ``=`` ``alu_snps``,`\
+`    alu_ranges ``=`` ``alus``,`\
+`    param ``=`` ``fp`\
+`)`\
+[`names`](https://rdrr.io/r/base/names.html)`(``alu_index``)`
 
     ## [1] "AEI"           "AEI_per_chrom"
 
-``` r
-
-Heatmap(alu_index$AEI,
-    name = "AEI",
-    row_labels = rse$genotype[match(rownames(alu_index$AEI), rse$sample)]
-)
-```
+\
+[`Heatmap`](https://rdrr.io/pkg/ComplexHeatmap/man/Heatmap.html)`(``alu_index``$``AEI``,`\
+`    name ``=`` ``"AEI"``,`\
+`    row_labels ``=`` ``rse``$``genotype``[`[`match`](https://rdrr.io/pkg/BiocGenerics/man/match.html)`(`[`rownames`](https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html)`(``alu_index``$``AEI``)``, ``rse``$``sample``)``]`\
+`)`
 
 ![](raer_files/figure-html/unnamed-chunk-27-1.png)
 
@@ -859,11 +797,9 @@ SNPs corresponding to the first 1Mb region of chr4 have been prepared
 for this vignette and can be downloaded and cached using
 [`NA12878()`](https://rdrr.io/pkg/raerdata/man/NA12878.html).
 
-``` r
-
-rna_wgs <- NA12878()
-names(rna_wgs)
-```
+\
+`rna_wgs`` ``<-`` `[`NA12878`](https://rdrr.io/pkg/raerdata/man/NA12878.html)`(``)`\
+[`names`](https://rdrr.io/r/base/names.html)`(``rna_wgs``)`
 
     ## [1] "bams"  "fasta" "snps"
 
@@ -883,13 +819,11 @@ Additionally we will use the following additional annotation resources:
   [`AnnotationHub()`](https://rdrr.io/pkg/AnnotationHub/man/AnnotationHub-class.html)
   for hg38, as shown in the [bulk RNA-seq](#bulk) tutorial.
 
-``` r
-
-library(TxDb.Hsapiens.UCSC.hg38.knownGene)
-
-txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
-chr4snps <- rna_wgs$snps
-```
+\
+[`library`](https://rdrr.io/r/base/library.html)`(``TxDb.Hsapiens.UCSC.hg38.knownGene``)`\
+\
+`txdb`` ``<-`` ``TxDb.Hsapiens.UCSC.hg38.knownGene`\
+`chr4snps`` ``<-`` ``rna_wgs``$``snps`
 
 The
 [`pileup_sites()`](https://rnabioco.github.io/raer/reference/pileup_sites.md)
@@ -900,32 +834,30 @@ can accept multiple arguments matched to each of the input BAM files.
 This allows us to have distinct settings for the WGS and RNA-seq BAM
 files.
 
-``` r
-
-bams <- rna_wgs$bams
-names(bams) <- c("rna", "dna")
-fp <- FilterParam(
-    min_depth = 1, # minimum read depth across all samples
-    min_base_quality = 30, # minimum base quality
-    min_mapq = c(255, 30), # minimum MAPQ for each BAM file
-    library_type = c("fr-first-strand", "unstranded"), # sample library-types
-    trim_5p = 5, # bases to trim from 5' end of alignment
-    trim_3p = 5, # bases to trim from 3' end of alignment
-    indel_dist = 4, # ignore read if contains an indel within distance from site
-    min_splice_overhang = 10, # required spliced alignment overhang
-    read_bqual = c(0.25, 20), # fraction of the read with base quality
-    only_keep_variants = c(TRUE, FALSE), # report site if rnaseq BAM has variant
-    report_multiallelic = FALSE, # exclude sites with multiple variant alleles
-)
-
-rse <- pileup_sites(bams,
-    fasta = rna_wgs$fasta,
-    chroms = "chr4",
-    param = fp
-)
-
-rse
-```
+\
+`bams`` ``<-`` ``rna_wgs``$``bams`\
+[`names`](https://rdrr.io/r/base/names.html)`(``bams``)`` ``<-`` `[`c`](https://rdrr.io/r/base/c.html)`(``"rna"``, ``"dna"``)`\
+`fp`` ``<-`` `[`FilterParam`](https://rnabioco.github.io/raer/reference/pileup_sites.md)`(`\
+`    min_depth ``=`` ``1``, ``# minimum read depth across all samples`\
+`    min_base_quality ``=`` ``30``, ``# minimum base quality`\
+`    min_mapq ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``255``, ``30``)``, ``# minimum MAPQ for each BAM file`\
+`    library_type ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``"fr-first-strand"``, ``"unstranded"``)``, ``# sample library-types`\
+`    trim_5p ``=`` ``5``, ``# bases to trim from 5' end of alignment`\
+`    trim_3p ``=`` ``5``, ``# bases to trim from 3' end of alignment`\
+`    indel_dist ``=`` ``4``, ``# ignore read if contains an indel within distance from site`\
+`    min_splice_overhang ``=`` ``10``, ``# required spliced alignment overhang`\
+`    read_bqual ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``0.25``, ``20``)``, ``# fraction of the read with base quality`\
+`    only_keep_variants ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``TRUE``, ``FALSE``)``, ``# report site if rnaseq BAM has variant`\
+`    report_multiallelic ``=`` ``FALSE``, ``# exclude sites with multiple variant alleles`\
+`)`\
+\
+`rse`` ``<-`` `[`pileup_sites`](https://rnabioco.github.io/raer/reference/pileup_sites.md)`(``bams``,`\
+`    fasta ``=`` ``rna_wgs``$``fasta``,`\
+`    chroms ``=`` ``"chr4"``,`\
+`    param ``=`` ``fp`\
+`)`\
+\
+`rse`
 
     ## class: RangedSummarizedExperiment 
     ## dim: 1035 2 
@@ -945,14 +877,12 @@ expressing RNA strand. We therefore use
 `subsetByOverlaps(..., ignore.strand = TRUE)` to retain sites passing
 these DNA-seq based filters independent of strand.
 
-``` r
-
-to_keep <- (assay(rse, "nRef")[, "dna"] >= 5 &
-    assay(rse, "ALT")[, "dna"] == "-")
-
-rse <- subsetByOverlaps(rse, rse[to_keep, ], ignore.strand = TRUE)
-nrow(rse)
-```
+\
+`to_keep`` ``<-`` ``(`[`assay`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``, ``"nRef"``)``[``, ``"dna"``]`` ``>=`` ``5`` ``&`\
+`    `[`assay`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``, ``"ALT"``)``[``, ``"dna"``]`` ``==`` ``"-"``)`\
+\
+`rse`` ``<-`` `[`subsetByOverlaps`](https://rdrr.io/pkg/IRanges/man/findOverlaps-methods.html)`(``rse``, ``rse``[``to_keep``, ``]``, ignore.strand ``=`` ``TRUE``)`\
+[`nrow`](https://rdrr.io/pkg/BiocGenerics/man/nrow.html)`(``rse``)`
 
     ## [1] 339
 
@@ -966,12 +896,10 @@ in the `summarizedExperiment` object. It will add a new column to the
 to indicate the variant for each site, and will calculate an `edit_freq`
 assay with variant allele frequencies for each sample.
 
-``` r
-
-rse <- filter_multiallelic(rse)
-rse <- calc_edit_frequency(rse)
-rowData(rse)
-```
+\
+`rse`` ``<-`` `[`filter_multiallelic`](https://rnabioco.github.io/raer/reference/filter_multiallelic.md)`(``rse``)`\
+`rse`` ``<-`` `[`calc_edit_frequency`](https://rnabioco.github.io/raer/reference/calc_edit_frequency.md)`(``rse``)`\
+[`rowData`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``)`
 
     ## DataFrame with 260 rows and 5 columns
     ##                            REF      rpbz       vdb       sor         ALT
@@ -995,19 +923,17 @@ using the
 [`annot_from_gr()`](https://rnabioco.github.io/raer/reference/annot_from_gr.md)
 function.
 
-``` r
-
-# subset both to chromosome 4 to avoid warning about different seqlevels
-seqlevels(rse, pruning.mode = "coarse") <- "chr4"
-seqlevels(rmsk_hg38, pruning.mode = "coarse") <- "chr4"
-
-rse <- annot_from_gr(rse,
-    rmsk_hg38,
-    cols_to_map = c("repName", "repClass", "repFamily")
-)
-
-rowData(rse)[c("repName", "repFamily")]
-```
+\
+`# subset both to chromosome 4 to avoid warning about different seqlevels`\
+[`seqlevels`](https://rdrr.io/pkg/Seqinfo/man/seqinfo.html)`(``rse``, pruning.mode ``=`` ``"coarse"``)`` ``<-`` ``"chr4"`\
+[`seqlevels`](https://rdrr.io/pkg/Seqinfo/man/seqinfo.html)`(``rmsk_hg38``, pruning.mode ``=`` ``"coarse"``)`` ``<-`` ``"chr4"`\
+\
+`rse`` ``<-`` `[`annot_from_gr`](https://rnabioco.github.io/raer/reference/annot_from_gr.md)`(``rse``,`\
+`    ``rmsk_hg38``,`\
+`    cols_to_map ``=`` `[`c`](https://rdrr.io/r/base/c.html)`(``"repName"``, ``"repClass"``, ``"repFamily"``)`\
+`)`\
+\
+[`rowData`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``)``[`[`c`](https://rdrr.io/r/base/c.html)`(``"repName"``, ``"repFamily"``)``]`
 
     ## DataFrame with 260 rows and 2 columns
     ##                    repName repFamily
@@ -1024,21 +950,17 @@ rowData(rse)[c("repName", "repFamily")]
     ## site_chr4_995144_1      NA        NA
     ## site_chr4_995145_1      NA        NA
 
-``` r
-
-rse <- rse[!rowData(rse)$repFamily %in% c("Simple_repeat", "Low_complexity")]
-```
+\
+`rse`` ``<-`` ``rse``[``!`[`rowData`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``)``$``repFamily`` `[`%in%`](https://rdrr.io/pkg/BiocGenerics/man/match.html)` `[`c`](https://rdrr.io/r/base/c.html)`(``"Simple_repeat"``, ``"Low_complexity"``)``]`
 
 Next we’ll remove sites adjacent to other sites with different variant
 types. For example if an A-\>G variant is located proximal to a C-\>T
 variant then the variants will be removed.
 
-``` r
-
-seqlevels(txdb, pruning.mode = "coarse") <- "chr4"
-rse <- filter_clustered_variants(rse, txdb, variant_dist = 100)
-rse
-```
+\
+[`seqlevels`](https://rdrr.io/pkg/Seqinfo/man/seqinfo.html)`(``txdb``, pruning.mode ``=`` ``"coarse"``)`` ``<-`` ``"chr4"`\
+`rse`` ``<-`` `[`filter_clustered_variants`](https://rnabioco.github.io/raer/reference/filter_clustered_variants.md)`(``rse``, ``txdb``, variant_dist ``=`` ``100``)`\
+`rse`
 
     ## class: RangedSummarizedExperiment 
     ## dim: 159 2 
@@ -1059,11 +981,9 @@ variant base. Here we will use the
 function to annotate using the `chr4snps` object and coarsely remove any
 editing sites overlapping the same position as a SNP.
 
-``` r
-
-rse <- annot_from_gr(rse, chr4snps, "name")
-rowData(rse)[c("name")]
-```
+\
+`rse`` ``<-`` `[`annot_from_gr`](https://rnabioco.github.io/raer/reference/annot_from_gr.md)`(``rse``, ``chr4snps``, ``"name"``)`\
+[`rowData`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``)``[`[`c`](https://rdrr.io/r/base/c.html)`(``"name"``)``]`
 
     ## DataFrame with 159 rows and 1 column
     ##                            name
@@ -1080,11 +1000,9 @@ rowData(rse)[c("name")]
     ## site_chr4_995144_1 rs1217215121
     ## site_chr4_995145_1           NA
 
-``` r
-
-rse <- rse[is.na(rowData(rse)$name), ]
-rse
-```
+\
+`rse`` ``<-`` ``rse``[`[`is.na`](https://rdrr.io/r/base/NA.html)`(`[`rowData`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``)``$``name``)``, ``]`\
+`rse`
 
     ## class: RangedSummarizedExperiment 
     ## dim: 100 2 
@@ -1099,13 +1017,11 @@ rse
 Lastly, we’ll further filter the edit sites to require that the editing
 frequency is \> 0.05 and that at least 2 reads support the editing site.
 
-``` r
-
-to_keep <- assay(rse, "edit_freq")[, 1] > 0.05
-rse <- rse[to_keep, ]
-
-rse <- rse[assay(rse, "nAlt")[, 1] >= 2]
-```
+\
+`to_keep`` ``<-`` `[`assay`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``, ``"edit_freq"``)``[``, ``1``]`` ``>`` ``0.05`\
+`rse`` ``<-`` ``rse``[``to_keep``, ``]`\
+\
+`rse`` ``<-`` ``rse``[`[`assay`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``, ``"nAlt"``)``[``, ``1``]`` ``>=`` ``2``]`
 
 With the above filtering approach we obtain a set of putative editing
 sites. The specificity of the filtering can be estimated by examining
@@ -1115,10 +1031,8 @@ by APOBEC enzymes) in human datasets so the majority of the variants
 should by A-to-G. In this vignette data all of the identified sites are
 A-to-G.
 
-``` r
-
-rowRanges(rse)
-```
+\
+`rowRanges``(``rse``)`
 
     ## GRanges object with 10 ranges and 9 metadata columns:
     ##                      seqnames    ranges strand |         REF      rpbz
@@ -1168,10 +1082,8 @@ molecular consequences of the editing event.
 
 ## R session information
 
-``` r
-
-sessionInfo()
-```
+\
+[`sessionInfo`](https://rdrr.io/r/utils/sessionInfo.html)`(``)`
 
     ## R version 4.6.1 (2026-06-24)
     ## Platform: x86_64-pc-linux-gnu
@@ -1199,9 +1111,9 @@ sessionInfo()
     ## other attached packages:
     ##  [1] TxDb.Hsapiens.UCSC.hg38.knownGene_3.22.0
     ##  [2] GenomicFeatures_1.65.0                  
-    ##  [3] AnnotationDbi_1.75.0                    
+    ##  [3] AnnotationDbi_1.75.2                    
     ##  [4] SNPlocs.Hsapiens.dbSNP144.GRCh38_0.99.20
-    ##  [5] BSgenome_1.81.0                         
+    ##  [5] BSgenome_1.81.1                         
     ##  [6] rtracklayer_1.73.0                      
     ##  [7] BiocIO_1.23.3                           
     ##  [8] AnnotationHub_4.3.2                     
@@ -1209,22 +1121,22 @@ sessionInfo()
     ## [10] dbplyr_2.6.0                            
     ## [11] ComplexHeatmap_2.29.0                   
     ## [12] Rsamtools_2.29.0                        
-    ## [13] Biostrings_2.81.5                       
+    ## [13] Biostrings_2.81.9                       
     ## [14] XVector_0.53.0                          
     ## [15] GenomeInfoDb_1.49.1                     
     ## [16] scater_1.41.2                           
     ## [17] ggplot2_4.0.3                           
-    ## [18] scuttle_1.23.1                          
-    ## [19] SingleCellExperiment_1.35.1             
+    ## [18] scuttle_1.23.2                          
+    ## [19] SingleCellExperiment_1.35.2             
     ## [20] SummarizedExperiment_1.43.0             
-    ## [21] Biobase_2.73.1                          
+    ## [21] Biobase_2.73.2                          
     ## [22] MatrixGenerics_1.25.0                   
     ## [23] matrixStats_1.5.0                       
-    ## [24] GenomicRanges_1.65.0                    
-    ## [25] Seqinfo_1.3.0                           
-    ## [26] IRanges_2.47.2                          
-    ## [27] S4Vectors_0.51.5                        
-    ## [28] BiocGenerics_0.59.9                     
+    ## [24] GenomicRanges_1.65.4                    
+    ## [25] Seqinfo_1.3.2                           
+    ## [26] IRanges_2.47.5                          
+    ## [27] S4Vectors_0.51.9                        
+    ## [28] BiocGenerics_0.59.12                    
     ## [29] generics_0.1.4                          
     ## [30] raerdata_1.11.0                         
     ## [31] raer_1.11.1                             
@@ -1233,40 +1145,40 @@ sessionInfo()
     ## loaded via a namespace (and not attached):
     ##   [1] RColorBrewer_1.1-3       shape_1.4.6.1            jsonlite_2.0.0          
     ##   [4] magrittr_2.0.5           ggbeeswarm_0.7.3         farver_2.1.2            
-    ##   [7] rmarkdown_2.31           GlobalOptions_0.1.4      fs_2.1.0                
+    ##   [7] rmarkdown_2.32           GlobalOptions_0.1.4      fs_2.1.0                
     ##  [10] ragg_1.5.2               vctrs_0.7.3              memoise_2.0.1           
-    ##  [13] RCurl_1.98-1.19          htmltools_0.5.9          S4Arrays_1.13.0         
-    ##  [16] BiocBaseUtils_1.15.1     curl_7.1.0               BiocNeighbors_2.7.2     
-    ##  [19] SparseArray_1.13.2       sass_0.4.10              bslib_0.11.0            
-    ##  [22] htmlwidgets_1.6.4        desc_1.4.3               httr2_1.2.3             
-    ##  [25] cachem_1.1.0             GenomicAlignments_1.49.0 lifecycle_1.0.5         
+    ##  [13] RCurl_1.98-1.20          htmltools_0.5.9          S4Arrays_1.13.0         
+    ##  [16] BiocBaseUtils_1.15.1     curl_8.0.0               BiocNeighbors_2.7.3     
+    ##  [19] SparseArray_1.13.2       sass_0.4.10              bslib_0.12.0            
+    ##  [22] htmlwidgets_1.6.4        desc_1.4.3               httr2_1.3.0             
+    ##  [25] cachem_1.1.0             GenomicAlignments_1.49.2 lifecycle_1.0.5         
     ##  [28] iterators_1.0.14         pkgconfig_2.0.3          rsvd_1.0.5              
-    ##  [31] Matrix_1.7-5             R6_2.6.1                 fastmap_1.2.0           
-    ##  [34] clue_0.3-68              digest_0.6.39            colorspace_2.1-2        
-    ##  [37] DESeq2_1.53.0            irlba_2.3.7              ExperimentHub_3.3.0     
-    ##  [40] textshaping_1.0.5        RSQLite_3.53.3           beachmat_2.29.0         
-    ##  [43] filelock_1.0.3           labeling_0.4.3           httr_1.4.8              
-    ##  [46] abind_1.4-8              compiler_4.6.1           bit64_4.8.2             
+    ##  [31] Matrix_1.7-6             R6_2.6.1                 fastmap_1.2.0           
+    ##  [34] clue_0.3-68              digest_0.6.39            colorspace_2.1-3        
+    ##  [37] DESeq2_1.53.3            irlba_2.3.7              ExperimentHub_3.3.2     
+    ##  [40] textshaping_1.0.5        RSQLite_3.53.3           beachmat_2.29.2         
+    ##  [43] filelock_1.0.3           labeling_0.4.3           httr_1.4.9              
+    ##  [46] abind_1.4-8              compiler_4.6.1           bit64_4.8.6             
     ##  [49] withr_3.0.3              doParallel_1.0.17        S7_0.2.2                
     ##  [52] BiocParallel_1.47.0      viridis_0.6.5            DBI_1.3.0               
-    ##  [55] rappdirs_0.3.4           DelayedArray_0.39.3      rjson_0.2.23            
+    ##  [55] rappdirs_0.3.4           DelayedArray_0.39.6      rjson_0.2.23            
     ##  [58] tools_4.6.1              vipor_0.4.7              otel_0.2.0              
     ##  [61] beeswarm_0.4.0           glue_1.8.1               restfulr_0.0.17         
-    ##  [64] cluster_2.1.8.2          gtable_0.3.6             BiocSingular_1.29.0     
+    ##  [64] cluster_2.1.8.3          gtable_0.3.6             BiocSingular_1.29.1     
     ##  [67] ScaledMatrix_1.21.0      ggrepel_0.9.8            BiocVersion_3.24.0      
     ##  [70] foreach_1.5.2            pillar_1.11.1            circlize_0.4.18         
-    ##  [73] dplyr_1.2.1              lattice_0.22-9           bit_4.6.0               
-    ##  [76] tidyselect_1.2.1         locfit_1.5-9.12          knitr_1.51              
-    ##  [79] gridExtra_2.3.1          bookdown_0.47            xfun_0.59               
+    ##  [73] dplyr_1.2.1              lattice_0.23-1           bit_4.6.0               
+    ##  [76] tidyselect_1.2.1         locfit_1.5-9.12          knitr_1.52              
+    ##  [79] gridExtra_2.3.1          bookdown_0.48            xfun_0.60               
     ##  [82] pheatmap_1.0.13          UCSC.utils_1.9.0         yaml_2.3.12             
-    ##  [85] evaluate_1.0.5           codetools_0.2-20         cigarillo_1.3.0         
+    ##  [85] evaluate_1.0.5           codetools_0.2-20         cigarillo_1.3.1         
     ##  [88] tibble_3.3.1             BiocManager_1.30.27      cli_3.6.6               
     ##  [91] systemfonts_1.3.2        jquerylib_0.1.4          Rcpp_1.1.2              
-    ##  [94] png_0.1-9                XML_3.99-0.23            parallel_4.6.1          
-    ##  [97] pkgdown_2.2.0            blob_1.3.0               bitops_1.0-9            
+    ##  [94] png_0.1-9                XML_3.99-0.24            parallel_4.6.1          
+    ##  [97] pkgdown_2.2.1            blob_1.3.0               bitops_1.1-0            
     ## [100] viridisLite_0.4.3        scales_1.4.0             purrr_1.2.2             
     ## [103] crayon_1.5.3             GetoptLong_1.1.1         rlang_1.3.0             
-    ## [106] KEGGREST_1.53.1
+    ## [106] KEGGREST_1.53.6
 
 Bonfield, James K, John Marshall, Petr Danecek, et al. 2021. “HTSlib: C
 Library for Reading/Writing High-Throughput Sequencing Data.”

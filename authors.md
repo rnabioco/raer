@@ -25,10 +25,10 @@ Source:
 Riemondy K, Wells-Wrasman K (2026). *raer: RNA editing tools in R*. R
 package version 1.11.1, <https://rnabioco.github.io/raer>.
 
-    @Manual{,
-      title = {raer: RNA editing tools in R},
-      author = {Kent Riemondy and Kristen Wells-Wrasman},
-      year = {2026},
-      note = {R package version 1.11.1},
-      url = {https://rnabioco.github.io/raer},
-    }
+@Manual{,\
+  title = {raer: RNA editing tools in R},\
+  author = {Kent Riemondy and Kristen Wells-Wrasman},\
+  year = {2026},\
+  note = {R package version 1.11.1},\
+  url = {https://rnabioco.github.io/raer},\
+}

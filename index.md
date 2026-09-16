@@ -8,22 +8,18 @@ raer facilitates analysis of RNA adenosine editing in the
 `raer` is available on
 [Bioconductor](https://bioconductor.org/packages/release/bioc/html/raer.html):
 
-``` r
-
-if (!require("BiocManager", quietly = TRUE)) {
-    install.packages("BiocManager")
-}
-
-BiocManager::install("raer")
-```
+\
+`if`` ``(``!`[`require`](https://rdrr.io/r/base/library.html)`(`[`"BiocManager"`](https://bioconductor.github.io/BiocManager/)`, quietly ``=`` ``TRUE``)``)`` ``{`\
+`    `[`install.packages`](https://rdrr.io/r/utils/install.packages.html)`(``"BiocManager"``)`\
+`}`\
+\
+`BiocManager``::`[`install`](https://bioconductor.github.io/BiocManager/reference/install.html)`(``"raer"``)`
 
 You can install the development version of raer from
 [GitHub](https://github.com/rnabioco/raer) with:
 
-``` r
-
-BiocManager::install("rnabioco/raer")
-```
+\
+`BiocManager``::`[`install`](https://bioconductor.github.io/BiocManager/reference/install.html)`(``"rnabioco/raer"``)`
 
 ## Quick start
 
@@ -35,146 +31,134 @@ raer provides methods to compute per site read count summaries from BAM
 alignment files, either for known editing sites, or for all detected
 sites.
 
-``` r
-
-library(raer)
-bam1fn <- raer_example("SRR5564269_Aligned.sortedByCoord.out.md.bam")
-bam2fn <- raer_example("SRR5564277_Aligned.sortedByCoord.out.md.bam")
-fafn <- raer_example("human.fasta")
-
-bams <- c("ko" = bam1fn, "wt" = bam2fn)
-
-rse <- pileup_sites(bams, fafn)
-```
+\
+[`library`](https://rdrr.io/r/base/library.html)`(`[`raer`](https://rnabioco.github.io/raer)`)`\
+`bam1fn`` ``<-`` `[`raer_example`](https://rnabioco.github.io/raer/reference/raer_example.md)`(``"SRR5564269_Aligned.sortedByCoord.out.md.bam"``)`\
+`bam2fn`` ``<-`` `[`raer_example`](https://rnabioco.github.io/raer/reference/raer_example.md)`(``"SRR5564277_Aligned.sortedByCoord.out.md.bam"``)`\
+`fafn`` ``<-`` `[`raer_example`](https://rnabioco.github.io/raer/reference/raer_example.md)`(``"human.fasta"``)`\
+\
+`bams`` ``<-`` `[`c`](https://rdrr.io/r/base/c.html)`(``"ko"`` ``=`` ``bam1fn``, ``"wt"`` ``=`` ``bam2fn``)`\
+\
+`rse`` ``<-`` `[`pileup_sites`](https://rnabioco.github.io/raer/reference/pileup_sites.md)`(``bams``, ``fafn``)`
 
 To facilitate comparisons across groups, base count data and genomic
 coordinates are stored in a `RangedSummarizedExperiment`.
 
-``` r
+\
+[`suppressMessages`](https://rdrr.io/r/base/message.html)`(`[`library`](https://rdrr.io/r/base/library.html)`(`[`SummarizedExperiment`](https://bioconductor.org/packages/SummarizedExperiment)`)``)`\
+`rse`\
+`#> class: RangedSummarizedExperiment `\
+`#> dim: 1695 2 `\
+`#> metadata(0):`\
+`#> assays(7): ALT nRef ... nC nG`\
+`#> rownames(1695): site_SSR3_1_2 site_SSR3_2_2 ... site_DHFR_517_2`\
+`#>   site_DHFR_518_2`\
+`#> rowData names(4): REF rpbz vdb sor`\
+`#> colnames(2): ko wt`\
+`#> colData names(1): sample`\
+[`assays`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``)`\
+`#> List of length 7`\
+`#> names(7): ALT nRef nAlt nA nT nC nG`\
+[`colData`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``)`\
+`#> DataFrame with 2 rows and 1 column`\
+`#>         sample`\
+`#>    <character>`\
+`#> ko          ko`\
+`#> wt          wt`
 
-suppressMessages(library(SummarizedExperiment))
-rse
-#> class: RangedSummarizedExperiment 
-#> dim: 1695 2 
-#> metadata(0):
-#> assays(7): ALT nRef ... nC nG
-#> rownames(1695): site_SSR3_1_2 site_SSR3_2_2 ... site_DHFR_517_2
-#>   site_DHFR_518_2
-#> rowData names(4): REF rpbz vdb sor
-#> colnames(2): ko wt
-#> colData names(1): sample
-assays(rse)
-#> List of length 7
-#> names(7): ALT nRef nAlt nA nT nC nG
-colData(rse)
-#> DataFrame with 2 rows and 1 column
-#>         sample
-#>    <character>
-#> ko          ko
-#> wt          wt
-```
-
-``` r
-
-assays(rse)$nRef[1:4, ]
-#>               ko wt
-#> site_SSR3_1_2 13 12
-#> site_SSR3_2_2 14 12
-#> site_SSR3_3_2 14 12
-#> site_SSR3_4_2 15 12
-assays(rse)$nAlt[1:4, ]
-#>               ko wt
-#> site_SSR3_1_2  0  0
-#> site_SSR3_2_2  0  0
-#> site_SSR3_3_2  0  0
-#> site_SSR3_4_2  0  0
-```
+\
+[`assays`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``)``$``nRef``[``1``:``4``, ``]`\
+`#>               ko wt`\
+`#> site_SSR3_1_2 13 12`\
+`#> site_SSR3_2_2 14 12`\
+`#> site_SSR3_3_2 14 12`\
+`#> site_SSR3_4_2 15 12`\
+[`assays`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``)``$``nAlt``[``1``:``4``, ``]`\
+`#>               ko wt`\
+`#> site_SSR3_1_2  0  0`\
+`#> site_SSR3_2_2  0  0`\
+`#> site_SSR3_3_2  0  0`\
+`#> site_SSR3_4_2  0  0`
 
 The
 [`FilterParam()`](https://rnabioco.github.io/raer/reference/pileup_sites.md)
 class holds multiple options for customizing the output of
 [`pileup_sites()`](https://rnabioco.github.io/raer/reference/pileup_sites.md).
 
-``` r
-
-fp <- FilterParam(
-    only_keep_variants = TRUE,
-    library_type = "fr-first-strand",
-    min_depth = 2
-)
-
-rse <- pileup_sites(bams, fafn, param = fp)
-rse
-#> class: RangedSummarizedExperiment 
-#> dim: 74 2 
-#> metadata(0):
-#> assays(7): ALT nRef ... nC nG
-#> rownames(74): site_SSR3_102_2 site_SSR3_125_2 ... site_DHFR_430_2
-#>   site_DHFR_513_2
-#> rowData names(4): REF rpbz vdb sor
-#> colnames(2): ko wt
-#> colData names(1): sample
-```
+\
+`fp`` ``<-`` `[`FilterParam`](https://rnabioco.github.io/raer/reference/pileup_sites.md)`(`\
+`    only_keep_variants ``=`` ``TRUE``,`\
+`    library_type ``=`` ``"fr-first-strand"``,`\
+`    min_depth ``=`` ``2`\
+`)`\
+\
+`rse`` ``<-`` `[`pileup_sites`](https://rnabioco.github.io/raer/reference/pileup_sites.md)`(``bams``, ``fafn``, param ``=`` ``fp``)`\
+`rse`\
+`#> class: RangedSummarizedExperiment `\
+`#> dim: 74 2 `\
+`#> metadata(0):`\
+`#> assays(7): ALT nRef ... nC nG`\
+`#> rownames(74): site_SSR3_102_2 site_SSR3_125_2 ... site_DHFR_430_2`\
+`#>   site_DHFR_513_2`\
+`#> rowData names(4): REF rpbz vdb sor`\
+`#> colnames(2): ko wt`\
+`#> colData names(1): sample`
 
 [`pileup_cells()`](https://rnabioco.github.io/raer/reference/pileup_cells.md)
 provides support for quantifying editing sites in single cell libraries.
 
-``` r
+\
+`scbam_fn`` ``<-`` `[`raer_example`](https://rnabioco.github.io/raer/reference/raer_example.md)`(``"5k_neuron_mouse_possort.bam"``)`\
+`outdir`` ``<-`` `[`tempdir`](https://rdrr.io/r/base/tempfile.html)`(``)`\
+\
+`editing_sites`` ``<-`` `[`GRanges`](https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html)`(`\
+`    `[`c`](https://rdrr.io/r/base/c.html)`(`\
+`        ``"2:579:-"``,`\
+`        ``"2:625:-"``,`\
+`        ``"2:589:-"`\
+`    ``)``,`\
+`    REF ``=`` ``"A"``,`\
+`    ALT ``=`` ``"G"`\
+`)`\
+\
+`cbs`` ``<-`` `[`c`](https://rdrr.io/r/base/c.html)`(`\
+`    ``"CACCAAACAACAACAA-1"``,`\
+`    ``"TATTCCACACCCTCTA-1"``,`\
+`    ``"GACCTTCAGTTGTAAG-1"`\
+`)`\
+\
+`sce`` ``<-`` `[`pileup_cells`](https://rnabioco.github.io/raer/reference/pileup_cells.md)`(``scbam_fn``,`\
+`    sites ``=`` ``editing_sites``,`\
+`    cell_barcodes ``=`` ``cbs``,`\
+`    param ``=`` ``fp``,`\
+`    output_directory ``=`` ``outdir`\
+`)`\
+`sce`\
+`#> class: SingleCellExperiment `\
+`#> dim: 3 3 `\
+`#> metadata(0):`\
+`#> assays(2): nRef nAlt`\
+`#> rownames(3): site_2_579_2_AG site_2_625_2_AG site_2_589_2_AG`\
+`#> rowData names(2): REF ALT`\
+`#> colnames(3): CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1`\
+`#> colData names(0):`\
+`#> reducedDimNames(0):`\
+`#> mainExpName: NULL`\
+`#> altExpNames(0):`
 
-scbam_fn <- raer_example("5k_neuron_mouse_possort.bam")
-outdir <- tempdir()
-
-editing_sites <- GRanges(
-    c(
-        "2:579:-",
-        "2:625:-",
-        "2:589:-"
-    ),
-    REF = "A",
-    ALT = "G"
-)
-
-cbs <- c(
-    "CACCAAACAACAACAA-1",
-    "TATTCCACACCCTCTA-1",
-    "GACCTTCAGTTGTAAG-1"
-)
-
-sce <- pileup_cells(scbam_fn,
-    sites = editing_sites,
-    cell_barcodes = cbs,
-    param = fp,
-    output_directory = outdir
-)
-sce
-#> class: SingleCellExperiment 
-#> dim: 3 3 
-#> metadata(0):
-#> assays(2): nRef nAlt
-#> rownames(3): site_2_579_2_AG site_2_625_2_AG site_2_589_2_AG
-#> rowData names(2): REF ALT
-#> colnames(3): CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
-#> colData names(0):
-#> reducedDimNames(0):
-#> mainExpName: NULL
-#> altExpNames(0):
-```
-
-``` r
-
-assays(sce)$nRef
-#> 3 x 3 sparse Matrix of class "dgCMatrix"
-#>                 CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
-#> site_2_579_2_AG                  0                  0                  1
-#> site_2_625_2_AG                  0                  0                  0
-#> site_2_589_2_AG                  1                  1                  2
-assays(sce)$nAlt
-#> 3 x 3 sparse Matrix of class "dgCMatrix"
-#>                 CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1
-#> site_2_579_2_AG                  1                  1                  1
-#> site_2_625_2_AG                  1                  1                  1
-#> site_2_589_2_AG                  0                  0                  0
-```
+\
+[`assays`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``sce``)``$``nRef`\
+`#> 3 x 3 sparse Matrix of class "dgCMatrix"`\
+`#>                 CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1`\
+`#> site_2_579_2_AG                  0                  0                  1`\
+`#> site_2_625_2_AG                  0                  0                  0`\
+`#> site_2_589_2_AG                  1                  1                  2`\
+[`assays`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``sce``)``$``nAlt`\
+`#> 3 x 3 sparse Matrix of class "dgCMatrix"`\
+`#>                 CACCAAACAACAACAA-1 TATTCCACACCCTCTA-1 GACCTTCAGTTGTAAG-1`\
+`#> site_2_579_2_AG                  1                  1                  1`\
+`#> site_2_625_2_AG                  1                  1                  1`\
+`#> site_2_589_2_AG                  0                  0                  0`
 
 ## Related work
 
