@@ -6,7 +6,7 @@
 #' libraries, from a BAM file containing a cell-barcode and UMI, or well-based
 #' libraries that do not contain cell-barcodes.
 #'
-#'   The `sites` parameter specifies sites to quantify. This must be a [GRanges]
+#'   The `sites` parameter specifies sites to quantify. This must be a [GRanges][GenomicRanges::GRanges]
 #'   object with 1 base intervals, a strand (+ or -), and supplemented with
 #'   metadata columns named `REF` and `ALT` containing the reference and
 #'   alternate base to query. See examples for the required format.
@@ -17,7 +17,7 @@
 #'
 #' @param bamfiles a path to a BAM file (for droplet scRNA-seq), or a vector of
 #' paths to BAM files (Smart-seq2). Can be supplied as a character vector,
-#' [BamFile], or [BamFileList].
+#' [BamFile][Rsamtools::BamFile], or [BamFileList][Rsamtools::BamFileList].
 #' @param sites a GRanges object containing sites to process. See examples for
 #'   valid formatting.
 #' @param output_directory Output directory for output matrix files. The
@@ -46,10 +46,10 @@
 #' @param BPPARAM BiocParallel instance. Parallel computation occurs across
 #'   chromosomes.
 #'
-#' @returns Returns either a [SingleCellExperiment] or character vector of paths
-#'   to the sparseMatrix files produced. The [SingleCellExperiment] object is
+#' @returns Returns either a [SingleCellExperiment][SingleCellExperiment::SingleCellExperiment] or character vector of paths
+#'   to the sparseMatrix files produced. The [SingleCellExperiment][SingleCellExperiment::SingleCellExperiment] object is
 #'   populated with two assays, `nRef` and `nAlt`, which represent base counts
-#'   for the reference and alternate alleles. The [rowRanges()] will contain the
+#'   for the reference and alternate alleles. The [rowRanges()][SummarizedExperiment::rowRanges] will contain the
 #'   genomic interval for each site, along with `REF` and `ALT` columns. The
 #'   rownames will be populated with the format
 #'   `site_[seqnames]_[position(1-based)]_[strand]_[allele]`, with `strand`

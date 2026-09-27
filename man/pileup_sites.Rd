@@ -42,15 +42,15 @@ FilterParam(
 )
 }
 \arguments{
-\item{bamfiles}{a character vector, \link{BamFile} or \link{BamFileList} indicating 1
+\item{bamfiles}{a character vector, \link[Rsamtools:BamFile-class]{BamFile} or \link[Rsamtools:BamFile-class]{BamFileList} indicating 1
 or more BAM files to process. If named, the names will be included in the
-\link{colData} of the \link{RangedSummarizedExperiment} as a \code{sample} column, otherwise
+\link[SummarizedExperiment:SummarizedExperiment-class]{colData} of the \link[SummarizedExperiment:RangedSummarizedExperiment-class]{RangedSummarizedExperiment} as a \code{sample} column, otherwise
 the names will be taken from the basename of the BAM file.}
 
 \item{fasta}{path to genome fasta file used for read alignment. Can be
 provided in compressed gzip or bgzip format.}
 
-\item{sites}{a \link{GRanges} object containing regions or sites to process.}
+\item{sites}{a \link[GenomicRanges:GRanges-class]{GRanges} object containing regions or sites to process.}
 
 \item{region}{samtools region query string (i.e. \code{chr1:100-1000}). Can be
 combined with sites, in which case sites will be filtered to keep only sites
@@ -62,7 +62,7 @@ be used with the region parameter.}
 \item{param}{object of class \code{\link[=FilterParam]{FilterParam()}} which specify various
 filters to apply to reads and sites during pileup.}
 
-\item{BPPARAM}{A \link{BiocParallel} class to control parallel execution. Parallel
+\item{BPPARAM}{A \link[BiocParallel:BiocParallelParam-class]{BiocParallelParam} class to control parallel execution. Parallel
 processing occurs per chromosome and is disabled when run on a single
 region.}
 
@@ -137,7 +137,7 @@ base with the lower quality is set to 0, which discards it from being
 counted.}
 }
 \value{
-A \link{RangedSummarizedExperiment} object populated with
+A \link[SummarizedExperiment:RangedSummarizedExperiment-class]{RangedSummarizedExperiment} object populated with
 multiple assays:
 \itemize{
 \item \code{ALT}:  Alternate base(s) found at each position
@@ -149,7 +149,7 @@ multiple assays:
 \item \code{nG}: # of reads with G
 }
 
-The \code{\link[=rowRanges]{rowRanges()}} contains the genomic interval for each site, along with:
+The \link[SummarizedExperiment:RangedSummarizedExperiment-class]{rowRanges()} contains the genomic interval for each site, along with:
 \itemize{
 \item \code{REF}: The reference base
 \item \code{rpbz}: Mann-Whitney U test of Read Position Bias from bcftools,
@@ -169,7 +169,7 @@ This function uses a pileup routine to examine numerate base
 counts from alignments at specified sites, regions, or across all read
 alignments, from one or more BAM files. Alignment and site filtering
 options are controlled by the \code{FilterParam} class. A
-\link{RangedSummarizedExperiment} object is returned, populated with base count
+\link[SummarizedExperiment:RangedSummarizedExperiment-class]{RangedSummarizedExperiment} object is returned, populated with base count
 statistics for each supplied BAM file.
 }
 \examples{

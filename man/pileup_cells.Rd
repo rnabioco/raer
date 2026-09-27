@@ -21,7 +21,7 @@ pileup_cells(
 \arguments{
 \item{bamfiles}{a path to a BAM file (for droplet scRNA-seq), or a vector of
 paths to BAM files (Smart-seq2). Can be supplied as a character vector,
-\link{BamFile}, or \link{BamFileList}.}
+\link[Rsamtools:BamFile-class]{BamFile}, or \link[Rsamtools:BamFile-class]{BamFileList}.}
 
 \item{sites}{a GRanges object containing sites to process. See examples for
 valid formatting.}
@@ -61,10 +61,10 @@ chromosomes.}
 \item{verbose}{Display messages}
 }
 \value{
-Returns either a \link{SingleCellExperiment} or character vector of paths
-to the sparseMatrix files produced. The \link{SingleCellExperiment} object is
+Returns either a \link[SingleCellExperiment:SingleCellExperiment]{SingleCellExperiment} or character vector of paths
+to the sparseMatrix files produced. The \link[SingleCellExperiment:SingleCellExperiment]{SingleCellExperiment} object is
 populated with two assays, \code{nRef} and \code{nAlt}, which represent base counts
-for the reference and alternate alleles. The \code{\link[=rowRanges]{rowRanges()}} will contain the
+for the reference and alternate alleles. The \link[SummarizedExperiment:RangedSummarizedExperiment-class]{rowRanges()} will contain the
 genomic interval for each site, along with \code{REF} and \code{ALT} columns. The
 rownames will be populated with the format
 \verb{site_[seqnames]_[position(1-based)]_[strand]_[allele]}, with \code{strand}
@@ -81,7 +81,7 @@ sites in single cells. \code{pileup_cells} can process droplet scRNA-seq
 libraries, from a BAM file containing a cell-barcode and UMI, or well-based
 libraries that do not contain cell-barcodes.
 
-The \code{sites} parameter specifies sites to quantify. This must be a \link{GRanges}
+The \code{sites} parameter specifies sites to quantify. This must be a \link[GenomicRanges:GRanges-class]{GRanges}
 object with 1 base intervals, a strand (+ or -), and supplemented with
 metadata columns named \code{REF} and \code{ALT} containing the reference and
 alternate base to query. See examples for the required format.

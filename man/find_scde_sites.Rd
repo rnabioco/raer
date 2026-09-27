@@ -8,11 +8,11 @@ datasets}
 find_scde_sites(sce, group, rowData = FALSE, BPPARAM = SerialParam(), ...)
 }
 \arguments{
-\item{sce}{\link{SingleCellExperiment} object with \code{nRef} and \code{nAlt} assays.}
+\item{sce}{\link[SingleCellExperiment:SingleCellExperiment]{SingleCellExperiment} object with \code{nRef} and \code{nAlt} assays.}
 
 \item{group}{column name from colData used to define groups to compare.}
 
-\item{rowData}{if TRUE,  \link{rowData} from the input \link{SingleCellExperiment} will
+\item{rowData}{if TRUE,  \link[SummarizedExperiment:SummarizedExperiment-class]{rowData} from the input \link[SingleCellExperiment:SingleCellExperiment]{SingleCellExperiment} will
 be included in the output DataFrames}
 
 \item{BPPARAM}{BiocParallel backend for control how parallel computations
@@ -21,7 +21,7 @@ are performed.}
 \item{...}{Additional arguments passed to \link[scran:combineMarkers]{scran::combineMarkers}}
 }
 \value{
-A named list of \link{DataFrame}s containing results for each cluster specified by
+A named list of \link[S4Vectors:DataFrame-class]{DataFrame}s containing results for each cluster specified by
 \code{group}. The difference in editing frequencies between cluster pairs are
 denoted as \code{dEF}. See \link[scran:combineMarkers]{scran::combineMarkers} for a description of additional
 output fields.

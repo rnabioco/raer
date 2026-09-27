@@ -14,7 +14,7 @@ find_de_sites(
 )
 }
 \arguments{
-\item{deobj}{A \link{RangedSummarizedExperiment} object prepared for differential
+\item{deobj}{A \link[SummarizedExperiment:RangedSummarizedExperiment-class]{RangedSummarizedExperiment} object prepared for differential
 editing analysis by \code{\link[=make_de_object]{make_de_object()}}}
 
 \item{test}{Indicate if \code{edgeR} or \code{DESeq2} should be run.}

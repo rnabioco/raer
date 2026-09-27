@@ -4,16 +4,16 @@
 #' counts from alignments at specified sites, regions, or across all read
 #' alignments, from one or more BAM files. Alignment and site filtering
 #'   options are controlled by the `FilterParam` class. A
-#'   [RangedSummarizedExperiment] object is returned, populated with base count
+#'   [RangedSummarizedExperiment][SummarizedExperiment::RangedSummarizedExperiment] object is returned, populated with base count
 #'   statistics for each supplied BAM file.
 #'
-#' @param bamfiles a character vector, [BamFile] or [BamFileList] indicating 1
+#' @param bamfiles a character vector, [BamFile][Rsamtools::BamFile] or [BamFileList][Rsamtools::BamFileList] indicating 1
 #' or more BAM files to process. If named, the names will be included in the
-#' [colData] of the [RangedSummarizedExperiment] as a `sample` column, otherwise
+#' [colData][SummarizedExperiment::colData] of the [RangedSummarizedExperiment][SummarizedExperiment::RangedSummarizedExperiment] as a `sample` column, otherwise
 #' the names will be taken from the basename of the BAM file.
 #' @param fasta path to genome fasta file used for read alignment. Can be
 #' provided in compressed gzip or bgzip format.
-#' @param sites a [GRanges] object containing regions or sites to process.
+#' @param sites a [GRanges][GenomicRanges::GRanges] object containing regions or sites to process.
 #' @param region samtools region query string (i.e. `chr1:100-1000`). Can be
 #' combined with sites, in which case sites will be filtered to keep only sites
 #' within the region.
@@ -23,12 +23,12 @@
 #'   filters to apply to reads and sites during pileup.
 #' @param umi_tag The BAM tag containing a UMI sequence. If supplied, multiple
 #'   reads with the same UMI sequence will only be counted once per position.
-#' @param BPPARAM A [BiocParallel] class to control parallel execution. Parallel
+#' @param BPPARAM A [BiocParallelParam][BiocParallel::BiocParallelParam] class to control parallel execution. Parallel
 #'   processing occurs per chromosome and is disabled when run on a single
 #'   region.
 #' @param verbose if TRUE, then report progress and warnings.
 #'
-#' @returns A [RangedSummarizedExperiment] object populated with
+#' @returns A [RangedSummarizedExperiment][SummarizedExperiment::RangedSummarizedExperiment] object populated with
 #' multiple assays:
 #'   * `ALT`:  Alternate base(s) found at each position
 #'   * `nRef`: # of reads supporting the reference base
@@ -38,7 +38,7 @@
 #'   * `nC`: # of reads with C
 #'   * `nG`: # of reads with G
 #'
-#'   The [rowRanges()] contains the genomic interval for each site, along with:
+#'   The [rowRanges()][SummarizedExperiment::rowRanges] contains the genomic interval for each site, along with:
 #'   * `REF`: The reference base
 #'   * `rpbz`: Mann-Whitney U test of Read Position Bias from bcftools,
 #'     extreme negative or positive values indicate more bias.

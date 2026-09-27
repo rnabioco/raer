@@ -56,8 +56,8 @@ a new column added with information from \code{col_to_aggr} and optionally
 \code{snp_ref_allele}, \code{snp_alt_alleles}, and \code{snp_matches_site} annotations.
 }
 \description{
-This function will annotate a \link{GRanges} or the rowRanges of
-a \link{SummarizedExperiment} with SNPs from a SNP package.
+This function will annotate a \link[GenomicRanges:GRanges-class]{GRanges} or the rowRanges of
+a \link[SummarizedExperiment:SummarizedExperiment-class]{SummarizedExperiment} with SNPs from a SNP package.
 }
 \examples{
 if (require(SNPlocs.Hsapiens.dbSNP144.GRCh38)) {

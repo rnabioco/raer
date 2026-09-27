@@ -15,24 +15,24 @@
 #' @param bamfiles character vector of paths to indexed bam files. If a named
 #' character vector is supplied the names will be used in the output.
 #' @param fasta fasta filename
-#' @param alu_ranges [GRanges] with regions to query for
+#' @param alu_ranges [GRanges][GenomicRanges::GRanges] with regions to query for
 #'   calculating the AEI, typically ALU repeats.
-#' @param txdb A [TxDb] object, if supplied, will be used to subset the
-#'   alu_ranges to those found overlapping genes. Alternatively a [GRanges]
+#' @param txdb A [TxDb][GenomicFeatures::TxDb] object, if supplied, will be used to subset the
+#'   alu_ranges to those found overlapping genes. Alternatively a [GRanges][GenomicRanges::GRanges]
 #'   object with gene coordinates.  If the `library_type`, specified by
-#'   `FilterParam`, is `unstranded` then the [TxDb] will
+#'   `FilterParam`, is `unstranded` then the [TxDb][GenomicFeatures::TxDb] will
 #'   be used to correct the strandness relative to the reference and is a
 #'   required
 #'   parameter.
-#' @param snp_db either a [SNPlocs], [GPos], or [GRanges] object. If supplied,
+#' @param snp_db either a [SNPlocs][BSgenome::SNPlocs], [GPos][GenomicRanges::GPos], or [GRanges][GenomicRanges::GRanges] object. If supplied,
 #'   will be used to exclude polymorphic positions prior to calculating the AEI.
 #'   If `calc_AEI()` will be used many times, one will save time by first
 #'   identifying SNPs that overlap the supplied `alu_ranges`, and passing these
-#'   as a [GRanges] to `snp_db` rather than supplying all known SNPs (see
+#'   as a [GRanges][GenomicRanges::GRanges] to `snp_db` rather than supplying all known SNPs (see
 #'   [get_overlapping_snps()]).
 #' @param param object of class [FilterParam()] which specify various
 #'   filters to apply to reads and sites during pileup.
-#' @param BPPARAM A [BiocParallelParam] object for specifying parallel options
+#' @param BPPARAM A [BiocParallelParam][BiocParallel::BiocParallelParam] object for specifying parallel options
 #'   for operating over chromosomes.
 #' @param verbose report progress on each chromosome?
 #'

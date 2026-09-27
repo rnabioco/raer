@@ -14,7 +14,7 @@ make_de_object(
 )
 }
 \arguments{
-\item{rse}{A \link{RangedSummarizedExperiment} object}
+\item{rse}{A \link[SummarizedExperiment:RangedSummarizedExperiment-class]{RangedSummarizedExperiment} object}
 
 \item{edit_from}{This should correspond to a nucleotide or assay
 (\code{A}, \code{C}, \code{G}, \code{T}, \code{Ref}, or \code{Alt}) you expect in the reference.
@@ -34,12 +34,12 @@ At least \code{min_samples} need to pass this to keep the site.}
 \code{max_prop} cutoffs to keep a site.}
 }
 \value{
-\link{RangedSummarizedExperiment} for use with \code{edgeR} or
+\link[SummarizedExperiment:RangedSummarizedExperiment-class]{RangedSummarizedExperiment} for use with \code{edgeR} or
 \code{DESeq2}. Contains a \code{counts} assay with a matrix formatted
 with 2 columns per sample (ref and alt counts).
 }
 \description{
-Generates a \link{RangedSummarizedExperiment} object for use with
+Generates a \link[SummarizedExperiment:RangedSummarizedExperiment-class]{RangedSummarizedExperiment} object for use with
 \code{edgeR} or \code{DESeq2} . Will generate a \code{counts} assay with
 a matrix formatted with 2 columns per sample,
 representing the reference and editing allele counts.
