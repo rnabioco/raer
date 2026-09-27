@@ -16,7 +16,8 @@ find_scde_sites(sce, group, rowData = FALSE, BPPARAM = SerialParam(), ...)
 
 - sce:
 
-  SingleCellExperiment object with `nRef` and `nAlt` assays.
+  [SingleCellExperiment](https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html)
+  object with `nRef` and `nAlt` assays.
 
 - group:
 
@@ -26,8 +27,9 @@ find_scde_sites(sce, group, rowData = FALSE, BPPARAM = SerialParam(), ...)
 
   if TRUE,
   [rowData](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)
-  from the input SingleCellExperiment will be included in the output
-  DataFrames
+  from the input
+  [SingleCellExperiment](https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html)
+  will be included in the output DataFrames
 
 - BPPARAM:
 
@@ -76,16 +78,6 @@ set.seed(42)
 sce$clusters <- paste0("cluster_", sample(1:3, ncol(sce), replace = TRUE))
 res <- find_scde_sites(sce, "clusters")
 #> → 244 cells had no REF or ALT counts and were excluded from the analysis
-#> Warning: 'normalizeCounts' is deprecated.
-#> Use 'scrapper::normalizeCounts' instead.
-#> See help("Deprecated")
-#> Warning: 'librarySizeFactors' is deprecated.
-#> Use 'scrapper::centerSizeFactors' instead.
-#> See help("Deprecated")
-#> Warning: 'summarizeAssayByGroup' is deprecated.
-#> Use 'scrapper::aggregateAcrossCells' or 'beachmat::tatami.sums.by.group' instead.
-#> Warning: 'summarizeAssayByGroup' is deprecated.
-#> Use 'scrapper::aggregateAcrossCells' or 'beachmat::tatami.sums.by.group' instead.
 #> Warning: 'scran::combineMarkers' is deprecated.
 #> Use 'scrapper::summarizeEffects' instead.
 #> See help("Deprecated")
@@ -109,7 +101,7 @@ res[[1]]
 #> site_2_625_2_AG     0.926220      0.991736      0.838384       0.901309
 #> site_2_589_2_AG     0.862085      0.831895      0.868687       0.861512
 #> site_2_601_2_TC     0.838316      0.850864      0.858586       0.871928
-#>                       Top   p.value       FDR summary.dEF dEF.cluster_2
+#>                       Top   p.value       FDR         dEF dEF.cluster_2
 #>                 <integer> <numeric> <numeric>   <numeric>     <numeric>
 #> site_2_579_2_AG         1  0.872535         1  0.01784427    0.02257960
 #> site_2_625_2_AG         1  1.000000         1 -0.03537552   -0.03537552

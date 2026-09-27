@@ -104,12 +104,15 @@ pileup_cells(
 
 ## Value
 
-Returns either a SingleCellExperiment or character vector of paths to
-the sparseMatrix files produced. The SingleCellExperiment object is
-populated with two assays, `nRef` and `nAlt`, which represent base
-counts for the reference and alternate alleles. The `rowRanges()` will
-contain the genomic interval for each site, along with `REF` and `ALT`
-columns. The rownames will be populated with the format
+Returns either a
+[SingleCellExperiment](https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html)
+or character vector of paths to the sparseMatrix files produced. The
+[SingleCellExperiment](https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html)
+object is populated with two assays, `nRef` and `nAlt`, which represent
+base counts for the reference and alternate alleles. The
+[rowRanges()](https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html)
+will contain the genomic interval for each site, along with `REF` and
+`ALT` columns. The rownames will be populated with the format
 `site_[seqnames]_[position(1-based)]_[strand]_[allele]`, with `strand`
 being encoded as 1 = +, 2 = -, and 3 = \*, and allele being `REF` +
 `ALT`.

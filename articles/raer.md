@@ -1135,11 +1135,11 @@ molecular consequences of the editing event.
     ## [24] GenomicRanges_1.65.4                    
     ## [25] Seqinfo_1.3.2                           
     ## [26] IRanges_2.47.5                          
-    ## [27] S4Vectors_0.51.9                        
+    ## [27] S4Vectors_0.51.10                       
     ## [28] BiocGenerics_0.59.12                    
     ## [29] generics_0.1.4                          
     ## [30] raerdata_1.11.0                         
-    ## [31] raer_1.11.1                             
+    ## [31] raer_1.11.2                             
     ## [32] BiocStyle_2.41.0                        
     ## 
     ## loaded via a namespace (and not attached):
@@ -1147,21 +1147,21 @@ molecular consequences of the editing event.
     ##   [4] magrittr_2.0.5           ggbeeswarm_0.7.3         farver_2.1.2            
     ##   [7] rmarkdown_2.32           GlobalOptions_0.1.4      fs_2.1.0                
     ##  [10] ragg_1.5.2               vctrs_0.7.3              memoise_2.0.1           
-    ##  [13] RCurl_1.98-1.20          htmltools_0.5.9          S4Arrays_1.13.0         
+    ##  [13] RCurl_1.98-1.20          htmltools_0.5.9          S4Arrays_1.13.1         
     ##  [16] BiocBaseUtils_1.15.1     curl_8.0.0               BiocNeighbors_2.7.3     
-    ##  [19] SparseArray_1.13.2       sass_0.4.10              bslib_0.12.0            
+    ##  [19] SparseArray_1.13.3       sass_0.4.10              bslib_0.12.0            
     ##  [22] htmlwidgets_1.6.4        desc_1.4.3               httr2_1.3.0             
     ##  [25] cachem_1.1.0             GenomicAlignments_1.49.2 lifecycle_1.0.5         
     ##  [28] iterators_1.0.14         pkgconfig_2.0.3          rsvd_1.0.5              
     ##  [31] Matrix_1.7-6             R6_2.6.1                 fastmap_1.2.0           
     ##  [34] clue_0.3-68              digest_0.6.39            colorspace_2.1-3        
     ##  [37] DESeq2_1.53.3            irlba_2.3.7              ExperimentHub_3.3.2     
-    ##  [40] textshaping_1.0.5        RSQLite_3.53.3           beachmat_2.29.2         
+    ##  [40] textshaping_1.0.5        RSQLite_3.53.3           beachmat_2.29.3         
     ##  [43] filelock_1.0.3           labeling_0.4.3           httr_1.4.9              
     ##  [46] abind_1.4-8              compiler_4.6.1           bit64_4.8.6             
     ##  [49] withr_3.0.3              doParallel_1.0.17        S7_0.2.2                
     ##  [52] BiocParallel_1.47.0      viridis_0.6.5            DBI_1.3.0               
-    ##  [55] rappdirs_0.3.4           DelayedArray_0.39.6      rjson_0.2.23            
+    ##  [55] rappdirs_0.3.4           DelayedArray_0.39.7      rjson_0.2.23            
     ##  [58] tools_4.6.1              vipor_0.4.7              otel_0.2.0              
     ##  [61] beeswarm_0.4.0           glue_1.8.1               restfulr_0.0.17         
     ##  [64] cluster_2.1.8.3          gtable_0.3.6             BiocSingular_1.29.1     
@@ -1169,7 +1169,7 @@ molecular consequences of the editing event.
     ##  [70] foreach_1.5.2            pillar_1.11.1            circlize_0.4.18         
     ##  [73] dplyr_1.2.1              lattice_0.23-1           bit_4.6.0               
     ##  [76] tidyselect_1.2.1         locfit_1.5-9.12          knitr_1.52              
-    ##  [79] gridExtra_2.3.1          bookdown_0.48            xfun_0.60               
+    ##  [79] gridExtra_2.3.1          bookdown_0.48            xfun_0.61               
     ##  [82] pheatmap_1.0.13          UCSC.utils_1.9.0         yaml_2.3.12             
     ##  [85] evaluate_1.0.5           codetools_0.2-20         cigarillo_1.3.1         
     ##  [88] tibble_3.3.1             BiocManager_1.30.27      cli_3.6.6               

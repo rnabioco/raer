@@ -41,12 +41,15 @@ calc_AEI(
 
 - txdb:
 
-  A TxDb object, if supplied, will be used to subset the alu_ranges to
-  those found overlapping genes. Alternatively a
+  A [TxDb](https://rdrr.io/pkg/GenomicFeatures/man/TxDb-class.html)
+  object, if supplied, will be used to subset the alu_ranges to those
+  found overlapping genes. Alternatively a
   [GRanges](https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html)
   object with gene coordinates. If the `library_type`, specified by
-  `FilterParam`, is `unstranded` then the TxDb will be used to correct
-  the strandness relative to the reference and is a required parameter.
+  `FilterParam`, is `unstranded` then the
+  [TxDb](https://rdrr.io/pkg/GenomicFeatures/man/TxDb-class.html) will
+  be used to correct the strandness relative to the reference and is a
+  required parameter.
 
 - snp_db:
 
@@ -71,8 +74,9 @@ calc_AEI(
 
 - BPPARAM:
 
-  A BiocParallelParam object for specifying parallel options for
-  operating over chromosomes.
+  A
+  [BiocParallelParam](https://rdrr.io/pkg/BiocParallel/man/BiocParallelParam-class.html)
+  object for specifying parallel options for operating over chromosomes.
 
 - verbose:
 

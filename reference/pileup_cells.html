@@ -29,7 +29,7 @@ base will be counted once for each UMI sequence present in each cell."><meta pro
 
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.11.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.11.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -162,10 +162,10 @@ chromosomes.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Returns either a SingleCellExperiment or character vector of paths
-to the sparseMatrix files produced. The SingleCellExperiment object is
+    <p>Returns either a <a href="https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html" class="external-link">SingleCellExperiment</a> or character vector of paths
+to the sparseMatrix files produced. The <a href="https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html" class="external-link">SingleCellExperiment</a> object is
 populated with two assays, <code>nRef</code> and <code>nAlt</code>, which represent base counts
-for the reference and alternate alleles. The <code>rowRanges()</code> will contain the
+for the reference and alternate alleles. The <a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html" class="external-link">rowRanges()</a> will contain the
 genomic interval for each site, along with <code>REF</code> and <code>ALT</code> columns. The
 rownames will be populated with the format
 <code>site_[seqnames]_[position(1-based)]_[strand]_[allele]</code>, with <code>strand</code>

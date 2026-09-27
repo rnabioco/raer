@@ -17,7 +17,7 @@ statistics for each supplied BAM file."><meta property="og:image" content="https
 
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.11.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.11.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -134,7 +134,7 @@ filters to apply to reads and sites during pileup.</p></dd>
 
 
 <dt id="arg-bpparam">BPPARAM<a class="anchor" aria-label="anchor" href="#arg-bpparam"></a></dt>
-<dd><p>A BiocParallel class to control parallel execution. Parallel
+<dd><p>A <a href="https://rdrr.io/pkg/BiocParallel/man/BiocParallelParam-class.html" class="external-link">BiocParallelParam</a> class to control parallel execution. Parallel
 processing occurs per chromosome and is disabled when run on a single
 region.</p></dd>
 
@@ -265,7 +265,7 @@ multiple assays:</p><ul><li><p><code>ALT</code>:  Alternate base(s) found at eac
 <li><p><code>nT</code>: # of reads with T</p></li>
 <li><p><code>nC</code>: # of reads with C</p></li>
 <li><p><code>nG</code>: # of reads with G</p></li>
-</ul><p>The <code>rowRanges()</code> contains the genomic interval for each site, along with:</p><ul><li><p><code>REF</code>: The reference base</p></li>
+</ul><p>The <a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html" class="external-link">rowRanges()</a> contains the genomic interval for each site, along with:</p><ul><li><p><code>REF</code>: The reference base</p></li>
 <li><p><code>rpbz</code>: Mann-Whitney U test of Read Position Bias from bcftools,
 extreme negative or positive values indicate more bias.</p></li>
 <li><p><code>vdb</code>: Variant Distance Bias for filtering splice-site artifacts from

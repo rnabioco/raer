@@ -91,9 +91,10 @@ FilterParam(
 
 - BPPARAM:
 
-  A BiocParallel class to control parallel execution. Parallel
-  processing occurs per chromosome and is disabled when run on a single
-  region.
+  A
+  [BiocParallelParam](https://rdrr.io/pkg/BiocParallel/man/BiocParallelParam-class.html)
+  class to control parallel execution. Parallel processing occurs per
+  chromosome and is disabled when run on a single region.
 
 - umi_tag:
 
@@ -229,8 +230,9 @@ object populated with multiple assays:
 
 - `nG`: \# of reads with G
 
-The `rowRanges()` contains the genomic interval for each site, along
-with:
+The
+[rowRanges()](https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html)
+contains the genomic interval for each site, along with:
 
 - `REF`: The reference base
 

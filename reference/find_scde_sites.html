@@ -15,7 +15,7 @@ comparison using scran::combineMarkers."><meta property="og:image" content="http
 
     <a class="navbar-brand me-2" href="../index.html">raer</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.11.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.11.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,7 +65,7 @@ comparison using <a href="https://rdrr.io/pkg/scran/man/combineMarkers.html" cla
 
 
 <dl><dt id="arg-sce">sce<a class="anchor" aria-label="anchor" href="#arg-sce"></a></dt>
-<dd><p>SingleCellExperiment object with <code>nRef</code> and <code>nAlt</code> assays.</p></dd>
+<dd><p><a href="https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html" class="external-link">SingleCellExperiment</a> object with <code>nRef</code> and <code>nAlt</code> assays.</p></dd>
 
 
 <dt id="arg-group">group<a class="anchor" aria-label="anchor" href="#arg-group"></a></dt>
@@ -73,7 +73,7 @@ comparison using <a href="https://rdrr.io/pkg/scran/man/combineMarkers.html" cla
 
 
 <dt id="arg-rowdata">rowData<a class="anchor" aria-label="anchor" href="#arg-rowdata"></a></dt>
-<dd><p>if TRUE,  <a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a> from the input SingleCellExperiment will
+<dd><p>if TRUE,  <a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a> from the input <a href="https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html" class="external-link">SingleCellExperiment</a> will
 be included in the output DataFrames</p></dd>
 
 
@@ -121,16 +121,6 @@ output fields.</p>
 <span class="r-in"><span><span class="va">sce</span><span class="op">$</span><span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"cluster_"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">sce</span><span class="op">)</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">find_scde_sites</span><span class="op">(</span><span class="va">sce</span>, <span class="st">"clusters"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> → 244 cells had no REF or ALT counts and were excluded from the analysis</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'normalizeCounts' is deprecated.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'scrapper::normalizeCounts' instead.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> See help("Deprecated")</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'librarySizeFactors' is deprecated.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'scrapper::centerSizeFactors' instead.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> See help("Deprecated")</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'summarizeAssayByGroup' is deprecated.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'scrapper::aggregateAcrossCells' or 'beachmat::tatami.sums.by.group' instead.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'summarizeAssayByGroup' is deprecated.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'scrapper::aggregateAcrossCells' or 'beachmat::tatami.sums.by.group' instead.</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'scran::combineMarkers' is deprecated.</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> Use 'scrapper::summarizeEffects' instead.</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> See help("Deprecated")</span>
@@ -154,7 +144,7 @@ output fields.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> site_2_625_2_AG     0.926220      0.991736      0.838384       0.901309</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> site_2_589_2_AG     0.862085      0.831895      0.868687       0.861512</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> site_2_601_2_TC     0.838316      0.850864      0.858586       0.871928</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                       Top   p.value       FDR summary.dEF dEF.cluster_2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       Top   p.value       FDR         dEF dEF.cluster_2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 &lt;integer&gt; &lt;numeric&gt; &lt;numeric&gt;   &lt;numeric&gt;     &lt;numeric&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> site_2_579_2_AG         1  0.872535         1  0.01784427    0.02257960</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> site_2_625_2_AG         1  1.000000         1 -0.03537552   -0.03537552</span>
