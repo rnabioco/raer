@@ -773,6 +773,7 @@ find_scde_sites <- function(
 
   for (nm in names(res)) {
     de_stats <- res[[nm]]
+    colnames(de_stats)[colnames(de_stats) == "summary.dEF"] <- "dEF"
     out_rows <- rownames(de_stats)
     depths <- depth_summary[[nm]][out_rows, ]
     de_stats <- cbind(depths, de_stats)
