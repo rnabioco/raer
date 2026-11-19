@@ -764,11 +764,10 @@ find_scde_sites <- function(
     ...
   )
 
-  depth_summary <- scran::summaryMarkerStats(
-    sce,
+  depth_summary <- summarize_depth_by_group(
+    assay(sce, "depth"),
     sce[[group]],
-    assay.type = "depth",
-    BPPARAM = BPPARAM
+    num_threads
   )
 
   for (nm in names(res)) {
@@ -784,6 +783,32 @@ find_scde_sites <- function(
     }
     res[[nm]] <- de_stats
   }
+  res
+}
+
+# Per-group mean and proportion of cells detected, along with the mean of
+# these values across all other groups. Replaces scran::summaryMarkerStats(),
+# which relies on deprecated scuttle functions.
+summarize_depth_by_group <- function(x, groups, num_threads = 1) {
+  agg <- scrapper::aggregateAcrossCells(
+    x,
+    list(groups),
+    num.threads = num_threads
+  )
+  ids <- as.character(agg$combinations[[1]])
+  ave <- sweep(agg$sums, 2, agg$counts, "/")
+  det <- sweep(agg$detected, 2, agg$counts, "/")
+  rownames(ave) <- rownames(det) <- rownames(x)
+
+  res <- lapply(seq_along(ids), function(i) {
+    S4Vectors::DataFrame(
+      self.average = ave[, i],
+      other.average = rowMeans(ave[, -i, drop = FALSE]),
+      self.detected = det[, i],
+      other.detected = rowMeans(det[, -i, drop = FALSE])
+    )
+  })
+  names(res) <- ids
   res
 }
 
