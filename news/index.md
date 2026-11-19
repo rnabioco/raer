@@ -1,5 +1,14 @@
 # Changelog
 
+## raer 1.11.3
+
+- Replaced
+  [`scran::summaryMarkerStats()`](https://rdrr.io/pkg/scran/man/summaryMarkerStats.html)
+  in
+  [`find_scde_sites()`](https://rnabioco.github.io/raer/reference/find_scde_sites.md)
+  to avoid deprecation warnings from scuttle functions on Bioconductor
+  devel.
+
 ## raer 1.1.3
 
 - Fixed bug in smart-seq2 pileup_cells reporting

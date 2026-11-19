@@ -963,10 +963,10 @@ variant then the variants will be removed.
 `rse`
 
     ## class: RangedSummarizedExperiment 
-    ## dim: 159 2 
+    ## dim: 156 2 
     ## metadata(0):
     ## assays(9): ALT nRef ... depth edit_freq
-    ## rownames(159): site_chr4_124940_1 site_chr4_126885_1 ...
+    ## rownames(156): site_chr4_124940_1 site_chr4_126955_1 ...
     ##   site_chr4_995144_1 site_chr4_995145_1
     ## rowData names(8): REF rpbz ... repClass repFamily
     ## colnames(2): rna dna
@@ -985,14 +985,14 @@ editing sites overlapping the same position as a SNP.
 `rse`` ``<-`` `[`annot_from_gr`](https://rnabioco.github.io/raer/reference/annot_from_gr.md)`(``rse``, ``chr4snps``, ``"name"``)`\
 [`rowData`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)`(``rse``)``[`[`c`](https://rdrr.io/r/base/c.html)`(``"name"``)``]`
 
-    ## DataFrame with 159 rows and 1 column
+    ## DataFrame with 156 rows and 1 column
     ##                            name
     ##                           <Rle>
     ## site_chr4_124940_1 rs1361822847
-    ## site_chr4_126885_1           NA
     ## site_chr4_126955_1           NA
     ## site_chr4_133310_1           NA
     ## site_chr4_133971_1  rs998760640
+    ## site_chr4_134328_1           NA
     ## ...                         ...
     ## site_chr4_992535_1 rs1714447589
     ## site_chr4_993342_1           NA
@@ -1005,10 +1005,10 @@ editing sites overlapping the same position as a SNP.
 `rse`
 
     ## class: RangedSummarizedExperiment 
-    ## dim: 100 2 
+    ## dim: 97 2 
     ## metadata(0):
     ## assays(9): ALT nRef ... depth edit_freq
-    ## rownames(100): site_chr4_126885_1 site_chr4_126955_1 ...
+    ## rownames(97): site_chr4_126955_1 site_chr4_133310_1 ...
     ##   site_chr4_994239_1 site_chr4_995145_1
     ## rowData names(9): REF rpbz ... repFamily name
     ## colnames(2): rna dna
@@ -1034,10 +1034,9 @@ A-to-G.
 \
 `rowRanges``(``rse``)`
 
-    ## GRanges object with 10 ranges and 9 metadata columns:
+    ## GRanges object with 9 ranges and 9 metadata columns:
     ##                      seqnames    ranges strand |         REF      rpbz
     ##                         <Rle> <IRanges>  <Rle> | <character> <numeric>
-    ##   site_chr4_126885_1     chr4    126885      + |           A  0.342818
     ##   site_chr4_134353_1     chr4    134353      + |           A -0.264728
     ##   site_chr4_348458_1     chr4    348458      + |           A -0.252166
     ##   site_chr4_378548_1     chr4    378548      + |           A  1.406115
@@ -1049,7 +1048,6 @@ A-to-G.
     ##   site_chr4_778780_2     chr4    778780      - |           A -1.469323
     ##                            vdb       sor         ALT repName repClass repFamily
     ##                      <numeric> <numeric> <character>   <Rle>    <Rle>     <Rle>
-    ##   site_chr4_126885_1 0.7000000  1.061473           G    <NA>     <NA>      <NA>
     ##   site_chr4_134353_1 0.4310148  0.252306           G    <NA>     <NA>      <NA>
     ##   site_chr4_348458_1 0.8000000  0.168623           G  AluSx1     SINE       Alu
     ##   site_chr4_378548_1 0.2800000  2.833213           G    <NA>     <NA>      <NA>
@@ -1061,7 +1059,6 @@ A-to-G.
     ##   site_chr4_778780_2 0.0490877  2.821974           G   AluSg     SINE       Alu
     ##                       name
     ##                      <Rle>
-    ##   site_chr4_126885_1  <NA>
     ##   site_chr4_134353_1  <NA>
     ##   site_chr4_348458_1  <NA>
     ##   site_chr4_378548_1  <NA>
@@ -1087,7 +1084,7 @@ molecular consequences of the editing event.
 
     ## R version 4.6.1 (2026-06-24)
     ## Platform: x86_64-pc-linux-gnu
-    ## Running under: Ubuntu 24.04.4 LTS
+    ## Running under: Ubuntu 24.04.5 LTS
     ## 
     ## Matrix products: default
     ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -1109,22 +1106,22 @@ molecular consequences of the editing event.
     ## [8] methods   base     
     ## 
     ## other attached packages:
-    ##  [1] TxDb.Hsapiens.UCSC.hg38.knownGene_3.22.0
+    ##  [1] TxDb.Hsapiens.UCSC.hg38.knownGene_3.24.0
     ##  [2] GenomicFeatures_1.65.0                  
     ##  [3] AnnotationDbi_1.75.2                    
     ##  [4] SNPlocs.Hsapiens.dbSNP144.GRCh38_0.99.20
     ##  [5] BSgenome_1.81.1                         
     ##  [6] rtracklayer_1.73.0                      
     ##  [7] BiocIO_1.23.3                           
-    ##  [8] AnnotationHub_4.3.2                     
-    ##  [9] BiocFileCache_3.3.0                     
+    ##  [8] AnnotationHub_4.3.3                     
+    ##  [9] BiocFileCache_3.3.3                     
     ## [10] dbplyr_2.6.0                            
     ## [11] ComplexHeatmap_2.29.0                   
     ## [12] Rsamtools_2.29.0                        
     ## [13] Biostrings_2.81.9                       
     ## [14] XVector_0.53.0                          
-    ## [15] GenomeInfoDb_1.49.1                     
-    ## [16] scater_1.41.2                           
+    ## [15] GenomeInfoDb_1.49.3                     
+    ## [16] scater_1.41.3                           
     ## [17] ggplot2_4.0.3                           
     ## [18] scuttle_1.23.2                          
     ## [19] SingleCellExperiment_1.35.2             
@@ -1136,10 +1133,10 @@ molecular consequences of the editing event.
     ## [25] Seqinfo_1.3.2                           
     ## [26] IRanges_2.47.5                          
     ## [27] S4Vectors_0.51.10                       
-    ## [28] BiocGenerics_0.59.12                    
+    ## [28] BiocGenerics_0.59.13                    
     ## [29] generics_0.1.4                          
     ## [30] raerdata_1.11.0                         
-    ## [31] raer_1.11.2                             
+    ## [31] raer_1.11.3                             
     ## [32] BiocStyle_2.41.0                        
     ## 
     ## loaded via a namespace (and not attached):
@@ -1147,34 +1144,34 @@ molecular consequences of the editing event.
     ##   [4] magrittr_2.0.5           ggbeeswarm_0.7.3         farver_2.1.2            
     ##   [7] rmarkdown_2.32           GlobalOptions_0.1.4      fs_2.1.0                
     ##  [10] ragg_1.5.2               vctrs_0.7.3              memoise_2.0.1           
-    ##  [13] RCurl_1.98-1.20          htmltools_0.5.9          S4Arrays_1.13.1         
-    ##  [16] BiocBaseUtils_1.15.1     curl_8.0.0               BiocNeighbors_2.7.3     
-    ##  [19] SparseArray_1.13.3       sass_0.4.10              bslib_0.12.0            
+    ##  [13] RCurl_1.98-1.20          htmltools_0.5.9          S4Arrays_1.13.2         
+    ##  [16] BiocBaseUtils_1.15.1     curl_8.1.0               BiocNeighbors_2.7.3     
+    ##  [19] SparseArray_1.13.5       sass_0.4.10              bslib_0.12.0            
     ##  [22] htmlwidgets_1.6.4        desc_1.4.3               httr2_1.3.0             
     ##  [25] cachem_1.1.0             GenomicAlignments_1.49.2 lifecycle_1.0.5         
-    ##  [28] iterators_1.0.14         pkgconfig_2.0.3          rsvd_1.0.5              
+    ##  [28] iterators_1.0.14         pkgconfig_2.0.3          rsvd_1.0.6              
     ##  [31] Matrix_1.7-6             R6_2.6.1                 fastmap_1.2.0           
-    ##  [34] clue_0.3-68              digest_0.6.39            colorspace_2.1-3        
-    ##  [37] DESeq2_1.53.3            irlba_2.3.7              ExperimentHub_3.3.2     
+    ##  [34] clue_0.3-68              digest_0.6.39            colorspace_2.1-4        
+    ##  [37] DESeq2_1.53.7            irlba_2.4.1              ExperimentHub_3.3.2     
     ##  [40] textshaping_1.0.5        RSQLite_3.53.3           beachmat_2.29.3         
     ##  [43] filelock_1.0.3           labeling_0.4.3           httr_1.4.9              
     ##  [46] abind_1.4-8              compiler_4.6.1           bit64_4.8.6             
     ##  [49] withr_3.0.3              doParallel_1.0.17        S7_0.2.2                
     ##  [52] BiocParallel_1.47.0      viridis_0.6.5            DBI_1.3.0               
-    ##  [55] rappdirs_0.3.4           DelayedArray_0.39.7      rjson_0.2.23            
+    ##  [55] rappdirs_0.3.4           DelayedArray_0.39.8      rjson_0.2.23            
     ##  [58] tools_4.6.1              vipor_0.4.7              otel_0.2.0              
     ##  [61] beeswarm_0.4.0           glue_1.8.1               restfulr_0.0.17         
-    ##  [64] cluster_2.1.8.3          gtable_0.3.6             BiocSingular_1.29.1     
+    ##  [64] cluster_2.1.8.3          gtable_0.3.6             BiocSingular_1.29.2     
     ##  [67] ScaledMatrix_1.21.0      ggrepel_0.9.8            BiocVersion_3.24.0      
     ##  [70] foreach_1.5.2            pillar_1.11.1            circlize_0.4.18         
     ##  [73] dplyr_1.2.1              lattice_0.23-1           bit_4.6.0               
     ##  [76] tidyselect_1.2.1         locfit_1.5-9.12          knitr_1.52              
-    ##  [79] gridExtra_2.3.1          bookdown_0.48            xfun_0.61               
-    ##  [82] pheatmap_1.0.13          UCSC.utils_1.9.0         yaml_2.3.12             
+    ##  [79] gridExtra_2.3.1          bookdown_0.48            xfun_0.62               
+    ##  [82] pheatmap_1.0.13          UCSC.utils_1.9.1         yaml_2.3.12             
     ##  [85] evaluate_1.0.5           codetools_0.2-20         cigarillo_1.3.1         
     ##  [88] tibble_3.3.1             BiocManager_1.30.27      cli_3.6.6               
     ##  [91] systemfonts_1.3.2        jquerylib_0.1.4          Rcpp_1.1.2              
-    ##  [94] png_0.1-9                XML_3.99-0.24            parallel_4.6.1          
+    ##  [94] png_0.1-9                XML_3.99-0.25            parallel_4.6.1          
     ##  [97] pkgdown_2.2.1            blob_1.3.0               bitops_1.1-0            
     ## [100] viridisLite_0.4.3        scales_1.4.0             purrr_1.2.2             
     ## [103] crayon_1.5.3             GetoptLong_1.1.1         rlang_1.3.0             

@@ -81,18 +81,6 @@ res <- find_scde_sites(sce, "clusters")
 #> Warning: 'scran::combineMarkers' is deprecated.
 #> Use 'scrapper::summarizeEffects' instead.
 #> See help("Deprecated")
-#> Warning: 'summaryMarkerStats' is deprecated.
-#> See help("Deprecated")
-#> Warning: 'sumCountsAcrossCells' is deprecated.
-#> Use 'scrapper::aggregateAcrossCells' instead.
-#> See help("Deprecated")
-#> Warning: 'summarizeAssayByGroup' is deprecated.
-#> Use 'scrapper::aggregateAcrossCells' or 'beachmat::tatami.sums.by.group' instead.
-#> Warning: 'numDetectedAcrossCells' is deprecated.
-#> Use 'scrapper::computeRnaQcMetrics' instead.
-#> See help("Deprecated")
-#> Warning: 'summarizeAssayByGroup' is deprecated.
-#> Use 'scrapper::aggregateAcrossCells' or 'beachmat::tatami.sums.by.group' instead.
 res[[1]]
 #> DataFrame with 4 rows and 10 columns
 #>                 self.average other.average self.detected other.detected
